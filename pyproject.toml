@@ -1,0 +1,11 @@
+[project]
+name = "intensity-flat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "cmake>=3.30.3",
+    "numpy>=2.1.1",
+    "rosbags>=0.10.4",
+]

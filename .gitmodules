@@ -1,0 +1,3 @@
+[submodule "pipelines/kiss-icp"]
+	path = pipelines/kiss-icp
+	url = git@github.com:contagon/kiss-icp.git
