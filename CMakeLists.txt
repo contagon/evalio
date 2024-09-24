@@ -21,6 +21,4 @@ if(NOT pybind11_FOUND)
 endif()
 
 #################### ADD TARGETS ####################
-add_subdirectory(evalio)
-
 add_subdirectory(pipelines)

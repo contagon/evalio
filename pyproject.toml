@@ -3,9 +3,11 @@ name = "intensity-flat"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "cmake>=3.30.3",
-    "numpy>=2.1.1",
+    "gdown>=5.2.0",
+    "gtsam>=4.2",
+    "numpy<2",
     "rosbags>=0.10.4",
 ]

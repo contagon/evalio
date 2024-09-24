@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "kiss_icp/pipeline/KissICP.hpp"
-#include "pipeline.h"
+#include "base.h"
 
 class KissICP : Pipeline {
     public:
