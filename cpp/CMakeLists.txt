@@ -29,15 +29,7 @@ set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 # ------------------------- Make python wrapper for pipelines ------------------------- #
 # Add python bindings
 # TODO: Fix saving directory
-pybind11_add_module(evalio_python bindings.cpp)
-target_link_libraries(evalio_python PUBLIC pipelines gtsam)
+pybind11_add_module(_pipelines bindings.cpp)
+target_link_libraries(_pipelines PUBLIC pipelines gtsam)
 
-# set_target_properties(evalio_python PROPERTIES
-#   INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
-#   INSTALL_RPATH_USE_LINK_PATH TRUE
-#   OUTPUT_NAME "evalio_python"
-#   LIBRARY_OUTPUT_DIRECTORY "${PYTHON_BUILD_DIRECTORY}/evalio"
-#   DEBUG_POSTFIX "" # Otherwise you will have a wrong name
-#   RELWITHDEBINFO_POSTFIX "" # Otherwise you will have a wrong name
-# )
-# target_compile_features(evalio_python PUBLIC cxx_std_17)
+install(TARGETS _pipelines DESTINATION evalio/pipelines)

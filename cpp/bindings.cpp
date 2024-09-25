@@ -46,7 +46,7 @@ class PyPipeline: public Pipeline {
         }
 };
 
-PYBIND11_MODULE(evalio_python, m){
+PYBIND11_MODULE(_pipelines, m){
     py::class_<Pipeline, PyPipeline>(m, "Pipeline")
         .def(py::init<>())
         .def("pose", &Pipeline::pose)

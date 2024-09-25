@@ -4,18 +4,15 @@ version = "0.1.0"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "gdown>=5.2.0",
-    "gtsam>=4.2",
-    "numpy<2",
-    "rosbags>=0.10.4",
-]
+dependencies = ["gdown>=5.2.0", "gtsam>=4.2", "numpy<2", "rosbags>=0.10.4"]
 
 [build-system]
 requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 
+# [tool.scikit-build]
+# editable.mode = "inplace"
+# build-dir = "build_uv"
+
 [tool.uv]
-dev-dependencies = [
-    "cmake>=3.30.3",
-]
+dev-dependencies = ["cmake>=3.30.3", "scikit-build-core>=0.10.7"]
