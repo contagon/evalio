@@ -2,12 +2,11 @@
 
 #include <map>
 
-#include <Eigen/Core>
 #include <gtsam/geometry/Pose3.h>
 
 class Pipeline {
     public:
-        Pipeline() {};
+        virtual ~Pipeline() {};
 
         virtual const gtsam::Pose3 pose() = 0;
 

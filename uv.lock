@@ -167,6 +167,33 @@ wheels = [
 ]
 
 [[package]]
+name = "evalio"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "gdown" },
+    { name = "gtsam" },
+    { name = "numpy" },
+    { name = "rosbags" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "cmake" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "gdown", specifier = ">=5.2.0" },
+    { name = "gtsam", specifier = ">=4.2" },
+    { name = "numpy", specifier = "<2" },
+    { name = "rosbags", specifier = ">=0.10.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "cmake", specifier = ">=3.30.3" }]
+
+[[package]]
 name = "filelock"
 version = "3.16.1"
 source = { registry = "https://pypi.org/simple" }
@@ -216,27 +243,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7590aa73f1f1d3fa9a380e654b86af429e0934a32f7d/idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9", size = 190490 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442 },
-]
-
-[[package]]
-name = "intensity-flat"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "cmake" },
-    { name = "gdown" },
-    { name = "gtsam" },
-    { name = "numpy" },
-    { name = "rosbags" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cmake", specifier = ">=3.30.3" },
-    { name = "gdown", specifier = ">=5.2.0" },
-    { name = "gtsam", specifier = ">=4.2" },
-    { name = "numpy", specifier = "<2" },
-    { name = "rosbags", specifier = ">=0.10.4" },
 ]
 
 [[package]]

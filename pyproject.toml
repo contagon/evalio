@@ -1,13 +1,21 @@
 [project]
-name = "intensity-flat"
+name = "evalio"
 version = "0.1.0"
-description = "Add your description here"
+description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cmake>=3.30.3",
     "gdown>=5.2.0",
     "gtsam>=4.2",
     "numpy<2",
     "rosbags>=0.10.4",
+]
+
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[tool.uv]
+dev-dependencies = [
+    "cmake>=3.30.3",
 ]

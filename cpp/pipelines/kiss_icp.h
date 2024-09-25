@@ -1,3 +1,4 @@
+#pragma once
 
 #include <memory>
 #include <stdexcept>
@@ -5,7 +6,7 @@
 #include "kiss_icp/pipeline/KissICP.hpp"
 #include "base.h"
 
-class KissICP : Pipeline {
+class KissICP : public Pipeline {
     public:
         KissICP() : config_() {};
 

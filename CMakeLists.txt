@@ -21,4 +21,4 @@ if(NOT pybind11_FOUND)
 endif()
 
 #################### ADD TARGETS ####################
-add_subdirectory(pipelines)
+add_subdirectory(cpp)
