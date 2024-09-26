@@ -1,6 +1,5 @@
-from .base import EVALIO_DATA, Dataset, RosbagIter, PreintNoise, load_pose_csv
+from .base import EVALIO_DATA, Dataset, RosbagIter, PreintNoise, load_pose_csv, SE3
 from rosbags.typesys import Stores
-import gtsam
 
 
 class NewerCollege2020(Dataset):
@@ -18,7 +17,7 @@ class NewerCollege2020(Dataset):
             "/os1_cloud_node/imu",
         )
 
-    def ground_truth(self) -> list[gtsam.Pose3]:
+    def ground_truth(self) -> list[SE3]:
         return load_pose_csv(
             EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv"
         )
@@ -68,11 +67,11 @@ class NewerCollege2020(Dataset):
         ]
 
     @staticmethod
-    def imu_T_lidar() -> gtsam.Pose3:
+    def imu_T_lidar() -> SE3:
         pass
 
     @staticmethod
-    def imu_T_gt() -> gtsam.Pose3:
+    def imu_T_gt() -> SE3:
         pass
 
     @staticmethod

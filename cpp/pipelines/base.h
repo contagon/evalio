@@ -1,20 +1,23 @@
 #pragma once
 
 #include <map>
+#include <Eigen/Core>
 
-#include <gtsam/geometry/Pose3.h>
+#include "types.h"
+
+namespace evalio {
 
 class Pipeline {
     public:
         virtual ~Pipeline() {};
 
-        virtual const gtsam::Pose3 pose() = 0;
+        virtual const SE3 pose() = 0;
 
-        virtual const std::vector<Eigen::Vector4d> map() = 0;
+        virtual const std::vector<Point> map() = 0;
 
-        virtual void add_imu(Eigen::Vector3d gyro, Eigen::Vector3d acc, uint64_t timestamp) = 0;
+        virtual void add_imu(ImuMeasurement mm) = 0;
 
-        virtual void add_lidar(std::vector<Eigen::Vector4d> points, uint64_t timestamp) = 0;
+        virtual void add_lidar(LidarMeasurement mm) = 0;
 
         virtual void set_param(std::string key, std::string value) = 0;
 
@@ -24,3 +27,5 @@ class Pipeline {
 
         virtual void set_param(std::string key, bool value) = 0;
 };
+
+} // namespace evalio

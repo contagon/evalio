@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 #################### IMPORT DEPENDENCIES ####################
 # Eigen 
-find_package(GTSAM 4.2 REQUIRED)
+find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 
 find_package(pybind11 QUIET)
 if(NOT pybind11_FOUND)
@@ -22,3 +22,8 @@ endif()
 
 #################### ADD TARGETS ####################
 add_subdirectory(cpp)
+
+pybind11_add_module(_cpp cpp/bindings.cpp)
+target_link_libraries(_cpp PUBLIC pipelines Eigen3::Eigen)
+
+install(TARGETS _cpp DESTINATION evalio)

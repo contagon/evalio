@@ -1,7 +1,5 @@
-build
 dist
-build_vscode
-build_uv
+build*
 .vscode
 .venv
 __pycache__

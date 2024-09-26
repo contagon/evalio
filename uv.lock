@@ -172,7 +172,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "gdown" },
-    { name = "gtsam" },
     { name = "numpy" },
     { name = "rosbags" },
 ]
@@ -180,13 +179,14 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "cmake" },
+    { name = "pip" },
+    { name = "pybind11" },
     { name = "scikit-build-core" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "gdown", specifier = ">=5.2.0" },
-    { name = "gtsam", specifier = ">=4.2" },
     { name = "numpy", specifier = "<2" },
     { name = "rosbags", specifier = ">=0.10.4" },
 ]
@@ -194,6 +194,8 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "cmake", specifier = ">=3.30.3" },
+    { name = "pip", specifier = ">=24.2" },
+    { name = "pybind11", specifier = ">=2.13.6" },
     { name = "scikit-build-core", specifier = ">=0.10.7" },
 ]
 
@@ -228,25 +230,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/09/6a/37e6b70c5bda3161e40265861e63b64a86bfc6ca6a8f1c35328a675c84fd/gdown-5.2.0.tar.gz", hash = "sha256:2145165062d85520a3cd98b356c9ed522c5e7984d408535409fd46f94defc787", size = 284647 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/70/e07c381e6488a77094f04c85c9caf1c8008cdc30778f7019bc52e5285ef0/gdown-5.2.0-py3-none-any.whl", hash = "sha256:33083832d82b1101bdd0e9df3edd0fbc0e1c5f14c9d8c38d2a35bf1683b526d6", size = 18235 },
-]
-
-[[package]]
-name = "gtsam"
-version = "4.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "pyparsing" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/3f/6325c300cc92ca2495570e41ab5dffc3147837d5fce77e243714c1d646dd/gtsam-4.2-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:e1c2958b5e8895ff5822114119e9b303fc12b2ded4c9ede0a7a6844f6eb7be1a", size = 21626497 },
-    { url = "https://files.pythonhosted.org/packages/11/d8/ab317fdedeca03362d316c1b5c32cabc06f7a8948363f1c96d4a7f3fca8d/gtsam-4.2-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:b89d231f1de264d475ce1c0fcac320fdccb1260e2df01f8fb8775cdaddf57fb0", size = 19858294 },
-    { url = "https://files.pythonhosted.org/packages/9d/e1/8c87e6cc713f18be917fd110570e0646a132ab189781c551e4347d175170/gtsam-4.2-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:59d452e645f7ca598e89170785c9e8ac1b5a2b0a0d32bcda2c279b7b51bb379f", size = 21621183 },
-    { url = "https://files.pythonhosted.org/packages/89/80/95d842fa51fef2223f3920f82ffea241bcc6f6b6ba6d7aa96c6e46e19474/gtsam-4.2-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:979b7c886724ac403d5c323613fd9800c8ac7ab224e2909faa8b266e5de742b2", size = 21788738 },
-    { url = "https://files.pythonhosted.org/packages/0e/25/b380725edd25c7ab50814a544ffaa748af41fe639d5294818cf4e67b2584/gtsam-4.2-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:2996c349f03182df739f284adc62f455337b5272c4227bb970cbac7622b1d8e8", size = 21626506 },
-    { url = "https://files.pythonhosted.org/packages/ae/41/a7e26b58289f0f634123615fffa3c7eefd9b559cc1709d7c6ae67da7c87d/gtsam-4.2-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:0dc13b8a76ef862359a15ea9feec7cfd7df9d2bf2545b5f96297592c63e76aad", size = 20149822 },
-    { url = "https://files.pythonhosted.org/packages/bd/ba/d7b3ddccb179ca28db84edb7dd223aba6733ae9f59015b6263391bc8976b/gtsam-4.2-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:473978b6d32ab45903433a745ca166f0441058a726c7f26e9f51ce5aa2a03721", size = 21620301 },
-    { url = "https://files.pythonhosted.org/packages/51/8e/a1cf54ea59c81b300d31f407270d8fe8b7e6fdcfd4c7353b0a0857602808/gtsam-4.2-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:3793d5524a0417924fddb9d9662afc8129357fd52f07c422776024ddab3780c1", size = 22352720 },
 ]
 
 [[package]]
@@ -338,21 +321,30 @@ wheels = [
 ]
 
 [[package]]
+name = "pip"
+version = "24.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/87/fb90046e096a03aeab235e139436b3fe804cdd447ed2093b0d70eba3f7f8/pip-24.2.tar.gz", hash = "sha256:5b5e490b5e9cb275c879595064adce9ebd31b854e3e803740b72f9ccf34a45b8", size = 1922041 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d4/55/90db48d85f7689ec6f81c0db0622d704306c5284850383c090e6c7195a5c/pip-24.2-py3-none-any.whl", hash = "sha256:2cd581cf58ab7fcfca4ce8efa6dcacd0de5bf8d0a3eb9ec927e07405f4d9e2a2", size = 1815170 },
+]
+
+[[package]]
+name = "pybind11"
+version = "2.13.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d2/c1/72b9622fcb32ff98b054f724e213c7f70d6898baa714f4516288456ceaba/pybind11-2.13.6.tar.gz", hash = "sha256:ba6af10348c12b24e92fa086b39cfba0eff619b61ac77c406167d813b096d39a", size = 218403 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/2f/0f24b288e2ce56f51c920137620b4434a38fd80583dbbe24fc2a1656c388/pybind11-2.13.6-py3-none-any.whl", hash = "sha256:237c41e29157b962835d356b370ededd57594a26d5894a795960f0047cb5caf5", size = 243282 },
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1d/b2/31537cf4b1ca988837256c910a668b553fceb8f069bedc4b1c826024b52c/pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6", size = 172736 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/a3/a812df4e2dd5696d1f351d58b8fe16a405b234ad2886a0dab9183fb78109/pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc", size = 117552 },
-]
-
-[[package]]
-name = "pyparsing"
-version = "3.1.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/83/08/13f3bce01b2061f2bbd582c9df82723de943784cf719a35ac886c652043a/pyparsing-3.1.4.tar.gz", hash = "sha256:f86ec8d1a83f11977c9a6ea7598e8c27fc5cddfa5b07ea2241edbbde1d7bc032", size = 900231 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/0c/0e3c05b1c87bb6a1c76d281b0f35e78d2d80ac91b5f8f524cebf77f51049/pyparsing-3.1.4-py3-none-any.whl", hash = "sha256:a6a7ee4235a3f944aa1fa2249307708f893fe5717dc603503c6c7969c070fb7c", size = 104100 },
 ]
 
 [[package]]

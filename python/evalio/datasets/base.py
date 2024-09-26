@@ -1,43 +1,15 @@
 from typing import Protocol, Union
-from dataclasses import dataclass
 from rosbags.typesys import Stores
 from rosbags.rosbag1 import Reader as Reader1
 from rosbags.rosbag2 import Reader as Reader2
 import rosbags
 
 import numpy as np
-import gtsam
 import os
 import csv
 from pathlib import Path
 
-
-@dataclass(frozen=True)
-class Stamp:
-    sec: np.uint64
-    nsec: np.uint64
-
-
-@dataclass
-class ImuMeasurement:
-    stamp: Stamp
-    gyro: np.ndarray
-    acc: np.ndarray
-
-
-# TODO: Probably want a custom point type here
-@dataclass
-class LidarMeasurement:
-    stamp: Stamp
-    points: list[np.ndarray]
-
-
-@dataclass
-class PreintNoise:
-    gyro: float
-    acc: float
-    gyro_bias: float
-    acc_bias: float
+from evalio._cpp import SE3, Stamp, ImuMeasurement, LidarMeasurement, PreintNoise  # type: ignore
 
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
@@ -54,7 +26,7 @@ class Dataset(Protocol):
         raise NotImplementedError("Download not implemented")
 
     # TODO: Does these need to be stamped?
-    def ground_truth(self) -> list[gtsam.Pose3]: ...
+    def ground_truth(self) -> list[SE3]: ...
 
     @staticmethod
     def name() -> str: ...
@@ -63,10 +35,10 @@ class Dataset(Protocol):
     def sequences() -> list[str]: ...
 
     @staticmethod
-    def imu_T_lidar() -> gtsam.Pose3: ...
+    def imu_T_lidar() -> SE3: ...
 
     @staticmethod
-    def imu_T_gt() -> gtsam.Pose3: ...
+    def imu_T_gt() -> SE3: ...
 
     @staticmethod
     def preint_params() -> PreintNoise: ...
@@ -100,6 +72,7 @@ class RosbagIter:
 
     def __next__(self) -> Measurement:
         # TODO: Parse point cloud
+        # TODO: Switch to new ImuMeasurement class
         # TODO: Ending somehow
         connection, timestamp, rawdata = next(self.iterator)
 
@@ -119,21 +92,23 @@ class RosbagIter:
         return mm
 
 
-def load_pose_csv(path: str) -> dict[Stamp, gtsam.Pose3]:
+def load_pose_csv(path: str) -> dict[Stamp, SE3]:
     poses = {}
 
     with open(path) as csvfile:
         reader = csv.DictReader(csvfile)
         for line in reader:
-            r = gtsam.Rot3.Quaternion(
-                float(line["qw"]),
-                float(line["qx"]),
-                float(line["qy"]),
-                float(line["qz"]),
-            )
-            t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
-            pose = gtsam.Pose3(r, t)
-            stamp = Stamp(int(line["#sec"]), int(line["nsec"]))
-            poses[stamp] = pose
+            # TODO: Redo this w/ SE3
+            pass
+            # r = gtsam.Rot3.Quaternion(
+            #     float(line["qw"]),
+            #     float(line["qx"]),
+            #     float(line["qy"]),
+            #     float(line["qz"]),
+            # )
+            # t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
+            # pose = SE3(r, t)
+            # stamp = Stamp(int(line["#sec"]), int(line["nsec"]))
+            # poses[stamp] = pose
 
     return poses

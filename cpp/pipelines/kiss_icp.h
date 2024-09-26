@@ -5,24 +5,45 @@
 
 #include "kiss_icp/pipeline/KissICP.hpp"
 #include "base.h"
+#include "types.h"
 
-class KissICP : public Pipeline {
+evalio::Point to_evalio_point(Eigen::Vector4d point) {
+    return {
+        .x = point[0],
+        .y = point[1],
+        .z = point[2],
+        .intensity = point[3],
+        .offset = 0,
+        .channel = 0,
+        .ring = 0
+    };
+}
+
+Eigen::Vector4d to_eigen_point(evalio::Point point) {
+    return { point.x, point.y, point.z, point.intensity };
+}
+
+class KissICP : public evalio::Pipeline {
     public:
         KissICP() : config_() {};
 
-        void add_imu(Eigen::Vector3d gyro, Eigen::Vector3d acc, uint64_t timestamp) { }
+        void add_imu(evalio::ImuMeasurement mm) override {};
 
         // TODO: Array of timestamps???
         // TODO: Point object to hold x, y, z, intensity, stamp??
-        void add_lidar(std::vector<Eigen::Vector4d> points, uint64_t timestamp) {
+        void add_lidar(evalio::LidarMeasurement mm) override {
+            std::vector<Eigen::Vector4d> points(mm.points.size());
+            for (auto point : mm.points) {
+                points.push_back(to_eigen_point(point));
+            }
             kiss_icp_->RegisterFrame(points);
         }
 
-        void set_param(std::string key, std::string value) {
+        void set_param(std::string key, std::string value) override {
             throw std::invalid_argument("Invalid parameter, KissICP doesn't have string param " + key);
         }
 
-        void set_param(std::string key, double value) {
+        void set_param(std::string key, double value) override {
             if (key == "voxel_size") {
                 config_.voxel_size = value;
             } else if (key == "max_range") {
@@ -46,7 +67,7 @@ class KissICP : public Pipeline {
             kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
         }
 
-        void set_param(std::string key, int value) {
+        void set_param(std::string key, int value) override {
             if (key == "max_points_per_voxel") {
                 config_.max_points_per_voxel = value;
             } else {
@@ -56,7 +77,7 @@ class KissICP : public Pipeline {
             kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
         }
 
-        void set_param(std::string key, bool value) {
+        void set_param(std::string key, bool value) override {
             if (key == "deskew") {
                 config_.deskew = value;
             } else {
@@ -66,15 +87,20 @@ class KissICP : public Pipeline {
             kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
         }
 
-        const gtsam::Pose3 pose() {
+        const evalio::SE3 pose() override {
             const Sophus::SE3d pose = kiss_icp_->pose();
             const auto t = pose.translation();
             const auto q = pose.unit_quaternion();
-            return gtsam::Pose3(gtsam::Rot3::Quaternion(q.w(), q.x(), q.y(), q.z()), t);
+            return { .qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w(), .trans = t };
         }
 
-        const std::vector<Eigen::Vector4d> map() {
-            return kiss_icp_->LocalMap();
+        const std::vector<evalio::Point> map() override {
+            std::vector<Eigen::Vector4d> map = kiss_icp_->LocalMap();
+            std::vector<evalio::Point> evalio_map(map.size());
+            for (auto point : map) {
+                evalio_map.push_back(to_evalio_point(point));
+            }
+            return evalio_map;
         }
 
 

@@ -1,7 +1,7 @@
 # Turn off deprecated cmake warning for pipelines
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 set(SRCS "")
-set(LIBS gtsam)
+set(LIBS Eigen3::Eigen)
 set(LIB_NAME pipelines)
 
 # ------------------------- Import all pipelines ------------------------- #
@@ -25,11 +25,3 @@ add_library(${PROJECT_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})
 target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(${LIB_NAME} PUBLIC ${LIBS})
 set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-
-# ------------------------- Make python wrapper for pipelines ------------------------- #
-# Add python bindings
-# TODO: Fix saving directory
-pybind11_add_module(_pipelines bindings.cpp)
-target_link_libraries(_pipelines PUBLIC pipelines gtsam)
-
-install(TARGETS _pipelines DESTINATION evalio/pipelines)
