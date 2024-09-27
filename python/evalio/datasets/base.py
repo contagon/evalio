@@ -9,7 +9,7 @@ import os
 import csv
 from pathlib import Path
 
-from evalio._cpp import SE3, Stamp, ImuMeasurement, LidarMeasurement, PreintNoise  # type: ignore
+from evalio._cpp import SE3, Stamp, ImuMeasurement, LidarMeasurement, ImuParams  # type: ignore
 
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
@@ -41,7 +41,7 @@ class Dataset(Protocol):
     def imu_T_gt() -> SE3: ...
 
     @staticmethod
-    def preint_params() -> PreintNoise: ...
+    def imu_params() -> ImuParams: ...
 
 
 # ------------------------- Helpers ------------------------- #

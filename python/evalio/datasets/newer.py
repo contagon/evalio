@@ -1,4 +1,4 @@
-from .base import EVALIO_DATA, Dataset, RosbagIter, PreintNoise, load_pose_csv, SE3
+from .base import EVALIO_DATA, Dataset, RosbagIter, ImuParams, load_pose_csv, SE3
 from rosbags.typesys import Stores
 
 
@@ -75,5 +75,5 @@ class NewerCollege2020(Dataset):
         pass
 
     @staticmethod
-    def preint_params() -> PreintNoise:
+    def imu_params() -> ImuParams:
         pass

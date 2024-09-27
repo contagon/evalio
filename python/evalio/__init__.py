@@ -1,7 +1,7 @@
 from . import datasets
 from . import pipelines
 from . import _cpp
-from ._cpp import Stamp, SE3, Point, PreintNoise, LidarMeasurement, ImuMeasurement  # type: ignore
+from ._cpp import Stamp, SE3, Point, ImuParams, LidarMeasurement, ImuMeasurement  # type: ignore
 
 __all__ = [
     "_cpp",
@@ -10,7 +10,7 @@ __all__ = [
     "Stamp",
     "SE3",
     "Point",
-    "PreintNoise",
+    "ImuParams",
     "LidarMeasurement",
     "ImuMeasurement",
 ]
