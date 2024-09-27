@@ -1,5 +1,12 @@
-from .base import EVALIO_DATA, Dataset, RosbagIter, ImuParams, load_pose_csv, SE3
-from rosbags.typesys import Stores
+from .base import (
+    EVALIO_DATA,
+    Dataset,
+    RosbagIter,
+    ImuParams,
+    LidarParams,
+    load_pose_csv,
+    SE3,
+)
 
 
 class NewerCollege2020(Dataset):
@@ -10,9 +17,8 @@ class NewerCollege2020(Dataset):
         self.seq = seq
 
     def __iter__(self):
-        RosbagIter(
-            "/mnt/grizzly/newer2020/01_short_experiment/rosbag/rooster_2020-03-10-10-36-30_0.bag",
-            Stores.ROS1_NOETIC,
+        return RosbagIter(
+            EVALIO_DATA / NewerCollege2020.name() / self.seq,
             "/os1_cloud_node/points",
             "/os1_cloud_node/imu",
         )
@@ -76,4 +82,8 @@ class NewerCollege2020(Dataset):
 
     @staticmethod
     def imu_params() -> ImuParams:
+        pass
+
+    @staticmethod
+    def lidar_params() -> LidarParams:
         pass

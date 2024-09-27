@@ -9,7 +9,7 @@ set(LIB_NAME pipelines)
 option(EVALIO_KISS_ICP "Build KISS-ICP" ON)
 if(EVALIO_KISS_ICP)
     add_subdirectory(pipelines/kiss-icp/cpp/kiss_icp)
-    list(APPEND LIBS kiss_icp_core)
+    list(APPEND LIBS kiss_icp_pipeline)
 endif()
 
 # TODO: Figure out python bindings with these
@@ -25,8 +25,3 @@ add_library(${PROJECT_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})
 target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(${LIB_NAME} PUBLIC ${LIBS})
 set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-
-
-# Fake executable
-add_executable(testing test.cpp)
-target_link_libraries(testing PRIVATE kiss_icp_core Eigen3::Eigen)

@@ -7,9 +7,16 @@
 namespace evalio {
 
 struct Stamp {
-  uint64_t nsecs;
+  uint32_t sec;
+  uint32_t nsec;
 
-  Stamp(uint64_t nsecs) : nsecs(nsecs) {}
+  std::string toString() const {
+    return "Stamp(" + std::to_string(sec) + "." + std::to_string(nsec) + ")";
+  }
+
+  std::string toStringBrief() const {
+    return std::to_string(sec) + "." + std::to_string(nsec);
+  };
 };
 
 struct Point {
@@ -17,9 +24,9 @@ struct Point {
   double y;
   double z;
   double intensity;
-  double offset;
-  short unsigned int column;
+  double stamp_offset;
   short unsigned int row;
+  short unsigned int column;
 };
 
 struct LidarMeasurement {
@@ -42,6 +49,14 @@ struct ImuMeasurement {
   Stamp stamp;
   Eigen::Vector3d gyro;
   Eigen::Vector3d accel;
+
+  std::string toString() const {
+    std::ostringstream oss;
+    oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
+        << gyro.transpose() << "]"
+        << ", accel: [" << accel.transpose() << "])";
+    return oss.str();
+  }
 };
 
 struct ImuParams {
@@ -71,6 +86,16 @@ struct SO3 {
   double qy;
   double qz;
   double qw;
+
+  std::string toString() const {
+    return "SO3(x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +
+           ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw) + ")";
+  }
+
+  std::string toStringBrief() const {
+    return "x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +
+           ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw);
+  }
 };
 
 struct SE3 {
@@ -78,6 +103,13 @@ struct SE3 {
   Eigen::Vector3d trans;
 
   SE3(SO3 rot, Eigen::Vector3d trans) : rot(rot), trans(trans) {}
+
+  std::string toString() const {
+    std::ostringstream oss;
+    oss << "SE3(rot: [" << rot.toStringBrief() << "], "
+        << "t: [" << trans.transpose() << "])";
+    return oss.str();
+  }
 };
 
 }  // namespace evalio

@@ -69,28 +69,30 @@ class PyPipeline : public evalio::Pipeline {
 PYBIND11_MODULE(_cpp, m) {
   // ----------------- Types for converting back and forth ----------------- //
   py::class_<evalio::Stamp>(m, "Stamp")
-      .def(py::init<uint64_t>(), "nsecs"_a)
-      .def_readonly("nsecs", &evalio::Stamp::nsecs);
+      .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
+      .def_readonly("sec", &evalio::Stamp::sec)
+      .def_readonly("nsec", &evalio::Stamp::nsec)
+      .def("__repr__", &evalio::Stamp::toString);
 
   // Lidar
   py::class_<evalio::Point>(m, "Point")
       .def(py::init<double, double, double, double, double, short unsigned int,
                     short unsigned int>(),
-           py::kw_only(), "x"_a, "y"_a, "z"_a, "intensity"_a, "offset"_a,
-           "column"_a, "row"_a)
+           py::kw_only(), "x"_a, "y"_a, "z"_a, "intensity"_a, "stamp_offset"_a,
+           "row"_a, "column"_a)
       .def_readonly("x", &evalio::Point::x)
       .def_readonly("y", &evalio::Point::y)
       .def_readonly("z", &evalio::Point::z)
       .def_readonly("intensity", &evalio::Point::intensity)
-      .def_readonly("offset", &evalio::Point::offset)
+      .def_readonly("stamp_offset", &evalio::Point::stamp_offset)
       .def_readonly("row", &evalio::Point::row)
       .def_readonly("column", &evalio::Point::column);
 
   py::class_<evalio::LidarMeasurement>(m, "LidarMeasurement")
       .def(py::init<evalio::Stamp, std::vector<evalio::Point>>(), "stamp"_a,
            "points"_a)
-      .def_readonly("points", &evalio::LidarMeasurement::points)
-      .def_readonly("stamp", &evalio::LidarMeasurement::stamp);
+      .def_readonly("stamp", &evalio::LidarMeasurement::stamp)
+      .def_readonly("points", &evalio::LidarMeasurement::points);
 
   py::class_<evalio::LidarParams>(m, "LidarParams")
       .def(py::init<int, int, double, double>(), py::kw_only(), "num_rows"_a,
@@ -104,9 +106,10 @@ PYBIND11_MODULE(_cpp, m) {
   py::class_<evalio::ImuMeasurement>(m, "ImuMeasurement")
       .def(py::init<evalio::Stamp, Eigen::Vector3d, Eigen::Vector3d>(),
            "stamp"_a, "gyro"_a, "accel"_a)
+      .def_readonly("stamp", &evalio::ImuMeasurement::stamp)
       .def_readonly("gyro", &evalio::ImuMeasurement::gyro)
       .def_readonly("accel", &evalio::ImuMeasurement::accel)
-      .def_readonly("stamp", &evalio::ImuMeasurement::stamp);
+      .def("__repr__", &evalio::ImuMeasurement::toString);
 
   py::class_<evalio::ImuParams>(m, "ImuParams")
       .def_static("up", &evalio::ImuParams::up)
@@ -125,12 +128,14 @@ PYBIND11_MODULE(_cpp, m) {
       .def_readonly("qx", &evalio::SO3::qx)
       .def_readonly("qy", &evalio::SO3::qy)
       .def_readonly("qz", &evalio::SO3::qz)
-      .def_readonly("qw", &evalio::SO3::qw);
+      .def_readonly("qw", &evalio::SO3::qw)
+      .def("__repr__", &evalio::SO3::toString);
 
   py::class_<evalio::SE3>(m, "SE3")
       .def(py::init<evalio::SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
       .def_readonly("rot", &evalio::SE3::rot)
-      .def_readonly("trans", &evalio::SE3::trans);
+      .def_readonly("trans", &evalio::SE3::trans)
+      .def("__repr__", &evalio::SE3::toString);
 
   // ------------------------- Pipelines ------------------------- //
   py::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
