@@ -12,9 +12,9 @@ evalio::Point to_evalio_point(Eigen::Vector4d point) {
           .y = point[1],
           .z = point[2],
           .intensity = point[3],
-          .stamp_offset = 0,
+          .t = 0,
           .row = 0,
-          .column = 0};
+          .col = 0};
 }
 
 Eigen::Vector4d to_eigen_point(evalio::Point point) {

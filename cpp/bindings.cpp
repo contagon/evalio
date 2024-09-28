@@ -76,23 +76,26 @@ PYBIND11_MODULE(_cpp, m) {
 
   // Lidar
   py::class_<evalio::Point>(m, "Point")
-      .def(py::init<double, double, double, double, double, short unsigned int,
-                    short unsigned int>(),
-           py::kw_only(), "x"_a, "y"_a, "z"_a, "intensity"_a, "stamp_offset"_a,
-           "row"_a, "column"_a)
-      .def_readonly("x", &evalio::Point::x)
-      .def_readonly("y", &evalio::Point::y)
-      .def_readonly("z", &evalio::Point::z)
-      .def_readonly("intensity", &evalio::Point::intensity)
-      .def_readonly("stamp_offset", &evalio::Point::stamp_offset)
-      .def_readonly("row", &evalio::Point::row)
-      .def_readonly("column", &evalio::Point::column);
+      .def(py::init<double, double, double, double, uint32_t, uint32_t, uint8_t,
+                    uint16_t>(),
+           py::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
+           "t"_a = 0, "range"_a = 0, "row"_a = 0, "col"_a = 0)
+      .def_readwrite("x", &evalio::Point::x)
+      .def_readwrite("y", &evalio::Point::y)
+      .def_readwrite("z", &evalio::Point::z)
+      .def_readwrite("intensity", &evalio::Point::intensity)
+      .def_readwrite("range", &evalio::Point::range)
+      .def_readwrite("t", &evalio::Point::t)
+      .def_readwrite("row", &evalio::Point::row)
+      .def_readwrite("col", &evalio::Point::col)
+      .def("__repr__", &evalio::Point::toString);
 
   py::class_<evalio::LidarMeasurement>(m, "LidarMeasurement")
       .def(py::init<evalio::Stamp, std::vector<evalio::Point>>(), "stamp"_a,
            "points"_a)
       .def_readonly("stamp", &evalio::LidarMeasurement::stamp)
-      .def_readonly("points", &evalio::LidarMeasurement::points);
+      .def_readonly("points", &evalio::LidarMeasurement::points)
+      .def("__repr__", &evalio::LidarMeasurement::toString);
 
   py::class_<evalio::LidarParams>(m, "LidarParams")
       .def(py::init<int, int, double, double>(), py::kw_only(), "num_rows"_a,
@@ -100,7 +103,8 @@ PYBIND11_MODULE(_cpp, m) {
       .def_readonly("num_rows", &evalio::LidarParams::num_rows)
       .def_readonly("num_columns", &evalio::LidarParams::num_columns)
       .def_readonly("min_range", &evalio::LidarParams::min_range)
-      .def_readonly("max_range", &evalio::LidarParams::max_range);
+      .def_readonly("max_range", &evalio::LidarParams::max_range)
+      .def("__repr__", &evalio::LidarParams::toString);
 
   // Imu
   py::class_<evalio::ImuMeasurement>(m, "ImuMeasurement")
@@ -120,7 +124,8 @@ PYBIND11_MODULE(_cpp, m) {
       .def_readwrite("accel_bias", &evalio::ImuParams::accel_bias)
       .def_readwrite("bias_init", &evalio::ImuParams::bias_init)
       .def_readwrite("integration", &evalio::ImuParams::integration)
-      .def_readwrite("gravity", &evalio::ImuParams::gravity);
+      .def_readwrite("gravity", &evalio::ImuParams::gravity)
+      .def("__repr__", &evalio::ImuParams::toString);
 
   py::class_<evalio::SO3>(m, "SO3")
       .def(py::init<double, double, double, double>(), py::kw_only(), "qx"_a,

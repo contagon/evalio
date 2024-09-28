@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <cstdint>
 
 namespace evalio {
 
@@ -24,9 +23,18 @@ struct Point {
   double y;
   double z;
   double intensity;
-  double stamp_offset;
-  short unsigned int row;
-  short unsigned int column;
+  uint32_t t;  // in nanoseconds?
+  uint32_t range;
+  uint8_t row;
+  uint16_t col;
+
+  std::string toString() const {
+    return "Point(x: " + std::to_string(x) + ", y: " + std::to_string(y) +
+           ", z: " + std::to_string(z) +
+           ", intensity: " + std::to_string(intensity) +
+           ", t: " + std::to_string(t) + ", row: " + std::to_string(row) +
+           ", col: " + std::to_string(col) + ")";
+  }
 };
 
 struct LidarMeasurement {
@@ -35,6 +43,13 @@ struct LidarMeasurement {
 
   LidarMeasurement(Stamp stamp, std::vector<Point> points)
       : points(points), stamp(stamp) {}
+
+  std::string toString() const {
+    std::ostringstream oss;
+    oss << "LidarMeasurement(stamp: " << stamp.toStringBrief()
+        << ", num_points: " << points.size() << ")";
+    return oss.str();
+  }
 };
 
 struct LidarParams {
@@ -43,6 +58,13 @@ struct LidarParams {
   int num_columns;
   double min_range;
   double max_range;
+
+  std::string toString() const {
+    return "LidarParams(rows: " + std::to_string(num_rows) +
+           ", cols: " + std::to_string(num_columns) +
+           ", min_range: " + std::to_string(min_range) +
+           ", max_range: " + std::to_string(max_range) + ")";
+  };
 };
 
 struct ImuMeasurement {
@@ -78,6 +100,15 @@ struct ImuParams {
     ImuParams imu_params;
     imu_params.gravity = Eigen::Vector3d(0, 0, -9.81);
     return imu_params;
+  }
+
+  std::string toString() const {
+    std::ostringstream oss;
+    oss << "ImuParams(gyro: " << gyro << ", accel: " << accel
+        << ", gyro_bias: " << gyro_bias << ", accel_bias: " << accel_bias
+        << ", bias_init: " << bias_init << ", integration: " << integration
+        << ", gravity: [" << gravity.transpose() << "])";
+    return oss.str();
   }
 };
 
