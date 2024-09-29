@@ -41,6 +41,8 @@ struct LidarMeasurement {
   Stamp stamp;
   std::vector<Point> points;
 
+  LidarMeasurement(Stamp stamp) : stamp(stamp) {}
+
   LidarMeasurement(Stamp stamp, std::vector<Point> points)
       : points(points), stamp(stamp) {}
 

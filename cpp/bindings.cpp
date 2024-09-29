@@ -5,6 +5,7 @@
 
 #include "pipelines/base.h"
 #include "pipelines/kiss_icp.h"
+#include "utils.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -67,6 +68,8 @@ class PyPipeline : public evalio::Pipeline {
 };
 
 PYBIND11_MODULE(_cpp, m) {
+  makeUtils(m);
+
   // ----------------- Types for converting back and forth ----------------- //
   py::class_<evalio::Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)

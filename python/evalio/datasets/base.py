@@ -16,8 +16,13 @@ from evalio._cpp import (  # type: ignore
     LidarParams,
     ImuParams,
     Point,
+    Field as FieldCpp,
+    DataType,
+    PointCloud2,
+    pointcloud2_to_evalio as pointcloud2_to_evalio_cpp,
 )
 
+import time
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
@@ -76,6 +81,35 @@ WIDTHS = {
 
 
 def pointcloud2_to_evalio(msg) -> LidarMeasurement:
+    # Convert to C++ types
+    # help(DataType)
+    fields = []
+    for f in msg.fields:
+        fields.append(
+            FieldCpp(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
+        )
+
+    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
+
+    t0 = time.time()
+    cloud = PointCloud2(
+        fields=fields,
+        data=msg.data,
+        stamp=stamp,
+        height=msg.height,
+        width=msg.width,
+        row_step=msg.row_step,
+        point_step=msg.point_step,
+        is_bigendian=msg.is_bigendian,
+        is_dense=msg.is_dense,
+    )
+    t1 = time.time()
+    print("Conversion Time:", t1 - t0)
+
+    return pointcloud2_to_evalio_cpp(cloud)
+
+
+def pointcloud2_to_evalio_py(msg) -> LidarMeasurement:
     # Parse fields to get the correct fields
     fields = []
     for f in msg.fields:
@@ -153,9 +187,21 @@ class RosbagIter:
         msg = self.reader.deserialize(rawdata, connection.msgtype)
 
         if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg)
+            import time
+
+            t0 = time.time()
+            res = pointcloud2_to_evalio(msg)
+            t1 = time.time()
+            print("Lidar Time:", t1 - t0)
+            return res
         elif connection.msgtype == "sensor_msgs/msg/Imu":
-            return imu_to_evalio(msg)
+            import time
+
+            t0 = time.time()
+            res = imu_to_evalio(msg)
+            t1 = time.time()
+            print("Imu Time:", t1 - t0)
+            return res
         else:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 
