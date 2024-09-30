@@ -9,6 +9,10 @@ struct Stamp {
   uint32_t sec;
   uint32_t nsec;
 
+  uint64_t to_nsec() const { return uint64_t(sec) * 1e9 + nsec; }
+
+  double to_sec() const { return double(sec) + double(nsec) * 1e-9; }
+
   std::string toString() const {
     return "Stamp(" + std::to_string(sec) + "." + std::to_string(nsec) + ")";
   }
@@ -120,6 +124,24 @@ struct SO3 {
   double qz;
   double qw;
 
+  Eigen::Quaterniond toEigen() const {
+    return Eigen::Quaterniond(qw, qx, qy, qz);
+  }
+
+  static SO3 fromEigen(const Eigen::Quaterniond& q) {
+    return SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
+  }
+
+  SO3 inverse() const { return SO3{.qx = -qx, .qy = -qy, .qz = -qz, .qw = qw}; }
+
+  SO3 operator*(const SO3& other) const {
+    return fromEigen(toEigen() * other.toEigen());
+  }
+
+  Eigen::Vector3d rotate(const Eigen::Vector3d& v) const {
+    return toEigen() * v;
+  }
+
   std::string toString() const {
     return "SO3(x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +
            ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw) + ")";
@@ -136,6 +158,15 @@ struct SE3 {
   Eigen::Vector3d trans;
 
   SE3(SO3 rot, Eigen::Vector3d trans) : rot(rot), trans(trans) {}
+
+  SE3 inverse() const {
+    const auto inv_rot = rot.inverse();
+    return SE3(inv_rot, inv_rot.rotate(-trans));
+  }
+
+  SE3 operator*(const SE3& other) const {
+    return SE3(rot * other.rot, rot.rotate(other.trans) + trans);
+  }
 
   std::string toString() const {
     std::ostringstream oss;

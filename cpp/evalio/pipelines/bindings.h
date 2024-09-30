@@ -76,6 +76,7 @@ void makePipelines(py::module& m) {
       .def_static("nickname", &evalio::Pipeline::nickname)
       .def("pose", &evalio::Pipeline::pose)
       .def("map", &evalio::Pipeline::map)
+      .def("initialize", &evalio::Pipeline::initialize)
       .def("add_imu", &evalio::Pipeline::add_imu)
       .def("add_lidar", &evalio::Pipeline::add_lidar)
       .def("set_param", py::overload_cast<std::string, std::string>(

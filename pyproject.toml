@@ -9,6 +9,7 @@ dependencies = [
     "numpy<2",
     "rerun-sdk>=0.18.2",
     "rosbags>=0.10.4",
+    "tqdm>=4.66.5",
 ]
 
 [build-system]

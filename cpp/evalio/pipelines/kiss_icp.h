@@ -21,6 +21,18 @@ Eigen::Vector4d to_eigen_point(evalio::Point point) {
   return {point.x, point.y, point.z, point.intensity};
 }
 
+evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
+  const auto t = pose.translation();
+  const auto q = pose.unit_quaternion();
+  const auto rot =
+      evalio::SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
+  return evalio::SE3(rot, t);
+}
+
+Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
+  return Sophus::SE3d(Sophus::SO3d(pose.rot.toEigen()), pose.trans);
+}
+
 class KissICP : public evalio::Pipeline {
  public:
   KissICP() : config_() {};
@@ -31,12 +43,8 @@ class KissICP : public evalio::Pipeline {
 
   // Getters
   const evalio::SE3 pose() override {
-    const Sophus::SE3d pose = kiss_icp_->pose();
-    const auto t = pose.translation();
-    const auto q = pose.unit_quaternion();
-    const auto rot =
-        evalio::SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
-    return evalio::SE3(rot, t);
+    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
+    return to_evalio_se3(pose);
   }
 
   const std::vector<evalio::Point> map() override {
@@ -51,7 +59,9 @@ class KissICP : public evalio::Pipeline {
   // Setters
   void set_imu_params(evalio::ImuParams params) override {};
   void set_lidar_params(evalio::LidarParams params) override {};
-  void set_imu_T_lidar(evalio::SE3 T) override {};
+  void set_imu_T_lidar(evalio::SE3 T) override {
+    lidar_T_imu_ = to_sophus_se3(T).inverse();
+  };
 
   void set_param(std::string key, std::string value) override {
     throw std::invalid_argument(
@@ -117,4 +127,5 @@ class KissICP : public evalio::Pipeline {
  private:
   std::unique_ptr<kiss_icp::pipeline::KissICP> kiss_icp_;
   kiss_icp::pipeline::KISSConfig config_;
+  Sophus::SE3d lidar_T_imu_;
 };

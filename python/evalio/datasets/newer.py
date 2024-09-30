@@ -1,3 +1,5 @@
+import numpy as np
+
 from .base import (
     EVALIO_DATA,
     Dataset,
@@ -5,16 +7,19 @@ from .base import (
     ImuParams,
     LidarParams,
     load_pose_csv,
+    SO3,
     SE3,
+    Stamp,
 )
 
 
 class NewerCollege2020(Dataset):
     def __init__(self, seq: str):
-        if seq not in NewerCollege2020.sequences():
-            raise ValueError(f"Sequence {seq} not found in {self.name()}")
+        self.seq = self.process_seq(seq)
 
-        self.seq = seq
+        if not self.check_download():
+            print(f"Data for {self.seq} not found, downloading now")
+            self.download()
 
     def __iter__(self):
         return RosbagIter(
@@ -23,13 +28,32 @@ class NewerCollege2020(Dataset):
             "/os1_cloud_node/imu",
         )
 
-    def ground_truth(self) -> list[SE3]:
+    def ground_truth(self) -> list[(Stamp, SE3)]:
         return load_pose_csv(
             EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv"
         )
 
+    def check_download(self) -> bool:
+        dir = EVALIO_DATA / NewerCollege2020.name() / self.seq
+        # Check how many bag files it should have
+        should_have = {
+            "01_short_experiment": 10,
+            "02_long_experiment": 16,
+            "05_quad_with_dynamics": 3,
+            "06_dynamic_spinning": 1,
+            "07_parkland_mound": 3,
+        }[self.seq]
+
+        if not dir.exists():
+            return False
+        elif dir / "ground_truth.csv":
+            return False
+        elif len(list(dir.glob("*.bag"))) != should_have:
+            return False
+        else:
+            return True
+
     def download(self):
-        # TODO: Check if already downloaded
         folder_id = {
             "01_short_experiment": "1WWtyU6bv4-JKwe-XuSeKEEEBhbgoFHRG",
             "02_long_experiment": "1pg3jzNF59YJX_lqVf4dcYI99TyBHcJX_",
@@ -40,9 +64,9 @@ class NewerCollege2020(Dataset):
 
         gt_url = {
             "01_short_experiment": "11VWvHxjitd4ijARD4dJ3WjFuZ_QbInVy",
-            "02_long_experiment": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
-            "05_quad_with_dynamics": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
-            "06_dynamic_spinning": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
+            "02_long_experiment": "1fT1_MhFkCn_RWzLTzo4i-sjoKa_TbIUW",
+            "05_quad_with_dynamics": "1Cc7fiYUCtNL8qnvA0x-m4uQvRWQLdrWO",
+            "06_dynamic_spinning": "16lLgl2iqVs5qSz-N3OZv9bZWBbvAXyP3",
             "07_parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
         }[self.seq]
 
@@ -63,6 +87,10 @@ class NewerCollege2020(Dataset):
         return "newer_college_2020"
 
     @staticmethod
+    def nickname() -> str:
+        return "nc20"
+
+    @staticmethod
     def sequences() -> list[str]:
         return [
             "01_short_experiment",
@@ -73,17 +101,40 @@ class NewerCollege2020(Dataset):
         ]
 
     @staticmethod
+    def nicksequences() -> list[str]:
+        return ["01", "02", "05", "06", "07"]
+
+    @staticmethod
     def imu_T_lidar() -> SE3:
-        pass
+        return SE3(
+            SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0),
+            [0.006252999883145094, -0.011775000020861626, 0.007644999772310257],
+        )
 
     @staticmethod
     def imu_T_gt() -> SE3:
-        pass
+        return SE3(
+            SO3(qx=0.0, qy=0.0, qz=0.38268, qw=0.92388),
+            [0.035643, 0.089026, -0.021653],
+        )
 
     @staticmethod
     def imu_params() -> ImuParams:
-        pass
+        return ImuParams(
+            gyro=0.000261799,
+            accel=0.000230,
+            gyro_bias=0.0000261799,
+            accel_bias=0.0000230,
+            bias_init=1e-7,
+            integration=1e-7,
+            gravity=np.array([0, 0, 9.81]),
+        )
 
     @staticmethod
     def lidar_params() -> LidarParams:
-        pass
+        return LidarParams(
+            num_rows=64,
+            num_columns=1024,
+            min_range=0.1,
+            max_range=120.0,
+        )

@@ -184,6 +184,7 @@ dependencies = [
     { name = "numpy" },
     { name = "rerun-sdk" },
     { name = "rosbags" },
+    { name = "tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -200,6 +201,7 @@ requires-dist = [
     { name = "numpy", specifier = "<2" },
     { name = "rerun-sdk", specifier = ">=0.18.2" },
     { name = "rosbags", specifier = ">=0.10.4" },
+    { name = "tqdm", specifier = ">=4.66.5" },
 ]
 
 [package.metadata.requires-dev]

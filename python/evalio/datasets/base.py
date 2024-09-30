@@ -27,17 +27,22 @@ Measurement = Union[ImuMeasurement, LidarMeasurement]
 
 EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
 
+# TODO: Ponder: https://stackoverflow.com/a/17496524
+
 
 class Dataset(Protocol):
     def __init__(self, seq: str): ...
 
     def __iter__(self): ...
 
-    def download(self, seq: str):
+    def check_download(self) -> bool:
+        raise NotImplementedError("Check download not implemented")
+
+    def download(self):
         raise NotImplementedError("Download not implemented")
 
     # TODO: Does these need to be stamped?
-    def ground_truth(self) -> list[SE3]: ...
+    def ground_truth(self) -> list[(Stamp, SE3)]: ...
 
     @staticmethod
     def name() -> str: ...
@@ -62,6 +67,33 @@ class Dataset(Protocol):
 
     @staticmethod
     def lidar_params() -> LidarParams: ...
+
+    # ------------------------- Helpers ------------------------- #
+    def process_seq(self, seq: str):
+        if seq in self.sequences():
+            return seq
+        elif seq in self.nicksequences():
+            idx = self.nicksequences().index(seq)
+            return self.sequences()[idx]
+        else:
+            raise ValueError(f"Sequence {seq} not in {self.name()}")
+
+    def ground_truth_corrected(self, imu_o_T_imu_0: SE3) -> list[SE3]:
+        # Load all transforms
+        gt_poses = self.ground_truth()
+        stamp, gt_o_T_gt_0 = gt_poses[0]
+        gt_T_imu = self.imu_T_gt().inverse()
+
+        # compute imu_o_T_gt_o
+        gt_o_T_imu_0 = gt_o_T_gt_0 * gt_T_imu
+        imu_o_T_gt_o = imu_o_T_imu_0 * gt_o_T_imu_0.inverse()
+
+        # Clean all poses
+        gt_poses_corrected = []
+        for stamp, gt_o_T_gt_i in gt_poses:
+            gt_poses_corrected.append(imu_o_T_gt_o * gt_o_T_gt_i * gt_T_imu)
+
+        return gt_poses_corrected
 
 
 # ------------------------- Helpers ------------------------- #
@@ -122,7 +154,15 @@ class RosbagIter:
             for x in self.reader.connections
             if x.topic in [self.lidar_topic, self.imu_topic]
         ]
+
+        self.lidar_count = sum(
+            [x.msgcount for x in connections if x.topic == self.lidar_topic]
+        )
+
         self.iterator = self.reader.messages(connections=connections)
+
+    def __len__(self):
+        return self.lidar_count
 
     def __iter__(self):
         return self
@@ -141,8 +181,8 @@ class RosbagIter:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 
 
-def load_pose_csv(path: str) -> dict[Stamp, SE3]:
-    poses = {}
+def load_pose_csv(path: str) -> list[(Stamp, SE3)]:
+    poses = []
 
     with open(path) as csvfile:
         reader = csv.DictReader(csvfile)
@@ -156,6 +196,6 @@ def load_pose_csv(path: str) -> dict[Stamp, SE3]:
             t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
             pose = SE3(r, t)
             stamp = Stamp(sec=int(line["#sec"]), nsec=int(line["nsec"]))
-            poses[stamp] = pose
+            poses.append((stamp, pose))
 
     return poses

@@ -13,6 +13,8 @@ namespace evalio {
 void makeTypes(py::module& m) {
   py::class_<evalio::Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
+      .def("to_sec", &evalio::Stamp::to_sec)
+      .def("to_nsec", &evalio::Stamp::to_nsec)
       .def_readonly("sec", &evalio::Stamp::sec)
       .def_readonly("nsec", &evalio::Stamp::nsec)
       .def("__repr__", &evalio::Stamp::toString);
@@ -59,6 +61,11 @@ void makeTypes(py::module& m) {
       .def("__repr__", &evalio::ImuMeasurement::toString);
 
   py::class_<evalio::ImuParams>(m, "ImuParams")
+      .def(py::init<double, double, double, double, double, double,
+                    Eigen::Vector3d>(),
+           py::kw_only(), "gyro"_a = 1e-5, "accel"_a = 1e-5,
+           "gyro_bias"_a = 1e-6, "accel_bias"_a = 1e-6, "bias_init"_a = 1e-7,
+           "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81))
       .def_static("up", &evalio::ImuParams::up)
       .def_static("down", &evalio::ImuParams::down)
       .def_readwrite("gyro", &evalio::ImuParams::gyro)
@@ -77,12 +84,16 @@ void makeTypes(py::module& m) {
       .def_readonly("qy", &evalio::SO3::qy)
       .def_readonly("qz", &evalio::SO3::qz)
       .def_readonly("qw", &evalio::SO3::qw)
+      .def("inverse", &evalio::SO3::inverse)
+      .def(py::self * py::self)
       .def("__repr__", &evalio::SO3::toString);
 
   py::class_<evalio::SE3>(m, "SE3")
       .def(py::init<evalio::SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
       .def_readonly("rot", &evalio::SE3::rot)
       .def_readonly("trans", &evalio::SE3::trans)
+      .def("inverse", &evalio::SE3::inverse)
+      .def(py::self * py::self)
       .def("__repr__", &evalio::SE3::toString);
 }
 
