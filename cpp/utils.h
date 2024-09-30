@@ -5,9 +5,6 @@
 #include <pybind11/stl.h>
 
 #include <execution>
-// #include <functional>
-// #include <numeric>
-// #include <type_traits>
 
 #include "types.h"
 
@@ -31,11 +28,7 @@ struct Field {
   uint32_t offset;
 };
 
-// TODO: is this necessary? Or should we just send over all the data into the
-// function
-struct PointCloud2 {
-  std::vector<Field> fields;
-  std::vector<uint8_t> data;
+struct PointCloudMetadata {
   evalio::Stamp stamp;
   int width;
   int height;
@@ -105,7 +98,9 @@ std::function<void(T&, const uint8_t*)> blank() {
   return [](T&, const uint8_t*) noexcept {};
 }
 
-evalio::LidarMeasurement pointcloud2_to_evalio(const PointCloud2& msg) {
+evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
+                                           const std::vector<Field>& fields,
+                                           const uint8_t* data) {
   std::function func_x = blank<double>();
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
@@ -119,7 +114,7 @@ evalio::LidarMeasurement pointcloud2_to_evalio(const PointCloud2& msg) {
     throw std::runtime_error("Big endian not supported yet");
   }
 
-  for (const auto& field : msg.fields) {
+  for (const auto& field : fields) {
     if (field.name == "x") {
       func_x = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "y") {
@@ -141,13 +136,12 @@ evalio::LidarMeasurement pointcloud2_to_evalio(const PointCloud2& msg) {
   }
 
   evalio::LidarMeasurement mm(msg.stamp);
-  mm.points.resize(msg.data.size() / msg.point_step);
+  mm.points.resize(msg.width * msg.height);
 
   // TODO: Need to consider row_step at all?
   size_t index = 0;
   for (evalio::Point& point : mm.points) {
-    const auto pointStart =
-        msg.data.data() + static_cast<size_t>(index * msg.point_step);
+    const auto pointStart = data + static_cast<size_t>(index * msg.point_step);
     func_x(point.x, pointStart);
     func_y(point.y, pointStart);
     func_z(point.z, pointStart);
@@ -182,21 +176,20 @@ void makeUtils(py::module& m) {
       .def_readwrite("datatype", &Field::datatype)
       .def_readwrite("offset", &Field::offset);
 
-  py::class_<PointCloud2>(m, "PointCloud2")
-      .def(py::init<std::vector<Field>, std::vector<uint8_t>, evalio::Stamp,
-                    int, int, int, int, int, int>(),
-           py::kw_only(), "fields"_a, "data"_a, "stamp"_a, "width"_a,
-           "height"_a, "point_step"_a, "row_step"_a, "is_bigendian"_a,
-           "is_dense"_a)
-      .def_readwrite("fields", &PointCloud2::fields)
-      .def_readwrite("data", &PointCloud2::data)
-      .def_readwrite("stamp", &PointCloud2::stamp)
-      .def_readwrite("width", &PointCloud2::width)
-      .def_readwrite("height", &PointCloud2::height)
-      .def_readwrite("point_step", &PointCloud2::point_step)
-      .def_readwrite("row_step", &PointCloud2::row_step)
-      .def_readwrite("is_bigendian", &PointCloud2::is_bigendian)
-      .def_readwrite("is_dense", &PointCloud2::is_dense);
+  py::class_<PointCloudMetadata>(m, "PointCloudMetadata")
+      .def(py::init<evalio::Stamp, int, int, int, int, int, int>(),
+           py::kw_only(), "stamp"_a, "width"_a, "height"_a, "point_step"_a,
+           "row_step"_a, "is_bigendian"_a, "is_dense"_a)
+      .def_readwrite("stamp", &PointCloudMetadata::stamp)
+      .def_readwrite("width", &PointCloudMetadata::width)
+      .def_readwrite("height", &PointCloudMetadata::height)
+      .def_readwrite("point_step", &PointCloudMetadata::point_step)
+      .def_readwrite("row_step", &PointCloudMetadata::row_step)
+      .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
+      .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("pointcloud2_to_evalio", &pointcloud2_to_evalio);
+  m.def("ros_pc2_to_evalio", [](const PointCloudMetadata& msg,
+                                const std::vector<Field>& fields, char* c) {
+    return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t*>(c));
+  });
 }

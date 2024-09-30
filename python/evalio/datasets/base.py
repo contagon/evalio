@@ -1,6 +1,5 @@
 from typing import Protocol, Union
 from rosbags.highlevel import AnyReader
-from dataclasses import dataclass
 
 import numpy as np
 import os
@@ -15,14 +14,11 @@ from evalio._cpp import (  # type: ignore
     LidarMeasurement,
     LidarParams,
     ImuParams,
-    Point,
-    Field as FieldCpp,
+    Field,
     DataType,
-    PointCloud2,
-    pointcloud2_to_evalio as pointcloud2_to_evalio_cpp,
+    PointCloudMetadata,
+    ros_pc2_to_evalio,
 )
-
-import time
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
@@ -60,41 +56,19 @@ class Dataset(Protocol):
 
 
 # ------------------------- Helpers ------------------------- #
-@dataclass
-class Field:
-    name: str
-    offset: int
-    data_width: int
-    data_type: type
-
-
-WIDTHS = {
-    1: np.int8,
-    2: np.uint8,
-    3: np.int16,
-    4: np.uint16,
-    5: np.int32,
-    6: np.uint32,
-    7: np.float32,
-    8: np.float64,
-}
 
 
 def pointcloud2_to_evalio(msg) -> LidarMeasurement:
     # Convert to C++ types
-    # help(DataType)
     fields = []
     for f in msg.fields:
         fields.append(
-            FieldCpp(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
+            Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
         )
 
     stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
 
-    t0 = time.time()
-    cloud = PointCloud2(
-        fields=fields,
-        data=msg.data,
+    cloud = PointCloudMetadata(
         stamp=stamp,
         height=msg.height,
         width=msg.width,
@@ -103,42 +77,8 @@ def pointcloud2_to_evalio(msg) -> LidarMeasurement:
         is_bigendian=msg.is_bigendian,
         is_dense=msg.is_dense,
     )
-    t1 = time.time()
-    print("Conversion Time:", t1 - t0)
 
-    return pointcloud2_to_evalio_cpp(cloud)
-
-
-def pointcloud2_to_evalio_py(msg) -> LidarMeasurement:
-    # Parse fields to get the correct fields
-    fields = []
-    for f in msg.fields:
-        name = f.name
-        if name in ["x", "y", "z", "intensity", "t", "range", "ring"]:
-            if name == "ring":
-                name = "row"
-            dtype = WIDTHS[f.datatype]
-            fields.append(Field(name, f.offset, dtype().nbytes, dtype))
-
-    # Parse the data
-    # TODO: Endianess??
-    # TODO: This is REALLY slow, need to speed it up
-    points = []
-    for row in range(0, msg.height):  # over each column
-        i = row * msg.row_step
-        for col in range(0, msg.width):  # then each row
-            point = Point(col=col)
-            j = i + col * msg.point_step
-            for f in fields:
-                d = np.frombuffer(
-                    msg.data[j + f.offset : j + f.offset + f.data_width],
-                    dtype=f.data_type,
-                )[0]
-                setattr(point, f.name, d)
-            points.append(point)
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-    return LidarMeasurement(stamp, points)
+    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))
 
 
 def imu_to_evalio(msg) -> ImuMeasurement:
@@ -162,8 +102,6 @@ class RosbagIter:
             self.path = list(path.glob("*.bag"))
             if not self.path:
                 raise FileNotFoundError(f"No .bag files found in directory {path}")
-            # TODO: Remove this
-            self.path = [self.path[0]]
         else:
             self.path = [path]
 
@@ -187,21 +125,9 @@ class RosbagIter:
         msg = self.reader.deserialize(rawdata, connection.msgtype)
 
         if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            import time
-
-            t0 = time.time()
-            res = pointcloud2_to_evalio(msg)
-            t1 = time.time()
-            print("Lidar Time:", t1 - t0)
-            return res
+            return pointcloud2_to_evalio(msg)
         elif connection.msgtype == "sensor_msgs/msg/Imu":
-            import time
-
-            t0 = time.time()
-            res = imu_to_evalio(msg)
-            t1 = time.time()
-            print("Imu Time:", t1 - t0)
-            return res
+            return imu_to_evalio(msg)
         else:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 

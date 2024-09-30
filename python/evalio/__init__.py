@@ -1,5 +1,6 @@
 from . import datasets
 from . import pipelines
+from . import vis
 from . import _cpp
 from ._cpp import (  # type: ignore
     Stamp,
@@ -15,6 +16,7 @@ from ._cpp import (  # type: ignore
 __all__ = [
     "datasets",
     "pipelines",
+    "vis",
     "_cpp",
     "Stamp",
     "SO3",
