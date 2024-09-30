@@ -24,6 +24,6 @@ endif()
 add_subdirectory(cpp)
 
 pybind11_add_module(_cpp cpp/bindings.cpp)
-target_link_libraries(_cpp PUBLIC pipelines Eigen3::Eigen kiss_icp_core)
+target_link_libraries(_cpp PUBLIC evalio_cpp Eigen3::Eigen)
 
 install(TARGETS _cpp DESTINATION evalio)

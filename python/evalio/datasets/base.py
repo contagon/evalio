@@ -6,7 +6,7 @@ import os
 import csv
 from pathlib import Path
 
-from evalio._cpp import (  # type: ignore
+from evalio._cpp.types import (  # type: ignore
     SO3,
     SE3,
     Stamp,
@@ -14,6 +14,9 @@ from evalio._cpp import (  # type: ignore
     LidarMeasurement,
     LidarParams,
     ImuParams,
+)
+
+from evalio._cpp._helpers import (  # type: ignore
     Field,
     DataType,
     PointCloudMetadata,
@@ -40,7 +43,13 @@ class Dataset(Protocol):
     def name() -> str: ...
 
     @staticmethod
+    def nickname() -> str: ...
+
+    @staticmethod
     def sequences() -> list[str]: ...
+
+    @staticmethod
+    def nicksequences() -> list[str]: ...
 
     @staticmethod
     def imu_T_lidar() -> SE3: ...

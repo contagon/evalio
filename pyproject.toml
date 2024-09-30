@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["gdown>=5.2.0", "numpy<2", "rosbags>=0.10.4"]
+dependencies = [
+    "gdown>=5.2.0",
+    "numpy<2",
+    "rerun-sdk>=0.18.2",
+    "rosbags>=0.10.4",
+]
 
 [build-system]
 requires = ["scikit-build-core", "pybind11"]
@@ -12,7 +17,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.uv]
 # TODO: Options this reinstall package somehow?
-reinstall-package = ["evalio"]
+# reinstall-package = ["evalio"]
 dev-dependencies = [
     "cmake>=3.30.3",
     "pip>=24.2",

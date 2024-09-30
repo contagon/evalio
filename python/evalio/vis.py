@@ -1,4 +1,4 @@
-from ._cpp import LidarMeasurement  # type: ignore
+from ._cpp.types import LidarMeasurement  # type: ignore
 import numpy as np
 
 import rerun as rr

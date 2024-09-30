@@ -3,9 +3,9 @@
 #include <memory>
 #include <stdexcept>
 
-#include "base.h"
+#include "evalio/pipelines/base.h"
+#include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
-#include "types.h"
 
 evalio::Point to_evalio_point(Eigen::Vector4d point) {
   return {.x = point[0],
@@ -24,6 +24,10 @@ Eigen::Vector4d to_eigen_point(evalio::Point point) {
 class KissICP : public evalio::Pipeline {
  public:
   KissICP() : config_() {};
+
+  // Info
+  static std::string name() { return "KissICP"; }
+  static std::string nickname() { return "kiss"; }
 
   // Getters
   const evalio::SE3 pose() override {
@@ -95,6 +99,7 @@ class KissICP : public evalio::Pipeline {
     }
   }
 
+  // Doers
   void initialize() override {
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }

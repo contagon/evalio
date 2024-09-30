@@ -3,13 +3,17 @@
 #include <Eigen/Core>
 #include <map>
 
-#include "types.h"
+#include "evalio/types.h"
 
 namespace evalio {
 
 class Pipeline {
  public:
   virtual ~Pipeline() {};
+
+  // Info
+  static std::string name() { throw std::runtime_error("Not implemented"); }
+  static std::string nickname() { throw std::runtime_error("Not implemented"); }
 
   // Getters
   virtual const SE3 pose() = 0;

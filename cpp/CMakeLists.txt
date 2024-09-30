@@ -2,17 +2,15 @@
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 set(SRCS "")
 set(LIBS Eigen3::Eigen)
-set(LIB_NAME pipelines)
+set(LIB_NAME evalio_cpp)
 
 # ------------------------- Import all pipelines ------------------------- #
 # KISS-ICP
 option(EVALIO_KISS_ICP "Build KISS-ICP" ON)
 if(EVALIO_KISS_ICP)
-    add_subdirectory(pipelines/kiss-icp/cpp/kiss_icp)
+    add_subdirectory(evalio/pipelines/kiss-icp/cpp/kiss_icp)
     list(APPEND LIBS kiss_icp_pipeline)
 endif()
-
-# TODO: Figure out python bindings with these
 
 # ------------------------- Put all wrappers into a target ------------------------- #
 # find all source and header files

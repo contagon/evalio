@@ -11,6 +11,8 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
+namespace evalio {
+
 enum DataType {
   INT8 = 1,
   UINT8 = 2,
@@ -156,9 +158,8 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
   return mm;
 }
 
-// ------------------------- Create python bindings -------------------------
-// //
-void makeUtils(py::module& m) {
+// ---------------------- Create python bindings ---------------------- //
+void makeConversions(py::module& m) {
   py::enum_<DataType>(m, "DataType")
       .value("UINT8", DataType::UINT8)
       .value("INT8", DataType::INT8)
@@ -193,3 +194,5 @@ void makeUtils(py::module& m) {
     return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t*>(c));
   });
 }
+
+}  // namespace evalio
