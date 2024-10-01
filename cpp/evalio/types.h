@@ -9,6 +9,16 @@ struct Stamp {
   uint32_t sec;
   uint32_t nsec;
 
+  static Stamp from_sec(double sec) {
+    return Stamp{.sec = uint32_t(sec),
+                 .nsec = uint32_t((sec - uint32_t(sec)) * 1e9)};
+  }
+
+  static Stamp from_nsec(uint64_t nsec) {
+    return Stamp{.sec = uint32_t(nsec / 1e9),
+                 .nsec = uint32_t(nsec % uint64_t(1e9))};
+  }
+
   uint64_t to_nsec() const { return uint64_t(sec) * 1e9 + nsec; }
 
   double to_sec() const { return double(sec) + double(nsec) * 1e-9; }

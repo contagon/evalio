@@ -13,6 +13,8 @@ namespace evalio {
 void makeTypes(py::module& m) {
   py::class_<evalio::Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
+      .def_static("from_sec", &evalio::Stamp::from_sec)
+      .def_static("from_nsec", &evalio::Stamp::from_nsec)
       .def("to_sec", &evalio::Stamp::to_sec)
       .def("to_nsec", &evalio::Stamp::to_nsec)
       .def_readonly("sec", &evalio::Stamp::sec)

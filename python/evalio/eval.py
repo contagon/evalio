@@ -51,9 +51,16 @@ def eval():
 
     if args.visualize:
         import rerun as rr
+        import rerun.blueprint as rrb
 
-        rr.init("evalio", spawn=False)
-        rr.connect("172.31.76.203:9876")
+        rr.init(
+            "evalio",
+            spawn=False,
+            default_blueprint=rrb.Spatial3DView(
+                overrides={"imu/lidar": [rrb.components.Visible(False)]}
+            ),
+        )
+        rr.connect("0.0.0.0:9876")
 
     # Run!
     # TODO: Saving???

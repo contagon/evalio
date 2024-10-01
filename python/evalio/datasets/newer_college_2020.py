@@ -30,7 +30,8 @@ class NewerCollege2020(Dataset):
 
     def ground_truth(self) -> list[(Stamp, SE3)]:
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv"
+            EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+            ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
     def check_download(self) -> bool:
@@ -45,8 +46,10 @@ class NewerCollege2020(Dataset):
         }[self.seq]
 
         if not dir.exists():
+            print("Directory does not exist")
             return False
-        elif dir / "ground_truth.csv":
+        elif not (dir / "ground_truth.csv").exists():
+            print("Ground truth does not exist")
             return False
         elif len(list(dir.glob("*.bag"))) != should_have:
             return False

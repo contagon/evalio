@@ -181,11 +181,14 @@ class RosbagIter:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 
 
-def load_pose_csv(path: str) -> list[(Stamp, SE3)]:
+def load_pose_csv(
+    path: str, fieldnames: list[str], delimiter=","
+) -> list[(Stamp, SE3)]:
     poses = []
 
     with open(path) as csvfile:
-        reader = csv.DictReader(csvfile)
+        csvfile = filter(lambda row: row[0] != "#", csvfile)
+        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
         for line in reader:
             r = SO3(
                 qw=float(line["qw"]),
@@ -195,7 +198,13 @@ def load_pose_csv(path: str) -> list[(Stamp, SE3)]:
             )
             t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
             pose = SE3(r, t)
-            stamp = Stamp(sec=int(line["#sec"]), nsec=int(line["nsec"]))
+
+            if "nsec" not in fieldnames:
+                stamp = Stamp.from_sec(float(line["sec"]))
+            elif "sec" not in fieldnames:
+                stamp = Stamp.from_nsec(float(line["nsec"]))
+            else:
+                stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
             poses.append((stamp, pose))
 
     return poses
