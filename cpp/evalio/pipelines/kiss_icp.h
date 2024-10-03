@@ -40,6 +40,23 @@ class KissICP : public evalio::Pipeline {
   // Info
   static std::string name() { return "KissICP"; }
   static std::string nickname() { return "kiss"; }
+  static std::string url() { return "https://github.com/contagon/kiss-icp"; }
+  static std::map<std::string, std::string> params() {
+    return {
+        {"voxel_size", "double"},
+        {"max_range", "double"},
+        {"min_range", "double"},
+        {"min_motion_th", "double"},
+        {"initial_threshold", "double"},
+        {"max_num_iterations", "double"},
+        {"convergence_criterion", "double"},
+        {"max_num_threads", "double"},
+        {"max_points_per_voxel", "int"},
+        {"deskew", "bool"},
+        {"use_intensity_metric", "bool"},
+        {"use_intensity_residual", "bool"},
+    };
+  }
 
   // Getters
   const evalio::SE3 pose() override {

@@ -9,7 +9,7 @@ from evalio._cpp.pipelines import Pipeline  # type: ignore
 
 
 # ------------------------- Finding types ------------------------- #
-def find_types(module, skip=None):
+def find_types(module, skip=None, include_nicknames=True) -> dict[str, type]:
     found = {}
     # Include by name
     found |= dict(
@@ -18,20 +18,30 @@ def find_types(module, skip=None):
         if isinstance(cls, type) and cls.__name__ != skip.__name__
     )
     # Include by nickname
-    found |= dict(
-        (cls.nickname(), cls)
-        for cls in module.__dict__.values()
-        if isinstance(cls, type) and cls.__name__ != skip.__name__
-    )
+    if include_nicknames:
+        found |= dict(
+            (cls.nickname(), cls)
+            for cls in module.__dict__.values()
+            if isinstance(cls, type) and cls.__name__ != skip.__name__
+        )
+
     return found
 
 
-def get_datasets():
-    return find_types(evalio.datasets, skip=evalio.datasets.Dataset)
+def get_datasets(include_nicknames=True) -> dict[str, Dataset]:
+    return find_types(
+        evalio.datasets,
+        skip=evalio.datasets.Dataset,
+        include_nicknames=include_nicknames,
+    )
 
 
-def get_pipelines():
-    return find_types(evalio.pipelines, skip=evalio.pipelines.Pipeline)
+def get_pipelines(include_nicknames=True) -> dict[str, Pipeline]:
+    return find_types(
+        evalio.pipelines,
+        skip=evalio.pipelines.Pipeline,
+        include_nicknames=include_nicknames,
+    )
 
 
 # ------------------------- Parsing input ------------------------- #
@@ -73,7 +83,7 @@ class PipelineBuilder:
         return pipe
 
 
-def parse_datasets(datasets: list[str]) -> list[(Dataset, str)]:
+def parse_datasets(datasets: list[str]) -> list[DatasetBuilder]:
     all_datasets = get_datasets()
     valid_datasets = []
     for d in datasets:
@@ -94,7 +104,7 @@ def parse_datasets(datasets: list[str]) -> list[(Dataset, str)]:
     return valid_datasets
 
 
-def parse_pipelines(pipelines: list[dict]) -> list[Pipeline]:
+def parse_pipelines(pipelines: list[dict]) -> list[PipelineBuilder]:
     all_pipelines = get_pipelines()
     valid_pipelines = []
     for p in pipelines:

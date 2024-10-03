@@ -52,6 +52,10 @@ class EnWide(Dataset):
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
+    def url() -> str:
+        return "https://projects.asl.ethz.ch/datasets/enwide"
+
+    @staticmethod
     def name() -> str:
         return "enwide"
 
@@ -158,10 +162,8 @@ class EnWide(Dataset):
         folder = EVALIO_DATA / EnWide.name() / seq
         url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{seq}/"
 
-        print(f"Making folder {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-
         print(f"Downloading to {folder}...")
+        folder.mkdir(parents=True, exist_ok=True)
         if not (folder / gt_file).exists():
             _urlretrieve(url + gt_file, folder / gt_file)
         if not (folder / bag_file).exists():

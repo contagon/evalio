@@ -33,6 +33,10 @@ class NewerCollege2021(Dataset):
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
+    def url() -> str:
+        return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
+
+    @staticmethod
     def name() -> str:
         return "newer_college_2021"
 
@@ -114,7 +118,7 @@ class NewerCollege2021(Dataset):
 
         if not dir.exists():
             return False
-        elif dir / "ground_truth.csv":
+        elif not (dir / "ground_truth.csv").exists():
             return False
         elif len(list(dir.glob("*.bag"))) != should_have:
             return False
@@ -170,10 +174,8 @@ class NewerCollege2021(Dataset):
 
         folder = EVALIO_DATA / NewerCollege2021.name() / seq
 
-        print(f"Making folder {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-
         print(f"Downloading {seq} to {folder}...")
+        folder.mkdir(parents=True, exist_ok=True)
         gdown.download(id=gt_ids, output=str(folder / "ground_truth.csv"), resume=True)
         for bid in bag_ids:
-            gdown.download(id=bid, output=str(folder), resume=True)
+            gdown.download(id=bid, output=str(folder) + "/", resume=True)

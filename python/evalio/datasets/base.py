@@ -43,6 +43,9 @@ class Dataset(Protocol):
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
+    def url() -> str: ...
+
+    @staticmethod
     def name() -> str: ...
 
     @staticmethod

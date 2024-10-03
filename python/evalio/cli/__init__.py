@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .download import download_datasets
 from .parser import parse_config
+from .ls import ls
 
 
 def main():
@@ -14,6 +15,10 @@ def main():
     # downloading
     download = subparsers.add_parser("download", help="Download datasets")
     download.add_argument("dataset", type=str, help="Dataset(s) to download", nargs="+")
+
+    # ls
+    ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
+    ls_opt.add_argument("options", type=str, choices=["datasets", "pipelines"])
 
     # eval
     eval = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
@@ -30,7 +35,10 @@ def main():
 
     # parse
     args = args.parse_args()
-    if args.command == "download":
+    if args.command == "ls":
+        ls(args.options)
+
+    elif args.command == "download":
         download_datasets(args.dataset)
 
     elif args.command == "run":

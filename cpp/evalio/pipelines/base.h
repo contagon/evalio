@@ -14,6 +14,10 @@ class Pipeline {
   // Info
   static std::string name() { throw std::runtime_error("Not implemented"); }
   static std::string nickname() { throw std::runtime_error("Not implemented"); }
+  static std::string url() { throw std::runtime_error("Not implemented"); }
+  static std::map<std::string, std::string> params() {
+    throw std::runtime_error("Not implemented");
+  }
 
   // Getters
   virtual const SE3 pose() = 0;

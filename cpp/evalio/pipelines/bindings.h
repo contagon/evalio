@@ -17,14 +17,6 @@ class PyPipeline : public evalio::Pipeline {
  public:
   using evalio::Pipeline::Pipeline;
 
-  // Info
-  // static std::string name() override {
-  //   PYBIND11_OVERRIDE(std::string, evalio::Pipeline, name);
-  // }
-  // static std::string nickname() override {
-  //   PYBIND11_OVERRIDE(std::string, evalio::Pipeline, nickname);
-  // }
-
   // Getters
   const evalio::SE3 pose() override {
     PYBIND11_OVERRIDE_PURE(const evalio::SE3, evalio::Pipeline, pose);
@@ -74,6 +66,8 @@ void makePipelines(py::module& m) {
       .def(py::init<>())
       .def_static("name", &evalio::Pipeline::name)
       .def_static("nickname", &evalio::Pipeline::nickname)
+      .def_static("url", &evalio::Pipeline::url)
+      .def_static("params", &evalio::Pipeline::params)
       .def("pose", &evalio::Pipeline::pose)
       .def("map", &evalio::Pipeline::map)
       .def("initialize", &evalio::Pipeline::initialize)
@@ -95,7 +89,9 @@ void makePipelines(py::module& m) {
   py::class_<KissICP, evalio::Pipeline>(m, "KissICP")
       .def(py::init<>())
       .def_static("name", &KissICP::name)
-      .def_static("nickname", &KissICP::nickname);
+      .def_static("nickname", &KissICP::nickname)
+      .def_static("url", &KissICP::url)
+      .def_static("params", &KissICP::params);
 }
 
 }  // namespace evalio
