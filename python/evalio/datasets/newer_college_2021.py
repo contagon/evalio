@@ -21,14 +21,14 @@ class NewerCollege2021(Dataset):
     def __iter__(self):
         return RosbagIter(
             EVALIO_DATA / NewerCollege2021.name() / self.seq,
-            "/os1_cloud_node/points",
-            "/os1_cloud_node/imu",
+            "/os_cloud_node/points",
+            "/os_cloud_node/imu",
         )
 
     def ground_truth(self) -> list[(Stamp, SE3)]:
-        # TODO: Verify this
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv"
+            EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv",
+            ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
     # ------------------------- For loading params ------------------------- #

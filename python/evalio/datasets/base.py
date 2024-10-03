@@ -7,6 +7,7 @@ import csv
 from pathlib import Path
 
 from dataclasses import dataclass
+from tabulate import tabulate
 
 from evalio._cpp.types import (  # type: ignore
     SO3,
@@ -25,6 +26,8 @@ from evalio._cpp._helpers import (  # type: ignore
     ros_pc2_to_evalio,
 )
 
+from typing import Optional
+
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
 EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
@@ -35,6 +38,7 @@ EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
 @dataclass
 class Dataset(Protocol):
     seq: str
+    length: Optional[int] = None
 
     # ------------------------- For loading data ------------------------- #
     def __iter__(self): ...
@@ -173,6 +177,16 @@ class RosbagIter:
             for x in self.reader.connections
             if x.topic in [self.lidar_topic, self.imu_topic]
         ]
+        if len(connections) == 0:
+            connections = [[c.topic, c.msgtype] for c in self.reader.connections]
+            print(
+                tabulate(
+                    connections, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
+                )
+            )
+            raise ValueError(
+                f"Could not find topics {self.lidar_topic} or {self.imu_topic}"
+            )
 
         self.lidar_count = sum(
             [x.msgcount for x in connections if x.topic == self.lidar_topic]

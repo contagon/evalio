@@ -76,11 +76,11 @@ void makePipelines(py::module& m) {
       .def("set_param", py::overload_cast<std::string, std::string>(
                             &evalio::Pipeline::set_param))
       .def("set_param",
-           py::overload_cast<std::string, double>(&evalio::Pipeline::set_param))
+           py::overload_cast<std::string, bool>(&evalio::Pipeline::set_param))
       .def("set_param",
            py::overload_cast<std::string, int>(&evalio::Pipeline::set_param))
       .def("set_param",
-           py::overload_cast<std::string, bool>(&evalio::Pipeline::set_param))
+           py::overload_cast<std::string, double>(&evalio::Pipeline::set_param))
       .def("set_imu_params", &evalio::Pipeline::set_imu_params)
       .def("set_lidar_params", &evalio::Pipeline::set_lidar_params)
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar);
