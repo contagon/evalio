@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from .download import download_datasets
+from .parser import parse_config
 
 
 def main():
@@ -16,15 +17,29 @@ def main():
 
     # eval
     eval = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
-    eval.add_argument("-d", "--dataset", type=str)
-    eval.add_argument("-p", "--pipeline", type=str)
-    eval.add_argument("-o", "--output", type=Path)
+    by_hand = eval.add_argument_group("Manually specify options")
+    by_hand.add_argument(
+        "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
+    )
+    by_hand.add_argument(
+        "-p", "--pipeline", type=str, nargs="+", help="Pipeline(s) to run"
+    )
+    by_hand.add_argument("-o", "--output", type=Path, help="Output directory")
+    from_file = eval.add_argument_group("Load config from a file")
+    from_file.add_argument("-c", "--config", type=Path, help="Path to a config file")
 
     # parse
     args = args.parse_args()
     if args.command == "download":
         download_datasets(args.dataset)
+
     elif args.command == "run":
+        if args.config and (args.datasets or args.pipeline or args.output):
+            raise ValueError("Cannot specify both config file and manual options")
+        # TODO: implement!
+        pipelines, datasets, out = parse_config(args.config)
+        print(pipelines)
+        print(datasets)
         print("Not implemented yet")
 
 

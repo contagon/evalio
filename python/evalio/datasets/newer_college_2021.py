@@ -12,7 +12,10 @@ from .base import (
     Stamp,
 )
 
+from dataclasses import dataclass
 
+
+@dataclass
 class NewerCollege2021(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
@@ -102,8 +105,8 @@ class NewerCollege2021(Dataset):
             "quad-medium": 1,
             "quad-hard": 1,
             "stairs": 1,
-            "cloister": 0,
-            "park": 0,
+            "cloister": 2,
+            "park": 8,
             "maths-easy": 2,
             "maths-medium": 1,
             "maths-hard": 2,

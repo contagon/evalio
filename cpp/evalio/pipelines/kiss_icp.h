@@ -103,6 +103,10 @@ class KissICP : public evalio::Pipeline {
   void set_param(std::string key, bool value) override {
     if (key == "deskew") {
       config_.deskew = value;
+    } else if (key == "use_intensity_metric") {
+      config_.use_intensity_metric = value;
+    } else if (key == "use_intensity_residual") {
+      config_.use_intensity_residual = value;
     } else {
       throw std::invalid_argument(
           "Invalid parameter, KissICP doesn't have bool param " + key);

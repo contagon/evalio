@@ -12,6 +12,8 @@ from .base import (
     Stamp,
 )
 
+from dataclasses import dataclass
+
 from tqdm import tqdm
 from pathlib import Path
 import urllib
@@ -31,6 +33,7 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
                 pbar.update(len(chunk))
 
 
+@dataclass
 class EnWide(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
@@ -63,8 +66,8 @@ class EnWide(Dataset):
             "field_s",
             "intersection_d",
             "intersection_s",
-            "katzenee_d",
-            "katzenee_s",
+            "katzensee_d",
+            "katzensee_s",
             "runway_d",
             "runway_s",
             "tunnel_d",
@@ -73,7 +76,7 @@ class EnWide(Dataset):
 
     @staticmethod
     def nicksequences() -> list[str]:
-        return EnWide.sequences()
+        return ["fd", "fs", "id", "is", "kd", "ks", "rd", "rs", "td", "ts"]
 
     @staticmethod
     def imu_T_lidar() -> SE3:
@@ -142,8 +145,8 @@ class EnWide(Dataset):
             "field_s": "2023-08-09-19-05-05",
             "intersection_d": "2023-08-09-17-58-11",
             "intersection_s": "2023-08-09-16-19-09",
-            "katzenee_d": "2023-08-21-10-29-20",
-            "katzenee_s": "2023-08-21-10-20-22",
+            "katzensee_d": "2023-08-21-10-29-20",
+            "katzensee_s": "2023-08-21-10-20-22",
             "runway_d": "2023-08-09-18-52-05",
             "runway_s": "2023-08-09-18-44-24",
             "tunnel_d": "2023-08-08-17-50-31",

@@ -12,7 +12,10 @@ from .base import (
     Stamp,
 )
 
+from dataclasses import dataclass
 
+
+@dataclass
 class NewerCollege2020(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):

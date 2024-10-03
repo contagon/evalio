@@ -6,7 +6,12 @@ version = "0.1.0"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy<2", "rosbags>=0.10.4", "tqdm>=4.66.5"]
+dependencies = [
+    "numpy<2",
+    "pyyaml>=6.0.2",
+    "rosbags>=0.10.4",
+    "tqdm>=4.66.5",
+]
 keywords = [
     "lidar",
     "odometry",
