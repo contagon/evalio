@@ -180,11 +180,17 @@ name = "evalio"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "gdown" },
     { name = "numpy" },
-    { name = "rerun-sdk" },
     { name = "rosbags" },
     { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+fetch = [
+    { name = "gdown" },
+]
+vis = [
+    { name = "rerun-sdk" },
 ]
 
 [package.dev-dependencies]
@@ -197,9 +203,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "gdown", specifier = ">=5.2.0" },
+    { name = "gdown", marker = "extra == 'fetch'", specifier = ">=5.2.0" },
     { name = "numpy", specifier = "<2" },
-    { name = "rerun-sdk", specifier = ">=0.18.2" },
+    { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
     { name = "rosbags", specifier = ">=0.10.4" },
     { name = "tqdm", specifier = ">=4.66.5" },
 ]

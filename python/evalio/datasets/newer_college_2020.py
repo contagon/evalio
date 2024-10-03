@@ -14,13 +14,7 @@ from .base import (
 
 
 class NewerCollege2020(Dataset):
-    def __init__(self, seq: str):
-        self.seq = self.process_seq(seq)
-
-        if not self.check_download():
-            print(f"Data for {self.seq} not found, downloading now")
-            self.download()
-
+    # ------------------------- For loading data ------------------------- #
     def __iter__(self):
         return RosbagIter(
             EVALIO_DATA / NewerCollege2020.name() / self.seq,
@@ -34,57 +28,7 @@ class NewerCollege2020(Dataset):
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
-    def check_download(self) -> bool:
-        dir = EVALIO_DATA / NewerCollege2020.name() / self.seq
-        # Check how many bag files it should have
-        should_have = {
-            "01_short_experiment": 10,
-            "02_long_experiment": 16,
-            "05_quad_with_dynamics": 3,
-            "06_dynamic_spinning": 1,
-            "07_parkland_mound": 3,
-        }[self.seq]
-
-        if not dir.exists():
-            print("Directory does not exist")
-            return False
-        elif not (dir / "ground_truth.csv").exists():
-            print("Ground truth does not exist")
-            return False
-        elif len(list(dir.glob("*.bag"))) != should_have:
-            return False
-        else:
-            return True
-
-    def download(self):
-        folder_id = {
-            "01_short_experiment": "1WWtyU6bv4-JKwe-XuSeKEEEBhbgoFHRG",
-            "02_long_experiment": "1pg3jzNF59YJX_lqVf4dcYI99TyBHcJX_",
-            "05_quad_with_dynamics": "1ScfmWiRQ_nGy3Xj5VqRSpzkEJl5BHPQv",
-            "06_dynamic_spinning": "1x1f_WfkQIf5AtdRhnWblhkPLur5_5ck0",
-            "07_parkland_mound": "1PAywZT8T9TbKy_XJEgWXJkFvr5C6M1pS",
-        }[self.seq]
-
-        gt_url = {
-            "01_short_experiment": "11VWvHxjitd4ijARD4dJ3WjFuZ_QbInVy",
-            "02_long_experiment": "1fT1_MhFkCn_RWzLTzo4i-sjoKa_TbIUW",
-            "05_quad_with_dynamics": "1Cc7fiYUCtNL8qnvA0x-m4uQvRWQLdrWO",
-            "06_dynamic_spinning": "16lLgl2iqVs5qSz-N3OZv9bZWBbvAXyP3",
-            "07_parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
-        }[self.seq]
-
-        import gdown
-
-        folder = EVALIO_DATA / NewerCollege2020.name() / self.seq
-
-        print(f"Making folder {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-
-        print(f"Downloading {self.seq} to {folder}...")
-        gdown.download(id=gt_url, output=str(folder / "ground_truth.csv"))
-        gdown.download_folder(id=folder_id, output=str(folder))
-
-    # ------------------------- Static Methods ------------------------- #
+    # ------------------------- For loading params ------------------------- #
     @staticmethod
     def name() -> str:
         return "newer_college_2020"
@@ -141,3 +85,56 @@ class NewerCollege2020(Dataset):
             min_range=0.1,
             max_range=120.0,
         )
+
+    # ------------------------- For downloading ------------------------- #
+    @staticmethod
+    def check_download(seq: str) -> bool:
+        dir = EVALIO_DATA / NewerCollege2020.name() / seq
+        # Check how many bag files it should have
+        should_have = {
+            "01_short_experiment": 10,
+            "02_long_experiment": 16,
+            "05_quad_with_dynamics": 3,
+            "06_dynamic_spinning": 1,
+            "07_parkland_mound": 3,
+        }[seq]
+
+        if not dir.exists():
+            print("Directory does not exist")
+            return False
+        elif not (dir / "ground_truth.csv").exists():
+            print("Ground truth does not exist")
+            return False
+        elif len(list(dir.glob("*.bag"))) != should_have:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def download(seq: str):
+        folder_id = {
+            "01_short_experiment": "1WWtyU6bv4-JKwe-XuSeKEEEBhbgoFHRG",
+            "02_long_experiment": "1pg3jzNF59YJX_lqVf4dcYI99TyBHcJX_",
+            "05_quad_with_dynamics": "1ScfmWiRQ_nGy3Xj5VqRSpzkEJl5BHPQv",
+            "06_dynamic_spinning": "1x1f_WfkQIf5AtdRhnWblhkPLur5_5ck0",
+            "07_parkland_mound": "1PAywZT8T9TbKy_XJEgWXJkFvr5C6M1pS",
+        }[seq]
+
+        gt_url = {
+            "01_short_experiment": "11VWvHxjitd4ijARD4dJ3WjFuZ_QbInVy",
+            "02_long_experiment": "1fT1_MhFkCn_RWzLTzo4i-sjoKa_TbIUW",
+            "05_quad_with_dynamics": "1Cc7fiYUCtNL8qnvA0x-m4uQvRWQLdrWO",
+            "06_dynamic_spinning": "16lLgl2iqVs5qSz-N3OZv9bZWBbvAXyP3",
+            "07_parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
+        }[seq]
+
+        import gdown
+
+        folder = EVALIO_DATA / NewerCollege2020.name() / seq
+
+        print(f"Making folder {folder}...")
+        folder.mkdir(parents=True, exist_ok=True)
+
+        print(f"Downloading {seq} to {folder}...")
+        gdown.download(id=gt_url, output=str(folder / "ground_truth.csv"), resume=True)
+        gdown.download_folder(id=folder_id, output=str(folder), resume=True)

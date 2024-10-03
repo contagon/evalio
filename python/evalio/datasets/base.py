@@ -6,6 +6,8 @@ import os
 import csv
 from pathlib import Path
 
+from dataclasses import dataclass
+
 from evalio._cpp.types import (  # type: ignore
     SO3,
     SE3,
@@ -30,20 +32,16 @@ EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
 # TODO: Ponder: https://stackoverflow.com/a/17496524
 
 
+@dataclass
 class Dataset(Protocol):
-    def __init__(self, seq: str): ...
+    seq: str
 
+    # ------------------------- For loading data ------------------------- #
     def __iter__(self): ...
 
-    def check_download(self) -> bool:
-        raise NotImplementedError("Check download not implemented")
-
-    def download(self):
-        raise NotImplementedError("Download not implemented")
-
-    # TODO: Does these need to be stamped?
     def ground_truth(self) -> list[(Stamp, SE3)]: ...
 
+    # ------------------------- For loading params ------------------------- #
     @staticmethod
     def name() -> str: ...
 
@@ -68,15 +66,33 @@ class Dataset(Protocol):
     @staticmethod
     def lidar_params() -> LidarParams: ...
 
+    # ------------------------- For downloading ------------------------- #
+    @staticmethod
+    def check_download(self, seq: str) -> bool:
+        return True
+
+    @staticmethod
+    def download(self, seq: str) -> None:
+        raise NotImplementedError("Download not implemented")
+
     # ------------------------- Helpers ------------------------- #
-    def process_seq(self, seq: str):
-        if seq in self.sequences():
+    def __post_init__(self):
+        self.seq = self.process_seq(self.seq)
+
+        if not self.check_download(self.seq):
+            raise ValueError(
+                f"Data for {self.seq} not found, please use `evalio download {self.name()}/{self.seq}` to download"
+            )
+
+    @classmethod
+    def process_seq(cls, seq: str):
+        if seq in cls.sequences():
             return seq
-        elif seq in self.nicksequences():
-            idx = self.nicksequences().index(seq)
-            return self.sequences()[idx]
+        elif seq in cls.nicksequences():
+            idx = cls.nicksequences().index(seq)
+            return cls.sequences()[idx]
         else:
-            raise ValueError(f"Sequence {seq} not in {self.name()}")
+            raise ValueError(f"Sequence {seq} not in {cls.name()}")
 
     def ground_truth_corrected(self, imu_o_T_imu_0: SE3) -> list[SE3]:
         # Load all transforms
