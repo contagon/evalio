@@ -7,6 +7,7 @@ description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "argcomplete>=3.5.0",
     "numpy<2",
     "pyyaml>=6.0.2",
     "rosbags>=0.10.4",
@@ -42,5 +43,6 @@ dev-dependencies = [
     "cmake>=3.30.3",
     "pip>=24.2",
     "pybind11>=2.13.6",
+    "ruff>=0.6.8",
     "scikit-build-core>=0.10.7",
 ]

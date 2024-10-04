@@ -1,5 +1,6 @@
-from .parser import get_datasets, get_pipelines
 from tabulate import tabulate
+
+from .parser import get_datasets, get_pipelines
 
 
 def ls(kind):

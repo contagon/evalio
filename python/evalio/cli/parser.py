@@ -1,11 +1,11 @@
-import evalio
-import yaml
+from dataclasses import dataclass
 from pathlib import Path
 
-from dataclasses import dataclass
+import yaml
 
+import evalio
 from evalio.datasets import Dataset
-from evalio._cpp.pipelines import Pipeline  # type: ignore
+from evalio.pipelines import Pipeline
 
 
 # ------------------------- Finding types ------------------------- #

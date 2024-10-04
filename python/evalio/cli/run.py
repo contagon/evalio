@@ -1,8 +1,10 @@
-from .parser import PipelineBuilder, DatasetBuilder
 from pathlib import Path
+
 from tqdm import tqdm
 
-from evalio._cpp.types import LidarMeasurement, ImuMeasurement  # type: ignore
+from evalio.types import ImuMeasurement, LidarMeasurement
+
+from .parser import DatasetBuilder, PipelineBuilder
 
 
 def run(
@@ -11,6 +13,7 @@ def run(
     if visualize:
         import rerun as rr
         import rerun.blueprint as rrb
+
         from evalio import vis as evis
 
         rr.connect("0.0.0.0:9876")

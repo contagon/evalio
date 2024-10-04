@@ -1,10 +1,9 @@
+#!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
 import argparse
 from pathlib import Path
 
-from .download import download_datasets
-from .parser import parse_config, parse_datasets, parse_pipelines
-from .ls import ls
-from .run import run
+import argcomplete
 
 
 def main():
@@ -27,24 +26,12 @@ def main():
     eval = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
     by_hand = eval.add_argument_group("Manually specify options")
     by_hand.add_argument(
-        "-d",
-        "--datasets",
-        type=str,
-        nargs="+",
-        required=True,
-        help="Dataset(s) to run on",
+        "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
     )
     by_hand.add_argument(
-        "-p",
-        "--pipeline",
-        type=str,
-        nargs="+",
-        required=True,
-        help="Pipeline(s) to run",
+        "-p", "--pipeline", type=str, nargs="+", help="Pipeline(s) to run"
     )
-    by_hand.add_argument(
-        "-o", "--output", type=Path, required=True, help="Output directory"
-    )
+    by_hand.add_argument("-o", "--output", type=Path, help="Output directory")
     by_hand.add_argument(
         "-l", "--length", type=int, help="Number of scans to process for each dataset"
     )
@@ -52,8 +39,16 @@ def main():
     from_file.add_argument("-c", "--config", type=Path, help="Path to a config file")
     eval.add_argument("-v", "--visualize", action="store_true")
 
-    # parse
+    argcomplete.autocomplete(args)
     args = args.parse_args()
+
+    # Import these now to spend up argcomplete
+    from .download import download_datasets
+    from .ls import ls
+    from .parser import parse_config, parse_datasets, parse_pipelines
+    from .run import run
+
+    # parse
     if args.command == "ls":
         ls(args.options)
 

@@ -1,23 +1,22 @@
+import urllib
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+
 import numpy as np
+from tqdm import tqdm
 
 from .base import (
     EVALIO_DATA,
+    SE3,
+    SO3,
     Dataset,
-    RosbagIter,
     ImuParams,
     LidarParams,
-    load_pose_csv,
-    SO3,
-    SE3,
+    RosbagIter,
     Stamp,
+    load_pose_csv,
 )
-
-from dataclasses import dataclass
-
-from tqdm import tqdm
-from pathlib import Path
-import urllib
-import urllib.request
 
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27

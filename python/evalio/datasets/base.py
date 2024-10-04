@@ -1,38 +1,32 @@
-from typing import Protocol, Union
-from rosbags.highlevel import AnyReader
+import csv
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional, Protocol, Union
 
 import numpy as np
-import os
-import csv
-from pathlib import Path
-
-from dataclasses import dataclass
+from rosbags.highlevel import AnyReader
 from tabulate import tabulate
 
-from evalio._cpp.types import (  # type: ignore
-    SO3,
-    SE3,
-    Stamp,
-    ImuMeasurement,
-    LidarMeasurement,
-    LidarParams,
-    ImuParams,
-)
-
 from evalio._cpp._helpers import (  # type: ignore
-    Field,
     DataType,
+    Field,
     PointCloudMetadata,
     ros_pc2_to_evalio,
 )
-
-from typing import Optional
+from evalio.types import (
+    SE3,
+    SO3,
+    ImuMeasurement,
+    ImuParams,
+    LidarMeasurement,
+    LidarParams,
+    Stamp,
+)
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
 EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
-
-# TODO: Ponder: https://stackoverflow.com/a/17496524
 
 
 @dataclass

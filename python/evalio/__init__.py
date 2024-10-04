@@ -1,9 +1,3 @@
-from . import datasets
-from . import vis
-from . import _cpp
-from ._cpp import (  # type: ignore
-    types,
-    pipelines,
-)
+from . import _cpp, datasets, pipelines, types, vis
 
 __all__ = ["datasets", "vis", "_cpp", "pipelines", "types"]

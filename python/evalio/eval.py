@@ -1,9 +1,10 @@
 import argparse
 from pathlib import Path
-import evalio
+
 from tqdm import tqdm
 
-from evalio._cpp.types import LidarMeasurement, ImuMeasurement  # type: ignore
+import evalio
+from evalio.types import ImuMeasurement, LidarMeasurement
 
 
 def find_types(module, skip=None):
@@ -87,7 +88,7 @@ def eval():
             if args.visualize:
                 rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
                 rr.log("imu", evalio.vis.rerun(pose))
-                rr.log("imu/lidar/frame", evalio.vis.rerun(data, use_intensity=True))
+                # rr.log("imu/lidar/frame", evalio.vis.rerun(data, use_intensity=True))
                 # rr.log("map", evalio.vis.rerun(pipe.map(), color=[150, 150, 150]))
 
             loop.update()
