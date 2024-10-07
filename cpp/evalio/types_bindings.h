@@ -19,6 +19,10 @@ void makeTypes(py::module& m) {
       .def("to_nsec", &evalio::Stamp::to_nsec)
       .def_readonly("sec", &evalio::Stamp::sec)
       .def_readonly("nsec", &evalio::Stamp::nsec)
+      .def(py::self < py::self)
+      .def(py::self > py::self)
+      .def(py::self == py::self)
+      .def(py::self != py::self)
       .def("__repr__", &evalio::Stamp::toString);
 
   // Lidar
@@ -86,12 +90,14 @@ void makeTypes(py::module& m) {
       .def_readonly("qy", &evalio::SO3::qy)
       .def_readonly("qz", &evalio::SO3::qz)
       .def_readonly("qw", &evalio::SO3::qw)
+      .def_static("identity", &evalio::SO3::identity)
       .def("inverse", &evalio::SO3::inverse)
       .def(py::self * py::self)
       .def("__repr__", &evalio::SO3::toString);
 
   py::class_<evalio::SE3>(m, "SE3")
       .def(py::init<evalio::SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
+      .def_static("identity", &evalio::SE3::identity)
       .def_readonly("rot", &evalio::SE3::rot)
       .def_readonly("trans", &evalio::SE3::trans)
       .def("inverse", &evalio::SE3::inverse)

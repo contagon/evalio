@@ -95,20 +95,24 @@ class Dataset(Protocol):
         else:
             raise ValueError(f"Sequence {seq} not in {cls.name()}")
 
-    def ground_truth_corrected(self, imu_o_T_imu_0: SE3) -> list[SE3]:
-        # Load all transforms
+    def ground_truth_corrected(self, imu_o_T_imu_0: SE3 = None) -> list[(Stamp, SE3)]:
         gt_poses = self.ground_truth()
-        stamp, gt_o_T_gt_0 = gt_poses[0]
         gt_T_imu = self.imu_T_gt().inverse()
 
-        # compute imu_o_T_gt_o
-        gt_o_T_imu_0 = gt_o_T_gt_0 * gt_T_imu
-        imu_o_T_gt_o = imu_o_T_imu_0 * gt_o_T_imu_0.inverse()
+        if imu_o_T_imu_0 is None:
+            imu_o_T_gt_o = SE3.identity()
+        else:
+            # Load all transforms
+            stamp, gt_o_T_gt_0 = gt_poses[0]
+
+            # compute imu_o_T_gt_o
+            gt_o_T_imu_0 = gt_o_T_gt_0 * gt_T_imu
+            imu_o_T_gt_o = imu_o_T_imu_0 * gt_o_T_imu_0.inverse()
 
         # Clean all poses
         gt_poses_corrected = []
         for stamp, gt_o_T_gt_i in gt_poses:
-            gt_poses_corrected.append(imu_o_T_gt_o * gt_o_T_gt_i * gt_T_imu)
+            gt_poses_corrected.append((stamp, imu_o_T_gt_o * gt_o_T_gt_i * gt_T_imu))
 
         return gt_poses_corrected
 
@@ -235,3 +239,7 @@ def load_pose_csv(
             poses.append((stamp, pose))
 
     return poses
+
+
+def load_tum(path: Path) -> list[(Stamp, SE3)]:
+    return load_pose_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])

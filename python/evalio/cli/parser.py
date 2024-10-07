@@ -143,7 +143,7 @@ def parse_config(
         params = yaml.safe_load(f)
 
     # get output directory
-    out = params["output_dir"]
+    out = Path(params["output_dir"])
 
     # process datasets & make sure they are downloaded by building
     datasets = parse_datasets(params["datasets"])

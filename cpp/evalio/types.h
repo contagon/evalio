@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <iostream>
 
 namespace evalio {
 
@@ -23,13 +24,29 @@ struct Stamp {
 
   double to_sec() const { return double(sec) + double(nsec) * 1e-9; }
 
-  std::string toString() const {
-    return "Stamp(" + std::to_string(sec) + "." + std::to_string(nsec) + ")";
-  }
+  std::string toString() const { return "Stamp(" + toStringBrief() + ")"; }
 
   std::string toStringBrief() const {
-    return std::to_string(sec) + "." + std::to_string(nsec);
+    size_t n_zeros = 9;
+    auto nsec_str = std::to_string(nsec);
+    auto nsec_str_leading =
+        std::string(9 - std::min(n_zeros, nsec_str.length()), '0') + nsec_str;
+    return std::to_string(sec) + "." + nsec_str_leading;
   };
+
+  bool operator<(const Stamp& other) const {
+    return sec < other.sec || (sec == other.sec && nsec < other.nsec);
+  }
+
+  bool operator>(const Stamp& other) const {
+    return sec > other.sec || (sec == other.sec && nsec > other.nsec);
+  }
+
+  bool operator==(const Stamp& other) const {
+    return sec == other.sec && nsec == other.nsec;
+  }
+
+  bool operator!=(const Stamp& other) const { return !(*this == other); }
 };
 
 struct Point {
@@ -142,6 +159,8 @@ struct SO3 {
     return SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
   }
 
+  static SO3 identity() { return SO3{.qx = 0, .qy = 0, .qz = 0, .qw = 1}; }
+
   SO3 inverse() const { return SO3{.qx = -qx, .qy = -qy, .qz = -qz, .qw = qw}; }
 
   SO3 operator*(const SO3& other) const {
@@ -168,6 +187,10 @@ struct SE3 {
   Eigen::Vector3d trans;
 
   SE3(SO3 rot, Eigen::Vector3d trans) : rot(rot), trans(trans) {}
+
+  static SE3 identity() {
+    return SE3(SO3::identity(), Eigen::Vector3d::Zero());
+  }
 
   SE3 inverse() const {
     const auto inv_rot = rot.inverse();

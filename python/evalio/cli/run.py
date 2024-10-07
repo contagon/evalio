@@ -5,6 +5,7 @@ from tqdm import tqdm
 from evalio.types import ImuMeasurement, LidarMeasurement
 
 from .parser import DatasetBuilder, PipelineBuilder
+from .writer import Writer, save_gt
 
 
 def run(
@@ -18,12 +19,18 @@ def run(
 
         rr.connect("0.0.0.0:9876")
 
+    if output.suffix == "":
+        output.mkdir(exist_ok=True)
+
     for dbuilder in datasets:
+        save_gt(output, dbuilder)
+
         for pbuilder in pipelines:
             # Setup all the things
             print(f"Running {pbuilder} on {dbuilder}")
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
+            writer = Writer(output, pbuilder, dbuilder)
 
             if visualize:
                 rr.init(
@@ -48,9 +55,11 @@ def run(
                 elif isinstance(data, LidarMeasurement):
                     pipe.add_lidar(data)
                     pose = pipe.pose()
+                    writer.write(data.stamp, pose)
 
                     if not first_scan_done and visualize:
                         gt = dataset.ground_truth_corrected(pose)
+                        gt = [pose for _, pose in gt]
                         rr.log(
                             "gt",
                             evis.poses_to_points(gt, color=[0, 0, 255]),
@@ -61,7 +70,7 @@ def run(
                             evis.rerun(dataset.imu_T_lidar()),
                             static=True,
                         )
-                        first_scan_done = True
+                    first_scan_done = True
 
                     if visualize:
                         rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
@@ -73,3 +82,5 @@ def run(
                     if loop.n >= length:
                         loop.close()
                         break
+
+            writer.close()

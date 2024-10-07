@@ -3,3 +3,5 @@ build*
 .vscode
 .venv
 __pycache__
+*.yaml
+*.csv

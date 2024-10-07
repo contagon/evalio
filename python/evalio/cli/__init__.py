@@ -61,6 +61,7 @@ def main():
         if args.config:
             pipelines, datasets, out = parse_config(args.config)
         else:
+            # TODO: If a single pipeline/dataset a filename is fine, otherwise make sure it's a path
             pipelines = parse_pipelines(args.pipeline)
             if args.length:
                 datasets = parse_datasets(
