@@ -18,9 +18,6 @@ def run(
 
         from evalio import vis as evis
 
-    if output.suffix == "":
-        output.mkdir(exist_ok=True)
-
     for dbuilder in datasets:
         save_gt(output, dbuilder)
 
@@ -77,7 +74,7 @@ def run(
                     if visualize:
                         rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
                         rr.log("imu", evis.rerun(pose))
-                        # rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
+                        rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
 
                     loop.update()
                     if loop.n >= length:

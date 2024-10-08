@@ -42,6 +42,7 @@ dev-dependencies = [
     "cmake>=3.30.3",
     "pip>=24.2",
     "pybind11>=2.13.6",
+    "rerun-sdk>=0.18.2",
     "ruff>=0.6.8",
     "scikit-build-core>=0.10.7",
 ]

@@ -26,6 +26,14 @@ class NewerCollege2020(Dataset):
         )
 
     def ground_truth(self) -> list[(Stamp, SE3)]:
+        # For some reason bag #7 is different
+        if self.seq == "07_parkland_mound":
+            return load_pose_csv(
+                EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+                ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
+                delimiter=" ",
+            )
+
         return load_pose_csv(
             EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],

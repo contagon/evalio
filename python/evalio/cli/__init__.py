@@ -77,10 +77,9 @@ def main():
                 datasets = parse_datasets(args.datasets)
 
             out = args.output
-            if len(pipelines) > 1 and len(datasets) > 1 and not out.suffix != "":
-                raise ValueError(
-                    "Output must be a directory if running multiple pipelines and datasets"
-                )
+
+        if out.suffix != "":
+            raise ValueError("Output must be a directory")
 
         run(pipelines, datasets, out, visualize=args.visualize)
 

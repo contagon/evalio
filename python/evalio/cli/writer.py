@@ -9,9 +9,9 @@ from .parser import DatasetBuilder, PipelineBuilder
 
 class Writer:
     def __init__(self, path: Path, pipeline: PipelineBuilder, dataset: DatasetBuilder):
-        # TODO: A directory for each??
-        if path.suffix == "":
-            path = path / f"{dataset.dataset.name()}_{dataset.seq}_{pipeline.name}.csv"
+        path = path / dataset.dataset.name() / dataset.seq
+        path.mkdir(parents=True, exist_ok=True)
+        path /= f"{pipeline.name}.csv"
 
         # write metadata to the header
         self.path = path
@@ -55,7 +55,9 @@ class Writer:
 
 def save_gt(output: Path, dataset: DatasetBuilder):
     gt = dataset.build().ground_truth_corrected()
-    path = output / f"{dataset.dataset.name()}_{dataset.seq}_gt.csv"
+    path = output / dataset.dataset.name() / dataset.seq
+    path.mkdir(parents=True, exist_ok=True)
+    path = path / "gt.csv"
     with open(path, "w") as f:
         f.write(f"# dataset: {dataset.dataset.name()}\n")
         f.write(f"# sequence: {dataset.seq}\n")

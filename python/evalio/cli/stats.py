@@ -142,7 +142,7 @@ def compute_ate(traj: Trajectory, gt_poses: Trajectory) -> Ate:
     return Ate(rot=error_r, trans=error_t)
 
 
-def eval(dir: Path, visualize: bool):
+def eval_dataset(dir: Path, visualize: bool):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
@@ -187,4 +187,14 @@ def eval(dir: Path, visualize: bool):
                 static=True,
             )
 
+    print(f"\nResults for {'/'.join(dir.parts[1:])}")
     print(tabulate(results, headers=["Pipeline", "ATEt", "ATEr"], tablefmt="fancy"))
+
+
+def eval(dir: Path, visualize: bool):
+    # TODO: Detect if a single folder or if we should glob
+    # Glob over folders
+    for dir in dir.glob("*/*"):
+        if not dir.is_dir():
+            continue
+        eval_dataset(dir, visualize)

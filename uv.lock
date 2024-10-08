@@ -214,6 +214,7 @@ dev = [
     { name = "cmake" },
     { name = "pip" },
     { name = "pybind11" },
+    { name = "rerun-sdk" },
     { name = "ruff" },
     { name = "scikit-build-core" },
 ]
@@ -235,6 +236,7 @@ dev = [
     { name = "cmake", specifier = ">=3.30.3" },
     { name = "pip", specifier = ">=24.2" },
     { name = "pybind11", specifier = ">=2.13.6" },
+    { name = "rerun-sdk", specifier = ">=0.18.2" },
     { name = "ruff", specifier = ">=0.6.8" },
     { name = "scikit-build-core", specifier = ">=0.10.7" },
 ]
