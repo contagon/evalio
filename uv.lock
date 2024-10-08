@@ -1,5 +1,9 @@
 version = 1
 requires-python = ">=3.10"
+resolution-markers = [
+    "python_full_version < '3.13'",
+    "python_full_version >= '3.13'",
+]
 
 [[package]]
 name = "argcomplete"
@@ -218,7 +222,7 @@ dev = [
 requires-dist = [
     { name = "argcomplete", specifier = ">=3.5.0" },
     { name = "gdown", marker = "extra == 'fetch'", specifier = ">=5.2.0" },
-    { name = "numpy", specifier = "<2" },
+    { name = "numpy", specifier = ">=1.26.4" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
     { name = "rosbags", specifier = ">=0.10.4" },

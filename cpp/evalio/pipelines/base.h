@@ -15,6 +15,7 @@ class Pipeline {
   static std::string name() { throw std::runtime_error("Not implemented"); }
   static std::string nickname() { throw std::runtime_error("Not implemented"); }
   static std::string url() { throw std::runtime_error("Not implemented"); }
+  // TODO: Make this return a map filled with the default values
   static std::map<std::string, std::string> params() {
     throw std::runtime_error("Not implemented");
   }

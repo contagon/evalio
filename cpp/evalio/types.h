@@ -47,6 +47,10 @@ struct Stamp {
   }
 
   bool operator!=(const Stamp& other) const { return !(*this == other); }
+
+  double operator-(const Stamp& other) const {
+    return to_sec() - other.to_sec();
+  }
 };
 
 struct Point {
@@ -161,6 +165,10 @@ struct SO3 {
 
   static SO3 identity() { return SO3{.qx = 0, .qy = 0, .qz = 0, .qw = 1}; }
 
+  static SO3 fromMat(const Eigen::Matrix3d& R) {
+    return fromEigen(Eigen::Quaterniond(R));
+  }
+
   SO3 inverse() const { return SO3{.qx = -qx, .qy = -qy, .qz = -qz, .qw = qw}; }
 
   SO3 operator*(const SO3& other) const {
@@ -169,6 +177,12 @@ struct SO3 {
 
   Eigen::Vector3d rotate(const Eigen::Vector3d& v) const {
     return toEigen() * v;
+  }
+
+  Eigen::Vector3d log() const {
+    Eigen::Quaterniond q = toEigen();
+    auto axis = Eigen::AngleAxisd(q);
+    return axis.angle() * axis.axis();
   }
 
   std::string toString() const {
@@ -190,6 +204,10 @@ struct SE3 {
 
   static SE3 identity() {
     return SE3(SO3::identity(), Eigen::Vector3d::Zero());
+  }
+
+  static SE3 fromMat(const Eigen::Matrix4d& T) {
+    return SE3(SO3::fromMat(T.block<3, 3>(0, 0)), T.block<3, 1>(0, 3));
   }
 
   SE3 inverse() const {

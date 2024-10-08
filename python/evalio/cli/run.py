@@ -6,6 +6,7 @@ from evalio.types import ImuMeasurement, LidarMeasurement
 
 from .parser import DatasetBuilder, PipelineBuilder
 from .writer import Writer, save_gt
+from uuid import uuid4
 
 
 def run(
@@ -17,8 +18,6 @@ def run(
 
         from evalio import vis as evis
 
-        rr.connect("0.0.0.0:9876")
-
     if output.suffix == "":
         output.mkdir(exist_ok=True)
 
@@ -26,21 +25,13 @@ def run(
         save_gt(output, dbuilder)
 
         for pbuilder in pipelines:
-            # Setup all the things
             print(f"Running {pbuilder} on {dbuilder}")
+            # Build everything
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
             writer = Writer(output, pbuilder, dbuilder)
 
-            if visualize:
-                rr.init(
-                    "evalio",
-                    spawn=False,
-                    default_blueprint=rrb.Spatial3DView(
-                        overrides={"imu/lidar": [rrb.components.Visible(False)]}
-                    ),
-                )
-
+            # Initialize params
             first_scan_done = False
             data_iter = iter(dataset)
             length = len(data_iter)
@@ -60,6 +51,17 @@ def run(
                     if not first_scan_done and visualize:
                         gt = dataset.ground_truth_corrected(pose)
                         gt = [pose for _, pose in gt]
+                        rr.new_recording(
+                            str(dbuilder),
+                            make_default=True,
+                            recording_id=uuid4(),
+                        )
+                        rr.connect(
+                            "0.0.0.0:9876",
+                            default_blueprint=rrb.Spatial3DView(
+                                overrides={"imu/lidar": [rrb.components.Visible(False)]}
+                            ),
+                        )
                         rr.log(
                             "gt",
                             evis.poses_to_points(gt, color=[0, 0, 255]),
@@ -76,7 +78,6 @@ def run(
                         rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
                         rr.log("imu", evis.rerun(pose))
                         # rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
-                        # rr.log("map", evis.rerun(pipe.map(), color=[150, 150, 150]))
 
                     loop.update()
                     if loop.n >= length:

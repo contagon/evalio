@@ -7,6 +7,7 @@ import argcomplete
 
 
 def main():
+    # TODO: Load in rerun ip from here somehow
     args = argparse.ArgumentParser(
         "Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets"
     )
@@ -22,9 +23,11 @@ def main():
     ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
     ls_opt.add_argument("options", type=str, choices=["datasets", "pipelines"])
 
-    # eval
-    eval = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
-    by_hand = eval.add_argument_group("Manually specify options")
+    # run
+    run = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
+    from_file = run.add_argument_group("Load config from a file")
+    from_file.add_argument("-c", "--config", type=Path, help="Path to a config file")
+    by_hand = run.add_argument_group("Manually specify options")
     by_hand.add_argument(
         "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
     )
@@ -35,9 +38,12 @@ def main():
     by_hand.add_argument(
         "-l", "--length", type=int, help="Number of scans to process for each dataset"
     )
-    from_file = eval.add_argument_group("Load config from a file")
-    from_file.add_argument("-c", "--config", type=Path, help="Path to a config file")
-    eval.add_argument("-v", "--visualize", action="store_true")
+    run.add_argument("-v", "--visualize", action="store_true")
+
+    # stats
+    stats = subparsers.add_parser("stats", help="Compute statistics on experiments")
+    stats.add_argument("experiments", type=Path, help="Directory to experiments")
+    stats.add_argument("-v", "--visualize", action="store_true")
 
     argcomplete.autocomplete(args)
     args = args.parse_args()
@@ -47,6 +53,7 @@ def main():
     from .ls import ls
     from .parser import parse_config, parse_datasets, parse_pipelines
     from .run import run
+    from .stats import eval
 
     # parse
     if args.command == "ls":
@@ -61,7 +68,6 @@ def main():
         if args.config:
             pipelines, datasets, out = parse_config(args.config)
         else:
-            # TODO: If a single pipeline/dataset a filename is fine, otherwise make sure it's a path
             pipelines = parse_pipelines(args.pipeline)
             if args.length:
                 datasets = parse_datasets(
@@ -69,9 +75,17 @@ def main():
                 )
             else:
                 datasets = parse_datasets(args.datasets)
+
             out = args.output
+            if len(pipelines) > 1 and len(datasets) > 1 and not out.suffix != "":
+                raise ValueError(
+                    "Output must be a directory if running multiple pipelines and datasets"
+                )
 
         run(pipelines, datasets, out, visualize=args.visualize)
+
+    elif args.command == "stats":
+        eval(args.experiments, args.visualize)
 
 
 if __name__ == "__main__":

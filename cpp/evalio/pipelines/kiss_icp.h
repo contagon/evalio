@@ -43,18 +43,12 @@ class KissICP : public evalio::Pipeline {
   static std::string url() { return "https://github.com/contagon/kiss-icp"; }
   static std::map<std::string, std::string> params() {
     return {
-        {"voxel_size", "double"},
-        {"max_range", "double"},
-        {"min_range", "double"},
-        {"min_motion_th", "double"},
-        {"initial_threshold", "double"},
-        {"max_num_iterations", "double"},
-        {"convergence_criterion", "double"},
-        {"max_num_threads", "double"},
-        {"max_points_per_voxel", "int"},
-        {"deskew", "bool"},
-        {"use_intensity_metric", "bool"},
-        {"use_intensity_residual", "bool"},
+        {"voxel_size", "double"},         {"max_range", "double"},
+        {"min_range", "double"},          {"min_motion_th", "double"},
+        {"initial_threshold", "double"},  {"convergence_criterion", "double"},
+        {"max_num_iterations", "int"},    {"max_num_threads", "int"},
+        {"max_points_per_voxel", "int"},  {"deskew", "bool"},
+        {"use_intensity_metric", "bool"}, {"use_intensity_residual", "bool"},
     };
   }
 
@@ -96,12 +90,8 @@ class KissICP : public evalio::Pipeline {
       config_.min_motion_th = value;
     } else if (key == "initial_threshold") {
       config_.initial_threshold = value;
-    } else if (key == "max_num_iterations") {
-      config_.max_num_iterations = value;
     } else if (key == "convergence_criterion") {
       config_.convergence_criterion = value;
-    } else if (key == "max_num_threads") {
-      config_.max_num_threads = value;
     } else {
       throw std::invalid_argument(
           "Invalid parameter, KissICP doesn't have double param " + key);
@@ -111,6 +101,10 @@ class KissICP : public evalio::Pipeline {
   void set_param(std::string key, int value) override {
     if (key == "max_points_per_voxel") {
       config_.max_points_per_voxel = value;
+    } else if (key == "max_num_iterations") {
+      config_.max_num_iterations = value;
+    } else if (key == "max_num_threads") {
+      config_.max_num_threads = value;
     } else {
       throw std::invalid_argument(
           "Invalid parameter, KissICP doesn't have int param " + key);
@@ -138,7 +132,8 @@ class KissICP : public evalio::Pipeline {
   void add_imu(evalio::ImuMeasurement mm) override {};
 
   void add_lidar(evalio::LidarMeasurement mm) override {
-    std::vector<Eigen::Vector4d> points(mm.points.size());
+    std::vector<Eigen::Vector4d> points;
+    points.reserve(mm.points.size());
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
     }

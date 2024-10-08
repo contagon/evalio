@@ -10,99 +10,114 @@ using namespace pybind11::literals;
 
 namespace evalio {
 
-void makeTypes(py::module& m) {
-  py::class_<evalio::Stamp>(m, "Stamp")
+void makeTypes(py::module &m) {
+  py::class_<Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
-      .def_static("from_sec", &evalio::Stamp::from_sec)
-      .def_static("from_nsec", &evalio::Stamp::from_nsec)
-      .def("to_sec", &evalio::Stamp::to_sec)
-      .def("to_nsec", &evalio::Stamp::to_nsec)
-      .def_readonly("sec", &evalio::Stamp::sec)
-      .def_readonly("nsec", &evalio::Stamp::nsec)
+      .def_static("from_sec", &Stamp::from_sec)
+      .def_static("from_nsec", &Stamp::from_nsec)
+      .def("to_sec", &Stamp::to_sec)
+      .def("to_nsec", &Stamp::to_nsec)
+      .def_readonly("sec", &Stamp::sec)
+      .def_readonly("nsec", &Stamp::nsec)
       .def(py::self < py::self)
       .def(py::self > py::self)
       .def(py::self == py::self)
       .def(py::self != py::self)
-      .def("__repr__", &evalio::Stamp::toString);
+      .def(py::self - py::self)
+      .def("__repr__", &Stamp::toString)
+      .def("__copy__", [](const Stamp &self) { return Stamp(self); })
+      .def(
+          "__deepcopy__",
+          [](const Stamp &self, py::dict) { return Stamp(self); }, "memo"_a);
 
   // Lidar
-  py::class_<evalio::Point>(m, "Point")
+  py::class_<Point>(m, "Point")
       .def(py::init<double, double, double, double, uint32_t, uint32_t, uint8_t,
                     uint16_t>(),
            py::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
            "t"_a = 0, "range"_a = 0, "row"_a = 0, "col"_a = 0)
-      .def_readwrite("x", &evalio::Point::x)
-      .def_readwrite("y", &evalio::Point::y)
-      .def_readwrite("z", &evalio::Point::z)
-      .def_readwrite("intensity", &evalio::Point::intensity)
-      .def_readwrite("range", &evalio::Point::range)
-      .def_readwrite("t", &evalio::Point::t)
-      .def_readwrite("row", &evalio::Point::row)
-      .def_readwrite("col", &evalio::Point::col)
-      .def("__repr__", &evalio::Point::toString);
+      .def_readwrite("x", &Point::x)
+      .def_readwrite("y", &Point::y)
+      .def_readwrite("z", &Point::z)
+      .def_readwrite("intensity", &Point::intensity)
+      .def_readwrite("range", &Point::range)
+      .def_readwrite("t", &Point::t)
+      .def_readwrite("row", &Point::row)
+      .def_readwrite("col", &Point::col)
+      .def("__repr__", &Point::toString);
 
-  py::class_<evalio::LidarMeasurement>(m, "LidarMeasurement")
-      .def(py::init<evalio::Stamp, std::vector<evalio::Point>>(), "stamp"_a,
-           "points"_a)
-      .def_readonly("stamp", &evalio::LidarMeasurement::stamp)
-      .def_readonly("points", &evalio::LidarMeasurement::points)
-      .def("__repr__", &evalio::LidarMeasurement::toString);
+  py::class_<LidarMeasurement>(m, "LidarMeasurement")
+      .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
+      .def_readonly("stamp", &LidarMeasurement::stamp)
+      .def_readonly("points", &LidarMeasurement::points)
+      .def("__repr__", &LidarMeasurement::toString);
 
-  py::class_<evalio::LidarParams>(m, "LidarParams")
+  py::class_<LidarParams>(m, "LidarParams")
       .def(py::init<int, int, double, double>(), py::kw_only(), "num_rows"_a,
            "num_columns"_a, "min_range"_a, "max_range"_a)
-      .def_readonly("num_rows", &evalio::LidarParams::num_rows)
-      .def_readonly("num_columns", &evalio::LidarParams::num_columns)
-      .def_readonly("min_range", &evalio::LidarParams::min_range)
-      .def_readonly("max_range", &evalio::LidarParams::max_range)
-      .def("__repr__", &evalio::LidarParams::toString);
+      .def_readonly("num_rows", &LidarParams::num_rows)
+      .def_readonly("num_columns", &LidarParams::num_columns)
+      .def_readonly("min_range", &LidarParams::min_range)
+      .def_readonly("max_range", &LidarParams::max_range)
+      .def("__repr__", &LidarParams::toString);
 
   // Imu
-  py::class_<evalio::ImuMeasurement>(m, "ImuMeasurement")
-      .def(py::init<evalio::Stamp, Eigen::Vector3d, Eigen::Vector3d>(),
-           "stamp"_a, "gyro"_a, "accel"_a)
-      .def_readonly("stamp", &evalio::ImuMeasurement::stamp)
-      .def_readonly("gyro", &evalio::ImuMeasurement::gyro)
-      .def_readonly("accel", &evalio::ImuMeasurement::accel)
-      .def("__repr__", &evalio::ImuMeasurement::toString);
+  py::class_<ImuMeasurement>(m, "ImuMeasurement")
+      .def(py::init<Stamp, Eigen::Vector3d, Eigen::Vector3d>(), "stamp"_a,
+           "gyro"_a, "accel"_a)
+      .def_readonly("stamp", &ImuMeasurement::stamp)
+      .def_readonly("gyro", &ImuMeasurement::gyro)
+      .def_readonly("accel", &ImuMeasurement::accel)
+      .def("__repr__", &ImuMeasurement::toString);
 
-  py::class_<evalio::ImuParams>(m, "ImuParams")
+  py::class_<ImuParams>(m, "ImuParams")
       .def(py::init<double, double, double, double, double, double,
                     Eigen::Vector3d>(),
            py::kw_only(), "gyro"_a = 1e-5, "accel"_a = 1e-5,
            "gyro_bias"_a = 1e-6, "accel_bias"_a = 1e-6, "bias_init"_a = 1e-7,
            "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81))
-      .def_static("up", &evalio::ImuParams::up)
-      .def_static("down", &evalio::ImuParams::down)
-      .def_readwrite("gyro", &evalio::ImuParams::gyro)
-      .def_readwrite("accel", &evalio::ImuParams::accel)
-      .def_readwrite("gyro_bias", &evalio::ImuParams::gyro_bias)
-      .def_readwrite("accel_bias", &evalio::ImuParams::accel_bias)
-      .def_readwrite("bias_init", &evalio::ImuParams::bias_init)
-      .def_readwrite("integration", &evalio::ImuParams::integration)
-      .def_readwrite("gravity", &evalio::ImuParams::gravity)
-      .def("__repr__", &evalio::ImuParams::toString);
+      .def_static("up", &ImuParams::up)
+      .def_static("down", &ImuParams::down)
+      .def_readwrite("gyro", &ImuParams::gyro)
+      .def_readwrite("accel", &ImuParams::accel)
+      .def_readwrite("gyro_bias", &ImuParams::gyro_bias)
+      .def_readwrite("accel_bias", &ImuParams::accel_bias)
+      .def_readwrite("bias_init", &ImuParams::bias_init)
+      .def_readwrite("integration", &ImuParams::integration)
+      .def_readwrite("gravity", &ImuParams::gravity)
+      .def("__repr__", &ImuParams::toString);
 
-  py::class_<evalio::SO3>(m, "SO3")
+  py::class_<SO3>(m, "SO3")
       .def(py::init<double, double, double, double>(), py::kw_only(), "qx"_a,
            "qy"_a, "qz"_a, "qw"_a)
-      .def_readonly("qx", &evalio::SO3::qx)
-      .def_readonly("qy", &evalio::SO3::qy)
-      .def_readonly("qz", &evalio::SO3::qz)
-      .def_readonly("qw", &evalio::SO3::qw)
-      .def_static("identity", &evalio::SO3::identity)
-      .def("inverse", &evalio::SO3::inverse)
+      .def_readonly("qx", &SO3::qx)
+      .def_readonly("qy", &SO3::qy)
+      .def_readonly("qz", &SO3::qz)
+      .def_readonly("qw", &SO3::qw)
+      .def_static("identity", &SO3::identity)
+      .def_static("fromMat", &SO3::fromMat)
+      .def("inverse", &SO3::inverse)
+      .def("log", &SO3::log)
       .def(py::self * py::self)
-      .def("__repr__", &evalio::SO3::toString);
+      .def("__repr__", &SO3::toString)
+      .def("__copy__", [](const SO3 &self) { return SO3(self); })
+      .def(
+          "__deepcopy__", [](const SO3 &self, py::dict) { return SO3(self); },
+          "memo"_a);
 
-  py::class_<evalio::SE3>(m, "SE3")
-      .def(py::init<evalio::SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
-      .def_static("identity", &evalio::SE3::identity)
-      .def_readonly("rot", &evalio::SE3::rot)
-      .def_readonly("trans", &evalio::SE3::trans)
-      .def("inverse", &evalio::SE3::inverse)
+  py::class_<SE3>(m, "SE3")
+      .def(py::init<SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
+      .def_static("identity", &SE3::identity)
+      .def_static("fromMat", &SE3::fromMat)
+      .def_readonly("rot", &SE3::rot)
+      .def_readonly("trans", &SE3::trans)
+      .def("inverse", &SE3::inverse)
       .def(py::self * py::self)
-      .def("__repr__", &evalio::SE3::toString);
+      .def("__repr__", &SE3::toString)
+      .def("__copy__", [](const SE3 &self) { return SE3(self); })
+      .def(
+          "__deepcopy__", [](const SE3 &self, py::dict) { return SE3(self); },
+          "memo"_a);
 }
 
 }  // namespace evalio
