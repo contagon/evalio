@@ -138,12 +138,33 @@ class KissICP : public evalio::Pipeline {
   void add_imu(evalio::ImuMeasurement mm) override {};
 
   void add_lidar(evalio::LidarMeasurement mm) override {
+    // Set everything up
     std::vector<Eigen::Vector4d> points;
     points.reserve(mm.points.size());
+    std::vector<double> timestamps;
+    timestamps.reserve(mm.points.size());
+
+    // Assuming our mm stamp from middle of scan seems to work well
+    // => kiss expects timestamps in range [0, 1] and mid_pose_timestamp = 0.5
+    auto min_timestamp = *std::min_element(
+        mm.points.begin(), mm.points.end(),
+        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
+    auto max_timestamp = *std::max_element(
+        mm.points.begin(), mm.points.end(),
+        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
+
+    double diff = max_timestamp.t.to_sec() - min_timestamp.t.to_sec();
+    double scale = 1.0 / diff;
+    double offset = min_timestamp.t.to_sec();
+
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
+      double sec = point.t.to_sec();
+      sec = (sec + offset) * scale;
+      timestamps.push_back(sec);
     }
-    kiss_icp_->RegisterFrame(points);
+
+    kiss_icp_->RegisterFrame(points, timestamps);
   }
 
  private:

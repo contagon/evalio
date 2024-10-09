@@ -31,7 +31,7 @@ struct Field {
 };
 
 struct PointCloudMetadata {
-  evalio::Stamp stamp;
+  Stamp stamp;
   int width;
   int height;
   int point_step;
@@ -95,6 +95,39 @@ std::function<void(T&, const uint8_t*)> data_getter(DataType datatype,
   }
 }
 
+// Specialization for Stamp
+std::function<void(Stamp&, const uint8_t*)> data_getter(DataType datatype,
+                                                        const uint32_t offset) {
+  switch (datatype) {
+    case UINT16: {
+      return [offset](Stamp& value, const uint8_t* data) noexcept {
+        value =
+            Stamp::from_nsec(*reinterpret_cast<const uint16_t*>(data + offset));
+      };
+    }
+    case UINT32: {
+      return [offset](Stamp& value, const uint8_t* data) noexcept {
+        value =
+            Stamp::from_nsec(*reinterpret_cast<const uint32_t*>(data + offset));
+      };
+    }
+    case FLOAT32: {
+      return [offset](Stamp& value, const uint8_t* data) noexcept {
+        value = Stamp::from_sec(*reinterpret_cast<const float*>(data + offset));
+      };
+    }
+    case FLOAT64: {
+      return [offset](Stamp& value, const uint8_t* data) noexcept {
+        value =
+            Stamp::from_sec(*reinterpret_cast<const double*>(data + offset));
+      };
+    }
+    default: {
+      throw std::runtime_error("Unsupported datatype for stamp");
+    }
+  }
+}
+
 template <typename T>
 std::function<void(T&, const uint8_t*)> blank() {
   return [](T&, const uint8_t*) noexcept {};
@@ -107,7 +140,7 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
   std::function func_intensity = blank<double>();
-  std::function func_t = blank<uint32_t>();
+  std::function func_t = blank<Stamp>();
   std::function func_range = blank<uint32_t>();
   std::function func_row = blank<uint8_t>();
   std::function func_col = blank<uint16_t>();
@@ -125,8 +158,10 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
       func_z = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "intensity") {
       func_intensity = data_getter<double>(field.datatype, field.offset);
-    } else if (field.name == "t") {
-      func_t = data_getter<uint32_t>(field.datatype, field.offset);
+    } else if (field.name == "t" || field.name == "time" ||
+               field.name == "stamp" || field.name == "time_offset" ||
+               field.name == "timeOffset") {
+      func_t = data_getter(field.datatype, field.offset);
     } else if (field.name == "range") {
       func_range = data_getter<uint32_t>(field.datatype, field.offset);
     } else if (field.name == "row") {
@@ -140,7 +175,6 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
   evalio::LidarMeasurement mm(msg.stamp);
   mm.points.resize(msg.width * msg.height);
 
-  // TODO: Need to consider row_step at all?
   size_t index = 0;
   for (evalio::Point& point : mm.points) {
     const auto pointStart = data + static_cast<size_t>(index * msg.point_step);

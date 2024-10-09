@@ -58,7 +58,7 @@ struct Point {
   double y;
   double z;
   double intensity;
-  uint32_t t;  // in nanoseconds?
+  Stamp t;  // in nanoseconds?
   uint32_t range;
   uint8_t row;
   uint16_t col;
@@ -67,8 +67,9 @@ struct Point {
     return "Point(x: " + std::to_string(x) + ", y: " + std::to_string(y) +
            ", z: " + std::to_string(z) +
            ", intensity: " + std::to_string(intensity) +
-           ", t: " + std::to_string(t) + ", row: " + std::to_string(row) +
-           ", col: " + std::to_string(col) + ")";
+           ", t: " + std::to_string(t.to_sec()) +
+           ", row: " + std::to_string(row) + ", col: " + std::to_string(col) +
+           ")";
   }
 };
 
