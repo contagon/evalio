@@ -75,11 +75,15 @@ class PipelineBuilder:
 
     def build(self, dataset: Dataset) -> Pipeline:
         pipe = self.pipeline()
+        # Set dataset params
         pipe.set_imu_params(dataset.imu_params())
         pipe.set_lidar_params(dataset.lidar_params())
         pipe.set_imu_T_lidar(dataset.imu_T_lidar())
-        for key, value in self.params.items():
-            pipe.set_param(key, value)
+        # Set user params
+        params = pipe.default_params()
+        params.update(self.params)
+        pipe.set_params(params)
+        # Initialize pipeline
         pipe.initialize()
         return pipe
 
@@ -88,6 +92,9 @@ class PipelineBuilder:
 
 
 def parse_datasets(datasets: list[str | dict]) -> list[DatasetBuilder]:
+    if datasets is None:
+        return []
+
     all_datasets = get_datasets()
     valid_datasets = []
     for d in datasets:
@@ -115,6 +122,9 @@ def parse_datasets(datasets: list[str | dict]) -> list[DatasetBuilder]:
 
 
 def parse_pipelines(pipelines: list[dict]) -> list[PipelineBuilder]:
+    if pipelines is None:
+        return []
+
     all_pipelines = get_pipelines()
     valid_pipelines = []
     for p in pipelines:
@@ -146,11 +156,11 @@ def parse_config(
     out = Path(params["output_dir"])
 
     # process datasets & make sure they are downloaded by building
-    datasets = parse_datasets(params["datasets"])
+    datasets = parse_datasets(params.get("datasets", None))
     for d in datasets:
         d.build()
 
     # process pipelines
-    pipelines = parse_pipelines(params["pipelines"])
+    pipelines = parse_pipelines(params.get("pipelines", None))
 
     return pipelines, datasets, out

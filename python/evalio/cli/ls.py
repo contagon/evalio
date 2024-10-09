@@ -23,11 +23,11 @@ def ls(kind):
         )
 
     if kind == "pipelines":
-        data = [["Name", "Nname", "Params", "Types", "Link"]]
+        data = [["Name", "Nname", "Params", "Default", "Link"]]
         for p in get_pipelines(False).values():
-            params = p.params()
+            params = p.default_params()
             keys = "\n".join(params.keys())
-            values = "\n".join(params.values())
+            values = "\n".join([str(v) for v in params.values()])
             data.append([p.name(), p.nickname(), keys, values, p.url()])
         print(
             tabulate(

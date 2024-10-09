@@ -63,22 +63,23 @@ def main():
         download_datasets(args.datasets)
 
     elif args.command == "run":
-        if args.config and (args.datasets or args.pipeline or args.output):
-            raise ValueError("Cannot specify both config file and manual options")
-        if args.config:
-            pipelines, datasets, out = parse_config(args.config)
+        # Parse config file
+        pipelines, datasets, out = parse_config(args.config)
+
+        # Parse manually specified options
+        manual_pipelines = parse_pipelines(args.pipeline)
+        if args.length:
+            manual_datasets = parse_datasets(
+                [{"name": d, "length": args.length} for d in args.datasets]
+            )
         else:
-            pipelines = parse_pipelines(args.pipeline)
-            if args.length:
-                datasets = parse_datasets(
-                    [{"name": d, "length": args.length} for d in args.datasets]
-                )
-            else:
-                datasets = parse_datasets(args.datasets)
+            manual_datasets = parse_datasets(args.datasets)
 
-            out = args.output
+        out = args.output if args.output else out
+        pipelines += manual_pipelines
+        datasets += manual_datasets
 
-        if out.suffix != "":
+        if out.suffix == ".csv":
             raise ValueError("Output must be a directory")
 
         run(pipelines, datasets, out, visualize=args.visualize)

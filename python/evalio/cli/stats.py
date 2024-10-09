@@ -187,12 +187,14 @@ def eval_dataset(dir: Path, visualize: bool):
                 static=True,
             )
 
-    print(f"\nResults for {'/'.join(dir.parts[1:])}")
+    print(f"\nResults for {'/'.join(dir.parts[-2:])}")
     print(tabulate(results, headers=["Pipeline", "ATEt", "ATEr"], tablefmt="fancy"))
 
 
 def eval(dir: Path, visualize: bool):
     # TODO: Detect if a single folder or if we should glob
+    print("Evaluating experiments in", dir)
+
     # Glob over folders
     for dir in dir.glob("*/*"):
         if not dir.is_dir():

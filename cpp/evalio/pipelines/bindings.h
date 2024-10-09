@@ -36,17 +36,8 @@ class PyPipeline : public evalio::Pipeline {
   void set_imu_T_lidar(evalio::SE3 T) override {
     PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_imu_T_lidar, T);
   }
-  void set_param(std::string key, std::string value) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_param, key, value);
-  }
-  void set_param(std::string key, double value) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_param, key, value);
-  }
-  void set_param(std::string key, int value) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_param, key, value);
-  }
-  void set_param(std::string key, bool value) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_param, key, value);
+  void set_params(std::map<std::string, Param> params) override {
+    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_params, params);
   }
 
   // Doers
@@ -67,20 +58,13 @@ void makePipelines(py::module& m) {
       .def_static("name", &evalio::Pipeline::name)
       .def_static("nickname", &evalio::Pipeline::nickname)
       .def_static("url", &evalio::Pipeline::url)
-      .def_static("params", &evalio::Pipeline::params)
+      .def_static("default_params", &evalio::Pipeline::default_params)
       .def("pose", &evalio::Pipeline::pose)
       .def("map", &evalio::Pipeline::map)
       .def("initialize", &evalio::Pipeline::initialize)
       .def("add_imu", &evalio::Pipeline::add_imu)
       .def("add_lidar", &evalio::Pipeline::add_lidar)
-      .def("set_param", py::overload_cast<std::string, std::string>(
-                            &evalio::Pipeline::set_param))
-      .def("set_param",
-           py::overload_cast<std::string, bool>(&evalio::Pipeline::set_param))
-      .def("set_param",
-           py::overload_cast<std::string, int>(&evalio::Pipeline::set_param))
-      .def("set_param",
-           py::overload_cast<std::string, double>(&evalio::Pipeline::set_param))
+      .def("set_params", &evalio::Pipeline::set_params)
       .def("set_imu_params", &evalio::Pipeline::set_imu_params)
       .def("set_lidar_params", &evalio::Pipeline::set_lidar_params)
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar);
@@ -91,7 +75,7 @@ void makePipelines(py::module& m) {
       .def_static("name", &KissICP::name)
       .def_static("nickname", &KissICP::nickname)
       .def_static("url", &KissICP::url)
-      .def_static("params", &KissICP::params);
+      .def_static("default_params", &KissICP::default_params);
 }
 
 }  // namespace evalio
