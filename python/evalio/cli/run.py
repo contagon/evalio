@@ -10,13 +10,18 @@ from uuid import uuid4
 
 
 def run(
-    pipelines: PipelineBuilder, datasets: DatasetBuilder, output: Path, visualize: bool
+    pipelines: list[PipelineBuilder],
+    datasets: list[DatasetBuilder],
+    output: Path,
+    visualize: bool,
 ):
     if visualize:
         import rerun as rr
         import rerun.blueprint as rrb
 
         from evalio import vis as evis
+
+    print(f"Running {len(pipelines)} pipelines on {len(datasets)} datasets\n")
 
     for dbuilder in datasets:
         save_gt(output, dbuilder)
@@ -74,7 +79,7 @@ def run(
                     if visualize:
                         rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
                         rr.log("imu", evis.rerun(pose))
-                        rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
+                        # rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
 
                     loop.update()
                     if loop.n >= length:

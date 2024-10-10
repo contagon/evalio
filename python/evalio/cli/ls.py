@@ -1,12 +1,12 @@
 from tabulate import tabulate
 
-from .parser import get_datasets, get_pipelines
+from .parser import DatasetBuilder, PipelineBuilder
 
 
 def ls(kind):
     if kind == "datasets":
         data = [["Name", "Nname", "Sequences", "Nseq", "Down", "Link"]]
-        for d in get_datasets(False).values():
+        for d in DatasetBuilder._all_datasets(False).values():
             seq = "\n".join(d.sequences())
             nickseq = "\n".join(d.nicksequences())
             downloaded = [d.check_download(s) for s in d.sequences()]
@@ -24,7 +24,7 @@ def ls(kind):
 
     if kind == "pipelines":
         data = [["Name", "Nname", "Params", "Default", "Link"]]
-        for p in get_pipelines(False).values():
+        for p in PipelineBuilder._all_pipelines(False).values():
             params = p.default_params()
             keys = "\n".join(params.keys())
             values = "\n".join([str(v) for v in params.values()])

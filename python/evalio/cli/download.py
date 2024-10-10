@@ -1,9 +1,9 @@
-from .parser import parse_datasets
+from .parser import DatasetBuilder
 
 
 def download_datasets(datasets: list[str]) -> None:
     # parse all datasets
-    valid_datasets = parse_datasets(datasets)
+    valid_datasets = DatasetBuilder.parse(datasets)
 
     # Check if already downloaded
     to_download = []

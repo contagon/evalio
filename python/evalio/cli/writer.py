@@ -16,7 +16,8 @@ class Writer:
         # write metadata to the header
         self.path = path
         self.file = open(path, "w")
-        self.file.write(f"# pipeline: {pipeline.name}\n")
+        self.file.write(f"# name: {pipeline.name}\n")
+        self.file.write(f"# pipeline: {pipeline.pipeline.name()}\n")
         for key, value in pipeline.params.items():
             self.file.write(f"# {key}: {value}\n")
         self.file.write("#\n")

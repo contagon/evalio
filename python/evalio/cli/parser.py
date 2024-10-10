@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
 
 import yaml
+import functools
+import itertools
+from copy import deepcopy
 
 import evalio
 from evalio.datasets import Dataset
@@ -28,28 +32,67 @@ def find_types(module, skip=None, include_nicknames=True) -> dict[str, type]:
     return found
 
 
-def get_datasets(include_nicknames=True) -> dict[str, Dataset]:
-    return find_types(
-        evalio.datasets,
-        skip=evalio.datasets.Dataset,
-        include_nicknames=include_nicknames,
-    )
-
-
-def get_pipelines(include_nicknames=True) -> dict[str, Pipeline]:
-    return find_types(
-        evalio.pipelines,
-        skip=evalio.pipelines.Pipeline,
-        include_nicknames=include_nicknames,
-    )
-
-
 # ------------------------- Parsing input ------------------------- #
 @dataclass
 class DatasetBuilder:
     dataset: Dataset
     seq: str
     length: int = None
+
+    @staticmethod
+    @functools.lru_cache
+    def _all_datasets(include_nicknames=True):
+        return find_types(
+            evalio.datasets,
+            skip=evalio.datasets.Dataset,
+            include_nicknames=include_nicknames,
+        )
+
+    @classmethod
+    @functools.lru_cache
+    def _get_dataset(cls, name: str) -> Dataset:
+        DatasetType = cls._all_datasets().get(name, None)
+        if DatasetType is None:
+            raise ValueError(f"Dataset {name} not found")
+        return DatasetType
+
+    @classmethod
+    def parse(cls, d: dict | str | list[dict | str]) -> Sequence["DatasetBuilder"]:
+        # If empty just return
+        if d is None:
+            return []
+
+        # If just given a dataset name
+        if isinstance(d, str):
+            name, seq = d.split("/")
+            if seq == "*":
+                return [
+                    DatasetBuilder(cls._get_dataset(name), seq)
+                    for seq in cls._get_dataset(name).sequences()
+                ]
+            else:
+                return [DatasetBuilder(cls._get_dataset(name), seq)]
+
+        # If given a dictionary
+        elif isinstance(d, dict):
+            name, seq = d.pop("name").split("/")
+            length = d.pop("length", None)
+            assert len(d) == 0, f"Invalid dataset configuration {d}"
+            if seq == "*":
+                return [
+                    DatasetBuilder(cls._get_dataset(name), seq, length)
+                    for seq in cls._get_dataset(name).sequences()
+                ]
+            else:
+                return [DatasetBuilder(cls._get_dataset(name), seq, length)]
+
+        # If given a list, iterate
+        elif isinstance(d, list):
+            results = [DatasetBuilder.parse(x) for x in d]
+            return list(itertools.chain.from_iterable(results))
+
+        else:
+            raise ValueError(f"Invalid dataset configuration {d}")
 
     def __post_init__(self):
         self.seq = self.dataset.process_seq(self.seq)
@@ -73,6 +116,75 @@ class PipelineBuilder:
     pipeline: Pipeline
     params: dict
 
+    def __post_init__(self):
+        # Make sure all parameters are valid
+        all_params = self.pipeline.default_params()
+        for key in self.params.keys():
+            if key not in all_params:
+                raise ValueError(
+                    f"Invalid parameter {key} for pipeline {self.pipeline.name()}"
+                )
+
+        # Save all params to file later
+        all_params.update(self.params)
+        self.params = all_params
+
+    @staticmethod
+    @functools.lru_cache
+    def _all_pipelines(include_nicknames=True):
+        return find_types(
+            evalio.pipelines,
+            skip=evalio.pipelines.Pipeline,
+            include_nicknames=include_nicknames,
+        )
+
+    @classmethod
+    @functools.lru_cache
+    def _get_pipeline(cls, name: str) -> Pipeline:
+        PipelineType = cls._all_pipelines().get(name, None)
+        if PipelineType is None:
+            raise ValueError(f"Pipeline {name} not found")
+        return PipelineType
+
+    @classmethod
+    def parse(cls, p: dict | str | list[dict | str]) -> Sequence["PipelineBuilder"]:
+        # If empty just return
+        if p is None:
+            return []
+
+        # If just given a pipeline name
+        if isinstance(p, str):
+            return [PipelineBuilder(p, cls._get_pipeline(p), {})]
+
+        # If given a dictionary
+        elif isinstance(p, dict):
+            kind = p.pop("pipeline")
+            name = p.pop("name", kind)
+            kind = cls._get_pipeline(kind)
+            # If the dictionary has a sweep parameter in it
+            if "sweep" in p:
+                sweep = p.pop("sweep")
+                keys, values = zip(*sweep.items())
+                results = []
+                for options in itertools.product(*values):
+                    parsed_name = deepcopy(name)
+                    params = deepcopy(p)
+                    for k, o in zip(keys, options):
+                        params[k] = o
+                        parsed_name += f"__{k}.{o}"
+                    results.append(PipelineBuilder(parsed_name, kind, params))
+                return results
+            else:
+                return [PipelineBuilder(name, kind, p)]
+
+        # If given a list, iterate
+        elif isinstance(p, list):
+            results = [PipelineBuilder.parse(x) for x in p]
+            return list(itertools.chain.from_iterable(results))
+
+        else:
+            raise ValueError(f"Invalid pipeline configuration {p}")
+
     def build(self, dataset: Dataset) -> Pipeline:
         pipe = self.pipeline()
         # Set dataset params
@@ -80,70 +192,13 @@ class PipelineBuilder:
         pipe.set_lidar_params(dataset.lidar_params())
         pipe.set_imu_T_lidar(dataset.imu_T_lidar())
         # Set user params
-        params = pipe.default_params()
-        params.update(self.params)
-        pipe.set_params(params)
+        pipe.set_params(self.params)
         # Initialize pipeline
         pipe.initialize()
         return pipe
 
     def __str__(self):
         return f"{self.name}"
-
-
-def parse_datasets(datasets: list[str | dict]) -> list[DatasetBuilder]:
-    if datasets is None:
-        return []
-
-    all_datasets = get_datasets()
-    valid_datasets = []
-    for d in datasets:
-        if isinstance(d, dict):
-            length = d.get("length", None)
-            d = d["name"]
-        elif isinstance(d, str):
-            length = None
-
-        name, seq = d.split("/")
-
-        # Make sure dataset exists
-        DatasetType = all_datasets.get(name, None)
-        if DatasetType is None:
-            raise ValueError(f"Dataset {name} not found")
-
-        # Make sure sequence exists
-        if seq == "*":
-            for seq in DatasetType.sequences():
-                valid_datasets.append(DatasetBuilder(DatasetType, seq, length))
-        else:
-            valid_datasets.append(DatasetBuilder(DatasetType, seq, length))
-
-    return valid_datasets
-
-
-def parse_pipelines(pipelines: list[dict]) -> list[PipelineBuilder]:
-    if pipelines is None:
-        return []
-
-    all_pipelines = get_pipelines()
-    valid_pipelines = []
-    for p in pipelines:
-        if isinstance(p, dict):
-            kind = p.pop("pipeline")
-            name = p.pop("name", kind)
-        elif isinstance(p, str):
-            kind = p
-            name = kind
-            p = {}
-
-        # Make sure pipeline exists
-        PipelineType = all_pipelines.get(kind, None)
-        if PipelineType is None:
-            raise ValueError(f"Pipeline {kind} not found")
-
-        valid_pipelines.append(PipelineBuilder(name, PipelineType, p))
-
-    return valid_pipelines
 
 
 def parse_config(
@@ -156,11 +211,11 @@ def parse_config(
     out = Path(params["output_dir"])
 
     # process datasets & make sure they are downloaded by building
-    datasets = parse_datasets(params.get("datasets", None))
+    datasets = DatasetBuilder.parse(params.get("datasets", None))
     for d in datasets:
         d.build()
 
     # process pipelines
-    pipelines = parse_pipelines(params.get("pipelines", None))
+    pipelines = PipelineBuilder.parse(params.get("pipelines", None))
 
     return pipelines, datasets, out

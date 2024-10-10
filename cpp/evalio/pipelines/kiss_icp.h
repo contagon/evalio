@@ -12,7 +12,7 @@ evalio::Point to_evalio_point(Eigen::Vector4d point) {
           .y = point[1],
           .z = point[2],
           .intensity = point[3],
-          .t = 0,
+          .t = evalio::Stamp::from_sec(0),
           .row = 0,
           .col = 0};
 }

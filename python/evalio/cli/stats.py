@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional, Sequence
 from attr import dataclass
 from evalio.types import Stamp, SE3, SO3
 from copy import deepcopy
@@ -142,7 +143,25 @@ def compute_ate(traj: Trajectory, gt_poses: Trajectory) -> Ate:
     return Ate(rot=error_r, trans=error_t)
 
 
-def eval_dataset(dir: Path, visualize: bool):
+def dict_diff(dicts: Sequence[dict]) -> list[str]:
+    """
+    Assumes each dictionary has the same keys
+    """
+    # quick sanity check
+    size = len(dicts[0])
+    for d in dicts:
+        assert len(d) == size
+
+    # compare all dictionaries to find varying keys
+    diff = []
+    for k in dicts[0].keys():
+        if any(d[k] != dicts[0][k] for d in dicts):
+            diff.append(k)
+
+    return diff
+
+
+def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
@@ -173,30 +192,65 @@ def eval_dataset(dir: Path, visualize: bool):
             static=True,
         )
 
-    results = []
+    # Group into pipelines
+    pipelines = set(traj.metadata["pipeline"] for traj in trajs)
+    grouped_trajs = {p: [] for p in pipelines}
     for traj in trajs:
-        traj, gt = align_stamps(traj, deepcopy(gt_og))
-        align_poses(traj, gt)
-        ate = compute_ate(traj, gt)
-        results.append((traj.metadata["pipeline"], ate.trans, ate.rot))
+        grouped_trajs[traj.metadata["pipeline"]].append(traj)
 
-        if visualize:
-            rr.log(
-                traj.metadata["pipeline"],
-                evis.poses_to_points(traj.poses, color=[255, 0, 0]),
-                static=True,
+    # Find all keys that were different
+    keys_to_print = ["pipeline"]
+    for pipeline, trajs in grouped_trajs.items():
+        keys = dict_diff([traj.metadata for traj in trajs])
+        keys.remove("name")
+        keys_to_print += keys
+
+    header = ["ATEt", "ATEr", *keys_to_print]
+
+    print(f"\nResults for {dir}")
+    results = []
+    for pipeline, trajs in grouped_trajs.items():
+        # Iterate over each
+        for traj in trajs:
+            traj, gt = align_stamps(traj, deepcopy(gt_og))
+            align_poses(traj, gt)
+            ate = compute_ate(traj, gt)
+            results.append(
+                [
+                    ate.trans,
+                    ate.rot,
+                    *[traj.metadata.get(k, "--") for k in keys_to_print],
+                ]
             )
 
-    print(f"\nResults for {'/'.join(dir.parts[-2:])}")
-    print(tabulate(results, headers=["Pipeline", "ATEt", "ATEr"], tablefmt="fancy"))
+            if visualize:
+                rr.log(
+                    traj.metadata["name"],
+                    evis.poses_to_points(traj.poses, color=[255, 0, 0]),
+                    static=True,
+                )
+
+        if sort is None:
+            pass
+        elif sort.lower() == "atet":
+            results = sorted(results, key=lambda x: x[0])
+        elif sort.lower() == "ater":
+            results = sorted(results, key=lambda x: x[1])
+
+    print(tabulate(results, headers=header, tablefmt="fancy"))
 
 
-def eval(dir: Path, visualize: bool):
-    # TODO: Detect if a single folder or if we should glob
-    print("Evaluating experiments in", dir)
+def _contains_dir(directory: Path) -> bool:
+    return any(directory.is_dir() for directory in directory.glob("*"))
 
-    # Glob over folders
-    for dir in dir.glob("*/*"):
-        if not dir.is_dir():
-            continue
-        eval_dataset(dir, visualize)
+
+def eval(directories: list[Path], visualize: bool, sort: Optional[str] = None):
+    # Collect all bottom level directories
+    bottom_level_dirs = []
+    for directory in directories:
+        for subdir in directory.glob("**/"):
+            if not _contains_dir(subdir):
+                bottom_level_dirs.append(subdir)
+
+    for d in bottom_level_dirs:
+        eval_dataset(d, visualize, sort)

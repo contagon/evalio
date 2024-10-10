@@ -42,8 +42,11 @@ def main():
 
     # stats
     stats = subparsers.add_parser("stats", help="Compute statistics on experiments")
-    stats.add_argument("experiments", type=Path, help="Directory to experiments")
+    stats.add_argument(
+        "experiments", type=Path, nargs="+", help="Directory(s) to experiments"
+    )
     stats.add_argument("-v", "--visualize", action="store_true")
+    stats.add_argument("-s", "--sort", type=str, help="Sort by this key")
 
     argcomplete.autocomplete(args)
     args = args.parse_args()
@@ -51,7 +54,7 @@ def main():
     # Import these now to spend up argcomplete
     from .download import download_datasets
     from .ls import ls
-    from .parser import parse_config, parse_datasets, parse_pipelines
+    from .parser import parse_config, PipelineBuilder, DatasetBuilder
     from .run import run
     from .stats import eval
 
@@ -67,13 +70,11 @@ def main():
         pipelines, datasets, out = parse_config(args.config)
 
         # Parse manually specified options
-        manual_pipelines = parse_pipelines(args.pipeline)
+        manual_pipelines = PipelineBuilder.parse(args.pipeline)
+        manual_datasets = DatasetBuilder.parse(args.datasets)
         if args.length:
-            manual_datasets = parse_datasets(
-                [{"name": d, "length": args.length} for d in args.datasets]
-            )
-        else:
-            manual_datasets = parse_datasets(args.datasets)
+            for d in manual_datasets:
+                d.length = args.length
 
         out = args.output if args.output else out
         pipelines += manual_pipelines
@@ -85,7 +86,7 @@ def main():
         run(pipelines, datasets, out, visualize=args.visualize)
 
     elif args.command == "stats":
-        eval(args.experiments, args.visualize)
+        eval(args.experiments, args.visualize, args.sort)
 
 
 if __name__ == "__main__":
