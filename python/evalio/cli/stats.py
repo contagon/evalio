@@ -1,14 +1,14 @@
+import csv
+from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Sequence
-from attr import dataclass
-from evalio.types import Stamp, SE3, SO3
-from copy import deepcopy
-from tabulate import tabulate
 
 import numpy as np
-
-import csv
 import yaml
+from attr import dataclass
+from tabulate import tabulate
+
+from evalio.types import SE3, SO3, Stamp
 
 
 @dataclass(kw_only=True)
@@ -30,19 +30,19 @@ class Ate:
     rot: float
 
 
-def load(path: str) -> Trajectory:
+def load(path: Path) -> Trajectory:
     fieldnames = ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"]
 
     poses = []
     stamps = []
 
     with open(path) as file:
-        metadata = filter(lambda row: row[0] == "#", file)
-        metadata = [row[1:].strip() for row in metadata]
-        metadata.pop(-1)
-        metadata = "\n".join(metadata)
+        metadata_filter = filter(lambda row: row[0] == "#", file)
+        metadata_list = [row[1:].strip() for row in metadata_filter]
+        metadata_list.pop(-1)
+        metadata_str = "\n".join(metadata_list)
         # remove the header row
-        metadata = yaml.safe_load(metadata)
+        metadata = yaml.safe_load(metadata_str)
 
         # Load trajectory
         file.seek(0)
@@ -61,7 +61,7 @@ def load(path: str) -> Trajectory:
             if "nsec" not in fieldnames:
                 stamp = Stamp.from_sec(float(line["sec"]))
             elif "sec" not in fieldnames:
-                stamp = Stamp.from_nsec(float(line["nsec"]))
+                stamp = Stamp.from_nsec(int(line["nsec"]))
             else:
                 stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
             poses.append(pose)
@@ -116,7 +116,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Traj
     return traj1, traj2
 
 
-def align_poses(traj: Trajectory, gt: Trajectory) -> Trajectory:
+def align_poses(traj: Trajectory, gt: Trajectory):
     """Transforms the first to look like the second"""
     imu_o_T_imu_0 = traj.poses[0]
     gt_o_T_imu_0 = gt.poses[0]
@@ -131,11 +131,11 @@ def compute_ate(traj: Trajectory, gt_poses: Trajectory) -> Ate:
     """
     assert len(gt_poses) == len(traj)
 
-    error_t = 0
-    error_r = 0
+    error_t = 0.0
+    error_r = 0.0
     for gt, pose in zip(gt_poses.poses, traj.poses):
-        error_t += np.linalg.norm(gt.trans - pose.trans)
-        error_r += np.linalg.norm((gt.rot * pose.rot.inverse()).log())
+        error_t += float(np.linalg.norm(gt.trans - pose.trans))
+        error_r += float(np.linalg.norm((gt.rot * pose.rot.inverse()).log()))
 
     error_t /= len(gt_poses)
     error_r /= len(gt_poses)
@@ -168,17 +168,18 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
         traj = load(file_path)
         trajectories.append(traj)
 
-    gt = []
-    trajs = []
+    gt_list: list[Trajectory] = []
+    trajs: list[Trajectory] = []
     for t in trajectories:
-        (gt if t.metadata.get("gt", False) else trajs).append(t)
+        (gt_list if "gt" in t.metadata else trajs).append(t)
 
-    assert len(gt) == 1, f"Found multiple ground truths in {dir}"
-    gt_og = gt[0]
+    assert len(gt_list) == 1, f"Found multiple ground truths in {dir}"
+    gt_og = gt_list[0]
 
     # Setup visualization
     if visualize:
         import rerun as rr
+
         import evalio.vis as evis
 
         rr.init(
@@ -194,7 +195,7 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
 
     # Group into pipelines
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
-    grouped_trajs = {p: [] for p in pipelines}
+    grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
     for traj in trajs:
         grouped_trajs[traj.metadata["pipeline"]].append(traj)
 

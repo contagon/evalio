@@ -25,7 +25,7 @@ class NewerCollege2020(Dataset):
             "/os1_cloud_node/imu",
         )
 
-    def ground_truth(self) -> list[(Stamp, SE3)]:
+    def ground_truth(self) -> list[tuple[Stamp, SE3]]:
         # For some reason bag #7 is different
         if self.seq == "07_parkland_mound":
             return load_pose_csv(
@@ -70,14 +70,16 @@ class NewerCollege2020(Dataset):
     def imu_T_lidar() -> SE3:
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0),
-            [0.006252999883145094, -0.011775000020861626, 0.007644999772310257],
+            np.array(
+                [0.006252999883145094, -0.011775000020861626, 0.007644999772310257]
+            ),
         )
 
     @staticmethod
     def imu_T_gt() -> SE3:
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=0.38268, qw=0.92388),
-            [0.035643, 0.089026, -0.021653],
+            np.array([0.035643, 0.089026, -0.021653]),
         )
 
     @staticmethod
@@ -141,7 +143,7 @@ class NewerCollege2020(Dataset):
             "07_parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
         }[seq]
 
-        import gdown
+        import gdown  # type: ignore
 
         folder = EVALIO_DATA / NewerCollege2020.name() / seq
 

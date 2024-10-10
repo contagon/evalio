@@ -24,9 +24,10 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
     with urllib.request.urlopen(
         urllib.request.Request(url, headers={"User-Agent": "evalio"})
     ) as response:
-        with open(filename, "wb") as fh, tqdm(
-            total=response.length, unit="B", unit_scale=True
-        ) as pbar:
+        with (
+            open(filename, "wb") as fh,
+            tqdm(total=response.length, unit="B", unit_scale=True) as pbar,
+        ):
             while chunk := response.read(chunk_size):
                 fh.write(chunk)
                 pbar.update(len(chunk))
@@ -42,7 +43,7 @@ class EnWide(Dataset):
             "/ouster/imu",
         )
 
-    def ground_truth(self) -> list[(Stamp, SE3)]:
+    def ground_truth(self) -> list[tuple[Stamp, SE3]]:
         return load_pose_csv(
             EVALIO_DATA / EnWide.name() / self.seq / f"gt-{self.seq}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
@@ -86,11 +87,11 @@ class EnWide(Dataset):
         scale = 100
         imu_T_sensor = SE3(
             SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
-            [6.253 / scale, -11.775 / scale, 7.645 / scale],
+            np.array([6.253 / scale, -11.775 / scale, 7.645 / scale]),
         )
         lidar_T_sensor = SE3(
             SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0),
-            [0.0, 0.0, 0.3617 / scale],
+            np.array([0.0, 0.0, 0.3617 / scale]),
         )
         # TODO: Hardcode this later on
         return imu_T_sensor * lidar_T_sensor.inverse()
@@ -100,7 +101,7 @@ class EnWide(Dataset):
         # TODO: Needs to be inverted?
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
-            [-0.006253, 0.011775, 0.10825],
+            np.array([-0.006253, 0.011775, 0.10825]),
         )
 
     @staticmethod

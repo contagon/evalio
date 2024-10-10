@@ -25,7 +25,7 @@ class NewerCollege2021(Dataset):
             "/os_cloud_node/imu",
         )
 
-    def ground_truth(self) -> list[(Stamp, SE3)]:
+    def ground_truth(self) -> list[tuple[Stamp, SE3]]:
         return load_pose_csv(
             EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
@@ -66,14 +66,14 @@ class NewerCollege2021(Dataset):
     def imu_T_lidar() -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
-            [0.013801, -0.012207, -0.01514],
+            np.array([0.013801, -0.012207, -0.01514]),
         )
 
     @staticmethod
     def imu_T_gt() -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
-            [0.013642, -0.011607, -0.10583],
+            np.array([0.013642, -0.011607, -0.10583]),
         )
 
     @staticmethod
@@ -170,7 +170,7 @@ class NewerCollege2021(Dataset):
             "maths-hard": "1Rb2TBKP7ISC2XzDGU68ix5lFjEB6jXeX",
         }[seq]
 
-        import gdown
+        import gdown  # type: ignore
 
         folder = EVALIO_DATA / NewerCollege2021.name() / seq
 

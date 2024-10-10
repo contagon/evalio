@@ -1,11 +1,11 @@
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Sequence
-
-import yaml
 import functools
 import itertools
 from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional, Sequence
+
+import yaml
 
 import evalio
 from evalio.datasets import Dataset
@@ -14,17 +14,17 @@ from evalio.pipelines import Pipeline
 
 # ------------------------- Finding types ------------------------- #
 def find_types(module, skip=None, include_nicknames=True) -> dict[str, type]:
-    found = {}
+    found: dict[str, type] = {}
     # Include by name
     found |= dict(
-        (cls.name(), cls)
+        (cls.name(), cls)  # type:ignore
         for cls in module.__dict__.values()
         if isinstance(cls, type) and cls.__name__ != skip.__name__
     )
     # Include by nickname
     if include_nicknames:
         found |= dict(
-            (cls.nickname(), cls)
+            (cls.nickname(), cls)  # type:ignore
             for cls in module.__dict__.values()
             if isinstance(cls, type) and cls.__name__ != skip.__name__
         )
@@ -35,13 +35,13 @@ def find_types(module, skip=None, include_nicknames=True) -> dict[str, type]:
 # ------------------------- Parsing input ------------------------- #
 @dataclass
 class DatasetBuilder:
-    dataset: Dataset
+    dataset: type[Dataset]
     seq: str
-    length: int = None
+    length: Optional[int] = None
 
     @staticmethod
     @functools.lru_cache
-    def _all_datasets(include_nicknames=True):
+    def _all_datasets(include_nicknames=True) -> dict[str, type[Dataset]]:
         return find_types(
             evalio.datasets,
             skip=evalio.datasets.Dataset,
@@ -50,14 +50,14 @@ class DatasetBuilder:
 
     @classmethod
     @functools.lru_cache
-    def _get_dataset(cls, name: str) -> Dataset:
+    def _get_dataset(cls, name: str) -> type[Dataset]:
         DatasetType = cls._all_datasets().get(name, None)
         if DatasetType is None:
             raise ValueError(f"Dataset {name} not found")
         return DatasetType
 
     @classmethod
-    def parse(cls, d: dict | str | list[dict | str]) -> Sequence["DatasetBuilder"]:
+    def parse(cls, d: dict | str | Sequence[dict | str]) -> Sequence["DatasetBuilder"]:
         # If empty just return
         if d is None:
             return []
@@ -113,7 +113,7 @@ class DatasetBuilder:
 @dataclass
 class PipelineBuilder:
     name: str
-    pipeline: Pipeline
+    pipeline: type[Pipeline]
     params: dict
 
     def __post_init__(self):
@@ -131,7 +131,7 @@ class PipelineBuilder:
 
     @staticmethod
     @functools.lru_cache
-    def _all_pipelines(include_nicknames=True):
+    def _all_pipelines(include_nicknames=True) -> dict[str, type[Pipeline]]:
         return find_types(
             evalio.pipelines,
             skip=evalio.pipelines.Pipeline,
@@ -140,14 +140,14 @@ class PipelineBuilder:
 
     @classmethod
     @functools.lru_cache
-    def _get_pipeline(cls, name: str) -> Pipeline:
+    def _get_pipeline(cls, name: str) -> type[Pipeline]:
         PipelineType = cls._all_pipelines().get(name, None)
         if PipelineType is None:
             raise ValueError(f"Pipeline {name} not found")
         return PipelineType
 
     @classmethod
-    def parse(cls, p: dict | str | list[dict | str]) -> Sequence["PipelineBuilder"]:
+    def parse(cls, p: dict | str | Sequence[dict | str]) -> Sequence["PipelineBuilder"]:
         # If empty just return
         if p is None:
             return []
@@ -179,8 +179,8 @@ class PipelineBuilder:
 
         # If given a list, iterate
         elif isinstance(p, list):
-            results = [PipelineBuilder.parse(x) for x in p]
-            return list(itertools.chain.from_iterable(results))
+            pipes = [PipelineBuilder.parse(x) for x in p]
+            return list(itertools.chain.from_iterable(pipes))
 
         else:
             raise ValueError(f"Invalid pipeline configuration {p}")
@@ -203,7 +203,7 @@ class PipelineBuilder:
 
 def parse_config(
     config_file: Path,
-) -> tuple[list[PipelineBuilder], list[DatasetBuilder], Path]:
+) -> tuple[Sequence[PipelineBuilder], Sequence[DatasetBuilder], Path]:
     with open(config_file, "r") as f:
         params = yaml.safe_load(f)
 

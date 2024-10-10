@@ -54,7 +54,7 @@ def main():
     # Import these now to spend up argcomplete
     from .download import download_datasets
     from .ls import ls
-    from .parser import parse_config, PipelineBuilder, DatasetBuilder
+    from .parser import DatasetBuilder, PipelineBuilder, parse_config
     from .run import run
     from .stats import eval
 

@@ -37,7 +37,7 @@ class Dataset(Protocol):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self): ...
 
-    def ground_truth(self) -> list[(Stamp, SE3)]: ...
+    def ground_truth(self) -> list[tuple[Stamp, SE3]]: ...
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
@@ -69,11 +69,11 @@ class Dataset(Protocol):
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
-    def check_download(self, seq: str) -> bool:
+    def check_download(seq: str) -> bool:
         return True
 
     @staticmethod
-    def download(self, seq: str) -> None:
+    def download(seq: str) -> None:
         raise NotImplementedError("Download not implemented")
 
     # ------------------------- Helpers ------------------------- #
@@ -95,7 +95,9 @@ class Dataset(Protocol):
         else:
             raise ValueError(f"Sequence {seq} not in {cls.name()}")
 
-    def ground_truth_corrected(self, imu_o_T_imu_0: SE3 = None) -> list[(Stamp, SE3)]:
+    def ground_truth_corrected(
+        self, imu_o_T_imu_0: Optional[SE3] = None
+    ) -> list[tuple[Stamp, SE3]]:
         gt_poses = self.ground_truth()
         gt_T_imu = self.imu_T_gt().inverse()
 
@@ -140,7 +142,7 @@ def pointcloud2_to_evalio(msg) -> LidarMeasurement:
         is_dense=msg.is_dense,
     )
 
-    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))
+    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))  # type: ignore
 
 
 def imu_to_evalio(msg) -> ImuMeasurement:
@@ -176,10 +178,10 @@ class RosbagIter:
             if x.topic in [self.lidar_topic, self.imu_topic]
         ]
         if len(connections) == 0:
-            connections = [[c.topic, c.msgtype] for c in self.reader.connections]
+            connections_all = [[c.topic, c.msgtype] for c in self.reader.connections]
             print(
                 tabulate(
-                    connections, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
+                    connections_all, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
                 )
             )
             raise ValueError(
@@ -213,12 +215,12 @@ class RosbagIter:
 
 
 def load_pose_csv(
-    path: str, fieldnames: list[str], delimiter=","
-) -> list[(Stamp, SE3)]:
+    path: Path, fieldnames: list[str], delimiter=","
+) -> list[tuple[Stamp, SE3]]:
     poses = []
 
-    with open(path) as csvfile:
-        csvfile = filter(lambda row: row[0] != "#", csvfile)
+    with open(path) as f:
+        csvfile = filter(lambda row: row[0] != "#", f)
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
         for line in reader:
             r = SO3(
@@ -233,7 +235,7 @@ def load_pose_csv(
             if "nsec" not in fieldnames:
                 stamp = Stamp.from_sec(float(line["sec"]))
             elif "sec" not in fieldnames:
-                stamp = Stamp.from_nsec(float(line["nsec"]))
+                stamp = Stamp.from_nsec(int(line["nsec"]))
             else:
                 stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
             poses.append((stamp, pose))
@@ -241,5 +243,5 @@ def load_pose_csv(
     return poses
 
 
-def load_tum(path: Path) -> list[(Stamp, SE3)]:
+def load_tum(path: Path) -> list[tuple[Stamp, SE3]]:
     return load_pose_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])

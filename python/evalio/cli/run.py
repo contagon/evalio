@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 from tqdm import tqdm
 
@@ -6,7 +7,6 @@ from evalio.types import ImuMeasurement, LidarMeasurement
 
 from .parser import DatasetBuilder, PipelineBuilder
 from .writer import Writer, save_gt
-from uuid import uuid4
 
 
 def run(
@@ -51,8 +51,8 @@ def run(
                     writer.write(data.stamp, pose)
 
                     if not first_scan_done and visualize:
-                        gt = dataset.ground_truth_corrected(pose)
-                        gt = [pose for _, pose in gt]
+                        gt_traj = dataset.ground_truth_corrected(pose)
+                        gt = [pose for _, pose in gt_traj]
                         rr.new_recording(
                             str(dbuilder),
                             make_default=True,
