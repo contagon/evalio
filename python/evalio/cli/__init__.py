@@ -4,6 +4,23 @@ import argparse
 from pathlib import Path
 
 import argcomplete
+import itertools
+
+from .parser import DatasetBuilder, PipelineBuilder, parse_config
+
+
+def dataset_completer(**kwargs):
+    datasets = DatasetBuilder._all_datasets()
+    datasets = itertools.chain.from_iterable(
+        [f"{d.name()}/{seq}" for seq in d.sequences()] for d in datasets.values()
+    )
+    return datasets
+
+
+def pipeline_completer(**kwargs):
+    pipelines = PipelineBuilder._all_pipelines()
+    pipelines = [p.name() for p in pipelines.values()]
+    return pipelines
 
 
 def main():
@@ -17,7 +34,7 @@ def main():
     download = subparsers.add_parser("download", help="Download datasets")
     download.add_argument(
         "datasets", type=str, help="Dataset(s) to download", nargs="+"
-    )
+    ).completer = dataset_completer
 
     # ls
     ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
@@ -30,10 +47,10 @@ def main():
     by_hand = run.add_argument_group("Manually specify options")
     by_hand.add_argument(
         "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
-    )
+    ).completer = dataset_completer
     by_hand.add_argument(
         "-p", "--pipeline", type=str, nargs="+", help="Pipeline(s) to run"
-    )
+    ).completer = pipeline_completer
     by_hand.add_argument("-o", "--output", type=Path, help="Output directory")
     by_hand.add_argument(
         "-l", "--length", type=int, help="Number of scans to process for each dataset"
@@ -48,13 +65,13 @@ def main():
     stats.add_argument("-v", "--visualize", action="store_true")
     stats.add_argument("-s", "--sort", type=str, help="Sort by this key")
 
+    # autocomplete
     argcomplete.autocomplete(args)
     args = args.parse_args()
 
     # Import these now to spend up argcomplete
     from .download import download_datasets
     from .ls import ls
-    from .parser import DatasetBuilder, PipelineBuilder, parse_config
     from .run import run
     from .stats import eval
 

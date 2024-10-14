@@ -6,7 +6,8 @@ from tqdm import tqdm
 from evalio.types import ImuMeasurement, LidarMeasurement
 
 from .parser import DatasetBuilder, PipelineBuilder
-from .writer import Writer, save_gt
+from .writer import TrajectoryWriter, save_config, save_gt
+from .stats import eval
 
 
 def run(
@@ -21,7 +22,11 @@ def run(
 
         from evalio import vis as evis
 
-    print(f"Running {len(pipelines)} pipelines on {len(datasets)} datasets\n")
+    print(
+        f"Running {len(pipelines)} pipelines on {len(datasets)} datasets => {len(pipelines) * len(datasets)} experiments"
+    )
+    print(f"Output will be saved to {output}\n")
+    save_config(pipelines, datasets, output)
 
     for dbuilder in datasets:
         save_gt(output, dbuilder)
@@ -31,7 +36,7 @@ def run(
             # Build everything
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
-            writer = Writer(output, pbuilder, dbuilder)
+            writer = TrajectoryWriter(output, pbuilder, dbuilder)
 
             # Initialize params
             first_scan_done = False
@@ -79,7 +84,7 @@ def run(
                     if visualize:
                         rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
                         rr.log("imu", evis.rerun(pose))
-                        # rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
+                        rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
 
                     loop.update()
                     if loop.n >= length:
@@ -87,3 +92,5 @@ def run(
                         break
 
             writer.close()
+
+    eval([output], False)

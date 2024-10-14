@@ -47,13 +47,7 @@ class Dataset(Protocol):
     def name() -> str: ...
 
     @staticmethod
-    def nickname() -> str: ...
-
-    @staticmethod
     def sequences() -> list[str]: ...
-
-    @staticmethod
-    def nicksequences() -> list[str]: ...
 
     @staticmethod
     def imu_T_lidar() -> SE3: ...
@@ -87,13 +81,10 @@ class Dataset(Protocol):
 
     @classmethod
     def process_seq(cls, seq: str):
-        if seq in cls.sequences():
-            return seq
-        elif seq in cls.nicksequences():
-            idx = cls.nicksequences().index(seq)
-            return cls.sequences()[idx]
-        else:
+        if seq not in cls.sequences():
             raise ValueError(f"Sequence {seq} not in {cls.name()}")
+
+        return seq
 
     def ground_truth_corrected(
         self, imu_o_T_imu_0: Optional[SE3] = None

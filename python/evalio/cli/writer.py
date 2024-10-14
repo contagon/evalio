@@ -1,13 +1,30 @@
 import atexit
 import csv
 from pathlib import Path
-
+from typing import Sequence
+import yaml
 from evalio.types import SE3, Stamp
 
 from .parser import DatasetBuilder, PipelineBuilder
 
 
-class Writer:
+def save_config(
+    pipelines: Sequence[PipelineBuilder],
+    datasets: Sequence[DatasetBuilder],
+    output: Path,
+):
+    output.mkdir(parents=True, exist_ok=True)
+    path = output / "config.yaml"
+
+    out = dict()
+    out["datasets"] = [d.as_dict() for d in datasets]
+    out["pipelines"] = [p.as_dict() for p in pipelines]
+
+    with open(path, "w") as f:
+        yaml.dump(out, f)
+
+
+class TrajectoryWriter:
     def __init__(self, path: Path, pipeline: PipelineBuilder, dataset: DatasetBuilder):
         path = path / dataset.dataset.name() / dataset.seq
         path.mkdir(parents=True, exist_ok=True)

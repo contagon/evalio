@@ -5,3 +5,4 @@ build*
 __pycache__
 *.yaml
 *.csv
+.cache

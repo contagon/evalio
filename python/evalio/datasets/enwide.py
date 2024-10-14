@@ -60,10 +60,6 @@ class EnWide(Dataset):
         return "enwide"
 
     @staticmethod
-    def nickname() -> str:
-        return "enwide"
-
-    @staticmethod
     def sequences() -> list[str]:
         return [
             "field_d",
@@ -77,10 +73,6 @@ class EnWide(Dataset):
             "tunnel_d",
             "tunnel_s",
         ]
-
-    @staticmethod
-    def nicksequences() -> list[str]:
-        return ["fd", "fs", "id", "is", "kd", "ks", "rd", "rs", "td", "ts"]
 
     @staticmethod
     def imu_T_lidar() -> SE3:

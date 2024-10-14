@@ -7,7 +7,7 @@
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
 
-evalio::Point to_evalio_point(Eigen::Vector4d point) {
+inline evalio::Point to_evalio_point(Eigen::Vector4d point) {
   return {.x = point[0],
           .y = point[1],
           .z = point[2],
@@ -17,11 +17,11 @@ evalio::Point to_evalio_point(Eigen::Vector4d point) {
           .col = 0};
 }
 
-Eigen::Vector4d to_eigen_point(evalio::Point point) {
+inline Eigen::Vector4d to_eigen_point(evalio::Point point) {
   return {point.x, point.y, point.z, point.intensity};
 }
 
-evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
+inline evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
   const auto t = pose.translation();
   const auto q = pose.unit_quaternion();
   const auto rot =
@@ -29,7 +29,7 @@ evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
   return evalio::SE3(rot, t);
 }
 
-Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
+inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
   return Sophus::SE3d(Sophus::SO3d(pose.rot.toEigen()), pose.trans);
 }
 
@@ -38,23 +38,16 @@ class KissICP : public evalio::Pipeline {
   KissICP() : config_() {};
 
   // Info
-  static std::string name() { return "KissICP"; }
-  static std::string nickname() { return "kiss"; }
+  static std::string name() { return "kiss"; }
   static std::string url() { return "https://github.com/contagon/kiss-icp"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
-        {"voxel_size", 1.0},
-        {"max_range", 100.0},
-        {"min_range", 5.0},
-        {"min_motion_th", 0.1},
-        {"initial_threshold", 2.0},
-        {"convergence_criterion", 0.0001},
-        {"max_num_iterations", 500},
-        {"max_num_threads", 0},
-        {"max_points_per_voxel", 20},
-        {"deskew", false},
-        {"use_intensity_metric", false},
-        {"use_intensity_residual", false},
+        {"voxel_size", 1.0},          {"max_range", 100.0},
+        {"min_range", 5.0},           {"min_motion_th", 0.1},
+        {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
+        {"max_num_iterations", 500},  {"max_num_threads", 0},
+        {"max_points_per_voxel", 20}, {"deskew", false},
+        {"intensity_metric", 0},      {"intensity_residual", 0},
     };
   }
 
@@ -85,10 +78,6 @@ class KissICP : public evalio::Pipeline {
       if (std::holds_alternative<bool>(value)) {
         if (key == "deskew") {
           config_.deskew = std::get<bool>(value);
-        } else if (key == "use_intensity_metric") {
-          config_.use_intensity_metric = std::get<bool>(value);
-        } else if (key == "use_intensity_residual") {
-          config_.use_intensity_residual = std::get<bool>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have bool param " + key);
@@ -100,6 +89,10 @@ class KissICP : public evalio::Pipeline {
           config_.max_num_iterations = std::get<int>(value);
         } else if (key == "max_num_threads") {
           config_.max_num_threads = std::get<int>(value);
+        } else if (key == "intensity_metric") {
+          config_.intensity_metric = std::get<int>(value);
+        } else if (key == "intensity_residual") {
+          config_.intensity_residual = std::get<int>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have int param " + key);

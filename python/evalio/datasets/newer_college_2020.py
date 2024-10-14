@@ -49,10 +49,6 @@ class NewerCollege2020(Dataset):
         return "newer_college_2020"
 
     @staticmethod
-    def nickname() -> str:
-        return "nc20"
-
-    @staticmethod
     def sequences() -> list[str]:
         return [
             "01_short_experiment",
@@ -61,10 +57,6 @@ class NewerCollege2020(Dataset):
             "06_dynamic_spinning",
             "07_parkland_mound",
         ]
-
-    @staticmethod
-    def nicksequences() -> list[str]:
-        return ["01", "02", "05", "06", "07"]
 
     @staticmethod
     def imu_T_lidar() -> SE3:

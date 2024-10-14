@@ -52,11 +52,10 @@ class PyPipeline : public evalio::Pipeline {
   }
 };
 
-void makePipelines(py::module& m) {
+inline void makePipelines(py::module& m) {
   py::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
       .def(py::init<>())
       .def_static("name", &evalio::Pipeline::name)
-      .def_static("nickname", &evalio::Pipeline::nickname)
       .def_static("url", &evalio::Pipeline::url)
       .def_static("default_params", &evalio::Pipeline::default_params)
       .def("pose", &evalio::Pipeline::pose)
@@ -73,7 +72,6 @@ void makePipelines(py::module& m) {
   py::class_<KissICP, evalio::Pipeline>(m, "KissICP")
       .def(py::init<>())
       .def_static("name", &KissICP::name)
-      .def_static("nickname", &KissICP::nickname)
       .def_static("url", &KissICP::url)
       .def_static("default_params", &KissICP::default_params);
 }

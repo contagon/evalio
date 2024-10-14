@@ -13,21 +13,13 @@ from evalio.pipelines import Pipeline
 
 
 # ------------------------- Finding types ------------------------- #
-def find_types(module, skip=None, include_nicknames=True) -> dict[str, type]:
+def find_types(module, skip=None) -> dict[str, type]:
     found: dict[str, type] = {}
-    # Include by name
     found |= dict(
         (cls.name(), cls)  # type:ignore
         for cls in module.__dict__.values()
         if isinstance(cls, type) and cls.__name__ != skip.__name__
     )
-    # Include by nickname
-    if include_nicknames:
-        found |= dict(
-            (cls.nickname(), cls)  # type:ignore
-            for cls in module.__dict__.values()
-            if isinstance(cls, type) and cls.__name__ != skip.__name__
-        )
 
     return found
 
@@ -40,16 +32,15 @@ class DatasetBuilder:
     length: Optional[int] = None
 
     @staticmethod
-    @functools.lru_cache
-    def _all_datasets(include_nicknames=True) -> dict[str, type[Dataset]]:
+    @functools.cache
+    def _all_datasets() -> dict[str, type[Dataset]]:
         return find_types(
             evalio.datasets,
             skip=evalio.datasets.Dataset,
-            include_nicknames=include_nicknames,
         )
 
     @classmethod
-    @functools.lru_cache
+    @functools.cache
     def _get_dataset(cls, name: str) -> type[Dataset]:
         DatasetType = cls._all_datasets().get(name, None)
         if DatasetType is None:
@@ -94,6 +85,13 @@ class DatasetBuilder:
         else:
             raise ValueError(f"Invalid dataset configuration {d}")
 
+    def as_dict(self) -> dict[str, str | int]:
+        out: dict[str, str | int] = {"name": f"{self.dataset.name()}/{self.seq}"}
+        if self.length is not None:
+            out["length"] = self.length
+
+        return out
+
     def __post_init__(self):
         self.seq = self.dataset.process_seq(self.seq)
 
@@ -131,11 +129,10 @@ class PipelineBuilder:
 
     @staticmethod
     @functools.lru_cache
-    def _all_pipelines(include_nicknames=True) -> dict[str, type[Pipeline]]:
+    def _all_pipelines() -> dict[str, type[Pipeline]]:
         return find_types(
             evalio.pipelines,
             skip=evalio.pipelines.Pipeline,
-            include_nicknames=include_nicknames,
         )
 
     @classmethod
@@ -184,6 +181,9 @@ class PipelineBuilder:
 
         else:
             raise ValueError(f"Invalid pipeline configuration {p}")
+
+    def as_dict(self) -> dict:
+        return {"name": self.name, "pipeline": self.pipeline.name(), **self.params}
 
     def build(self, dataset: Dataset) -> Pipeline:
         pipe = self.pipeline()
