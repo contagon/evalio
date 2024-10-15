@@ -55,7 +55,13 @@ def main():
     by_hand.add_argument(
         "-l", "--length", type=int, help="Number of scans to process for each dataset"
     )
-    run.add_argument("-v", "--visualize", action="store_true")
+    run.add_argument(
+        "-v",
+        "--visualize",
+        action="count",
+        default=0,
+        help="Visualize results. Repeat up to 3 times for more detail",
+    )
 
     # stats
     stats = subparsers.add_parser("stats", help="Compute statistics on experiments")
@@ -74,6 +80,7 @@ def main():
     from .ls import ls
     from .run import run
     from .stats import eval
+    from evalio.rerun import RerunVis, RerunConfig
 
     # parse
     if args.command == "ls":
@@ -100,7 +107,10 @@ def main():
         if out.suffix == ".csv":
             raise ValueError("Output must be a directory")
 
-        run(pipelines, datasets, out, visualize=args.visualize)
+        # parse visualizer
+        vis = RerunVis(args.visualize, RerunConfig())
+
+        run(pipelines, datasets, out, vis)
 
     elif args.command == "stats":
         eval(args.experiments, args.visualize, args.sort)

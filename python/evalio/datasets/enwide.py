@@ -3,6 +3,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from evalio.types import Trajectory
 import numpy as np
 from tqdm import tqdm
 
@@ -14,7 +15,6 @@ from .base import (
     ImuParams,
     LidarParams,
     RosbagIter,
-    Stamp,
     load_pose_csv,
 )
 
@@ -43,7 +43,7 @@ class EnWide(Dataset):
             "/ouster/imu",
         )
 
-    def ground_truth(self) -> list[tuple[Stamp, SE3]]:
+    def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
             EVALIO_DATA / EnWide.name() / self.seq / f"gt-{self.seq}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],

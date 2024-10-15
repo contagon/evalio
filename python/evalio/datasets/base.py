@@ -22,6 +22,7 @@ from evalio.types import (
     LidarMeasurement,
     LidarParams,
     Stamp,
+    Trajectory,
 )
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
@@ -37,7 +38,7 @@ class Dataset(Protocol):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self): ...
 
-    def ground_truth(self) -> list[tuple[Stamp, SE3]]: ...
+    def ground_truth_raw(self) -> Trajectory: ...
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
@@ -86,28 +87,19 @@ class Dataset(Protocol):
 
         return seq
 
-    def ground_truth_corrected(
-        self, imu_o_T_imu_0: Optional[SE3] = None
-    ) -> list[tuple[Stamp, SE3]]:
-        gt_poses = self.ground_truth()
+    def ground_truth(self) -> Trajectory:
+        gt_traj = self.ground_truth()
         gt_T_imu = self.imu_T_gt().inverse()
 
-        if imu_o_T_imu_0 is None:
-            imu_o_T_gt_o = SE3.identity()
-        else:
-            # Load all transforms
-            stamp, gt_o_T_gt_0 = gt_poses[0]
+        # Conver to IMU frame
+        for i in range(len(gt_traj)):
+            gt_o_T_gt_i = gt_traj.poses[i]
+            gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
 
-            # compute imu_o_T_gt_o
-            gt_o_T_imu_0 = gt_o_T_gt_0 * gt_T_imu
-            imu_o_T_gt_o = imu_o_T_imu_0 * gt_o_T_imu_0.inverse()
+        return gt_traj
 
-        # Clean all poses
-        gt_poses_corrected = []
-        for stamp, gt_o_T_gt_i in gt_poses:
-            gt_poses_corrected.append((stamp, imu_o_T_gt_o * gt_o_T_gt_i * gt_T_imu))
-
-        return gt_poses_corrected
+    def __str__(self):
+        return f"{self.name()}/{self.seq}"
 
 
 # ------------------------- Helpers ------------------------- #
@@ -205,10 +197,9 @@ class RosbagIter:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 
 
-def load_pose_csv(
-    path: Path, fieldnames: list[str], delimiter=","
-) -> list[tuple[Stamp, SE3]]:
+def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajectory:
     poses = []
+    stamps = []
 
     with open(path) as f:
         csvfile = filter(lambda row: row[0] != "#", f)
@@ -229,10 +220,11 @@ def load_pose_csv(
                 stamp = Stamp.from_nsec(int(line["nsec"]))
             else:
                 stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
-            poses.append((stamp, pose))
+            poses.append(pose)
+            stamps.append(stamp)
 
-    return poses
+    return Trajectory(metadata={}, stamps=stamps, poses=poses)
 
 
-def load_tum(path: Path) -> list[tuple[Stamp, SE3]]:
+def load_tum(path: Path) -> Trajectory:
     return load_pose_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])

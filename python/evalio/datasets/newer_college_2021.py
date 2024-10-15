@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from evalio.types import Trajectory
 import numpy as np
 
 from .base import (
@@ -10,7 +11,6 @@ from .base import (
     ImuParams,
     LidarParams,
     RosbagIter,
-    Stamp,
     load_pose_csv,
 )
 
@@ -25,7 +25,7 @@ class NewerCollege2021(Dataset):
             "/os_cloud_node/imu",
         )
 
-    def ground_truth(self) -> list[tuple[Stamp, SE3]]:
+    def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
             EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],

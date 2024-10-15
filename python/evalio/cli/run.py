@@ -1,29 +1,26 @@
 from pathlib import Path
-from uuid import uuid4
-
 from tqdm import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
+from evalio.rerun import RerunVis
 
 from .parser import DatasetBuilder, PipelineBuilder
 from .writer import TrajectoryWriter, save_config, save_gt
 from .stats import eval
 
 
+def plural(num: int, word: str) -> str:
+    return f"{num} {word}{ 's' if num > 1 else ''}"
+
+
 def run(
     pipelines: list[PipelineBuilder],
     datasets: list[DatasetBuilder],
     output: Path,
-    visualize: bool,
+    vis: RerunVis,
 ):
-    if visualize:
-        import rerun as rr
-        import rerun.blueprint as rrb
-
-        from evalio import vis as evis
-
     print(
-        f"Running {len(pipelines)} pipelines on {len(datasets)} datasets => {len(pipelines) * len(datasets)} experiments"
+        f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
     print(f"Output will be saved to {output}\n")
     save_config(pipelines, datasets, output)
@@ -55,36 +52,11 @@ def run(
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
-                    if not first_scan_done and visualize:
-                        gt_traj = dataset.ground_truth_corrected(pose)
-                        gt = [pose for _, pose in gt_traj]
-                        rr.new_recording(
-                            str(dbuilder),
-                            make_default=True,
-                            recording_id=uuid4(),
-                        )
-                        rr.connect(
-                            "0.0.0.0:9876",
-                            default_blueprint=rrb.Spatial3DView(
-                                overrides={"imu/lidar": [rrb.components.Visible(False)]}
-                            ),
-                        )
-                        rr.log(
-                            "gt",
-                            evis.poses_to_points(gt, color=[0, 0, 255]),
-                            static=True,
-                        )
-                        rr.log(
-                            "imu/lidar",
-                            evis.rerun(dataset.imu_T_lidar()),
-                            static=True,
-                        )
-                    first_scan_done = True
+                    if not first_scan_done:
+                        vis.new_recording(dataset)
+                        first_scan_done = True
 
-                    if visualize:
-                        rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
-                        rr.log("imu", evis.rerun(pose))
-                        rr.log("imu/lidar/frame", evis.rerun(data, use_intensity=True))
+                    vis.log(data, pose)
 
                     loop.update()
                     if loop.n >= length:

@@ -8,20 +8,7 @@ import yaml
 from attr import dataclass
 from tabulate import tabulate
 
-from evalio.types import SE3, SO3, Stamp
-
-
-@dataclass(kw_only=True)
-class Trajectory:
-    metadata: dict
-    stamps: list[Stamp]
-    poses: list[SE3]
-
-    def __getitem__(self, idx):
-        return self.stamps[idx], self.poses[idx]
-
-    def __len__(self):
-        return len(self.stamps)
+from evalio.types import SE3, SO3, Stamp, Trajectory
 
 
 @dataclass(kw_only=True)
@@ -177,21 +164,21 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     gt_og = gt_list[0]
 
     # Setup visualization
-    if visualize:
-        import rerun as rr
+    # if visualize:
+    #     import rerun as rr
 
-        import evalio.vis as evis
+    #     import evalio.vis as evis
 
-        rr.init(
-            str(dir),
-            spawn=False,
-        )
-        rr.connect("0.0.0.0:9876")
-        rr.log(
-            "gt",
-            evis.poses_to_points(gt_og.poses, color=[0, 0, 255]),
-            static=True,
-        )
+    #     rr.init(
+    #         str(dir),
+    #         spawn=False,
+    #     )
+    #     rr.connect("0.0.0.0:9876")
+    #     rr.log(
+    #         "gt",
+    #         evis.poses_to_points(gt_og.poses, color=[0, 0, 255]),
+    #         static=True,
+    #     )
 
     # Group into pipelines
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
@@ -224,12 +211,12 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
                 ]
             )
 
-            if visualize:
-                rr.log(
-                    traj.metadata["name"],
-                    evis.poses_to_points(traj.poses, color=[255, 0, 0]),
-                    static=True,
-                )
+            # if visualize:
+            #     rr.log(
+            #         traj.metadata["name"],
+            #         evis.poses_to_points(traj.poses, color=[255, 0, 0]),
+            #         static=True,
+            #     )
 
         if sort is None:
             pass

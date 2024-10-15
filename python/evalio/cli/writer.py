@@ -72,7 +72,7 @@ class TrajectoryWriter:
 
 
 def save_gt(output: Path, dataset: DatasetBuilder):
-    gt = dataset.build().ground_truth_corrected()
+    gt = dataset.build().ground_truth()
     path = output / dataset.dataset.name() / dataset.seq
     path.mkdir(parents=True, exist_ok=True)
     path = path / "gt.csv"
