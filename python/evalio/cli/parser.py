@@ -117,11 +117,13 @@ class PipelineBuilder:
     def __post_init__(self):
         # Make sure all parameters are valid
         all_params = self.pipeline.default_params()
-        for key in self.params.keys():
-            if key not in all_params:
-                raise ValueError(
-                    f"Invalid parameter {key} for pipeline {self.pipeline.name()}"
-                )
+        # TODO: Find a way to handle this gracefully for the wrapper
+        # Maybe a function in the pipeline class?
+        # for key in self.params.keys():
+        #     if key not in all_params:
+        #         raise ValueError(
+        #             f"Invalid parameter {key} for pipeline {self.pipeline.name()}"
+        #         )
 
         # Save all params to file later
         all_params.update(self.params)
@@ -187,12 +189,12 @@ class PipelineBuilder:
 
     def build(self, dataset: Dataset) -> Pipeline:
         pipe = self.pipeline()
+        # Set user params
+        pipe.set_params(self.params)
         # Set dataset params
         pipe.set_imu_params(dataset.imu_params())
         pipe.set_lidar_params(dataset.lidar_params())
         pipe.set_imu_T_lidar(dataset.imu_T_lidar())
-        # Set user params
-        pipe.set_params(self.params)
         # Initialize pipeline
         pipe.initialize()
         return pipe

@@ -88,7 +88,7 @@ class Dataset(Protocol):
         return seq
 
     def ground_truth(self) -> Trajectory:
-        gt_traj = self.ground_truth()
+        gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
 
         # Conver to IMU frame

@@ -34,6 +34,6 @@ def ls(kind):
                 headers="firstrow",
                 tablefmt="fancy_grid",
                 rowalign="center",
-                colalign=("center", "center", "right", "left"),
+                colalign=("center", "right", "left", "center"),
             )
         )
