@@ -11,8 +11,8 @@ namespace evalio {
 using Param = std::variant<bool, int, double, std::string>;
 
 class Pipeline {
- public:
-  virtual ~Pipeline() {};
+public:
+  virtual ~Pipeline(){};
 
   // Info
   static std::string name() { throw std::runtime_error("Not implemented"); }
@@ -35,7 +35,7 @@ class Pipeline {
   // Doers
   virtual void initialize() = 0;
   virtual void add_imu(ImuMeasurement mm) = 0;
-  virtual void add_lidar(LidarMeasurement mm) = 0;
+  virtual std::vector<Point> add_lidar(LidarMeasurement mm) = 0;
 };
 
-}  // namespace evalio
+} // namespace evalio

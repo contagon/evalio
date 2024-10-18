@@ -10,7 +10,6 @@ from evalio.types import (
 )
 from typing import Optional
 
-import numpy as np
 from copy import deepcopy
 
 
@@ -80,10 +79,10 @@ class IntensityCleaner(Pipeline):
     def add_imu(self, mm: ImuMeasurement) -> None:
         self.pipeline.add_imu(mm)
 
-    def add_lidar(self, mm: LidarMeasurement) -> None:
-        # Threshold intensity to [0,1]
-        intensity = np.array([p.intensity for p in mm.points])
-        maximum = np.max(intensity)
-        for p in mm.points:
-            p.intensity /= maximum
-        self.pipeline.add_lidar(mm)
+    def add_lidar(self, mm: LidarMeasurement) -> list[Point]:
+        if self.clean:
+            # Threshold intensity to [0,1]
+            maximum = max(p.intensity for p in mm.points)
+            for p in mm.points:
+                p.intensity /= maximum
+        return self.pipeline.add_lidar(mm)

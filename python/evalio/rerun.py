@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import uuid4
 
 from evalio.types import LidarParams, Trajectory
@@ -33,12 +33,14 @@ class RerunVis:
         elif self.level >= 2:
             self.blueprint = rrb.Blueprint(
                 rrb.Vertical(
-                    rrb.Spatial2DView(),
-                    rrb.Spatial3DView(
+                    rrb.Spatial2DView(),  # image
+                    rrb.BarChartView(),  # bar chart
+                    # TODO: Error as well?
+                    rrb.Spatial3DView(  # 3d view
                         overrides=overrides,
                         background=rrb.BackgroundKind.GradientBright,
                     ),
-                    row_shares=[1, 3],
+                    row_shares=[1, 1, 3],
                 ),
                 collapse_panels=True,
             )
@@ -77,7 +79,7 @@ class RerunVis:
             static=True,
         )
 
-    def log(self, data: LidarMeasurement, pose: SE3):
+    def log(self, data: LidarMeasurement, features: Sequence[Point], pose: SE3):
         if self.level == 0:
             return
 
@@ -102,18 +104,20 @@ class RerunVis:
         # If level is 2 or greater, include the image
         if self.level >= 2:
             # TODO: Need to handle row vs column major points here
-            # image = (
-            #     np.array([d.intensity for d in data.points])
-            #     .reshape((self.lidar_params.num_columns, self.lidar_params.num_rows))
-            #     .T
+            intensity = np.array([d.intensity for d in data.points])
+            image = intensity.reshape(
+                (self.lidar_params.num_columns, self.lidar_params.num_rows)
+            ).T
+            # image = np.array([d.intensity for d in data.points]).reshape(
+            #     (self.lidar_params.num_rows, self.lidar_params.num_columns)
             # )
-            image = np.array([d.intensity for d in data.points]).reshape(
-                (self.lidar_params.num_rows, self.lidar_params.num_columns)
-            )
             rr.log("image", rr.Image(image))
 
+            feat_intensity = np.array([d.intensity for d in features])
+            rr.log("features", convert(feat_intensity, Vis.Histogram, bins=100))
+
         # If level is 3 or greater, include the scan
-        if self.level > 3:
+        if self.level >= 3:
             rr.log("imu/lidar/frame", convert(data, Vis.Points, use_intensity=True))
 
 
@@ -131,6 +135,7 @@ class Vis(Enum):
     Points = 1
     Pose = 2
     Arrows = 3
+    Histogram = 4
 
 
 def convert(obj: object, kind: Vis, **kwargs):
@@ -168,6 +173,13 @@ def convert(obj: object, kind: Vis, **kwargs):
                 return map_to_rerun(obj, **kwargs)
             case _:
                 raise ValueError(f"Cannot convert list of Point to {kind}")
+
+    elif isinstance(obj, np.ndarray):
+        match kind:
+            case Vis.Histogram:
+                return array_to_histogram(obj, **kwargs)
+            case _:
+                raise ValueError(f"Cannot convert np.ndarray to {kind}")
 
     else:
         raise ValueError(f"Cannot convert {type(obj)} to {kind}")
@@ -229,3 +241,9 @@ def poses_to_points(poses: list[SE3], color=None) -> rr.Points3D:
         points[i] = pose.trans
 
     return rr.Points3D(points, colors=color)
+
+
+def array_to_histogram(array: np.ndarray, **kwargs) -> rr.BarChart:
+    """Convert an array to a histogram."""
+    heights, bins = np.histogram(array, **kwargs)
+    return rr.BarChart(heights)

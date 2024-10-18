@@ -14,7 +14,7 @@ using namespace pybind11::literals;
 namespace evalio {
 
 class PyPipeline : public evalio::Pipeline {
- public:
+public:
   using evalio::Pipeline::Pipeline;
 
   // Getters
@@ -47,12 +47,12 @@ class PyPipeline : public evalio::Pipeline {
   void add_imu(evalio::ImuMeasurement mm) override {
     PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, add_imu, mm);
   }
-  void add_lidar(evalio::LidarMeasurement mm) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, add_lidar, mm);
+  std::vector<Point> add_lidar(evalio::LidarMeasurement mm) override {
+    PYBIND11_OVERRIDE_PURE(std::vector<Point>, evalio::Pipeline, add_lidar, mm);
   }
 };
 
-inline void makePipelines(py::module& m) {
+inline void makePipelines(py::module &m) {
   py::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
       .def(py::init<>())
       .def_static("name", &evalio::Pipeline::name)
@@ -76,4 +76,4 @@ inline void makePipelines(py::module& m) {
       .def_static("default_params", &KissICP::default_params);
 }
 
-}  // namespace evalio
+} // namespace evalio

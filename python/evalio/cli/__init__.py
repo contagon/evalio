@@ -104,6 +104,8 @@ def main():
         pipelines += manual_pipelines
         datasets += manual_datasets
 
+        if out is None:
+            raise ValueError("Must specify output directory")
         if out.suffix == ".csv":
             raise ValueError("Output must be a directory")
 

@@ -48,7 +48,7 @@ def run(
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
-                    pipe.add_lidar(data)
+                    features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
@@ -56,7 +56,7 @@ def run(
                         vis.new_recording(dataset)
                         first_scan_done = True
 
-                    vis.log(data, pose)
+                    vis.log(data, features, pose)
 
                     loop.update()
                     if loop.n >= length:

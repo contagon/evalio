@@ -204,8 +204,11 @@ class PipelineBuilder:
 
 
 def parse_config(
-    config_file: Path,
-) -> tuple[Sequence[PipelineBuilder], Sequence[DatasetBuilder], Path]:
+    config_file: Optional[Path],
+) -> tuple[Sequence[PipelineBuilder], Sequence[DatasetBuilder], Optional[Path]]:
+    if config_file is None:
+        return ([], [], None)
+
     with open(config_file, "r") as f:
         params = yaml.safe_load(f)
 
