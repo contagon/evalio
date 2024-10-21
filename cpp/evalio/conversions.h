@@ -4,8 +4,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <execution>
-
 #include "types.h"
 
 namespace py = pybind11;
@@ -41,101 +39,96 @@ struct PointCloudMetadata {
 };
 
 template <typename T>
-std::function<void(T&, const uint8_t*)> data_getter(DataType datatype,
-                                                    const uint32_t offset) {
+std::function<void(T &, const uint8_t *)> data_getter(DataType datatype,
+                                                      const uint32_t offset) {
   switch (datatype) {
-    case UINT8: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value =
-            static_cast<T>(*reinterpret_cast<const uint8_t*>(data + offset));
-      };
-    }
-    case INT8: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value = static_cast<T>(*reinterpret_cast<const int8_t*>(data + offset));
-      };
-    }
-    case UINT16: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value =
-            static_cast<T>(*reinterpret_cast<const uint16_t*>(data + offset));
-      };
-    }
-    case UINT32: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value =
-            static_cast<T>(*reinterpret_cast<const uint32_t*>(data + offset));
-      };
-    }
-    case INT16: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value =
-            static_cast<T>(*reinterpret_cast<const int16_t*>(data + offset));
-      };
-    }
-    case INT32: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value =
-            static_cast<T>(*reinterpret_cast<const int32_t*>(data + offset));
-      };
-    }
-    case FLOAT32: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value = static_cast<T>(*reinterpret_cast<const float*>(data + offset));
-      };
-    }
-    case FLOAT64: {
-      return [offset](T& value, const uint8_t* data) noexcept {
-        value = static_cast<T>(*reinterpret_cast<const double*>(data + offset));
-      };
-    }
-    default: {
-      throw std::runtime_error("Unsupported datatype");
-    }
+  case UINT8: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const uint8_t *>(data + offset));
+    };
+  }
+  case INT8: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const int8_t *>(data + offset));
+    };
+  }
+  case UINT16: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value =
+          static_cast<T>(*reinterpret_cast<const uint16_t *>(data + offset));
+    };
+  }
+  case UINT32: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value =
+          static_cast<T>(*reinterpret_cast<const uint32_t *>(data + offset));
+    };
+  }
+  case INT16: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const int16_t *>(data + offset));
+    };
+  }
+  case INT32: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const int32_t *>(data + offset));
+    };
+  }
+  case FLOAT32: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const float *>(data + offset));
+    };
+  }
+  case FLOAT64: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = static_cast<T>(*reinterpret_cast<const double *>(data + offset));
+    };
+  }
+  default: {
+    throw std::runtime_error("Unsupported datatype");
+  }
   }
 }
 
 // Specialization for Stamp
-std::function<void(Stamp&, const uint8_t*)> data_getter(DataType datatype,
-                                                        const uint32_t offset) {
+inline std::function<void(Stamp &, const uint8_t *)>
+data_getter(DataType datatype, const uint32_t offset) {
   switch (datatype) {
-    case UINT16: {
-      return [offset](Stamp& value, const uint8_t* data) noexcept {
-        value =
-            Stamp::from_nsec(*reinterpret_cast<const uint16_t*>(data + offset));
-      };
-    }
-    case UINT32: {
-      return [offset](Stamp& value, const uint8_t* data) noexcept {
-        value =
-            Stamp::from_nsec(*reinterpret_cast<const uint32_t*>(data + offset));
-      };
-    }
-    case FLOAT32: {
-      return [offset](Stamp& value, const uint8_t* data) noexcept {
-        value = Stamp::from_sec(*reinterpret_cast<const float*>(data + offset));
-      };
-    }
-    case FLOAT64: {
-      return [offset](Stamp& value, const uint8_t* data) noexcept {
-        value =
-            Stamp::from_sec(*reinterpret_cast<const double*>(data + offset));
-      };
-    }
-    default: {
-      throw std::runtime_error("Unsupported datatype for stamp");
-    }
+  case UINT16: {
+    return [offset](Stamp &value, const uint8_t *data) noexcept {
+      value =
+          Stamp::from_nsec(*reinterpret_cast<const uint16_t *>(data + offset));
+    };
+  }
+  case UINT32: {
+    return [offset](Stamp &value, const uint8_t *data) noexcept {
+      value =
+          Stamp::from_nsec(*reinterpret_cast<const uint32_t *>(data + offset));
+    };
+  }
+  case FLOAT32: {
+    return [offset](Stamp &value, const uint8_t *data) noexcept {
+      value = Stamp::from_sec(*reinterpret_cast<const float *>(data + offset));
+    };
+  }
+  case FLOAT64: {
+    return [offset](Stamp &value, const uint8_t *data) noexcept {
+      value = Stamp::from_sec(*reinterpret_cast<const double *>(data + offset));
+    };
+  }
+  default: {
+    throw std::runtime_error("Unsupported datatype for stamp");
+  }
   }
 }
 
-template <typename T>
-std::function<void(T&, const uint8_t*)> blank() {
-  return [](T&, const uint8_t*) noexcept {};
+template <typename T> std::function<void(T &, const uint8_t *)> blank() {
+  return [](T &, const uint8_t *) noexcept {};
 }
 
-evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
-                                           const std::vector<Field>& fields,
-                                           const uint8_t* data) {
+inline evalio::LidarMeasurement
+ros_pc2_to_evalio(const PointCloudMetadata &msg,
+                  const std::vector<Field> &fields, const uint8_t *data) {
   std::function func_x = blank<double>();
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
@@ -149,7 +142,7 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
     throw std::runtime_error("Big endian not supported yet");
   }
 
-  for (const auto& field : fields) {
+  for (const auto &field : fields) {
     if (field.name == "x") {
       func_x = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "y") {
@@ -176,7 +169,7 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
   mm.points.resize(msg.width * msg.height);
 
   size_t index = 0;
-  for (evalio::Point& point : mm.points) {
+  for (evalio::Point &point : mm.points) {
     const auto pointStart = data + static_cast<size_t>(index * msg.point_step);
     func_x(point.x, pointStart);
     func_y(point.y, pointStart);
@@ -193,7 +186,7 @@ evalio::LidarMeasurement ros_pc2_to_evalio(const PointCloudMetadata& msg,
 }
 
 // ---------------------- Create python bindings ---------------------- //
-void makeConversions(py::module& m) {
+inline void makeConversions(py::module &m) {
   py::enum_<DataType>(m, "DataType")
       .value("UINT8", DataType::UINT8)
       .value("INT8", DataType::INT8)
@@ -223,10 +216,10 @@ void makeConversions(py::module& m) {
       .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
       .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("ros_pc2_to_evalio", [](const PointCloudMetadata& msg,
-                                const std::vector<Field>& fields, char* c) {
-    return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t*>(c));
+  m.def("ros_pc2_to_evalio", [](const PointCloudMetadata &msg,
+                                const std::vector<Field> &fields, char *c) {
+    return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c));
   });
 }
 
-}  // namespace evalio
+} // namespace evalio
