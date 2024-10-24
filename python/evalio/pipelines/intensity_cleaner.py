@@ -82,7 +82,8 @@ class IntensityCleaner(Pipeline):
     def add_lidar(self, mm: LidarMeasurement) -> list[Point]:
         if self.clean:
             # Threshold intensity to [0,1]
-            maximum = max(p.intensity for p in mm.points)
+            # maximum = max(p.intensity for p in mm.points)
+            # print(maximum)
             for p in mm.points:
-                p.intensity /= maximum
+                p.intensity *= 10.0
         return self.pipeline.add_lidar(mm)

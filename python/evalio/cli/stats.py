@@ -190,8 +190,9 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     keys_to_print = ["pipeline"]
     for pipeline, trajs in grouped_trajs.items():
         keys = dict_diff([traj.metadata for traj in trajs])
-        keys.remove("name")
-        keys_to_print += keys
+        if len(keys) > 0:
+            keys.remove("name")
+            keys_to_print += keys
 
     header = ["ATEt", "ATEr", *keys_to_print]
 
