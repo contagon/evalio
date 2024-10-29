@@ -51,7 +51,7 @@ public:
   LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()){};
 
   // Info
-  static std::string name() { return "kiss"; }
+  static std::string name() { return "liosam"; }
   static std::string url() { return "https://github.com/contagon/LIO-SAM"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
@@ -65,8 +65,8 @@ public:
         {"mappingCornerLeafSize", 0.2},
         {"mappingSurfLeafSize", 0.4},
 
-        {"z_tollerance", 1000},
-        {"rotation_tollerance", 1000},
+        {"z_tollerance", 1000.0},
+        {"rotation_tollerance", 1000.0},
 
         // CPU Params
         {"numberOfCores", 4},
@@ -87,6 +87,7 @@ public:
 
   // Getters
   const evalio::SE3 pose() override {
+    std::cout << lio_sam_->getPose().orientation << std::endl;
     return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
@@ -100,9 +101,24 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {};
-  void set_lidar_params(evalio::LidarParams params) override {};
-  void set_imu_T_lidar(evalio::SE3 T) override { lidar_T_imu_ = T.inverse(); };
+  void set_imu_params(evalio::ImuParams params) override {
+    config_.imuAccNoise = params.accel;
+    config_.imuAccBiasN = params.accel_bias;
+    config_.imuGyrBiasN = params.gyro;
+    config_.imuGyrBiasN = params.gyro_bias;
+    config_.imuGravity = params.gravity[2];
+  };
+  void set_lidar_params(evalio::LidarParams params) override {
+    config_.N_SCAN = params.num_rows;
+    config_.Horizon_SCAN = params.num_columns;
+    config_.lidarMaxRange = params.max_range;
+    config_.lidarMinRange = params.min_range;
+  };
+  void set_imu_T_lidar(evalio::SE3 T) override {
+    lidar_T_imu_ = T.inverse();
+    config_.lidar_P_imu = lidar_T_imu_.trans;
+    config_.lidar_R_imu = lidar_T_imu_.rot.toEigen();
+  };
 
   void set_params(std::map<std::string, evalio::Param> params) override {
     for (auto &[key, value] : params) {
@@ -118,7 +134,7 @@ public:
           config_.numberOfCores = std::get<int>(value);
         } else {
           throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have int param " + key);
+              "Invalid parameter, LioSAM doesn't have int param " + key);
         }
       } else if (std::holds_alternative<double>(value)) {
         if (key == "edgeThreshold") {
@@ -135,6 +151,8 @@ public:
           config_.z_tollerance = std::get<double>(value);
         } else if (key == "rotation_tollerance") {
           config_.rotation_tollerance = std::get<double>(value);
+        } else if (key == "mappingProcessInterval") {
+          config_.mappingProcessInterval = std::get<double>(value);
         } else if (key == "surroundingkeyframeAddingDistThreshold") {
           config_.surroundingkeyframeAddingDistThreshold =
               std::get<double>(value);
@@ -153,11 +171,11 @@ public:
           config_.globalMapVisualizationLeafSize = std::get<double>(value);
         } else {
           throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have double param " + key);
+              "Invalid parameter, LioSAM doesn't have double param " + key);
         }
       } else if (std::holds_alternative<std::string>(value)) {
         throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have string param " + key);
+            "Invalid parameter, LioSAM doesn't have string param " + key);
       } else {
         throw std::invalid_argument("Invalid parameter type");
       }
@@ -169,7 +187,11 @@ public:
     lio_sam_ = std::make_unique<lio_sam::LIOSAM>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {};
+  void add_imu(evalio::ImuMeasurement mm) override {
+    lio_sam::Imu imuMsg{
+        .stamp = mm.stamp.to_sec(), .gyro = mm.gyro, .acc = mm.accel};
+    lio_sam_->addImuMeasurement(imuMsg);
+  };
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up

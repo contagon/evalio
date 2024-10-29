@@ -80,7 +80,7 @@ inline void makePipelines(py::module &m) {
       .def(py::init<>())
       .def_static("name", &LioSam::name)
       .def_static("url", &LioSam::url)
-      .def_static("default_params", &KissICP::default_params);
+      .def_static("default_params", &LioSam::default_params);
 }
 
 } // namespace evalio
