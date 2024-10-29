@@ -1,67 +1,100 @@
 #pragma once
 
-#include <memory>
+#include <map>
+#include <pcl/point_cloud.h>
 #include <stdexcept>
+#include <string>
 
+#include "LIO-SAM/lio-sam.h"
+#include "LIO-SAM/types.h"
 #include "evalio/pipelines/base.h"
 #include "evalio/types.h"
-#include "kiss_icp/pipeline/KissICP.hpp"
 
-inline evalio::Point to_evalio_point(Eigen::Vector4d point) {
-  return {.x = point[0],
-          .y = point[1],
-          .z = point[2],
-          .intensity = point[3],
-          .t = evalio::Stamp::from_sec(0),
-          .row = 0,
-          .col = 0};
+inline void to_evalio_point(evalio::Point &ev_point,
+                            const lio_sam::PointXYZIRT &ls_point) {
+  ev_point.x = ls_point.x;
+  ev_point.y = ls_point.y;
+  ev_point.z = ls_point.z;
+  ev_point.intensity = ls_point.intensity;
+  ev_point.t = evalio::Stamp::from_sec(ls_point.time);
+  ev_point.row = ls_point.ring;
 }
 
-inline Eigen::Vector4d to_eigen_point(evalio::Point point) {
-  return {point.x, point.y, point.z, point.intensity};
+inline void to_evalio_point(evalio::Point &ev_point,
+                            const lio_sam::PointType &ls_point) {
+  ev_point.x = ls_point.x;
+  ev_point.y = ls_point.y;
+  ev_point.z = ls_point.z;
+  ev_point.intensity = ls_point.intensity;
 }
 
-inline evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
-  const auto t = pose.translation();
-  const auto q = pose.unit_quaternion();
+inline void to_pcl_point(lio_sam::PointXYZIRT &ls_point,
+                         const evalio::Point &ev_point) {
+  ls_point.x = ev_point.x;
+  ls_point.y = ev_point.y;
+  ls_point.z = ev_point.z;
+  ls_point.intensity = ev_point.intensity;
+  ls_point.time = ev_point.t.to_sec();
+  ls_point.ring = ev_point.row;
+}
+
+inline evalio::SE3 to_evalio_se3(lio_sam::Odometry pose) {
+  const auto t = pose.position;
+  const auto q = pose.orientation;
   const auto rot =
       evalio::SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
   return evalio::SE3(rot, t);
 }
 
-inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
-  return Sophus::SE3d(Sophus::SO3d(pose.rot.toEigen()), pose.trans);
-}
-
-class KissICP : public evalio::Pipeline {
+class LioSam : public evalio::Pipeline {
 public:
-  KissICP() : config_(){};
+  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()){};
 
   // Info
   static std::string name() { return "kiss"; }
-  static std::string url() { return "https://github.com/contagon/kiss-icp"; }
+  static std::string url() { return "https://github.com/contagon/LIO-SAM"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
-        {"voxel_size", 1.0},          {"max_range", 100.0},
-        {"min_range", 5.0},           {"min_motion_th", 0.1},
-        {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
-        {"max_num_iterations", 500},  {"max_num_threads", 0},
-        {"max_points_per_voxel", 20}, {"deskew", false},
-        {"intensity_metric", 0},      {"intensity_residual", 0},
+        {"edgeThreshold", 1.0},
+        {"surfThreshold", 0.1},
+        {"edgeFeatureMinValidNum", 10},
+        {"surfFeatureMinValidNum", 100},
+
+        // voxel filter paprams
+        {"odometrySurfLeafSize", 0.4},
+        {"mappingCornerLeafSize", 0.2},
+        {"mappingSurfLeafSize", 0.4},
+
+        {"z_tollerance", 1000},
+        {"rotation_tollerance", 1000},
+
+        // CPU Params
+        {"numberOfCores", 4},
+        {"mappingProcessInterval", 0.15},
+
+        // Surrounding map
+        {"surroundingkeyframeAddingDistThreshold", 1.0},
+        {"surroundingkeyframeAddingAngleThreshold", 0.2},
+        {"surroundingKeyframeDensity", 2.0},
+        {"surroundingKeyframeSearchRadius", 50.0},
+
+        // global map visualization radius
+        {"globalMapVisualizationSearchRadius", 1000.0},
+        {"globalMapVisualizationPoseDensity", 10.0},
+        {"globalMapVisualizationLeafSize", 1.0},
     };
   }
 
   // Getters
   const evalio::SE3 pose() override {
-    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    return to_evalio_se3(pose);
+    return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
   const std::vector<evalio::Point> map() override {
-    std::vector<Eigen::Vector4d> map = kiss_icp_->LocalMap();
-    std::vector<evalio::Point> evalio_map(map.size());
-    for (auto point : map) {
-      evalio_map.push_back(to_evalio_point(point));
+    auto map = lio_sam_->getMap();
+    std::vector<evalio::Point> evalio_map(map->size());
+    for (std::size_t i = 0; i < map->size(); ++i) {
+      to_evalio_point(evalio_map[i], map->at(i));
     }
     return evalio_map;
   }
@@ -69,47 +102,55 @@ public:
   // Setters
   void set_imu_params(evalio::ImuParams params) override {};
   void set_lidar_params(evalio::LidarParams params) override {};
-  void set_imu_T_lidar(evalio::SE3 T) override {
-    lidar_T_imu_ = to_sophus_se3(T).inverse();
-  };
+  void set_imu_T_lidar(evalio::SE3 T) override { lidar_T_imu_ = T.inverse(); };
 
   void set_params(std::map<std::string, evalio::Param> params) override {
     for (auto &[key, value] : params) {
       if (std::holds_alternative<bool>(value)) {
-        if (key == "deskew") {
-          config_.deskew = std::get<bool>(value);
-        } else {
-          throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have bool param " + key);
-        }
+        throw std::invalid_argument(
+            "Invalid parameter, KissICP doesn't have bool param " + key);
       } else if (std::holds_alternative<int>(value)) {
-        if (key == "max_points_per_voxel") {
-          config_.max_points_per_voxel = std::get<int>(value);
-        } else if (key == "max_num_iterations") {
-          config_.max_num_iterations = std::get<int>(value);
-        } else if (key == "max_num_threads") {
-          config_.max_num_threads = std::get<int>(value);
-        } else if (key == "intensity_metric") {
-          config_.intensity_metric = std::get<int>(value);
-        } else if (key == "intensity_residual") {
-          config_.intensity_residual = std::get<int>(value);
+        if (key == "edgeFeatureMinValidNum") {
+          config_.edgeFeatureMinValidNum = std::get<int>(value);
+        } else if (key == "surfFeatureMinValidNum") {
+          config_.surfFeatureMinValidNum = std::get<int>(value);
+        } else if (key == "numberOfCores") {
+          config_.numberOfCores = std::get<int>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have int param " + key);
         }
       } else if (std::holds_alternative<double>(value)) {
-        if (key == "voxel_size") {
-          config_.voxel_size = std::get<double>(value);
-        } else if (key == "max_range") {
-          config_.max_range = std::get<double>(value);
-        } else if (key == "min_range") {
-          config_.min_range = std::get<double>(value);
-        } else if (key == "min_motion_th") {
-          config_.min_motion_th = std::get<double>(value);
-        } else if (key == "initial_threshold") {
-          config_.initial_threshold = std::get<double>(value);
-        } else if (key == "convergence_criterion") {
-          config_.convergence_criterion = std::get<double>(value);
+        if (key == "edgeThreshold") {
+          config_.edgeThreshold = std::get<double>(value);
+        } else if (key == "surfThreshold") {
+          config_.surfThreshold = std::get<double>(value);
+        } else if (key == "odometrySurfLeafSize") {
+          config_.odometrySurfLeafSize = std::get<double>(value);
+        } else if (key == "mappingCornerLeafSize") {
+          config_.mappingCornerLeafSize = std::get<double>(value);
+        } else if (key == "mappingSurfLeafSize") {
+          config_.mappingSurfLeafSize = std::get<double>(value);
+        } else if (key == "z_tollerance") {
+          config_.z_tollerance = std::get<double>(value);
+        } else if (key == "rotation_tollerance") {
+          config_.rotation_tollerance = std::get<double>(value);
+        } else if (key == "surroundingkeyframeAddingDistThreshold") {
+          config_.surroundingkeyframeAddingDistThreshold =
+              std::get<double>(value);
+        } else if (key == "surroundingkeyframeAddingAngleThreshold") {
+          config_.surroundingkeyframeAddingAngleThreshold =
+              std::get<double>(value);
+        } else if (key == "surroundingKeyframeDensity") {
+          config_.surroundingKeyframeDensity = std::get<double>(value);
+        } else if (key == "surroundingKeyframeSearchRadius") {
+          config_.surroundingKeyframeSearchRadius = std::get<double>(value);
+        } else if (key == "globalMapVisualizationSearchRadius") {
+          config_.globalMapVisualizationSearchRadius = std::get<double>(value);
+        } else if (key == "globalMapVisualizationPoseDensity") {
+          config_.globalMapVisualizationPoseDensity = std::get<double>(value);
+        } else if (key == "globalMapVisualizationLeafSize") {
+          config_.globalMapVisualizationLeafSize = std::get<double>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have double param " + key);
@@ -125,49 +166,36 @@ public:
 
   // Doers
   void initialize() override {
-    kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
+    lio_sam_ = std::make_unique<lio_sam::LIOSAM>(config_);
   }
 
   void add_imu(evalio::ImuMeasurement mm) override {};
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
-    std::vector<Eigen::Vector4d> points;
-    points.reserve(mm.points.size());
-    std::vector<double> timestamps;
-    timestamps.reserve(mm.points.size());
+    pcl::PointCloud<lio_sam::PointXYZIRT>::Ptr cloud;
+    cloud.reset(new pcl::PointCloud<lio_sam::PointXYZIRT>);
+    cloud->points.resize(mm.points.size());
 
-    // Assuming our mm stamp from middle of scan seems to work well
-    // => kiss expects timestamps in range [0, 1] and mid_pose_timestamp = 0.5
-    auto min_timestamp = *std::min_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-    auto max_timestamp = *std::max_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-
-    double diff = max_timestamp.t.to_sec() - min_timestamp.t.to_sec();
-    double scale = 1.0 / diff;
-    double offset = min_timestamp.t.to_sec();
-
-    for (auto point : mm.points) {
-      points.push_back(to_eigen_point(point));
-      double sec = point.t.to_sec();
-      sec = (sec + offset) * scale;
-      timestamps.push_back(sec);
+    // Convert to pcl
+    for (size_t i = 0; i < mm.points.size(); ++i) {
+      to_pcl_point(cloud->points[i], mm.points[i]);
     }
 
-    const auto &[_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
-    std::vector<evalio::Point> result;
-    result.reserve(used_points.size());
-    for (auto point : used_points) {
-      result.push_back(to_evalio_point(point));
+    // Run through pipeline
+    lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
+
+    // Return features
+    auto used_points = lio_sam_->getMostRecentFrame();
+    std::vector<evalio::Point> result(used_points->points.size());
+    for (size_t i = 0; i < used_points->points.size(); ++i) {
+      to_evalio_point(result[i], used_points->points[i]);
     }
     return result;
   }
 
 private:
-  std::unique_ptr<kiss_icp::pipeline::KissICP> kiss_icp_;
-  kiss_icp::pipeline::KISSConfig config_;
-  Sophus::SE3d lidar_T_imu_;
+  std::unique_ptr<lio_sam::LIOSAM> lio_sam_;
+  lio_sam::LioSamParams config_;
+  evalio::SE3 lidar_T_imu_;
 };

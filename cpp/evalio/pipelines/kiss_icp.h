@@ -59,7 +59,8 @@ public:
 
   const std::vector<evalio::Point> map() override {
     std::vector<Eigen::Vector4d> map = kiss_icp_->LocalMap();
-    std::vector<evalio::Point> evalio_map(map.size());
+    std::vector<evalio::Point> evalio_map;
+    evalio_map.reserve(map.size());
     for (auto point : map) {
       evalio_map.push_back(to_evalio_point(point));
     }
