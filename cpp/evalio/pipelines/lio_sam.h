@@ -55,6 +55,7 @@ public:
   static std::string url() { return "https://github.com/contagon/LIO-SAM"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
+        {"downsampleRate", 1},
         {"edgeThreshold", 1.0},
         {"surfThreshold", 0.1},
         {"edgeFeatureMinValidNum", 10},
@@ -87,7 +88,6 @@ public:
 
   // Getters
   const evalio::SE3 pose() override {
-    std::cout << lio_sam_->getPose().orientation << std::endl;
     return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
@@ -104,7 +104,7 @@ public:
   void set_imu_params(evalio::ImuParams params) override {
     config_.imuAccNoise = params.accel;
     config_.imuAccBiasN = params.accel_bias;
-    config_.imuGyrBiasN = params.gyro;
+    config_.imuGyrNoise = params.gyro;
     config_.imuGyrBiasN = params.gyro_bias;
     config_.imuGravity = params.gravity[2];
   };
@@ -132,6 +132,8 @@ public:
           config_.surfFeatureMinValidNum = std::get<int>(value);
         } else if (key == "numberOfCores") {
           config_.numberOfCores = std::get<int>(value);
+        } else if (key == "downsampleRate") {
+          config_.downsampleRate = std::get<int>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, LioSAM doesn't have int param " + key);

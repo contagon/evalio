@@ -139,6 +139,10 @@ class Vis(Enum):
 
 
 def convert(obj: object, kind: Vis, **kwargs):
+    # Short circuit if there isn't anything
+    if isinstance(obj, list) and len(obj) == 0:
+        return None
+
     if isinstance(obj, LidarMeasurement):
         match kind:
             case Vis.Points:
