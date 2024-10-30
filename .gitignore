@@ -12,6 +12,7 @@ __pycache__
 *.yaml
 *.csv
 .cache
+python/evalio/_cpp
 
 # for buildling
 compile_commands.json

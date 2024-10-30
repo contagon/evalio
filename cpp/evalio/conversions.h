@@ -157,7 +157,8 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       func_t = data_getter(field.datatype, field.offset);
     } else if (field.name == "range") {
       func_range = data_getter<uint32_t>(field.datatype, field.offset);
-    } else if (field.name == "row") {
+    } else if (field.name == "row" || field.name == "ring" ||
+               field.name == "channel") {
       func_row = data_getter<uint8_t>(field.datatype, field.offset);
     } else if (field.name == "col") {
       // TODO: Custom column function?

@@ -118,7 +118,7 @@ class RerunVis:
 
         # If level is 3 or greater, include the scan
         if self.level >= 3:
-            rr.log("imu/lidar/frame", convert(data, Vis.Points, use_intensity=True))
+            rr.log("imu/lidar/frame", convert(features, Vis.Points, use_intensity=True))
 
 
 @dataclass
@@ -141,7 +141,15 @@ class Vis(Enum):
 def convert(obj: object, kind: Vis, **kwargs):
     # Short circuit if there isn't anything
     if isinstance(obj, list) and len(obj) == 0:
-        return None
+        match kind:
+            case Vis.Points:
+                return rr.Points3D([])
+            case Vis.Pose:
+                raise ValueError("Cannot convert empty list to Pose")
+            case Vis.Arrows:
+                return rr.Arrows3D(vectors=[])
+            case Vis.Histogram:
+                return rr.BarChart([])
 
     if isinstance(obj, LidarMeasurement):
         match kind:
