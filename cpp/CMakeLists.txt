@@ -19,7 +19,6 @@ endif()
 
 # LIO-SAM
 if(EVALIO_BUILD_ALL OR EVALIO_LIO_SAM)
-    # TODO: Fetch_content lio_sam dependencies here?
     message(STATUS "Building LIO-SAM")
     add_subdirectory(evalio/pipelines/lio-sam/)
     list(APPEND LIBS lio_sam)
