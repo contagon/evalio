@@ -101,22 +101,26 @@ class RerunVis:
             if self.gt_o_T_imu_o is not None:
                 rr.log("imu", convert(self.gt_o_T_imu_o * pose, Vis.Pose))
 
-        # If level is 2 or greater, include the image
+        # If level is 2 or greater, include the image and histogram
         if self.level >= 2:
-            # TODO: Need to handle row vs column major points here
             intensity = np.array([d.intensity for d in data.points])
-            image = intensity.reshape(
-                (self.lidar_params.num_columns, self.lidar_params.num_rows)
-            ).T
-            # image = np.array([d.intensity for d in data.points]).reshape(
-            #     (self.lidar_params.num_rows, self.lidar_params.num_columns)
-            # )
+            # row major order
+            if data.points[0].row == data.points[1].row:
+                image = intensity.reshape(
+                    (self.lidar_params.num_rows, self.lidar_params.num_columns)
+                )
+            # column major order
+            else:
+                image = intensity.reshape(
+                    (self.lidar_params.num_columns, self.lidar_params.num_rows)
+                ).T
+
             rr.log("image", rr.Image(image))
 
             feat_intensity = np.array([d.intensity for d in features])
             rr.log("features", convert(feat_intensity, Vis.Histogram, bins=100))
 
-        # If level is 3 or greater, include the scan
+        # If level is 3 or greater, include the features from the scan
         if self.level >= 3:
             rr.log("imu/lidar/frame", convert(features, Vis.Points, use_intensity=True))
 

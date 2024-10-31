@@ -66,8 +66,8 @@ public:
         {"mappingCornerLeafSize", 0.2},
         {"mappingSurfLeafSize", 0.4},
 
-        {"z_tollerance", 1000.0},
-        {"rotation_tollerance", 1000.0},
+        {"z_tolerance", 1000.0},
+        {"rotation_tolerance", 1000.0},
 
         // CPU Params
         {"numberOfCores", 4},
@@ -149,10 +149,10 @@ public:
           config_.mappingCornerLeafSize = std::get<double>(value);
         } else if (key == "mappingSurfLeafSize") {
           config_.mappingSurfLeafSize = std::get<double>(value);
-        } else if (key == "z_tollerance") {
-          config_.z_tollerance = std::get<double>(value);
-        } else if (key == "rotation_tollerance") {
-          config_.rotation_tollerance = std::get<double>(value);
+        } else if (key == "z_tolerance") {
+          config_.z_tolerance = std::get<double>(value);
+        } else if (key == "rotation_tolerance") {
+          config_.rotation_tolerance = std::get<double>(value);
         } else if (key == "mappingProcessInterval") {
           config_.mappingProcessInterval = std::get<double>(value);
         } else if (key == "surroundingkeyframeAddingDistThreshold") {
