@@ -20,7 +20,7 @@ struct Stamp {
                  .nsec = uint32_t(nsec % uint64_t(1e9))};
   }
 
-  uint64_t to_nsec() const { return uint64_t(sec) * 1e9 + nsec; }
+  uint64_t to_nsec() const { return uint64_t(sec) * uint64_t(1e9) + nsec; }
 
   double to_sec() const { return double(sec) + double(nsec) * 1e-9; }
 
@@ -34,21 +34,21 @@ struct Stamp {
     return std::to_string(sec) + "." + nsec_str_leading;
   };
 
-  bool operator<(const Stamp& other) const {
+  bool operator<(const Stamp &other) const {
     return sec < other.sec || (sec == other.sec && nsec < other.nsec);
   }
 
-  bool operator>(const Stamp& other) const {
+  bool operator>(const Stamp &other) const {
     return sec > other.sec || (sec == other.sec && nsec > other.nsec);
   }
 
-  bool operator==(const Stamp& other) const {
+  bool operator==(const Stamp &other) const {
     return sec == other.sec && nsec == other.nsec;
   }
 
-  bool operator!=(const Stamp& other) const { return !(*this == other); }
+  bool operator!=(const Stamp &other) const { return !(*this == other); }
 
-  double operator-(const Stamp& other) const {
+  double operator-(const Stamp &other) const {
     return to_sec() - other.to_sec();
   }
 };
@@ -58,7 +58,7 @@ struct Point {
   double y;
   double z;
   double intensity;
-  Stamp t;  // in nanoseconds?
+  Stamp t; // in nanoseconds?
   uint32_t range;
   uint8_t row;
   uint16_t col;
@@ -80,7 +80,7 @@ struct LidarMeasurement {
   LidarMeasurement(Stamp stamp) : stamp(stamp) {}
 
   LidarMeasurement(Stamp stamp, std::vector<Point> points)
-      : points(points), stamp(stamp) {}
+      : stamp(stamp), points(points) {}
 
   std::string toString() const {
     std::ostringstream oss;
@@ -113,8 +113,7 @@ struct ImuMeasurement {
   std::string toString() const {
     std::ostringstream oss;
     oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
-        << gyro.transpose() << "]"
-        << ", accel: [" << accel.transpose() << "])";
+        << gyro.transpose() << "]" << ", accel: [" << accel.transpose() << "])";
     return oss.str();
   }
 };
@@ -160,23 +159,23 @@ struct SO3 {
     return Eigen::Quaterniond(qw, qx, qy, qz);
   }
 
-  static SO3 fromEigen(const Eigen::Quaterniond& q) {
+  static SO3 fromEigen(const Eigen::Quaterniond &q) {
     return SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
   }
 
   static SO3 identity() { return SO3{.qx = 0, .qy = 0, .qz = 0, .qw = 1}; }
 
-  static SO3 fromMat(const Eigen::Matrix3d& R) {
+  static SO3 fromMat(const Eigen::Matrix3d &R) {
     return fromEigen(Eigen::Quaterniond(R));
   }
 
   SO3 inverse() const { return SO3{.qx = -qx, .qy = -qy, .qz = -qz, .qw = qw}; }
 
-  SO3 operator*(const SO3& other) const {
+  SO3 operator*(const SO3 &other) const {
     return fromEigen(toEigen() * other.toEigen());
   }
 
-  Eigen::Vector3d rotate(const Eigen::Vector3d& v) const {
+  Eigen::Vector3d rotate(const Eigen::Vector3d &v) const {
     return toEigen() * v;
   }
 
@@ -207,7 +206,7 @@ struct SE3 {
     return SE3(SO3::identity(), Eigen::Vector3d::Zero());
   }
 
-  static SE3 fromMat(const Eigen::Matrix4d& T) {
+  static SE3 fromMat(const Eigen::Matrix4d &T) {
     return SE3(SO3::fromMat(T.block<3, 3>(0, 0)), T.block<3, 1>(0, 3));
   }
 
@@ -216,16 +215,16 @@ struct SE3 {
     return SE3(inv_rot, inv_rot.rotate(-trans));
   }
 
-  SE3 operator*(const SE3& other) const {
+  SE3 operator*(const SE3 &other) const {
     return SE3(rot * other.rot, rot.rotate(other.trans) + trans);
   }
 
   std::string toString() const {
     std::ostringstream oss;
-    oss << "SE3(rot: [" << rot.toStringBrief() << "], "
-        << "t: [" << trans.transpose() << "])";
+    oss << "SE3(rot: [" << rot.toStringBrief() << "], " << "t: ["
+        << trans.transpose() << "])";
     return oss.str();
   }
 };
 
-}  // namespace evalio
+} // namespace evalio

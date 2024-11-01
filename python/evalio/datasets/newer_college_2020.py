@@ -83,7 +83,7 @@ class NewerCollege2020(Dataset):
             accel_bias=0.0000230,
             bias_init=1e-7,
             integration=1e-7,
-            gravity=np.array([0, 0, 9.81]),
+            gravity=np.array([0, 0, -9.81]),
         )
 
     @staticmethod

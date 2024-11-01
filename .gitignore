@@ -1,8 +1,20 @@
+# build artificacts
 dist
 **/build*
+vcpkg_installed
+
+# other caches
+.mypy_cache
+.ruff_cache
 .vscode
 .venv
 __pycache__
 *.yaml
 *.csv
 .cache
+python/evalio/_cpp
+
+# for buildling
+compile_commands.json
+CMakePresets.json
+CMakeUserPresets.json

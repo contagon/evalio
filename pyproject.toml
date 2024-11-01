@@ -40,7 +40,9 @@ evalio = "evalio.cli:main"
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",
+    "compdb>=0.2.0",
     "mypy>=1.11.2",
+    "pip>=24.3.1",
     "pybind11-stubgen>=2.5.1",
     "pybind11>=2.13.6",
     "rerun-sdk>=0.18.2",

@@ -7,6 +7,7 @@
 
 #include "evalio/pipelines/base.h"
 #include "evalio/pipelines/kiss_icp.h"
+#include "evalio/pipelines/lio_sam.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -74,6 +75,12 @@ inline void makePipelines(py::module &m) {
       .def_static("name", &KissICP::name)
       .def_static("url", &KissICP::url)
       .def_static("default_params", &KissICP::default_params);
+
+  py::class_<LioSam, evalio::Pipeline>(m, "LioSAM")
+      .def(py::init<>())
+      .def_static("name", &LioSam::name)
+      .def_static("url", &LioSam::url)
+      .def_static("default_params", &LioSam::default_params);
 }
 
 } // namespace evalio
