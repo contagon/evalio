@@ -4,3 +4,6 @@
 [submodule "lio-sam"]
 	path = cpp/evalio/pipelines/lio-sam
 	url = git@github.com:contagon/LIO-SAM.git
+[submodule "tclio"]
+	path = cpp/evalio/pipelines/tclio
+	url = git@github.com:rpl-cmu/tclio.git

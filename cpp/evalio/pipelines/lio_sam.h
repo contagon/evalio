@@ -61,7 +61,7 @@ public:
         {"edgeFeatureMinValidNum", 10},
         {"surfFeatureMinValidNum", 100},
 
-        // voxel filter paprams
+        // voxel filter params
         {"odometrySurfLeafSize", 0.4},
         {"mappingCornerLeafSize", 0.2},
         {"mappingSurfLeafSize", 0.4},
