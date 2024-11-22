@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <stdexcept>
+#include <variant>
 
+#include "evalio/metrics.h"
 #include "evalio/pipelines/base.h"
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
@@ -42,12 +44,18 @@ public:
   static std::string url() { return "https://github.com/contagon/kiss-icp"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
-        {"voxel_size", 1.0},          {"max_range", 100.0},
-        {"min_range", 5.0},           {"min_motion_th", 0.1},
-        {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
-        {"max_num_iterations", 500},  {"max_num_threads", 0},
-        {"max_points_per_voxel", 20}, {"deskew", false},
-        {"intensity_metric", 0},      {"intensity_residual", 0},
+        {"voxel_size", 1.0},
+        {"max_range", 100.0},
+        {"min_range", 5.0},
+        {"min_motion_th", 0.1},
+        {"initial_threshold", 2.0},
+        {"convergence_criterion", 0.0001},
+        {"max_num_iterations", 500},
+        {"max_num_threads", 0},
+        {"max_points_per_voxel", 20},
+        {"deskew", false},
+        {"intensity_metric", std::string("norm0")},
+        {"intensity_residual", std::string("norm0")},
     };
   }
 
@@ -90,10 +98,6 @@ public:
           config_.max_num_iterations = std::get<int>(value);
         } else if (key == "max_num_threads") {
           config_.max_num_threads = std::get<int>(value);
-        } else if (key == "intensity_metric") {
-          config_.intensity_metric = std::get<int>(value);
-        } else if (key == "intensity_residual") {
-          config_.intensity_residual = std::get<int>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have int param " + key);
@@ -116,8 +120,16 @@ public:
               "Invalid parameter, KissICP doesn't have double param " + key);
         }
       } else if (std::holds_alternative<std::string>(value)) {
-        throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have string param " + key);
+        if (key == "intensity_metric") {
+          std::string kind = std::get<std::string>(value);
+          config_.intensity_metric = evalio::lookup(kind);
+        } else if (key == "intensity_residual") {
+          std::string kind = std::get<std::string>(value);
+          config_.intensity_residual = evalio::lookup(kind);
+        } else {
+          throw std::invalid_argument(
+              "Invalid parameter, KissICP doesn't have string param " + key);
+        }
       } else {
         throw std::invalid_argument("Invalid parameter type");
       }

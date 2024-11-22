@@ -18,7 +18,7 @@ def find_types(module, skip=None) -> dict[str, type]:
     found |= dict(
         (cls.name(), cls)  # type:ignore
         for cls in module.__dict__.values()
-        if isinstance(cls, type) and cls.__name__ != skip.__name__
+        if skip is not None and isinstance(cls, type) and cls.__name__ != skip.__name__
     )
 
     return found

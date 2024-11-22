@@ -1,4 +1,4 @@
-# build artificacts
+# build artifacts
 dist
 **/build*
 vcpkg_installed
@@ -14,7 +14,5 @@ __pycache__
 .cache
 python/evalio/_cpp
 
-# for buildling
-compile_commands.json
-CMakePresets.json
-CMakeUserPresets.json
+# results
+results

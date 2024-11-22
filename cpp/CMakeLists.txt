@@ -6,7 +6,7 @@ set(DEF "")
 
 # ------------------------- Import all pipelines ------------------------- #
 # options
-option(EVALIO_BUILD_ALL "Build all included pipelines" OFF)
+option(EVALIO_BUILD_ALL "Build all included pipelines" ON)
 option(EVALIO_KISS_ICP "Build KISS-ICP" OFF)
 option(EVALIO_LIO_SAM "Build Lio-Sam" OFF)
 option(EVALIO_TCLIO "Build TCLIO" OFF)
