@@ -74,6 +74,21 @@ class EnWide(Dataset):
             "tunnel_s",
         ]
 
+    @classmethod
+    def lengths(cls) -> dict[str, int | None]:
+        return {
+            "field_d": None,
+            "field_s": 1671,
+            "intersection_d": None,
+            "intersection_s": None,
+            "katzensee_d": None,
+            "katzensee_s": None,
+            "runway_d": None,
+            "runway_s": None,
+            "tunnel_d": None,
+            "tunnel_s": 2380,
+        }
+
     @staticmethod
     def imu_T_lidar() -> SE3:
         scale = 100
@@ -116,6 +131,7 @@ class EnWide(Dataset):
             num_columns=1024,
             min_range=0.0,
             max_range=100.0,
+            rate=10,
         )
 
     # ------------------------- For downloading ------------------------- #

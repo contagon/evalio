@@ -88,6 +88,7 @@ class NewerCollege2021(Dataset):
             num_columns=1024,
             min_range=0.0,
             max_range=50.0,
+            rate=10,
         )
 
     # ------------------------- For downloading ------------------------- #

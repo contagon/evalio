@@ -58,7 +58,7 @@ struct Point {
   double y;
   double z;
   double intensity;
-  Stamp t; // in nanoseconds?
+  Stamp t;  // in nanoseconds?
   uint32_t range;
   uint8_t row;
   uint16_t col;
@@ -96,12 +96,14 @@ struct LidarParams {
   int num_columns;
   double min_range;
   double max_range;
+  double rate;
 
   std::string toString() const {
     return "LidarParams(rows: " + std::to_string(num_rows) +
            ", cols: " + std::to_string(num_columns) +
            ", min_range: " + std::to_string(min_range) +
-           ", max_range: " + std::to_string(max_range) + ")";
+           ", max_range: " + std::to_string(max_range) +
+           ", rate: " + std::to_string(rate) + ")";
   };
 };
 
@@ -227,4 +229,4 @@ struct SE3 {
   }
 };
 
-} // namespace evalio
+}  // namespace evalio

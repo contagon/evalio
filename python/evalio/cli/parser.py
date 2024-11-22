@@ -31,6 +31,12 @@ class DatasetBuilder:
     seq: str
     length: Optional[int] = None
 
+    def __post_init__(self):
+        self.seq = self.dataset.process_seq(self.seq)
+
+        if self.length is None:
+            self.length = self.dataset.lengths().get(self.seq, None)
+
     @staticmethod
     @functools.cache
     def _all_datasets() -> dict[str, type[Dataset]]:
@@ -91,9 +97,6 @@ class DatasetBuilder:
             out["length"] = self.length
 
         return out
-
-    def __post_init__(self):
-        self.seq = self.dataset.process_seq(self.seq)
 
     def check_download(self) -> bool:
         return self.dataset.check_download(self.seq)

@@ -22,7 +22,19 @@ def run(
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
+    if all(d.length is not None for d in datasets):
+        dtime = sum(d.length / d.dataset.lidar_params().rate for d in datasets)
+        dtime *= len(pipelines)
+        if dtime > 3600:
+            print(f"Total estimated: {dtime / 3600:.2f} hours")
+        elif dtime > 60:
+            print(f"Total estimated: {dtime / 60:.2f} minutes")
+        else:
+            print(f"Total estimated: {dtime:.2f} seconds")
+    else:
+        print("Total time is unknown, missing dataset information")
     print(f"Output will be saved to {output}\n")
+
     save_config(pipelines, datasets, output)
 
     for dbuilder in datasets:

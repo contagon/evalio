@@ -58,6 +58,16 @@ class NewerCollege2020(Dataset):
             "07_parkland_mound",
         ]
 
+    @classmethod
+    def lengths(cls) -> dict[str, int | None]:
+        return {
+            "01_short_experiment": 15302,
+            "02_long_experiment": None,
+            "05_quad_with_dynamics": None,
+            "06_dynamic_spinning": None,
+            "07_parkland_mound": None,
+        }
+
     @staticmethod
     def imu_T_lidar() -> SE3:
         return SE3(
@@ -93,6 +103,7 @@ class NewerCollege2020(Dataset):
             num_columns=1024,
             min_range=0.1,
             max_range=120.0,
+            rate=10,
         )
 
     # ------------------------- For downloading ------------------------- #

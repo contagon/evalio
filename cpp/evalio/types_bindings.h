@@ -53,12 +53,14 @@ void makeTypes(py::module &m) {
       .def("__repr__", &LidarMeasurement::toString);
 
   py::class_<LidarParams>(m, "LidarParams")
-      .def(py::init<int, int, double, double>(), py::kw_only(), "num_rows"_a,
-           "num_columns"_a, "min_range"_a, "max_range"_a)
+      .def(py::init<int, int, double, double, double>(), py::kw_only(),
+           "num_rows"_a, "num_columns"_a, "min_range"_a, "max_range"_a,
+           "rate"_a)
       .def_readonly("num_rows", &LidarParams::num_rows)
       .def_readonly("num_columns", &LidarParams::num_columns)
       .def_readonly("min_range", &LidarParams::min_range)
       .def_readonly("max_range", &LidarParams::max_range)
+      .def_readonly("rate", &LidarParams::rate)
       .def("__repr__", &LidarParams::toString);
 
   // Imu

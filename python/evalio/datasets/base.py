@@ -50,6 +50,10 @@ class Dataset(Protocol):
     @staticmethod
     def sequences() -> list[str]: ...
 
+    @classmethod
+    def lengths(cls) -> dict[str, int | None]:
+        return {seq: None for seq in cls.sequences()}
+
     @staticmethod
     def imu_T_lidar() -> SE3: ...
 

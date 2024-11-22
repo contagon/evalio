@@ -5,13 +5,22 @@
 
 namespace evalio {
 
-inline double norm2(double p, double i) {
+// ------------------------- Multiplicative Norm ------------------------- //
+inline double norm_m2(double p, double i) {
   if (i < 1e-3) {
     i = 1e-3;
   }
-  return i;
+  return 1.0 / i;
+}
+inline double norm_m1(double p, double i) {
+  i = std::sqrt(i);
+  if (i < 1e-3) {
+    i = 1e-3;
+  }
+  return 1.0 / i;
 }
 
+inline double norm0(double p, double i) { return 1.0; }
 inline double norm1(double p, double i) {
   i = std::sqrt(i);
   if (i < 1e-3) {
@@ -19,9 +28,39 @@ inline double norm1(double p, double i) {
   }
   return i;
 }
+inline double norm2(double p, double i) {
+  if (i < 1e-3) {
+    i = 1e-3;
+  }
+  return i;
+}
 
-inline double norm0(double p, double i) { return 1.0; }
+// ------------------------- Additive Norm ------------------------- //
+inline double add25(double p, double i) {
+  if (p < 1e-3) {
+    return 0.25 * i;
+  } else {
+    return 1.0 + 0.25 * i / p;
+  }
+}
 
+inline double add50(double p, double i) {
+  if (p < 1e-3) {
+    return 0.50 * i;
+  } else {
+    return 1.0 + 0.50 * i / p;
+  }
+}
+
+inline double add75(double p, double i) {
+  if (p < 1e-3) {
+    return 0.75 * i;
+  } else {
+    return 1.0 + 0.75 * i / p;
+  }
+}
+
+// ------------------------- Experiments ------------------------- //
 inline double step(double p, double i) { return i < 10 ? 1.0 : 10.0; }
 
 inline double add_norm12(double p, double i) { return (1.0 + std::sqrt(i)); }
@@ -32,9 +71,16 @@ inline double add_norm2(double p, double i) { return (1.0 + i * i); }
 
 inline std::function<double(double, double)> lookup(std::string name) {
   // clang-format off
+  if (name == "norm_m2") return norm_m2;
+  if (name == "norm_m1") return norm_m1;
   if (name == "norm0") return norm0;
   if (name == "norm1") return norm1;
   if (name == "norm2") return norm2;
+
+  if (name == "add25") return add25;
+  if (name == "add50") return add50;
+  if (name == "add75") return add75;
+
   if (name == "step") return step;
   if (name == "add_norm12") return add_norm12;
   if (name == "add_norm1") return add_norm1;
@@ -43,4 +89,4 @@ inline std::function<double(double, double)> lookup(std::string name) {
   throw "Couldn't find metric";
 }
 
-} // namespace evalio
+}  // namespace evalio
