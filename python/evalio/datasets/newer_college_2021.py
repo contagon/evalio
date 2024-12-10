@@ -54,22 +54,19 @@ class NewerCollege2021(Dataset):
             "maths-hard",
         ]
 
-    @staticmethod
-    def imu_T_lidar() -> SE3:
+    def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
             np.array([0.013801, -0.012207, -0.01514]),
         )
 
-    @staticmethod
-    def imu_T_gt() -> SE3:
+    def imu_T_gt(self) -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
             np.array([0.013642, -0.011607, -0.10583]),
         )
 
-    @staticmethod
-    def imu_params() -> ImuParams:
+    def imu_params(self) -> ImuParams:
         # TODO:
         return ImuParams(
             gyro=0.000261799,
@@ -81,8 +78,7 @@ class NewerCollege2021(Dataset):
             gravity=np.array([0, 0, 9.81]),
         )
 
-    @staticmethod
-    def lidar_params() -> LidarParams:
+    def lidar_params(self) -> LidarParams:
         return LidarParams(
             num_rows=128,
             num_columns=1024,
