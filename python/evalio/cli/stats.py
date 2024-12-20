@@ -148,7 +148,9 @@ def dict_diff(dicts: Sequence[dict]) -> list[str]:
     return diff
 
 
-def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
+def eval_dataset(
+    dir: Path, visualize: bool, sort: Optional[str], out_dir: Optional[Path]
+):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
@@ -219,21 +221,35 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
             #         static=True,
             #     )
 
-        if sort is None:
-            pass
-        elif sort.lower() == "atet":
-            results = sorted(results, key=lambda x: x[0])
-        elif sort.lower() == "ater":
-            results = sorted(results, key=lambda x: x[1])
+    if sort is None:
+        pass
+    elif sort.lower() == "atet":
+        results = sorted(results, key=lambda x: x[0])
+    elif sort.lower() == "ater":
+        results = sorted(results, key=lambda x: x[1])
 
     print(tabulate(results, headers=header, tablefmt="fancy"))
+
+    if out_dir is not None:
+        # save results to csv
+        out_dir.mkdir(parents=True, exist_ok=True)
+        filename = "_".join(dir.parts[-2:])
+        with open(out_dir / f"{filename}.csv", "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            writer.writerows(results)
 
 
 def _contains_dir(directory: Path) -> bool:
     return any(directory.is_dir() for directory in directory.glob("*"))
 
 
-def eval(directories: list[Path], visualize: bool, sort: Optional[str] = None):
+def eval(
+    directories: list[Path],
+    visualize: bool,
+    sort: Optional[str] = None,
+    out_dir: Optional[Path] = None,
+):
     # Collect all bottom level directories
     bottom_level_dirs = []
     for directory in directories:
@@ -242,4 +258,4 @@ def eval(directories: list[Path], visualize: bool, sort: Optional[str] = None):
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort)
+        eval_dataset(d, visualize, sort, out_dir)

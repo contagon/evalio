@@ -70,6 +70,7 @@ def main():
     )
     stats.add_argument("-v", "--visualize", action="store_true")
     stats.add_argument("-s", "--sort", type=str, help="Sort by this key")
+    stats.add_argument("-o", "--output", type=Path, help="Output directory")
 
     # autocomplete
     argcomplete.autocomplete(args)
@@ -110,12 +111,12 @@ def main():
             raise ValueError("Output must be a directory")
 
         # parse visualizer
-        vis = RerunVis(args.visualize, RerunConfig())
+        vis = RerunVis(args.visualize, RerunConfig("172.31.75.54"))
 
         run(pipelines, datasets, out, vis)
 
     elif args.command == "stats":
-        eval(args.experiments, args.visualize, args.sort)
+        eval(args.experiments, args.visualize, args.sort, args.output)
 
 
 if __name__ == "__main__":
