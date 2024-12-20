@@ -9,6 +9,7 @@
 #include "LIO-SAM/types.h"
 #include "evalio/pipelines/base.h"
 #include "evalio/types.h"
+#include "evalio/metrics.h"
 
 inline void to_evalio_point(evalio::Point &ev_point,
                             const lio_sam::PointXYZIRT &ls_point) {
@@ -83,6 +84,10 @@ public:
         {"globalMapVisualizationSearchRadius", 1000.0},
         {"globalMapVisualizationPoseDensity", 10.0},
         {"globalMapVisualizationLeafSize", 1.0},
+
+        // Intensity params
+        {"intensity_metric", std::string("norm0")},
+        {"intensity_residual", std::string("norm0")},
     };
   }
 
@@ -176,8 +181,16 @@ public:
               "Invalid parameter, LioSAM doesn't have double param " + key);
         }
       } else if (std::holds_alternative<std::string>(value)) {
-        throw std::invalid_argument(
-            "Invalid parameter, LioSAM doesn't have string param " + key);
+        if (key == "intensity_metric") {
+          std::string kind = std::get<std::string>(value);
+          config_.intensity_metric = evalio::lookup(kind);
+        } else if (key == "intensity_residual") {
+          std::string kind = std::get<std::string>(value);
+          config_.intensity_residual = evalio::lookup(kind);
+        } else {
+          throw std::invalid_argument(
+              "Invalid parameter, LioSAM doesn't have string param " + key);
+        }
       } else {
         throw std::invalid_argument("Invalid parameter type");
       }
