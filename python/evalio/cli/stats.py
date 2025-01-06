@@ -169,7 +169,7 @@ def eval_dataset(
     # if visualize:
     #     import rerun as rr
 
-    #     import evalio.vis as evis
+    #     from evalio.rerun import convert, Vis
 
     #     rr.init(
     #         str(dir),
@@ -178,7 +178,7 @@ def eval_dataset(
     #     rr.connect("0.0.0.0:9876")
     #     rr.log(
     #         "gt",
-    #         evis.poses_to_points(gt_og.poses, color=[0, 0, 255]),
+    #         convert(gt_og.poses, Vis.Points, color=[0, 0, 255]),
     #         static=True,
     #     )
 
@@ -217,7 +217,7 @@ def eval_dataset(
             # if visualize:
             #     rr.log(
             #         traj.metadata["name"],
-            #         evis.poses_to_points(traj.poses, color=[255, 0, 0]),
+            #         convert(traj.poses, Vis.Points, color=[255, 0, 0]),
             #         static=True,
             #     )
 

@@ -23,7 +23,7 @@ def run(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
     if all(d.length is not None for d in datasets):
-        dtime = sum(d.length / d.dataset.lidar_params().rate for d in datasets)
+        dtime = sum(d.length / d.dataset.lidar_params().rate for d in datasets)  # type: ignore
         dtime *= len(pipelines)
         if dtime > 3600:
             print(f"Total estimated: {dtime / 3600:.2f} hours")
