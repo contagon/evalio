@@ -182,8 +182,7 @@ public:
         }
       } else if (std::holds_alternative<std::string>(value)) {
         if (key == "intensity_metric") {
-          std::string kind = std::get<std::string>(value);
-          config_.intensity_metric = evalio::lookup(kind);
+          config_.intensity_metric = std::get<std::string>(value);
         } else if (key == "intensity_residual") {
           std::string kind = std::get<std::string>(value);
           config_.intensity_residual = evalio::lookup(kind);

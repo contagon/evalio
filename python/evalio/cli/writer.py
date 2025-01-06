@@ -76,7 +76,6 @@ def save_gt(output: Path, dataset: DatasetBuilder):
     path = output / dataset.dataset.name() / dataset.seq
     path.mkdir(parents=True, exist_ok=True)
     path = path / "gt.csv"
-    gt_T_imu = dataset.build().imu_T_gt().inverse()
     with open(path, "w") as f:
         f.write(f"# dataset: {dataset.dataset.name()}\n")
         f.write(f"# sequence: {dataset.seq}\n")
@@ -86,16 +85,15 @@ def save_gt(output: Path, dataset: DatasetBuilder):
         writer = csv.writer(f)
         for stamp, pose in gt:
             # Convert to imu frame
-            new_pose = pose * gt_T_imu
             writer.writerow(
                 [
                     stamp.to_sec(),
-                    new_pose.trans[0],
-                    new_pose.trans[1],
-                    new_pose.trans[2],
-                    new_pose.rot.qx,
-                    new_pose.rot.qy,
-                    new_pose.rot.qz,
-                    new_pose.rot.qw,
+                    pose.trans[0],
+                    pose.trans[1],
+                    pose.trans[2],
+                    pose.rot.qx,
+                    pose.rot.qy,
+                    pose.rot.qz,
+                    pose.rot.qw,
                 ]
             )
