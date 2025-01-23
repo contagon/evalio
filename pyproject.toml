@@ -30,13 +30,17 @@ fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]
-requires = ["scikit-build-core", "pybind11", "pybind11-stubgen", "numpy"]
+requires = ["scikit-build-core>=0.10", "pybind11", "pybind11-stubgen", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
 evalio = "evalio.cli:main"
 
 # -------------- Tools -------------- #
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",
