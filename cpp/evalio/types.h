@@ -88,6 +88,15 @@ struct LidarMeasurement {
         << ", num_points: " << points.size() << ")";
     return oss.str();
   }
+
+  std::vector<Eigen::Vector3d> to_vec_positions() const {
+    std::vector<Eigen::Vector3d> eigen_points;
+    eigen_points.reserve(points.size());
+    for (const auto &point : points) {
+      eigen_points.push_back(Eigen::Vector3d(point.x, point.y, point.z));
+    }
+    return eigen_points;
+  }
 };
 
 struct LidarParams {

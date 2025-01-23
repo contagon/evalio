@@ -50,6 +50,7 @@ void makeTypes(py::module &m) {
       .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
       .def_readonly("stamp", &LidarMeasurement::stamp)
       .def_readonly("points", &LidarMeasurement::points)
+      .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
       .def("__repr__", &LidarMeasurement::toString);
 
   py::class_<LidarParams>(m, "LidarParams")
@@ -120,4 +121,4 @@ void makeTypes(py::module &m) {
           "memo"_a);
 }
 
-}  // namespace evalio
+} // namespace evalio
