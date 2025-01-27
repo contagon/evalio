@@ -86,7 +86,7 @@ class NewerCollege2021(Dataset):
         return LidarParams(
             num_rows=128,
             num_columns=1024,
-            min_range=0.0,
+            min_range=0.1,
             max_range=50.0,
         )
 

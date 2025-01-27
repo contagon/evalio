@@ -26,7 +26,9 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
     ) as response:
         with (
             open(filename, "wb") as fh,
-            tqdm(total=response.length, unit="B", unit_scale=True) as pbar,
+            tqdm(
+                total=response.length, unit="B", unit_scale=True, dynamic_ncols=True
+            ) as pbar,
         ):
             while chunk := response.read(chunk_size):
                 fh.write(chunk)

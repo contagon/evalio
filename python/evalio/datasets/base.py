@@ -2,7 +2,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol, Union
+from typing import Iterator, Optional, Protocol, Union
 
 import numpy as np
 from rosbags.highlevel import AnyReader
@@ -36,7 +36,7 @@ class Dataset(Protocol):
     length: Optional[int] = None
 
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self): ...
+    def __iter__(self) -> Iterator[Measurement]: ...
 
     def ground_truth_raw(self) -> Trajectory: ...
 
