@@ -76,8 +76,7 @@ class EnWide(Dataset):
             "tunnel_s",
         ]
 
-    @staticmethod
-    def imu_T_lidar() -> SE3:
+    def imu_T_lidar(self) -> SE3:
         scale = 100
         imu_T_sensor = SE3(
             SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
@@ -90,16 +89,14 @@ class EnWide(Dataset):
         # TODO: Hardcode this later on
         return imu_T_sensor * lidar_T_sensor.inverse()
 
-    @staticmethod
-    def imu_T_gt() -> SE3:
+    def imu_T_gt(self) -> SE3:
         # TODO: Needs to be inverted?
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
             np.array([-0.006253, 0.011775, 0.10825]),
         )
 
-    @staticmethod
-    def imu_params() -> ImuParams:
+    def imu_params(self) -> ImuParams:
         # TODO: Verify these values
         return ImuParams(
             gyro=0.000261799,
@@ -111,8 +108,7 @@ class EnWide(Dataset):
             gravity=np.array([0, 0, 9.81]),
         )
 
-    @staticmethod
-    def lidar_params() -> LidarParams:
+    def lidar_params(self) -> LidarParams:
         return LidarParams(
             num_rows=128,
             num_columns=1024,
