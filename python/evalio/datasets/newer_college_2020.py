@@ -58,8 +58,7 @@ class NewerCollege2020(Dataset):
             "07_parkland_mound",
         ]
 
-    @staticmethod
-    def imu_T_lidar() -> SE3:
+    def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0),
             np.array(
@@ -67,15 +66,13 @@ class NewerCollege2020(Dataset):
             ),
         )
 
-    @staticmethod
-    def imu_T_gt() -> SE3:
+    def imu_T_gt(self) -> SE3:
         return SE3(
             SO3(qx=0.0, qy=0.0, qz=0.38268, qw=0.92388),
             np.array([0.035643, 0.089026, -0.021653]),
         )
 
-    @staticmethod
-    def imu_params() -> ImuParams:
+    def imu_params(self) -> ImuParams:
         return ImuParams(
             gyro=0.000261799,
             accel=0.000230,
@@ -86,8 +83,7 @@ class NewerCollege2020(Dataset):
             gravity=np.array([0, 0, -9.81]),
         )
 
-    @staticmethod
-    def lidar_params() -> LidarParams:
+    def lidar_params(self) -> LidarParams:
         return LidarParams(
             num_rows=64,
             num_columns=1024,
