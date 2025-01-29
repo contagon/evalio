@@ -6,7 +6,6 @@ import numpy as np
 from .base import (
     EVALIO_DATA,
     SE3,
-    SO3,
     Dataset,
     ImuParams,
     LidarParams,
@@ -33,25 +32,14 @@ class MultiCampus2024(Dataset):
                 "/os_cloud_node/points",
                 "/vn200/imu",
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
             EVALIO_DATA / MultiCampus2024.name() / self.seq / "pose_inW.csv",
             ["num", "sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
-
-    def ground_truth(self) -> Trajectory:
-        gt_traj = self.ground_truth_raw()
-        # The MCD dataset does not have a fixed initial transform so use the first pose
-        # For details on the coordinate system see: https://mcdviral.github.io/UserManual.html#coordinate-systems
-        w_T_gt0 = gt_traj.poses[0]
-
-        # Conver to IMU frame
-        for i in range(len(gt_traj)):
-            w_T_gt_i = gt_traj.poses[i]
-            gt_traj.poses[i] = w_T_gt0.inverse() * w_T_gt_i
-
-        return gt_traj
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
@@ -142,12 +130,11 @@ class MultiCampus2024(Dataset):
                     ]
                 )
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     def imu_T_gt(self) -> SE3:
-        # No constant transform, so ground_truth is overridden above
-        raise NotImplementedError(
-            "MultiCampus2024 dataset does not have a fixed imu_T_gt transform."
-        )
+        return SE3.identity()
 
     def imu_params(self) -> ImuParams:
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
@@ -181,6 +168,8 @@ class MultiCampus2024(Dataset):
                 min_range=0.1,
                 max_range=120.0,
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod

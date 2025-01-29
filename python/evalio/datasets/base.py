@@ -56,7 +56,7 @@ class Dataset(Protocol):
 
     def imu_params(self) -> ImuParams: ...
 
-    def lidar_params() -> LidarParams: ...
+    def lidar_params(self) -> LidarParams: ...
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
@@ -87,7 +87,7 @@ class Dataset(Protocol):
         gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
 
-        # Conver to IMU frame
+        # Convert to IMU frame
         for i in range(len(gt_traj)):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
