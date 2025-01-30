@@ -36,19 +36,22 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 @dataclass
-class EnWide(Dataset):
+class Hilti2022(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
+        bag, _ = Hilti2022.get_files(self.seq)
         return RosbagIter(
-            EVALIO_DATA / EnWide.name() / self.seq,
-            "/ouster/points",
-            "/ouster/imu",
+            EVALIO_DATA / Hilti2022.name() / self.seq / bag,
+            "/hesai/pandar",
+            "/alphasense/imu",
             self.lidar_params(),
         )
 
     def ground_truth_raw(self) -> Trajectory:
+        # TODO: Update the path to the ground truth file
+        _, gt = Hilti2022.get_files(self.seq)
         return load_pose_csv(
-            EVALIO_DATA / EnWide.name() / self.seq / f"gt-{self.seq}.csv",
+            EVALIO_DATA / Hilti2022.name() / self.seq / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -56,49 +59,34 @@ class EnWide(Dataset):
     # ------------------------- For loading params ------------------------- #
     @staticmethod
     def url() -> str:
-        return "https://projects.asl.ethz.ch/datasets/enwide"
+        return "https://hilti-challenge.com/dataset-2022.html"
 
     @staticmethod
     def name() -> str:
-        return "enwide"
+        return "hilti_2022"
 
     @staticmethod
     def sequences() -> list[str]:
         return [
-            "field_d",
-            "field_s",
-            "intersection_d",
-            "intersection_s",
-            "katzensee_d",
-            "katzensee_s",
-            "runway_d",
-            "runway_s",
-            "tunnel_d",
-            "tunnel_s",
+            "construction_upper_level_1",
+            "construction_upper_level_2",
+            "construction_upper_level_3",
+            "basement_2",
+            "attic_to_upper_gallery_2",
+            "corridor_lower_gallery_2",
         ]
 
     def imu_T_lidar(self) -> SE3:
-        scale = 100
-        imu_T_sensor = SE3(
-            SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
-            np.array([6.253 / scale, -11.775 / scale, 7.645 / scale]),
+        return SE3(
+            SO3(qx=0.7071068, qy=-0.7071068, qz=0.0, qw=0.0),
+            np.array([-0.001, -0.00855, 0.055]),
         )
-        lidar_T_sensor = SE3(
-            SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0),
-            np.array([0.0, 0.0, 0.3617 / scale]),
-        )
-        # TODO: Hardcode this later on
-        return imu_T_sensor * lidar_T_sensor.inverse()
 
     def imu_T_gt(self) -> SE3:
-        # TODO: Needs to be inverted?
-        return SE3(
-            SO3(qx=0.0, qy=0.0, qz=0.0, qw=1.0),
-            np.array([-0.006253, 0.011775, 0.10825]),
-        )
+        return SE3.identity()
 
     def imu_params(self) -> ImuParams:
-        # TODO: Verify these values
+        # TODO:
         return ImuParams(
             gyro=0.000261799,
             accel=0.000230,
@@ -111,51 +99,60 @@ class EnWide(Dataset):
 
     def lidar_params(self) -> LidarParams:
         return LidarParams(
-            num_rows=128,
-            num_columns=1024,
-            min_range=0.0,
-            max_range=100.0,
+            num_rows=32,
+            num_columns=2000,
+            min_range=0.1,
+            max_range=120.0,
         )
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / EnWide.name() / seq
+    def get_files(seq: str) -> tuple[str, str]:
+        filename = {
+            "construction_upper_level_1": "exp04_construction_upper_level",
+            "construction_upper_level_2": "exp05_construction_upper_level_2",
+            "construction_upper_level_3": "exp06_construction_upper_level_3",
+            "basement_2": "exp14_basement_2",
+            "attic_to_upper_gallery_2": "exp16_attic_to_upper_gallery_2",
+            "corridor_lower_gallery_2": "exp18_corridor_lower_gallery_2",
+        }[seq]
 
-        if not dir.exists():
+        bag_file = f"{filename}.bag"
+        gt_file = f"{filename}_imu.txt"
+
+        # Extra space in these ones for some reason
+        if "construction" in seq:
+            gt_file = "exp_" + gt_file[3:]
+
+        return bag_file, gt_file
+
+    @staticmethod
+    def check_download(seq: str) -> bool:
+        folder = EVALIO_DATA / Hilti2022.name() / seq
+
+        bag_file, gt_file = Hilti2022.get_files(seq)
+
+        if not folder.exists():
             return False
-        elif not (dir / f"gt-{seq}.csv").exists():
+        elif not (folder / gt_file).exists():
             return False
-        elif len(list(dir.glob("*.bag"))) == 0:
+        elif not (folder / bag_file).exists():
             return False
-        elif len(list(dir.glob("*.bag"))) > 1:
-            raise ValueError(f"Too many bag files found, should only be 1 in {dir}")
         else:
             return True
 
     @staticmethod
     def download(seq: str):
-        bag_date = {
-            "field_d": "2023-08-09-19-25-45",
-            "field_s": "2023-08-09-19-05-05",
-            "intersection_d": "2023-08-09-17-58-11",
-            "intersection_s": "2023-08-09-16-19-09",
-            "katzensee_d": "2023-08-21-10-29-20",
-            "katzensee_s": "2023-08-21-10-20-22",
-            "runway_d": "2023-08-09-18-52-05",
-            "runway_s": "2023-08-09-18-44-24",
-            "tunnel_d": "2023-08-08-17-50-31",
-            "tunnel_s": "2023-08-08-17-12-37",
-        }[seq]
-        bag_file = f"{bag_date}-{seq}.bag"
-        gt_file = f"gt-{seq}.csv"
+        bag_file, gt_file = Hilti2022.get_files(seq)
 
-        folder = EVALIO_DATA / EnWide.name() / seq
-        url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{seq}/"
+        folder = EVALIO_DATA / Hilti2022.name() / seq
+        url = "https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/"
 
         print(f"Downloading to {folder}...")
         folder.mkdir(parents=True, exist_ok=True)
         if not (folder / gt_file).exists():
+            print(f"Downloading {gt_file}")
             _urlretrieve(url + gt_file, folder / gt_file)
         if not (folder / bag_file).exists():
+            print(f"Downloading {bag_file}")
             _urlretrieve(url + bag_file, folder / bag_file)

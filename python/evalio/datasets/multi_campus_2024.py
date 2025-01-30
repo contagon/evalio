@@ -24,6 +24,7 @@ class MultiCampus2024(Dataset):
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn100/imu",
+                self.lidar_params(),
             )
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
         elif "kth" in self.seq or "tuhh" in self.seq:
@@ -31,6 +32,7 @@ class MultiCampus2024(Dataset):
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn200/imu",
+                self.lidar_params(),
             )
         else:
             raise ValueError(f"Unknown sequence: {self.seq}")

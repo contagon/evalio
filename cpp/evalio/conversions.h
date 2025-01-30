@@ -171,7 +171,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   uint8_t first, second;
   func_row(first, data + static_cast<size_t>(0));
   func_row(second, data + static_cast<size_t>(msg.point_step));
-  bool rowMajor = (first == second);
+  bool row_major = (first == second);
   bool dense_cloud =
       (msg.height * msg.width == params.num_columns * params.num_rows);
 
@@ -179,7 +179,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   std::function<void(uint16_t & col, const uint16_t &prev_col,
                      const uint8_t &prev_row, const uint8_t &curr_row)>
       func_col;
-  if (rowMajor) {
+  if (row_major) {
     func_col = [](uint16_t &col, const uint16_t &prev_col,
                   const uint8_t &prev_row, const uint8_t &curr_row) {
       if (prev_row != curr_row) {
@@ -205,7 +205,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   // If we got exactly the right number of points in
   if (dense_cloud) {
     // If already row major, fill in the points in place
-    if (rowMajor) {
+    if (row_major) {
       size_t index = 0;
       for (evalio::Point &point : mm.points) {
         const auto pointStart =
@@ -242,7 +242,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
     }
   } else {
     // TODO handle this
-    if (rowMajor) {
+    if (row_major) {
       throw std::runtime_error(
           "Non-dense row major point clouds not supported yet");
     } else {

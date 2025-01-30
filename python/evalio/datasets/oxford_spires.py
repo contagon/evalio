@@ -124,7 +124,6 @@ class OxfordSpires(Dataset):
         )
 
     def lidar_params(self) -> LidarParams:
-        # TODO: Verify number of columns
         return LidarParams(
             num_rows=64,
             num_columns=1200,
