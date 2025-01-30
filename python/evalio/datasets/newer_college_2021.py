@@ -23,6 +23,7 @@ class NewerCollege2021(Dataset):
             EVALIO_DATA / NewerCollege2021.name() / self.seq,
             "/os_cloud_node/points",
             "/os_cloud_node/imu",
+            self.lidar_params(),
         )
 
     def ground_truth_raw(self) -> Trajectory:

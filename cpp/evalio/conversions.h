@@ -1,4 +1,6 @@
 #pragma once
+#include <cmath>
+#include <cstddef>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -128,7 +130,8 @@ template <typename T> std::function<void(T &, const uint8_t *)> blank() {
 
 inline evalio::LidarMeasurement
 ros_pc2_to_evalio(const PointCloudMetadata &msg,
-                  const std::vector<Field> &fields, const uint8_t *data) {
+                  const std::vector<Field> &fields, const uint8_t *data,
+                  const LidarParams &params) {
   std::function func_x = blank<double>();
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
@@ -136,7 +139,6 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   std::function func_t = blank<Stamp>();
   std::function func_range = blank<uint32_t>();
   std::function func_row = blank<uint8_t>();
-  std::function func_col = blank<uint16_t>();
 
   if (msg.is_bigendian) {
     throw std::runtime_error("Big endian not supported yet");
@@ -153,34 +155,120 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       func_intensity = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "t" || field.name == "time" ||
                field.name == "stamp" || field.name == "time_offset" ||
-               field.name == "timeOffset") {
+               field.name == "timeOffset" || field.name == "timestamp") {
       func_t = data_getter(field.datatype, field.offset);
     } else if (field.name == "range") {
       func_range = data_getter<uint32_t>(field.datatype, field.offset);
     } else if (field.name == "row" || field.name == "ring" ||
                field.name == "channel") {
       func_row = data_getter<uint8_t>(field.datatype, field.offset);
-    } else if (field.name == "col") {
-      // TODO: Custom column function?
-      func_col = data_getter<uint16_t>(field.datatype, field.offset);
     }
   }
 
   evalio::LidarMeasurement mm(msg.stamp);
-  mm.points.resize(msg.width * msg.height);
 
-  size_t index = 0;
-  for (evalio::Point &point : mm.points) {
-    const auto pointStart = data + static_cast<size_t>(index * msg.point_step);
-    func_x(point.x, pointStart);
-    func_y(point.y, pointStart);
-    func_z(point.z, pointStart);
-    func_intensity(point.intensity, pointStart);
-    func_t(point.t, pointStart);
-    func_range(point.range, pointStart);
-    func_row(point.row, pointStart);
-    func_col(point.col, pointStart);
-    ++index;
+  // Check in on some info about the data
+  uint8_t first, second;
+  func_row(first, data + static_cast<size_t>(0));
+  func_row(second, data + static_cast<size_t>(msg.point_step));
+  bool rowMajor = (first == second);
+  bool dense_cloud =
+      (msg.height * msg.width == params.num_columns * params.num_rows);
+
+  // Figure out how to count the columns
+  std::function<void(uint16_t & col, const uint16_t &prev_col,
+                     const uint8_t &prev_row, const uint8_t &curr_row)>
+      func_col;
+  if (rowMajor) {
+    func_col = [](uint16_t &col, const uint16_t &prev_col,
+                  const uint8_t &prev_row, const uint8_t &curr_row) {
+      if (prev_row != curr_row) {
+        col = 0;
+      } else {
+        col = prev_col + 1;
+      }
+    };
+  } else {
+    func_col = [](uint16_t &col, const uint16_t &prev_col,
+                  const uint8_t &prev_row, const uint8_t &curr_row) {
+      if (curr_row < prev_row) {
+        col = prev_col + 1;
+      } else {
+        col = prev_col;
+      }
+    };
+  }
+
+  mm.points.resize(params.num_columns * params.num_rows);
+  uint16_t prev_col = 0;
+  uint8_t prev_row = 0;
+  // If we got exactly the right number of points in
+  if (dense_cloud) {
+    // If already row major, fill in the points in place
+    if (rowMajor) {
+      size_t index = 0;
+      for (evalio::Point &point : mm.points) {
+        const auto pointStart =
+            data + static_cast<size_t>(index * msg.point_step);
+        func_x(point.x, pointStart);
+        func_y(point.y, pointStart);
+        func_z(point.z, pointStart);
+        func_intensity(point.intensity, pointStart);
+        func_t(point.t, pointStart);
+        func_range(point.range, pointStart);
+        func_row(point.row, pointStart);
+        func_col(point.col, prev_col, prev_row, point.row);
+        prev_col = point.col;
+        prev_row = point.row;
+        ++index;
+      }
+      // If not row major, we'll have to organize the points as we go
+    } else {
+      for (size_t i = 0; i < msg.height * msg.width; i++) {
+        const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
+        evalio::Point point;
+        func_x(point.x, pointStart);
+        func_y(point.y, pointStart);
+        func_z(point.z, pointStart);
+        func_intensity(point.intensity, pointStart);
+        func_t(point.t, pointStart);
+        func_range(point.range, pointStart);
+        func_row(point.row, pointStart);
+        func_col(point.col, prev_col, prev_row, point.row);
+        prev_col = point.col;
+        prev_row = point.row;
+        mm.points[point.row * params.num_columns + point.col] = point;
+      }
+    }
+  } else {
+    // TODO handle this
+    if (rowMajor) {
+      throw std::runtime_error(
+          "Non-dense row major point clouds not supported yet");
+    } else {
+      // fill out row/col for blank points
+      for (size_t row = 0; row < params.num_rows; row++) {
+        for (size_t col = 0; col < params.num_columns; col++) {
+          mm.points[row * params.num_columns + col].row = row;
+          mm.points[row * params.num_columns + col].col = col;
+        }
+      }
+      for (size_t i = 0; i < msg.height * msg.width; i++) {
+        const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
+        evalio::Point point;
+        func_x(point.x, pointStart);
+        func_y(point.y, pointStart);
+        func_z(point.z, pointStart);
+        func_intensity(point.intensity, pointStart);
+        func_t(point.t, pointStart);
+        func_range(point.range, pointStart);
+        func_row(point.row, pointStart);
+        func_col(point.col, prev_col, prev_row, point.row);
+        prev_col = point.col;
+        prev_row = point.row;
+        mm.points[point.row * params.num_columns + point.col] = point;
+      }
+    }
   }
 
   return mm;
@@ -217,10 +305,12 @@ inline void makeConversions(py::module &m) {
       .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
       .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("ros_pc2_to_evalio", [](const PointCloudMetadata &msg,
-                                const std::vector<Field> &fields, char *c) {
-    return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c));
-  });
+  m.def("ros_pc2_to_evalio",
+        [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
+           char *c, const LidarParams &params) {
+          return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c),
+                                   params);
+        });
 }
 
 } // namespace evalio

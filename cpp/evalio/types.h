@@ -54,14 +54,14 @@ struct Stamp {
 };
 
 struct Point {
-  double x;
-  double y;
-  double z;
-  double intensity;
-  Stamp t; // in nanoseconds?
-  uint32_t range;
-  uint8_t row;
-  uint16_t col;
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double intensity = 0.0;
+  Stamp t = Stamp{.sec = 0, .nsec = 0}; // in nanoseconds?
+  uint32_t range = 0;
+  uint8_t row = 0;
+  uint16_t col = 0;
 
   std::string toString() const {
     return "Point(x: " + std::to_string(x) + ", y: " + std::to_string(y) +

@@ -101,7 +101,7 @@ class Dataset(Protocol):
 # ------------------------- Helpers ------------------------- #
 
 
-def pointcloud2_to_evalio(msg) -> LidarMeasurement:
+def pointcloud2_to_evalio(msg, params: LidarParams) -> LidarMeasurement:
     # Convert to C++ types
     fields = []
     for f in msg.fields:
@@ -121,7 +121,7 @@ def pointcloud2_to_evalio(msg) -> LidarMeasurement:
         is_dense=msg.is_dense,
     )
 
-    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))  # type: ignore
+    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data), params)  # type: ignore
 
 
 def imu_to_evalio(msg) -> ImuMeasurement:
@@ -136,12 +136,20 @@ def imu_to_evalio(msg) -> ImuMeasurement:
 
 # These are helpers to help with common dataset types
 class RosbagIter:
-    def __init__(self, path: Path, lidar_topic: str, imu_topic: str):
+    def __init__(
+        self,
+        path: Path,
+        lidar_topic: str,
+        imu_topic: str,
+        params,
+        is_mcap: bool = False,
+    ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
+        self.params = params
 
         # Glob to get all .bag files in the directory
-        if path.is_dir():
+        if path.is_dir() and is_mcap is False:
             self.path = list(path.glob("*.bag"))
             if not self.path:
                 raise FileNotFoundError(f"No .bag files found in directory {path}")
@@ -186,7 +194,7 @@ class RosbagIter:
         msg = self.reader.deserialize(rawdata, connection.msgtype)
 
         if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg)
+            return pointcloud2_to_evalio(msg, self.params)
         elif connection.msgtype == "sensor_msgs/msg/Imu":
             return imu_to_evalio(msg)
         else:
