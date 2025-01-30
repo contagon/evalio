@@ -6,6 +6,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <fstream>
+
 #include "types.h"
 
 namespace py = pybind11;
@@ -274,6 +276,53 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   return mm;
 }
 
+// The helipr stores them in row major order
+// TODO: The helipr format drops points with bad returns - since it's row major,
+// its nigh impossible to infer where these were along a scan line
+// for now we just tack them on the end
+// Largely borrowed from
+// https://github.com/minwoo0611/HeLiPR-File-Player/blob/501b338c4be1070fc61a438177c3c0e22b628b30/src/ROSThread.cpp#L444-L454
+inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
+                                             Stamp stamp,
+                                             const LidarParams &params) {
+  LidarMeasurement mm(stamp);
+  mm.points.resize(params.num_columns * params.num_rows);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float holder = 0.0;
+  uint16_t ring = 0;
+  uint32_t nsec = 0;
+  uint16_t prev_col = 0;
+  uint16_t prev_row = 10; // start with something not 0
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
+    file.read(reinterpret_cast<char *>(&nsec), sizeof(uint32_t)); point.t = Stamp::from_nsec(nsec);
+    // file.read(reinterpret_cast<char *>(&point.reflectivity), sizeof(uint16_t));
+    file.ignore(sizeof(uint16_t));
+    file.read(reinterpret_cast<char *>(&ring), sizeof(uint16_t)); point.row = ring;
+    // file.read(reinterpret_cast<char *>(&point.ambient), sizeof(uint16_t));
+    file.ignore(sizeof(uint16_t));
+    // clang-format on
+    if (prev_row != point.row) {
+      point.col = 0;
+    } else {
+      point.col = prev_col + 1;
+    }
+    prev_col = point.col;
+    prev_row = point.row;
+    mm.points[point.row * params.num_columns + point.col] = point;
+  }
+  file.close();
+
+  return mm;
+}
+
 // ---------------------- Create python bindings ---------------------- //
 inline void makeConversions(py::module &m) {
   py::enum_<DataType>(m, "DataType")
@@ -311,6 +360,8 @@ inline void makeConversions(py::module &m) {
           return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c),
                                    params);
         });
+
+  m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
 }
 
 } // namespace evalio
