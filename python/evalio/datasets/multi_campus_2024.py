@@ -40,7 +40,8 @@ class MultiCampus2024(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
             EVALIO_DATA / MultiCampus2024.name() / self.seq / "pose_inW.csv",
-            ["num", "sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            skip_lines=1,
         )
 
     # ------------------------- For loading params ------------------------- #

@@ -207,9 +207,9 @@ class RawDataIter:
         self.imu_file = imu_file
 
         # Load all IMU data
-        imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64)
+        imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
         self.imu_stamps = [Stamp.from_nsec(x) for x in imu_stamps]
-        imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16))
+        imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16), delimiter=",")
         self.imu_gyro = imu_data[:, :3]
         self.imu_acc = imu_data[:, 3:]
 
@@ -246,12 +246,16 @@ class RawDataIter:
             return helipr_bin_to_evalio(str(file), stamp, self.lidar_params)
 
 
-def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajectory:
+def load_pose_csv(
+    path: Path, fieldnames: list[str], delimiter=",", skip_lines: Optional[int] = None
+) -> Trajectory:
     poses = []
     stamps = []
 
     with open(path) as f:
-        csvfile = filter(lambda row: row[0] != "#", f)
+        csvfile = list(filter(lambda row: row[0] != "#", f))
+        if skip_lines is not None:
+            csvfile = csvfile[skip_lines:]
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
         for line in reader:
             r = SO3(
@@ -262,6 +266,9 @@ def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajector
             )
             t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
             pose = SE3(r, t)
+
+            if "t" in fieldnames:
+                line["sec"] = line["t"]
 
             if "nsec" not in fieldnames:
                 stamp = Stamp.from_sec(float(line["sec"]))

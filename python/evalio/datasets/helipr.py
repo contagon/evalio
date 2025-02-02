@@ -53,7 +53,7 @@ class HeLiPR(Dataset):
             # "kaist_04",
             "kaist_05",
             "kaist_06",
-            "dcc_04",
+            # "dcc_04",
             "dcc_05",
             "dcc_06",
             # "riverside_04",
@@ -104,16 +104,12 @@ class HeLiPR(Dataset):
     def check_download(seq: str) -> bool:
         dir = EVALIO_DATA / HeLiPR.name() / seq
         if not dir.exists():
-            print("no directory")
             return False
         elif not (dir / "Ouster_gt.txt").exists():
-            print("no gt")
             return False
         elif not (dir / "xsens_imu.csv").exists():
-            print("no imu")
             return False
         elif not (dir / "Ouster").exists():
-            print("no ouster direcotry")
             return False
         else:
             return True
@@ -124,7 +120,7 @@ class HeLiPR(Dataset):
             # "kaist_04": "",
             "kaist_05": "17S4649polOCfN0IOBCCxQ85UrdXf1jhF",
             "kaist_06": "1GzU4gaQKL1XPtM5t4HWw2r6EvKJOWJV_",
-            "dcc_04": "1ZG3muCWwrZrVhtOsSTUMBWdUhieBZnZy",
+            # "dcc_04": "1ZG3muCWwrZrVhtOsSTUMBWdUhieBZnZy",
             "dcc_05": "1_GrcOKatx6F0DqglW0L9vk4ENBVFs0ZV",
             "dcc_06": "1Bxbl3T3OGrtn8Gh8BfeV8KJjwkgRtBMv",
             # "riverside_04": "",
@@ -136,7 +132,7 @@ class HeLiPR(Dataset):
             # "kaist_04": "",
             "kaist_05": "1R0Z7Z9BAhqOSNsD1ft6vqenH644rxXk9",
             "kaist_06": "1X-KiLi26PpJpTbZ3xupBq8I74OdXlSYU",
-            "dcc_04": "1u5eZK1sP_Jr3XasZ7PFKFGryVLuTUpGp",
+            # "dcc_04": "1u5eZK1sP_Jr3XasZ7PFKFGryVLuTUpGp",
             "dcc_05": "1X3_BJsVyaQZ7yL5t0stqr7j-G1K1sq5R",
             "dcc_06": "1WqxElIxpXR1uXTIRTow2mZgPFooy2BBt",
             # "riverside_04": "",
@@ -148,7 +144,7 @@ class HeLiPR(Dataset):
             # "kaist_04": "",
             "kaist_05": "1FM5L17x12Lh3byp9m4h8njB-4RCP4HeZ",
             "kaist_06": "1FgNG22gYkOTaWN5mtaXmR2RHbFYJ5ufo",
-            "dcc_04": "1WcUkHU-kuH_g7GCSHJDrpkuJu_xm5Wfx",
+            # "dcc_04": "1WcUkHU-kuH_g7GCSHJDrpkuJu_xm5Wfx",
             "dcc_05": "1YqCnquttT6WXcYyHnq4pzhgEGoEjvY4p",
             "dcc_06": "1tThqQ706gUuoV29g2l1c2vjEHbOfvKsa",
             # "riverside_04": "",

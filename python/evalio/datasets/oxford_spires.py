@@ -41,33 +41,6 @@ class OxfordSpires(Dataset):
 
     # ------------------------- For loading params ------------------------- #
     def cam_T_lidar(self) -> SE3:
-        return SE3.fromMat(
-            np.array(
-                [
-                    [
-                        0.007194409453692541,
-                        0.9999715416500337,
-                        0.002270762573978069,
-                        0.003242860366163889,
-                    ],
-                    [
-                        0.004589905134308125,
-                        0.0022377749953642057,
-                        -0.9999869624819755,
-                        -0.07368532755947366,
-                    ],
-                    [
-                        -0.999963585958744,
-                        0.007204738241246789,
-                        -0.004573675043599734,
-                        -0.05485800045216396,
-                    ],
-                    [0.0, 0.0, 0.0, 1.0],
-                ]
-            )
-        )
-
-    def cam_T_imu(self) -> SE3:
         r = SO3(
             qx=0.5023769275907106,
             qy=0.49990425097844265,
@@ -75,6 +48,18 @@ class OxfordSpires(Dataset):
             qw=0.5012131556048427,
         )
         t = np.array([0.003242860366163889, -0.07368532755947366, -0.05485800045216396])
+        return SE3(r, t)
+
+    def cam_T_imu(self) -> SE3:
+        r = SO3(
+            qx=-0.003150684959962717,
+            qy=0.7095105504964175,
+            qz=-0.7046875827967661,
+            qw=0.0005124164367280889,
+        )
+        t = np.array(
+            [-0.005000230026155717, -0.0031440163748744266, -0.07336562959794378]
+        )
         return SE3(r, t)
 
     @staticmethod
@@ -107,9 +92,13 @@ class OxfordSpires(Dataset):
         return self.cam_T_imu().inverse() * self.cam_T_lidar()
 
     def imu_T_gt(self) -> SE3:
-        # TODO: The GT is actually in the base frame... missing any transform to the base frame however
-        # gt is in the lidar frame
-        return self.imu_T_lidar()
+        # Ground truth was found in the lidar frame, but is reported in the "base frame"
+        # We go back to the lidar frame (as this transform should be what they used as well)
+        # then use calibration to go to imu frame
+        gt_T_lidar = SE3(
+            SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0), np.array([0.0, 0.0, 0.124])
+        )
+        return self.imu_T_lidar() * gt_T_lidar.inverse()
 
     def imu_params(self) -> ImuParams:
         # TODO
