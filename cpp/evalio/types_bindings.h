@@ -1,3 +1,4 @@
+#pragma once
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -10,7 +11,7 @@ using namespace pybind11::literals;
 
 namespace evalio {
 
-void makeTypes(py::module &m) {
+inline void makeTypes(py::module &m) {
   py::class_<Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
       .def_static("from_sec", &Stamp::from_sec)

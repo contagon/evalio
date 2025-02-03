@@ -94,7 +94,8 @@ class HeLiPR(Dataset):
     def lidar_params(self) -> LidarParams:
         return LidarParams(
             num_rows=128,
-            num_columns=1024,
+            # TODO: This seems wrong... but it's what I'm getting out of the data
+            num_columns=1025,
             min_range=1.0,
             max_range=200.0,
         )

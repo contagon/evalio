@@ -178,7 +178,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       (msg.height * msg.width == params.num_columns * params.num_rows);
 
   // Figure out how to count the columns
-  std::function<void(uint16_t & col, const uint16_t &prev_col,
+  std::function<void(uint16_t &col, const uint16_t &prev_col,
                      const uint8_t &prev_row, const uint8_t &curr_row)>
       func_col;
   if (row_major) {
@@ -314,6 +314,12 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
     } else {
       point.col = prev_col + 1;
     }
+    if (point.row >= params.num_rows || point.col >= params.num_columns) {
+      std::cout << "HeLiPR point out of bounds\npoint.row: " << +point.row
+                << " point.col: " << point.col << std::endl;
+      throw -1;
+    }
+
     prev_col = point.col;
     prev_row = point.row;
     mm.points[point.row * params.num_columns + point.col] = point;
