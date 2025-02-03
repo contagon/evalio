@@ -233,16 +233,17 @@ class RawDataIter:
             raise StopIteration
 
         if self.imu_stamps[self.idx_imu] < self.lidar_stamps[self.idx_lidar]:
-            self.idx_imu += 1
-            return ImuMeasurement(
+            mm = ImuMeasurement(
                 self.imu_stamps[self.idx_imu],
                 self.imu_gyro[self.idx_imu],
                 self.imu_acc[self.idx_imu],
             )
+            self.idx_imu += 1
+            return mm
         else:
-            self.idx_lidar += 1
             file = self.lidar_files[self.idx_lidar]
             stamp = self.lidar_stamps[self.idx_lidar]
+            self.idx_lidar += 1
             return helipr_bin_to_evalio(str(file), stamp, self.lidar_params)
 
 

@@ -1,8 +1,9 @@
+import tarfile
 from dataclasses import dataclass
 
-from evalio.types import Trajectory
 import numpy as np
-import tarfile
+
+from evalio.types import Trajectory
 
 from .base import (
     EVALIO_DATA,
@@ -66,9 +67,9 @@ class HeLiPR(Dataset):
             SO3.fromMat(
                 np.array(
                     [
-                        [0.99971549, -0.02245141, -0.01290706],
-                        [0.00805374, 0.01309075, 0.99988188],
-                        [-0.008345, -0.02234481, 0.99966461],
+                        [0.999715495593027, 0.0223448061210468, -0.00834490926264448],
+                        [-0.0224514077723064, 0.999664614804883, -0.0129070599303583],
+                        [0.00805370475188661, 0.0130907427756056, 0.999881878170293],
                     ]
                 )
             ),
