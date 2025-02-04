@@ -52,6 +52,7 @@ inline void makeTypes(py::module &m) {
       .def_readonly("stamp", &LidarMeasurement::stamp)
       .def_readonly("points", &LidarMeasurement::points)
       .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
+      .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
       .def("__repr__", &LidarMeasurement::toString);
 
   py::class_<LidarParams>(m, "LidarParams")

@@ -97,6 +97,15 @@ struct LidarMeasurement {
     }
     return eigen_points;
   }
+
+  std::vector<double> to_vec_stamps() const {
+    std::vector<double> vec_stamps;
+    vec_stamps.reserve(points.size());
+    for (const auto &point : points) {
+      vec_stamps.push_back(point.t.to_sec());
+    }
+    return vec_stamps;
+  }
 };
 
 struct LidarParams {

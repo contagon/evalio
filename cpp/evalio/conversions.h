@@ -169,16 +169,31 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
 
   evalio::LidarMeasurement mm(msg.stamp);
 
-  // Check in on some info about the data
+  // check if row or column major
   uint8_t first, second;
-  func_row(first, data + static_cast<size_t>(0));
+  func_row(first, data);
   func_row(second, data + static_cast<size_t>(msg.point_step));
   bool row_major = (first == second);
+
+  // Check if stamp is absolute or relative
+  Stamp t;
+  func_t(t, data);
+  std::function<void(Stamp &, const uint8_t *)> func_stamp;
+  if (t.sec > 1.0) {
+    func_stamp = [&func_t, &mm](Stamp &stamp, const uint8_t *data) noexcept {
+      func_t(stamp, data);
+      stamp = Stamp::from_sec(stamp - mm.stamp);
+    };
+  } else {
+    func_stamp = func_t;
+  }
+
+  // Check if there's holes in the cloud
   bool dense_cloud =
       (msg.height * msg.width == params.num_columns * params.num_rows);
 
   // Figure out how to count the columns
-  std::function<void(uint16_t &col, const uint16_t &prev_col,
+  std::function<void(uint16_t & col, const uint16_t &prev_col,
                      const uint8_t &prev_row, const uint8_t &curr_row)>
       func_col;
   if (row_major) {
@@ -216,7 +231,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
         func_y(point.y, pointStart);
         func_z(point.z, pointStart);
         func_intensity(point.intensity, pointStart);
-        func_t(point.t, pointStart);
+        func_stamp(point.t, pointStart);
         func_range(point.range, pointStart);
         func_row(point.row, pointStart);
         func_col(point.col, prev_col, prev_row, point.row);
@@ -224,8 +239,9 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
         prev_row = point.row;
         ++index;
       }
-      // If not row major, we'll have to organize the points as we go
-    } else {
+    }
+    // If not row major, we'll have to organize the points as we go
+    else {
       for (size_t i = 0; i < msg.height * msg.width; i++) {
         const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
         evalio::Point point;
@@ -233,7 +249,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
         func_y(point.y, pointStart);
         func_z(point.z, pointStart);
         func_intensity(point.intensity, pointStart);
-        func_t(point.t, pointStart);
+        func_stamp(point.t, pointStart);
         func_range(point.range, pointStart);
         func_row(point.row, pointStart);
         func_col(point.col, prev_col, prev_row, point.row);
@@ -262,7 +278,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
         func_y(point.y, pointStart);
         func_z(point.z, pointStart);
         func_intensity(point.intensity, pointStart);
-        func_t(point.t, pointStart);
+        func_stamp(point.t, pointStart);
         func_range(point.range, pointStart);
         func_row(point.row, pointStart);
         func_col(point.col, prev_col, prev_row, point.row);
