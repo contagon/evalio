@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from pathlib import Path
 
+from evalio.types import LidarMeasurement, ImuMeasurement, Stamp
 from evalio.types import Trajectory
 import numpy as np
 
@@ -9,9 +11,34 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
+    Measurement,
     RosbagIter,
     load_pose_csv,
 )
+
+
+# The multi-campus dataset lidar scan timestamps are taken at the end of the scan
+# Offset so they are actually taken from the start of the scan
+class OffsetRosbagIter(RosbagIter):
+    def __init__(
+        self,
+        path: Path,
+        lidar_topic: str,
+        imu_topic: str,
+        params,
+        is_mcap: bool = False,
+    ):
+        super().__init__(path, lidar_topic, imu_topic, params, is_mcap)
+
+    def __next__(self) -> Measurement:
+        msg = super().__next__()
+        if isinstance(msg, ImuMeasurement):
+            return msg
+        elif isinstance(msg, LidarMeasurement):
+            msg.stamp = Stamp.from_sec(msg.stamp.to_sec() - 0.1)
+            return msg
+        else:
+            raise ValueError("Unknown message type")
 
 
 @dataclass
@@ -20,7 +47,7 @@ class MultiCampus2024(Dataset):
     def __iter__(self):
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
         if "ntu" in self.seq:
-            return RosbagIter(
+            return OffsetRosbagIter(
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn100/imu",
@@ -28,7 +55,7 @@ class MultiCampus2024(Dataset):
             )
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
         elif "kth" in self.seq or "tuhh" in self.seq:
-            return RosbagIter(
+            return OffsetRosbagIter(
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn200/imu",
@@ -182,6 +209,8 @@ class MultiCampus2024(Dataset):
             return False
         elif not (dir / "pose_inW.csv").exists():
             return False
+        elif not (dir / "spline.csv").exists():
+            return False
         elif len(list(dir.glob("*.bag"))) != 2:
             return False
         else:
@@ -252,12 +281,35 @@ class MultiCampus2024(Dataset):
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
         }[seq]
 
+        gt_spline_url = {
+            "ntu_day_01": "13PwhWOuIEJmaCtWY8JvZAJ-uTA4vcmV3",
+            "ntu_day_02": "19j_KBh8Tmfhi6DALY-soZDd90bsXy35X",
+            "ntu_day_10": "1AR0H2c3MYlU3qYMCrS6CuUlwJ0QkP2mJ",
+            "ntu_night_04": "1oOiSH6l6Au_9HNlw7wtKri_hKil8syJY",
+            "ntu_night_08": "1rNXsVACfYFGzApQVk4s0nJoau53Y6Kn5",
+            "ntu_night_13": "1uXqwSo_PqsqNQT4LC7-3p9OCSIeeWZQn",
+            "kth_day_06": "1omeDSQt5XowK4F9dM0ur5PSmjZfDrVgS",
+            "kth_day_09": "1ZkqJ9mmGhcbbkwHWoSNYoJP1TKw5ChXF",
+            "kth_day_10": "1lSQgTH4cgY77c-Mw7PGqxndOj7v7vhfg",
+            "kth_night_01": "15rKuojnx1apTA7C1XkzFLBkrY5jp_9gS",
+            "kth_night_04": "1X7i89QWFsl0UkYtIfJYBXXBz9exPAAeI",
+            "kth_night_05": "1tdHyg4tmFrJiP17cCP-cDaGcgS69G4Pg",
+            "tuhh_day_02": "1mWwXjk7rCOJytMH8809hrvy5i-wqnwoL",
+            "tuhh_day_03": "19rvvdCcE-o5bZr-1UGWXN9GBz4YHC7TX",
+            "tuhh_day_04": "1EXQI70rvFbJkvZ8Fww6PvcQxwJsJAo1W",
+            "tuhh_night_07": "1CIhyAK7bqwrdj3YoGWBc_AvtBDMY3pAi",
+            "tuhh_night_08": "1fWRpwboPgkk1KVrVKB_4Vu-nVe3YObuX",
+            "tuhh_night_09": "1ERnoR7Thtmsib6yu_4GACUODSyzyMLCk",
+        }[seq]
+
         import gdown  # type: ignore
 
         folder = EVALIO_DATA / MultiCampus2024.name() / seq
 
         print(f"Downloading {seq} to {folder}...")
         folder.mkdir(parents=True, exist_ok=True)
+
         gdown.download(id=gt_url, output=str(folder / "pose_inW.csv"), resume=True)
+        gdown.download(id=gt_spline_url, output=str(folder / "spline.csv"), resume=True)
         gdown.download(id=ouster_url, output=str(folder / "ouster.bag"), resume=True)
         gdown.download(id=imu_url, output=str(folder / "vectornav.bag"), resume=True)

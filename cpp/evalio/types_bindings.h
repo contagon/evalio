@@ -49,7 +49,7 @@ inline void makeTypes(py::module &m) {
 
   py::class_<LidarMeasurement>(m, "LidarMeasurement")
       .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
-      .def_readonly("stamp", &LidarMeasurement::stamp)
+      .def_readwrite("stamp", &LidarMeasurement::stamp)
       .def_readonly("points", &LidarMeasurement::points)
       .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
       .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
