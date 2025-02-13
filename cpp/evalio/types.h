@@ -197,11 +197,19 @@ struct SO3 {
     return toEigen() * v;
   }
 
+  static SO3 exp(const Eigen::Vector3d &v) {
+    Eigen::AngleAxisd axis(v.norm(), v.normalized());
+    Eigen::Quaterniond q(axis);
+    return fromEigen(q);
+  }
+
   Eigen::Vector3d log() const {
     Eigen::Quaterniond q = toEigen();
     auto axis = Eigen::AngleAxisd(q);
     return axis.angle() * axis.axis();
   }
+
+  Eigen::Matrix3d toMat() const { return toEigen().toRotationMatrix(); }
 
   std::string toString() const {
     return "SO3(x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +

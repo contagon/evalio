@@ -27,7 +27,7 @@ class OxfordSpires(Dataset):
         return RosbagIter(
             EVALIO_DATA / OxfordSpires.name() / self.seq,
             "/hesai/pandar",
-            "/alphasense_driver_ros/imu	",
+            "/alphasense_driver_ros/imu",
             self.lidar_params(),
             is_mcap=True,
         )

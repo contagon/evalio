@@ -86,15 +86,17 @@ class Hilti2022(Dataset):
         return SE3.identity()
 
     def imu_params(self) -> ImuParams:
-        # TODO:
+        # From their kalibur config (in pdf)
+        # https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/2022322_calibration_files.zip
+        # https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi085-ds001.pdf
         return ImuParams(
-            gyro=0.000261799,
-            accel=0.000230,
-            gyro_bias=0.0000261799,
-            accel_bias=0.0000230,
-            bias_init=1e-7,
-            integration=1e-7,
-            gravity=np.array([0, 0, 9.81]),
+            gyro=0.00019,
+            accel=0.00132435,
+            gyro_bias=0.000266,
+            accel_bias=0.0043,
+            bias_init=1e-8,
+            integration=1e-8,
+            gravity=np.array([0, 0, -9.81]),
         )
 
     def lidar_params(self) -> LidarParams:
