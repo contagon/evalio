@@ -14,6 +14,13 @@ from .base import (
     load_pose_csv,
 )
 
+"""
+As a reference, we use the built in Ouster IMU instead of the alphasense one
+Extrinsics are more likely to be accurate
+Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster one (ICM-20948)
+
+"""
+
 
 @dataclass
 class NewerCollege2021(Dataset):
@@ -68,14 +75,15 @@ class NewerCollege2021(Dataset):
         )
 
     def imu_params(self) -> ImuParams:
-        # TODO:
+        # ICM-20948
+        # https://invensense.tdk.com/wp-content/uploads/2024/03/DS-000189-ICM-20948-v1.6.pdf
         return ImuParams(
-            gyro=0.000261799,
-            accel=0.000230,
-            gyro_bias=0.0000261799,
-            accel_bias=0.0000230,
-            bias_init=1e-7,
-            integration=1e-7,
+            gyro=0.000261799387799,  # TODO: Test this
+            accel=0.0022563,
+            gyro_bias=0.0000261799387799,
+            accel_bias=0.00022563,
+            bias_init=1e-8,
+            integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
         )
 

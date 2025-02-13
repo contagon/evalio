@@ -173,8 +173,8 @@ class MultiCampus2024(Dataset):
         return ImuParams(
             gyro=0.000061087,  # VectorNav Datasheet
             accel=0.00137,  # VectorNav Datasheet
-            gyro_bias=0.0000261799,  # TODO (dan) - Fix currently stolen from newer college
-            accel_bias=0.0000230,  # TODO (dan) - Fix currently stolen from newer college
+            gyro_bias=0.000061087,
+            accel_bias=0.000137,
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
@@ -211,7 +211,9 @@ class MultiCampus2024(Dataset):
             return False
         elif not (dir / "spline.csv").exists():
             return False
-        elif len(list(dir.glob("*.bag"))) != 2:
+        elif not (dir / "ouster.bag").exists():
+            return False
+        elif not (dir / "vectornav.bag").exists():
             return False
         else:
             return True

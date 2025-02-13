@@ -151,7 +151,7 @@ class RosbagIter:
 
         # Glob to get all .bag files in the directory
         if path.is_dir() and is_mcap is False:
-            self.path = list(path.glob("*.bag"))
+            self.path = [p for p in path.glob("*.bag") if "orig" not in str(p)]
             if not self.path:
                 raise FileNotFoundError(f"No .bag files found in directory {path}")
         else:
