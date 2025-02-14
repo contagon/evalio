@@ -33,11 +33,22 @@ class OxfordSpires(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        # Some of these are within a few milliseconds of each other
+        # skip over ones that are too close
+        traj = load_pose_csv(
             EVALIO_DATA / OxfordSpires.name() / self.seq / "gt-tum.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
+
+        poses = []
+        stamps = []
+        for i in range(1, len(traj)):
+            if traj.stamps[i] - traj.stamps[i - 1] > 1e-2:
+                poses.append(traj.poses[i])
+                stamps.append(traj.stamps[i])
+
+        return Trajectory(metadata=traj.metadata, stamps=stamps, poses=poses)
 
     # ------------------------- For loading params ------------------------- #
     def cam_T_lidar(self) -> SE3:
@@ -95,20 +106,24 @@ class OxfordSpires(Dataset):
         # Ground truth was found in the lidar frame, but is reported in the "base frame"
         # We go back to the lidar frame (as this transform should be what they used as well)
         # then use calibration to go to imu frame
+        # https://github.com/ori-drs/oxford_spires_dataset/blob/main/config/sensor.yaml
         gt_T_lidar = SE3(
             SO3(qx=0.0, qy=0.0, qz=1.0, qw=0.0), np.array([0.0, 0.0, 0.124])
         )
         return self.imu_T_lidar() * gt_T_lidar.inverse()
 
     def imu_params(self) -> ImuParams:
-        # TODO
+        # Same one as hilti
+        # From their kalibur config (in pdf)
+        # https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/2022322_calibration_files.zip
+        # https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi085-ds001.pdf
         return ImuParams(
-            gyro=0.000261799,
-            accel=0.000230,
-            gyro_bias=0.0000261799,
-            accel_bias=0.0000230,
-            bias_init=1e-7,
-            integration=1e-7,
+            gyro=0.00019,
+            accel=0.00132435,
+            gyro_bias=0.000266,
+            accel_bias=0.0043,
+            bias_init=1e-8,
+            integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
         )
 
@@ -129,7 +144,9 @@ class OxfordSpires(Dataset):
             return False
         elif not (dir / "gt-tum.csv").exists():
             return False
-        elif len(list(dir.glob("*"))) != 3:
+        elif not (dir / "metadata.yaml").exists():
+            return False
+        elif len(list(dir.glob("*.db3"))) < 1:
             return False
         else:
             return True

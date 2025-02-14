@@ -272,7 +272,9 @@ def load_pose_csv(
                 line["sec"] = line["t"]
 
             if "nsec" not in fieldnames:
-                stamp = Stamp.from_sec(float(line["sec"]))
+                s, ns = line["sec"].split(".")  # parse separately to get exact stamp
+                ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
+                stamp = Stamp(sec=int(s), nsec=int(ns))
             elif "sec" not in fieldnames:
                 stamp = Stamp.from_nsec(int(line["nsec"]))
             else:
