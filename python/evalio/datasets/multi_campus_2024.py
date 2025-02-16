@@ -209,8 +209,8 @@ class MultiCampus2024(Dataset):
             return False
         elif not (dir / "pose_inW.csv").exists():
             return False
-        elif not (dir / "spline.csv").exists():
-            return False
+        # elif not (dir / "spline.csv").exists():
+        #     return False
         elif not (dir / "ouster.bag").exists():
             return False
         elif not (dir / "vectornav.bag").exists():

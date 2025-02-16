@@ -81,14 +81,15 @@ class HeLiPR(Dataset):
         return self.imu_T_lidar()
 
     def imu_params(self) -> ImuParams:
-        # TODO
+        # Xsens MTi-300
+        # https://www.xsens.com/hubfs/Downloads/Leaflets/MTi-300.pdf
         return ImuParams(
-            gyro=0.000261799,
-            accel=0.000230,
-            gyro_bias=0.0000261799,
-            accel_bias=0.0000230,
-            bias_init=1e-7,
-            integration=1e-7,
+            gyro=0.000174532925199,
+            accel=0.00014715,
+            gyro_bias=0.000174532925199,
+            accel_bias=0.00014715,
+            bias_init=1e-8,
+            integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
         )
 

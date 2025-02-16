@@ -210,8 +210,8 @@ class RawDataIter:
         imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
         self.imu_stamps = [Stamp.from_nsec(x) for x in imu_stamps]
         imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16), delimiter=",")
-        self.imu_gyro = imu_data[:, :3]
-        self.imu_acc = imu_data[:, 3:]
+        self.imu_gyro = imu_data[:, 3:]
+        self.imu_acc = imu_data[:, :3]
 
         self.lidar_params = lidar_params
         self.lidar_files = sorted(list(lidar_path.glob("*")))
@@ -244,6 +244,8 @@ class RawDataIter:
             file = self.lidar_files[self.idx_lidar]
             stamp = self.lidar_stamps[self.idx_lidar]
             self.idx_lidar += 1
+            # short circuit if we don't need lidar scans (ie for bias generation)
+            # return LidarMeasurement(stamp, [])
             return helipr_bin_to_evalio(str(file), stamp, self.lidar_params)
 
 
