@@ -12,7 +12,7 @@ from evalio._cpp._helpers import (  # type: ignore
     DataType,
     Field,
     PointCloudMetadata,
-    ros_pc2_to_evalio,
+    general_pc2_to_evalio,
     helipr_bin_to_evalio,
 )
 from evalio.types import (
@@ -102,7 +102,9 @@ class Dataset(Protocol):
 # ------------------------- Helpers ------------------------- #
 
 
-def pointcloud2_to_evalio(msg, params: LidarParams) -> LidarMeasurement:
+def pointcloud2_to_evalio(
+    msg, params: LidarParams, cpp_point_loader=general_pc2_to_evalio
+) -> LidarMeasurement:
     # Convert to C++ types
     fields = []
     for f in msg.fields:
@@ -122,7 +124,7 @@ def pointcloud2_to_evalio(msg, params: LidarParams) -> LidarMeasurement:
         is_dense=msg.is_dense,
     )
 
-    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data), params)  # type: ignore
+    return cpp_point_loader(cloud, fields, bytes(msg.data), params)  # type: ignore
 
 
 def imu_to_evalio(msg) -> ImuMeasurement:
@@ -142,12 +144,14 @@ class RosbagIter:
         path: Path,
         lidar_topic: str,
         imu_topic: str,
-        params,
+        params: LidarParams,
         is_mcap: bool = False,
+        cpp_point_loader=general_pc2_to_evalio,
     ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
         self.params = params
+        self.cpp_point_loader = cpp_point_loader
 
         # Glob to get all .bag files in the directory
         if path.is_dir() and is_mcap is False:
@@ -194,7 +198,7 @@ class RosbagIter:
         msg = self.reader.deserialize(rawdata, connection.msgtype)
 
         if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg, self.params)
+            return pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
         elif connection.msgtype == "sensor_msgs/msg/Imu":
             return imu_to_evalio(msg)
         else:

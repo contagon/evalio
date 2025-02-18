@@ -42,6 +42,7 @@ struct PointCloudMetadata {
   int is_dense;
 };
 
+// ------------------------- Point loading lambdas ------------------------- //
 template <typename T>
 std::function<void(T &, const uint8_t *)> data_getter(DataType datatype,
                                                       const uint32_t offset) {
@@ -130,10 +131,10 @@ template <typename T> std::function<void(T &, const uint8_t *)> blank() {
   return [](T &, const uint8_t *) noexcept {};
 }
 
-inline evalio::LidarMeasurement
-ros_pc2_to_evalio(const PointCloudMetadata &msg,
-                  const std::vector<Field> &fields, const uint8_t *data,
-                  const LidarParams &params) {
+inline std::function<void(const unsigned char *pointStart,
+                          evalio::Point &point)>
+point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
+                  const uint8_t *data) {
   std::function func_x = blank<double>();
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
@@ -141,10 +142,6 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   std::function func_t = blank<Stamp>();
   std::function func_range = blank<uint32_t>();
   std::function func_row = blank<uint8_t>();
-
-  if (msg.is_bigendian) {
-    throw std::runtime_error("Big endian not supported yet");
-  }
 
   for (const auto &field : fields) {
     if (field.name == "x") {
@@ -167,26 +164,52 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
     }
   }
 
-  evalio::LidarMeasurement mm(msg.stamp);
-
-  // check if row or column major
-  uint8_t first, second;
-  func_row(first, data);
-  func_row(second, data + static_cast<size_t>(msg.point_step));
-  bool row_major = (first == second);
-
   // Check if stamp is absolute or relative
   Stamp t;
   func_t(t, data);
   std::function<void(Stamp &, const uint8_t *)> func_stamp;
   if (t.sec > 1.0) {
-    func_stamp = [&func_t, &mm](Stamp &stamp, const uint8_t *data) noexcept {
+    func_stamp = [func_t, scan_stamp](Stamp &stamp,
+                                      const uint8_t *data) noexcept {
       func_t(stamp, data);
-      stamp = Stamp::from_sec(stamp - mm.stamp);
+      stamp = Stamp::from_sec(stamp - scan_stamp);
     };
   } else {
     func_stamp = func_t;
   }
+
+  auto func_point = [func_x, func_y, func_z, func_intensity, func_stamp,
+                     func_range, func_row](const unsigned char *pointStart,
+                                           evalio::Point &point) {
+    func_x(point.x, pointStart);
+    func_y(point.y, pointStart);
+    func_z(point.z, pointStart);
+    func_intensity(point.intensity, pointStart);
+    func_stamp(point.t, pointStart);
+    func_range(point.range, pointStart);
+    func_row(point.row, pointStart);
+  };
+
+  return func_point;
+}
+
+inline evalio::LidarMeasurement
+general_pc2_to_evalio(const PointCloudMetadata &msg,
+                      const std::vector<Field> &fields, const uint8_t *data,
+                      const LidarParams &params) {
+  if (msg.is_bigendian) {
+    throw std::runtime_error("Big endian not supported yet");
+  }
+
+  evalio::LidarMeasurement mm(msg.stamp);
+
+  auto func_point = point_loader_func(fields, msg.stamp, data);
+
+  // check if row or column major
+  Point first, second;
+  func_point(data, first);
+  func_point(data + static_cast<size_t>(msg.point_step), second);
+  bool row_major = (first.row == second.row);
 
   // Check if there's holes in the cloud
   bool dense_cloud =
@@ -227,13 +250,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       for (evalio::Point &point : mm.points) {
         const auto pointStart =
             data + static_cast<size_t>(index * msg.point_step);
-        func_x(point.x, pointStart);
-        func_y(point.y, pointStart);
-        func_z(point.z, pointStart);
-        func_intensity(point.intensity, pointStart);
-        func_stamp(point.t, pointStart);
-        func_range(point.range, pointStart);
-        func_row(point.row, pointStart);
+        func_point(pointStart, point);
         func_col(point.col, prev_col, prev_row, point.row);
         prev_col = point.col;
         prev_row = point.row;
@@ -245,13 +262,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       for (size_t i = 0; i < msg.height * msg.width; i++) {
         const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
         evalio::Point point;
-        func_x(point.x, pointStart);
-        func_y(point.y, pointStart);
-        func_z(point.z, pointStart);
-        func_intensity(point.intensity, pointStart);
-        func_stamp(point.t, pointStart);
-        func_range(point.range, pointStart);
-        func_row(point.row, pointStart);
+        func_point(pointStart, point);
         func_col(point.col, prev_col, prev_row, point.row);
         prev_col = point.col;
         prev_row = point.row;
@@ -274,13 +285,7 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
       for (size_t i = 0; i < msg.height * msg.width; i++) {
         const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
         evalio::Point point;
-        func_x(point.x, pointStart);
-        func_y(point.y, pointStart);
-        func_z(point.z, pointStart);
-        func_intensity(point.intensity, pointStart);
-        func_stamp(point.t, pointStart);
-        func_range(point.range, pointStart);
-        func_row(point.row, pointStart);
+        func_point(pointStart, point);
         func_col(point.col, prev_col, prev_row, point.row);
         prev_col = point.col;
         prev_row = point.row;
@@ -292,11 +297,64 @@ ros_pc2_to_evalio(const PointCloudMetadata &msg,
   return mm;
 }
 
+// point cloud loader where rows come in in 0, 8, 1, 9, ... order
+inline evalio::LidarMeasurement
+split_row_pc2_to_evalio(const PointCloudMetadata &msg,
+                        const std::vector<Field> &fields, const uint8_t *data,
+                        const LidarParams &params) {
+  if (msg.is_bigendian) {
+    throw std::runtime_error("Big endian not supported yet");
+  }
+
+  auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
+    if (row_idx < 8) {
+      return row_idx * 2;
+    } else {
+      return (row_idx - 8) * 2 + 1;
+    }
+  };
+
+  auto func_col = [&func_row_idx_to_row_seq](
+                      uint16_t &col, const uint16_t &prev_col,
+                      const uint8_t &prev_row, const uint8_t &curr_row) {
+    if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
+      col = prev_col + 1;
+    } else {
+      col = prev_col;
+    }
+  };
+
+  evalio::LidarMeasurement mm(msg.stamp);
+  auto func_point = point_loader_func(fields, msg.stamp, data);
+  mm.points.resize(params.num_columns * params.num_rows);
+
+  // fill out row/col for blank points
+  uint16_t prev_col = 0;
+  uint8_t prev_row = 0;
+  for (size_t row = 0; row < params.num_rows; row++) {
+    for (size_t col = 0; col < params.num_columns; col++) {
+      mm.points[row * params.num_columns + col].row = row;
+      mm.points[row * params.num_columns + col].col = col;
+    }
+  }
+  for (size_t i = 0; i < msg.height * msg.width; i++) {
+    const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
+    evalio::Point point;
+    func_point(pointStart, point);
+    func_col(point.col, prev_col, prev_row, point.row);
+    // std::cout << "point.row: " << +point.row << " point.col: " << point.col
+    //           << std::endl;
+    prev_col = point.col;
+    prev_row = point.row;
+    mm.points[point.row * params.num_columns + point.col] = point;
+  }
+
+  return mm;
+}
 // The helipr stores them in row major order
-// TODO: The helipr format drops points with bad returns - since it's row major,
-// its nigh impossible to infer where these were along a scan line
-// for now we just tack them on the end
-// Largely borrowed from
+// TODO: The helipr format drops points with bad returns - since it's row
+// major, its nigh impossible to infer where these were along a scan line for
+// now we just tack them on the end Largely borrowed from
 // https://github.com/minwoo0611/HeLiPR-File-Player/blob/501b338c4be1070fc61a438177c3c0e22b628b30/src/ROSThread.cpp#L444-L454
 inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
                                              Stamp stamp,
@@ -376,12 +434,19 @@ inline void makeConversions(py::module &m) {
       .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
       .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("ros_pc2_to_evalio",
+  m.def("general_pc2_to_evalio",
         [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
            char *c, const LidarParams &params) {
-          return ros_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c),
-                                   params);
+          return general_pc2_to_evalio(msg, fields,
+                                       reinterpret_cast<uint8_t *>(c), params);
         });
+
+  m.def("split_row_pc2_to_evalio", [](const PointCloudMetadata &msg,
+                                      const std::vector<Field> &fields, char *c,
+                                      const LidarParams &params) {
+    return split_row_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c),
+                                   params);
+  });
 
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
 }

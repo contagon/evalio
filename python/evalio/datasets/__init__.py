@@ -1,4 +1,5 @@
 from .base import Dataset
+from .botanic_garden import BotanicGarden
 from .enwide import EnWide
 from .helipr import HeLiPR
 from .hilti_2022 import Hilti2022
@@ -9,6 +10,7 @@ from .oxford_spires import OxfordSpires
 
 __all__ = [
     "Dataset",
+    "BotanicGarden",
     "EnWide",
     "HeLiPR",
     "Hilti2022",
