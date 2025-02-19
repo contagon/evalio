@@ -1,5 +1,4 @@
 #pragma once
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <pybind11/eigen.h>
