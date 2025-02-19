@@ -78,7 +78,7 @@ class NewerCollege2021(Dataset):
         # ICM-20948
         # https://invensense.tdk.com/wp-content/uploads/2024/03/DS-000189-ICM-20948-v1.6.pdf
         return ImuParams(
-            gyro=0.000261799387799,  # TODO: Test this
+            gyro=0.000261799387799,
             accel=0.0022563,
             gyro_bias=0.0000261799387799,
             accel_bias=0.00022563,

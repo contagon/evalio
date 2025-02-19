@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <pybind11/eigen.h>
@@ -168,7 +169,7 @@ point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
   Stamp t;
   func_t(t, data);
   std::function<void(Stamp &, const uint8_t *)> func_stamp;
-  if (t.sec > 1.0) {
+  if (t.sec > 100.0) {
     func_stamp = [func_t, scan_stamp](Stamp &stamp,
                                       const uint8_t *data) noexcept {
       func_t(stamp, data);
@@ -216,7 +217,7 @@ general_pc2_to_evalio(const PointCloudMetadata &msg,
       (msg.height * msg.width == params.num_columns * params.num_rows);
 
   // Figure out how to count the columns
-  std::function<void(uint16_t & col, const uint16_t &prev_col,
+  std::function<void(uint16_t &col, const uint16_t &prev_col,
                      const uint8_t &prev_row, const uint8_t &curr_row)>
       func_col;
   if (row_major) {
@@ -342,8 +343,10 @@ split_row_pc2_to_evalio(const PointCloudMetadata &msg,
     evalio::Point point;
     func_point(pointStart, point);
     func_col(point.col, prev_col, prev_row, point.row);
+    // TODO: Hack to handle negative durations. See constructor of Stamp
+    point.t = Stamp::from_sec(point.t.to_sec() - 5.0 + 0.1);
     // std::cout << "point.row: " << +point.row << " point.col: " << point.col
-    //           << std::endl;
+    //           << " point.t: " << point.t.to_sec() << std::endl;
     prev_col = point.col;
     prev_row = point.row;
     mm.points[point.row * params.num_columns + point.col] = point;

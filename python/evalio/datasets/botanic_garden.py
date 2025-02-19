@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from evalio._cpp._helpers import split_row_pc2_to_evalio  # type: ignore
 from evalio.types import Trajectory
 import numpy as np
+from pathlib import Path
 
 from .base import (
     EVALIO_DATA,
@@ -12,15 +13,47 @@ from .base import (
     LidarParams,
     RosbagIter,
     load_pose_csv,
+    Measurement,
+    ImuMeasurement,
+    LidarMeasurement,
+    Stamp,
 )
+
+
+# The botanic garden dataset returns stamps at the end of the scan
+# Offset so they are actually taken from the start of the scan
+# Additionally, the point offsets are negative
+# We hackily add five to them earlier, subtract that back off now
+class OffsetRosbagIter(RosbagIter):
+    def __init__(
+        self,
+        path: Path,
+        lidar_topic: str,
+        imu_topic: str,
+        params,
+        is_mcap: bool = False,
+        cpp_point_loader=None,
+    ):
+        super().__init__(
+            path, lidar_topic, imu_topic, params, is_mcap, cpp_point_loader
+        )
+
+    def __next__(self) -> Measurement:
+        msg = super().__next__()
+        if isinstance(msg, ImuMeasurement):
+            return msg
+        elif isinstance(msg, LidarMeasurement):
+            msg.stamp = Stamp.from_sec(msg.stamp.to_sec() - 0.1)
+            return msg
+        else:
+            raise ValueError("Unknown message type")
 
 
 @dataclass
 class BotanicGarden(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
-        # Use Ouster IMU as lidar IMU since the realsense IMU is not time-synced
-        return RosbagIter(
+        return OffsetRosbagIter(
             EVALIO_DATA / BotanicGarden.name() / self.seq / f"{self.seq}.bag",
             "/velodyne_points",
             "/imu/data",

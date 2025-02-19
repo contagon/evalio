@@ -11,6 +11,11 @@ struct Stamp {
   uint32_t nsec;
 
   static Stamp from_sec(double sec) {
+    // TODO: Hack for when we have negative seconds
+    // Need to handle negative durations better
+    if (sec < 0) {
+      sec += 5.0;
+    }
     return Stamp{.sec = uint32_t(sec),
                  .nsec = uint32_t((sec - uint32_t(sec)) * 1e9)};
   }
