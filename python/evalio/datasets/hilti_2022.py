@@ -103,7 +103,8 @@ class Hilti2022(Dataset):
         return LidarParams(
             num_rows=32,
             num_columns=2000,
-            min_range=1.0,
+            # Increase this a smidge to remove vehicle from scan
+            min_range=0.5,
             max_range=120.0,
         )
 
