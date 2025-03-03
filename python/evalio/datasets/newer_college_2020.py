@@ -19,10 +19,12 @@ from .base import (
 class NewerCollege2020(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
+        # Use Ouster IMU as lidar IMU since the realsense IMU is not time-synced
         return RosbagIter(
             EVALIO_DATA / NewerCollege2020.name() / self.seq,
             "/os1_cloud_node/points",
             "/os1_cloud_node/imu",
+            self.lidar_params(),
         )
 
     def ground_truth_raw(self) -> Trajectory:

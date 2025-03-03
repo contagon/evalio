@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 import yaml
-from attr import dataclass
+from dataclasses import dataclass
 from tabulate import tabulate
 
 from evalio.types import SE3, SO3, Stamp, Trajectory

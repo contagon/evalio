@@ -2,7 +2,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol, Union
+from typing import Iterator, Optional, Protocol, Union
 
 import numpy as np
 from rosbags.highlevel import AnyReader
@@ -12,7 +12,8 @@ from evalio._cpp._helpers import (  # type: ignore
     DataType,
     Field,
     PointCloudMetadata,
-    ros_pc2_to_evalio,
+    general_pc2_to_evalio,
+    helipr_bin_to_evalio,
 )
 from evalio.types import (
     SE3,
@@ -36,7 +37,7 @@ class Dataset(Protocol):
     length: Optional[int] = None
 
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self): ...
+    def __iter__(self) -> Iterator[Measurement]: ...
 
     def ground_truth_raw(self) -> Trajectory: ...
 
@@ -56,7 +57,7 @@ class Dataset(Protocol):
 
     def imu_params(self) -> ImuParams: ...
 
-    def lidar_params() -> LidarParams: ...
+    def lidar_params(self) -> LidarParams: ...
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
@@ -87,7 +88,7 @@ class Dataset(Protocol):
         gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
 
-        # Conver to IMU frame
+        # Convert to IMU frame
         for i in range(len(gt_traj)):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
@@ -101,7 +102,9 @@ class Dataset(Protocol):
 # ------------------------- Helpers ------------------------- #
 
 
-def pointcloud2_to_evalio(msg) -> LidarMeasurement:
+def pointcloud2_to_evalio(
+    msg, params: LidarParams, cpp_point_loader=general_pc2_to_evalio
+) -> LidarMeasurement:
     # Convert to C++ types
     fields = []
     for f in msg.fields:
@@ -121,7 +124,7 @@ def pointcloud2_to_evalio(msg) -> LidarMeasurement:
         is_dense=msg.is_dense,
     )
 
-    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))  # type: ignore
+    return cpp_point_loader(cloud, fields, bytes(msg.data), params)  # type: ignore
 
 
 def imu_to_evalio(msg) -> ImuMeasurement:
@@ -136,13 +139,23 @@ def imu_to_evalio(msg) -> ImuMeasurement:
 
 # These are helpers to help with common dataset types
 class RosbagIter:
-    def __init__(self, path: Path, lidar_topic: str, imu_topic: str):
+    def __init__(
+        self,
+        path: Path,
+        lidar_topic: str,
+        imu_topic: str,
+        params: LidarParams,
+        is_mcap: bool = False,
+        cpp_point_loader=general_pc2_to_evalio,
+    ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
+        self.params = params
+        self.cpp_point_loader = cpp_point_loader
 
         # Glob to get all .bag files in the directory
-        if path.is_dir():
-            self.path = list(path.glob("*.bag"))
+        if path.is_dir() and is_mcap is False:
+            self.path = [p for p in path.glob("*.bag") if "orig" not in str(p)]
             if not self.path:
                 raise FileNotFoundError(f"No .bag files found in directory {path}")
         else:
@@ -180,25 +193,76 @@ class RosbagIter:
         return self
 
     def __next__(self) -> Measurement:
-        # TODO: Ending somehow
         connection, timestamp, rawdata = next(self.iterator)
 
         msg = self.reader.deserialize(rawdata, connection.msgtype)
 
         if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg)
+            return pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
         elif connection.msgtype == "sensor_msgs/msg/Imu":
             return imu_to_evalio(msg)
         else:
             raise ValueError(f"Unknown message type {connection.msgtype}")
 
 
-def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajectory:
+class RawDataIter:
+    def __init__(self, lidar_path: Path, imu_file: Path, lidar_params: LidarParams):
+        self.lidar_path = lidar_path
+        self.imu_file = imu_file
+
+        # Load all IMU data
+        imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
+        self.imu_stamps = [Stamp.from_nsec(x) for x in imu_stamps]
+        imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16), delimiter=",")
+        self.imu_gyro = imu_data[:, 3:]
+        self.imu_acc = imu_data[:, :3]
+
+        self.lidar_params = lidar_params
+        self.lidar_files = sorted(list(lidar_path.glob("*")))
+        self.lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in self.lidar_files]
+
+        self.idx_imu = 0
+        self.idx_lidar = 0
+
+    def __len__(self):
+        return len(self.lidar_files)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Measurement:
+        if self.idx_imu >= len(self.imu_stamps) or self.idx_lidar >= len(
+            self.lidar_stamps
+        ):
+            raise StopIteration
+
+        if self.imu_stamps[self.idx_imu] < self.lidar_stamps[self.idx_lidar]:
+            mm = ImuMeasurement(
+                self.imu_stamps[self.idx_imu],
+                self.imu_gyro[self.idx_imu],
+                self.imu_acc[self.idx_imu],
+            )
+            self.idx_imu += 1
+            return mm
+        else:
+            file = self.lidar_files[self.idx_lidar]
+            stamp = self.lidar_stamps[self.idx_lidar]
+            self.idx_lidar += 1
+            # short circuit if we don't need lidar scans (ie for bias generation)
+            # return LidarMeasurement(stamp, [])
+            return helipr_bin_to_evalio(str(file), stamp, self.lidar_params)
+
+
+def load_pose_csv(
+    path: Path, fieldnames: list[str], delimiter=",", skip_lines: Optional[int] = None
+) -> Trajectory:
     poses = []
     stamps = []
 
     with open(path) as f:
-        csvfile = filter(lambda row: row[0] != "#", f)
+        csvfile = list(filter(lambda row: row[0] != "#", f))
+        if skip_lines is not None:
+            csvfile = csvfile[skip_lines:]
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
         for line in reader:
             r = SO3(
@@ -210,8 +274,13 @@ def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajector
             t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
             pose = SE3(r, t)
 
+            if "t" in fieldnames:
+                line["sec"] = line["t"]
+
             if "nsec" not in fieldnames:
-                stamp = Stamp.from_sec(float(line["sec"]))
+                s, ns = line["sec"].split(".")  # parse separately to get exact stamp
+                ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
+                stamp = Stamp(sec=int(s), nsec=int(ns))
             elif "sec" not in fieldnames:
                 stamp = Stamp.from_nsec(int(line["nsec"]))
             else:

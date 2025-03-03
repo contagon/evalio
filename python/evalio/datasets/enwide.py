@@ -26,7 +26,9 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
     ) as response:
         with (
             open(filename, "wb") as fh,
-            tqdm(total=response.length, unit="B", unit_scale=True) as pbar,
+            tqdm(
+                total=response.length, unit="B", unit_scale=True, dynamic_ncols=True
+            ) as pbar,
         ):
             while chunk := response.read(chunk_size):
                 fh.write(chunk)
@@ -41,6 +43,7 @@ class EnWide(Dataset):
             EVALIO_DATA / EnWide.name() / self.seq,
             "/ouster/points",
             "/ouster/imu",
+            self.lidar_params(),
         )
 
     def ground_truth_raw(self) -> Trajectory:

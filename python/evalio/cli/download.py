@@ -25,5 +25,8 @@ def download_datasets(datasets: list[str]) -> None:
 
     for builder in to_download:
         print(f"---------- Beginning {builder} ----------")
-        builder.download()
+        try:
+            builder.download()
+        except Exception as e:
+            print(f"Error downloading {builder}\n: {e}")
         print(f"---------- Finished {builder} ----------")

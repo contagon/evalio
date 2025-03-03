@@ -1,3 +1,4 @@
+#pragma once
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -10,7 +11,7 @@ using namespace pybind11::literals;
 
 namespace evalio {
 
-void makeTypes(py::module &m) {
+inline void makeTypes(py::module &m) {
   py::class_<Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
       .def_static("from_sec", &Stamp::from_sec)
@@ -28,7 +29,20 @@ void makeTypes(py::module &m) {
       .def("__copy__", [](const Stamp &self) { return Stamp(self); })
       .def(
           "__deepcopy__",
-          [](const Stamp &self, py::dict) { return Stamp(self); }, "memo"_a);
+          [](const Stamp &self, py::dict) { return Stamp(self); }, "memo"_a)
+      .def(py::pickle(
+          [](const Stamp &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.sec, p.nsec);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 2)
+              throw std::runtime_error("Invalid state when unpickling Stamp!");
+            /* Create a new C++ instance */
+            Stamp p{.sec = t[0].cast<uint32_t>(),
+                    .nsec = t[1].cast<uint32_t>()};
+            return p;
+          }));
 
   // Lidar
   py::class_<Point>(m, "Point")
@@ -48,8 +62,10 @@ void makeTypes(py::module &m) {
 
   py::class_<LidarMeasurement>(m, "LidarMeasurement")
       .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
-      .def_readonly("stamp", &LidarMeasurement::stamp)
+      .def_readwrite("stamp", &LidarMeasurement::stamp)
       .def_readonly("points", &LidarMeasurement::points)
+      .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
+      .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
       .def("__repr__", &LidarMeasurement::toString);
 
   py::class_<LidarParams>(m, "LidarParams")
@@ -96,8 +112,11 @@ void makeTypes(py::module &m) {
       .def_readonly("qw", &SO3::qw)
       .def_static("identity", &SO3::identity)
       .def_static("fromMat", &SO3::fromMat)
+      .def_static("exp", &SO3::exp)
       .def("inverse", &SO3::inverse)
       .def("log", &SO3::log)
+      .def("toMat", &SO3::toMat)
+      .def("rotate", &SO3::rotate)
       .def(py::self * py::self)
       .def("__repr__", &SO3::toString)
       .def("__copy__", [](const SO3 &self) { return SO3(self); })
@@ -117,7 +136,28 @@ void makeTypes(py::module &m) {
       .def("__copy__", [](const SE3 &self) { return SE3(self); })
       .def(
           "__deepcopy__", [](const SE3 &self, py::dict) { return SE3(self); },
-          "memo"_a);
+          "memo"_a)
+      .def(py::pickle(
+          [](const SE3 &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.rot.qx, p.rot.qy, p.rot.qz, p.rot.qw,
+                                  p.trans[0], p.trans[1], p.trans[2]);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 7)
+              throw std::runtime_error("Invalid state when unpickling SE3!");
+            /* Create a new C++ instance */
+            double qx = t[0].cast<double>();
+            double qy = t[1].cast<double>();
+            double qz = t[2].cast<double>();
+            double qw = t[3].cast<double>();
+            double x = t[4].cast<double>();
+            double y = t[5].cast<double>();
+            double z = t[6].cast<double>();
+            SE3 p(SO3{.qx = qx, .qy = qy, .qz = qz, .qw = qw},
+                  Eigen::Vector3d(x, y, z));
+            return p;
+          }));
 }
 
-}  // namespace evalio
+} // namespace evalio

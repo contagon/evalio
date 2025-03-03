@@ -1,11 +1,10 @@
-#include "evalio/pipelines/bindings.h"
-
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include "evalio/conversions.h"
+#include "evalio/pipelines/bindings.h"
 #include "evalio/types_bindings.h"
 
 PYBIND11_MODULE(_cpp, m) {
