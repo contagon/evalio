@@ -317,7 +317,7 @@ requires-dist = [
     { name = "gdown", marker = "extra == 'fetch'", specifier = ">=5.2.0" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
+    { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.21.0" },
     { name = "rosbags", specifier = ">=0.10.4" },
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "tqdm", specifier = ">=4.66.5" },
@@ -922,7 +922,7 @@ socks = [
 
 [[package]]
 name = "rerun-sdk"
-version = "0.18.2"
+version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -932,11 +932,11 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/57/28eca6dd15bb4f22d8db6b10107b0150f926bfee00d9921ee3666d94ea21/rerun_sdk-0.18.2-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:bc4e73275f428e4e9feb8e85f88db7a9fd18b997b1570de62f949a926978f1b2", size = 33042864 },
-    { url = "https://files.pythonhosted.org/packages/97/6c/712f82dcf774f1b9cd7bc4e9a7dc190f2088de22e33ad66486c8058c5455/rerun_sdk-0.18.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:efbba40a59710ae83607cb0dc140398a35979c2d2acf5190c9def2ac4697f6a8", size = 32104282 },
-    { url = "https://files.pythonhosted.org/packages/83/f9/fe349c911cd61df85167fccffdafedcc923dd2eed055f811b957c8b738b5/rerun_sdk-0.18.2-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:2a5e3b618b6d1bfde09bd5614a898995f3c318cc69d8f6d569924a2cd41536ce", size = 38459061 },
-    { url = "https://files.pythonhosted.org/packages/c9/88/ee72d28bdf8e1821fe6cd3e1de85ca7931706452b4892cb4a90256d78cf0/rerun_sdk-0.18.2-cp38-abi3-manylinux_2_31_x86_64.whl", hash = "sha256:8fdfc4c51ef2e75cb68d39e56f0d7c196eff250cb9a0260c07d5e2d6736e31b0", size = 38761761 },
-    { url = "https://files.pythonhosted.org/packages/01/36/f0675261e1e620141515b837f65b015cda05a493153c59158b0ac1b80a3c/rerun_sdk-0.18.2-cp38-abi3-win_amd64.whl", hash = "sha256:c929ade91d3be301b26671b25e70fb529524ced915523d266641c6fc667a1eb5", size = 29534437 },
+    { url = "https://files.pythonhosted.org/packages/1a/7b/2dda703d2d234e8bf73edc11c099bc14c04b6bad6f748b76ad0525925dd9/rerun_sdk-0.21.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:1e454ceea31c70ae9ec1bb26eaa82828661b7657ab4d2261ca0b94006d6a1975", size = 43464114 },
+    { url = "https://files.pythonhosted.org/packages/c7/11/de8d1d375624edc7dae25a9d76b769cddb9090ca55b8fd7ce5f93b975cf5/rerun_sdk-0.21.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:84ecb77b0b5bac71b53e849801ff073de89fcd2f1e0ca0da62fb18fcbeceadf0", size = 41643016 },
+    { url = "https://files.pythonhosted.org/packages/53/49/aefaa4f0e2ee685858aedaee2cc6cc4df8330055bdfbe88c6905e62d693d/rerun_sdk-0.21.0-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:919d921165c3238490dbe5bf00a062c68fdd2c54dc14aac6a1914c82edb5d9c8", size = 46355630 },
+    { url = "https://files.pythonhosted.org/packages/10/63/405a1b601cf1253878b1aebef6764095b2e8139cf233a908c2ccc4ad4ffd/rerun_sdk-0.21.0-cp38-abi3-manylinux_2_31_x86_64.whl", hash = "sha256:897649aadcab7014b78096f93c84c61c00a227b80adaf0dec279924b5aab53d8", size = 47790175 },
+    { url = "https://files.pythonhosted.org/packages/87/5e/c7cf6379a7a42748f5961ec41faf0e38635c6e6d5cd95b63a2691f0b34dc/rerun_sdk-0.21.0-cp38-abi3-win_amd64.whl", hash = "sha256:2060bdb536a198f0f04789ba5ba771e66587e7851d668b3dfab257a5efa16819", size = 39216574 },
 ]
 
 [[package]]

@@ -47,6 +47,11 @@ def run(
             pipe = pbuilder.build(dataset)
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
 
+            gt_list = dataset.ground_truth()  # already in the IMU frame!
+            stamps = [s.to_nsec() for s in gt_list.stamps]
+            gt = dict(zip(stamps, gt_list.poses))
+            imu_T_lidar = dataset.imu_T_lidar()
+
             # Initialize params
             first_scan_done = False
             data_iter = iter(dataset)
@@ -56,11 +61,23 @@ def run(
             loop = tqdm(total=length)
 
             # Run the pipeline
+            # try:
+            last_gt = None
             for data in data_iter:
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
-                    features = pipe.add_lidar(data)
+                    # TODO: Probably need to actually align the timestamps... for enwide timestamps don't line up
+                    if data.stamp.to_nsec() not in gt:
+                        continue
+                    this_gt = gt[data.stamp.to_nsec()] * imu_T_lidar
+                    if last_gt is None:
+                        init = None
+                    else:
+                        init = last_gt.inverse() * this_gt
+                    last_gt = this_gt
+
+                    features = pipe.add_lidar(data, init)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
@@ -74,6 +91,10 @@ def run(
                     if loop.n >= length:
                         loop.close()
                         break
+
+            # except Exception as e:
+            #     print("Failed to run", e)
+            #     loop.close()
 
             writer.close()
 

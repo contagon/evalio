@@ -143,7 +143,9 @@ public:
 
   void add_imu(evalio::ImuMeasurement mm) override {};
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::vector<evalio::Point>
+  add_lidar(evalio::LidarMeasurement mm,
+            std::optional<evalio::SE3> init) override {
     // Set everything up
     std::vector<Eigen::Vector4d> points;
     points.reserve(mm.points.size());
@@ -170,7 +172,12 @@ public:
       timestamps.push_back(sec);
     }
 
-    const auto &[_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
+    std::optional<Sophus::SE3d> sophus_init;
+    if (init.has_value()) {
+      sophus_init = to_sophus_se3(init.value());
+    }
+    const auto &[_, used_points] =
+        kiss_icp_->RegisterFrame(points, timestamps, sophus_init);
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());
     for (auto point : used_points) {

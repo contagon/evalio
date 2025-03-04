@@ -166,21 +166,21 @@ def eval_dataset(
     gt_og = gt_list[0]
 
     # Setup visualization
-    # if visualize:
-    #     import rerun as rr
+    if visualize:
+        import rerun as rr
 
-    #     from evalio.rerun import convert, Vis
+        from evalio.rerun import convert, Vis
 
-    #     rr.init(
-    #         str(dir),
-    #         spawn=False,
-    #     )
-    #     rr.connect("0.0.0.0:9876")
-    #     rr.log(
-    #         "gt",
-    #         convert(gt_og.poses, Vis.Points, color=[0, 0, 255]),
-    #         static=True,
-    #     )
+        rr.init(
+            str(dir),
+            spawn=False,
+        )
+        rr.connect("172.31.74.123:9876")
+        rr.log(
+            "gt",
+            convert(gt_og.poses, Vis.Points, color=[0, 0, 255]),
+            static=True,
+        )
 
     # Group into pipelines
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
@@ -203,6 +203,7 @@ def eval_dataset(
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
+            print(traj.metadata["name"])
             traj, gt = align_stamps(traj, deepcopy(gt_og))
             align_poses(traj, gt)
             ate = compute_ate(traj, gt)
@@ -214,12 +215,12 @@ def eval_dataset(
                 ]
             )
 
-            # if visualize:
-            #     rr.log(
-            #         traj.metadata["name"],
-            #         convert(traj.poses, Vis.Points, color=[255, 0, 0]),
-            #         static=True,
-            #     )
+            if visualize:
+                rr.log(
+                    traj.metadata["name"],
+                    convert(traj.poses, Vis.Points, color=[255, 0, 0]),
+                    static=True,
+                )
 
     if sort is None:
         pass

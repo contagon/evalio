@@ -16,6 +16,7 @@ from pathlib import Path
 
 file = Path(sys.argv[1])
 stem = file.stem
+dir = file.parent
 
 # ------------------------- Read in and clean ------------------------- #
 df = pd.read_csv(file)
@@ -56,4 +57,4 @@ sns.heatmap(df, annot=True, fmt=".1f", ax=ax)
 ax.tick_params(axis="y", rotation=0)
 ax.set_xlabel("Intensity Metric")
 ax.set_ylabel("Intensity Residual")
-plt.savefig(f"scripts/{stem}.png")
+plt.savefig(dir / f"{stem}.png")

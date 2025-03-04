@@ -1,15 +1,16 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <pcl/point_cloud.h>
 #include <stdexcept>
 #include <string>
 
 #include "LIO-SAM/lio-sam.h"
 #include "LIO-SAM/types.h"
+#include "evalio/metrics.h"
 #include "evalio/pipelines/base.h"
 #include "evalio/types.h"
-#include "evalio/metrics.h"
 
 inline void to_evalio_point(evalio::Point &ev_point,
                             const lio_sam::PointXYZIRT &ls_point) {
@@ -207,7 +208,9 @@ public:
     lio_sam_->addImuMeasurement(imuMsg);
   };
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::vector<evalio::Point>
+  add_lidar(evalio::LidarMeasurement mm,
+            std::optional<evalio::SE3> init) override {
     // Set everything up
     pcl::PointCloud<lio_sam::PointXYZIRT>::Ptr cloud;
     cloud.reset(new pcl::PointCloud<lio_sam::PointXYZIRT>);

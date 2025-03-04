@@ -58,7 +58,8 @@ public:
   void add_imu(evalio::ImuMeasurement mm) override {
     PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, add_imu, mm);
   }
-  std::vector<Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::vector<Point> add_lidar(evalio::LidarMeasurement mm,
+                               std::optional<evalio::SE3> init) override {
     PYBIND11_OVERRIDE_PURE(std::vector<Point>, evalio::Pipeline, add_lidar, mm);
   }
 };
@@ -73,7 +74,8 @@ inline void makePipelines(py::module &m) {
       .def("map", &evalio::Pipeline::map)
       .def("initialize", &evalio::Pipeline::initialize)
       .def("add_imu", &evalio::Pipeline::add_imu)
-      .def("add_lidar", &evalio::Pipeline::add_lidar)
+      .def("add_lidar", &evalio::Pipeline::add_lidar, "mm"_a,
+           "init"_a = std::nullopt)
       .def("set_params", &evalio::Pipeline::set_params)
       .def("set_imu_params", &evalio::Pipeline::set_imu_params)
       .def("set_lidar_params", &evalio::Pipeline::set_lidar_params)

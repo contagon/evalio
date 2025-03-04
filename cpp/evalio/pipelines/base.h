@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <map>
+#include <optional>
 #include <variant>
 
 #include "evalio/types.h"
@@ -34,7 +35,8 @@ public:
   // Doers
   virtual void initialize() = 0;
   virtual void add_imu(ImuMeasurement mm) = 0;
-  virtual std::vector<Point> add_lidar(LidarMeasurement mm) = 0;
+  virtual std::vector<Point> add_lidar(LidarMeasurement mm,
+                                       std::optional<SE3> init) = 0;
 };
 
 } // namespace evalio
