@@ -1,6 +1,0 @@
-[submodule "kiss-icp"]
-	path = cpp/evalio/pipelines/kiss-icp
-	url = git@github.com:contagon/kiss-icp.git
-[submodule "lio-sam"]
-	path = cpp/evalio/pipelines/lio-sam
-	url = git@github.com:contagon/LIO-SAM.git
