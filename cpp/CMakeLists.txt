@@ -5,32 +5,27 @@ set(LIB_NAME evalio_cpp)
 set(DEF "")
 
 # ------------------------- Import all pipelines ------------------------- #
-# KISS-ICP
-find_package(KissICP QUIET)
-if(TARGET kiss_icp_pipeline)
-    message(STATUS "Found KISS-ICP")
-    list(APPEND LIBS kiss_icp_pipeline)
-    list(APPEND DEF EVALIO_KISS_ICP)
-else()
-    message(STATUS "KISS-ICP not found")
-endif()
+function(find_pipeline PIPELINE_NAME TARGET_NAME DEF_NAME)
+    find_package(${PIPELINE_NAME} QUIET)
+    if(TARGET ${TARGET_NAME})
+        message(STATUS "✓ ${PIPELINE_NAME}")
+        list(APPEND LIBS ${TARGET_NAME})
+        list(APPEND DEF ${DEF_NAME})
+    else()
+        message(STATUS "x ${PIPELINE_NAME}")
+    endif()
+endfunction()
 
-# LIO-SAM
-find_package(LioSam QUIET)
-if(TARGET lio_sam)
-    message(STATUS "Found LIO-SAM")
-    list(APPEND LIBS lio_sam)
-    list(APPEND DEF EVALIO_LIO_SAM)
-else()
-    message(STATUS "LIO-SAM not found")
-endif()
+message("################### Searching for pipelines ###################")
+find_pipeline(KissICP  kiss_icp_pipeline EVALIO_KISS_ICP)
+find_pipeline(LioSam   lio_sam           EVALIO_LIO_SAM)
+message("###############################################################")
 
 # ------------------------- Put all wrappers into a target ------------------------- #
 # make position_independent code for python wrapper
-# foreach(L IN LISTS LIBS)
-#     set_target_properties(${L} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-# endforeach()
-
+foreach(L IN LISTS LIBS)
+    set_target_properties(${L} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+endforeach()
 
 # Create Library
 add_library(${LIB_NAME} INTERFACE) 

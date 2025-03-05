@@ -15,10 +15,6 @@
 #include "evalio/pipelines/lio_sam.h"
 #endif
 
-#ifdef EVALIO_TCLIO
-#include "evalio/pipelines/tclio.h"
-#endif
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 
