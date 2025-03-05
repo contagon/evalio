@@ -7,12 +7,12 @@ description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "argcomplete>=3.5.0",
-    "numpy<2",
-    "pyyaml>=6.0.2",
-    "rosbags>=0.10.4",
-    "tabulate>=0.9.0",
-    "tqdm>=4.66.5",
+    "argcomplete>=3.3.0",
+    "numpy",
+    "pyyaml>=6.0",
+    "rosbags>=0.10",
+    "tabulate>=0.9",
+    "tqdm>=4.66",
 ]
 keywords = [
     "lidar",
@@ -30,7 +30,7 @@ fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]
-requires = ["scikit-build-core>=0.10", "pybind11", "pybind11-stubgen", "numpy"]
+requires = ["scikit-build-core>=0.8", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
@@ -38,7 +38,7 @@ evalio = "evalio.cli:main"
 
 # -------------- Tools -------------- #
 [tool.scikit-build]
-minimum-version = "build-system.requires"
+minimum-version = "0.8"
 build-dir = "build/{wheel_tag}"
 
 [tool.uv]
@@ -59,6 +59,3 @@ dev-dependencies = [
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
-
-[tool.mypy]
-exclude = ["build/", "build_vscode/", "cpp/", "dist/"]

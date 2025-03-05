@@ -1,31 +1,74 @@
 diff --git a/cpp/kiss_icp/3rdparty/find_dependencies.cmake b/cpp/kiss_icp/3rdparty/find_dependencies.cmake
-index c4eed75..8b06742 100644
+index c4eed75..ad7c9c1 100644
 --- a/cpp/kiss_icp/3rdparty/find_dependencies.cmake
 +++ b/cpp/kiss_icp/3rdparty/find_dependencies.cmake
-@@ -29,7 +29,7 @@ function(find_external_dependency PACKAGE_NAME TARGET_NAME INCLUDED_CMAKE_PATH)
+@@ -29,7 +29,8 @@ function(find_external_dependency PACKAGE_NAME TARGET_NAME INCLUDED_CMAKE_PATH)
    string(TOUPPER ${PACKAGE_NAME} PACKAGE_NAME_UP)
    set(USE_FROM_SYSTEM_OPTION "USE_SYSTEM_${PACKAGE_NAME_UP}")
    if(${${USE_FROM_SYSTEM_OPTION}})
 -    find_package(${PACKAGE_NAME} QUIET NO_MODULE)
 +    find_package(${PACKAGE_NAME} NO_MODULE)
++    set("${PACKAGE_NAME_UP}_DEPENDENCY" "find_dependency (${PACKAGE_NAME} ${${PACKAGE_NAME}_VERSION})" PARENT_SCOPE)
    endif()
    if(NOT ${${USE_FROM_SYSTEM_OPTION}} OR NOT TARGET ${TARGET_NAME})
      set(${USE_FROM_SYSTEM_OPTION} OFF PARENT_SCOPE)
 diff --git a/cpp/kiss_icp/CMakeLists.txt b/cpp/kiss_icp/CMakeLists.txt
-index 554ea77..09af0ea 100644
+index 554ea77..eaeb373 100644
 --- a/cpp/kiss_icp/CMakeLists.txt
 +++ b/cpp/kiss_icp/CMakeLists.txt
-@@ -51,3 +51,10 @@ include(cmake/CompilerOptions.cmake)
+@@ -51,3 +51,34 @@ include(cmake/CompilerOptions.cmake)
  add_subdirectory(core)
  add_subdirectory(metrics)
  add_subdirectory(pipeline)
 +
-+install(TARGETS kiss_icp_core kiss_icp_pipeline 
-+        EXPORT KissICP
-+        DESTINATION lib)
-+install(DIRECTORY ${CMAKE_SOURCE_DIR}/core DESTINATION include FILES_MATCHING PATTERN "*.hpp")
-+install(DIRECTORY ${CMAKE_SOURCE_DIR}/pipeline DESTINATION include FILES_MATCHING PATTERN "*.hpp")
-+install(EXPORT KissICP DESTINATION lib/cmake/KissICP)
++# ------------------------- Installation ------------------------- #
++include(CMakePackageConfigHelpers)
++include(GNUInstallDirs)
++
++set(KISS_CMAKE_EXPORT_DIR share/kissicp/cmake/)
++
++# install targets
++install(TARGETS kiss_icp_core kiss_icp_pipeline EXPORT KissICPTargets)
++install(EXPORT KissICPTargets DESTINATION ${KISS_CMAKE_EXPORT_DIR})
++
++# configure package config file
++configure_package_config_file(
++  KissICPConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/KissICPConfig.cmake
++  INSTALL_DESTINATION ${KISS_CMAKE_EXPORT_DIR}
++  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
++
++# Write version to file
++write_basic_package_version_file(
++  KissICPConfigVersion.cmake
++  VERSION ${PROJECT_VERSION}
++  COMPATIBILITY SameMajorVersion)
++
++# Install config files
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/KissICPConfig.cmake
++              ${CMAKE_CURRENT_BINARY_DIR}/KissICPConfigVersion.cmake
++        DESTINATION ${KISS_CMAKE_EXPORT_DIR})
++
++# install headers
++install(DIRECTORY ${CMAKE_SOURCE_DIR}/core DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/kiss_icp FILES_MATCHING PATTERN "*.hpp")
++install(DIRECTORY ${CMAKE_SOURCE_DIR}/pipeline DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/kiss_icp FILES_MATCHING PATTERN "*.hpp")
+\ No newline at end of file
+diff --git a/cpp/kiss_icp/KissICPConfig.cmake.in b/cpp/kiss_icp/KissICPConfig.cmake.in
+new file mode 100644
+index 0000000..ea5b024
+--- /dev/null
++++ b/cpp/kiss_icp/KissICPConfig.cmake.in
+@@ -0,0 +1,10 @@
++@PACKAGE_INIT@
++
++include (CMakeFindDependencyMacro)
++
++@EIGEN3_DEPENDENCY@
++@SOPHUS_DEPENDENCY@
++@TBB_DEPENDENCY@
++@TSL-ROBIN-MAP_DEPENDENCY@
++
++include ("${CMAKE_CURRENT_LIST_DIR}/KissICPTargets.cmake")
+\ No newline at end of file
 diff --git a/cpp/kiss_icp/core/CMakeLists.txt b/cpp/kiss_icp/core/CMakeLists.txt
 index d439cdb..401591a 100644
 --- a/cpp/kiss_icp/core/CMakeLists.txt

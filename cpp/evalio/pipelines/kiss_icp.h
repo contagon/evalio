@@ -7,18 +7,18 @@
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
 
-inline evalio::Point to_evalio_point(Eigen::Vector4d point) {
+inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
   return {.x = point[0],
           .y = point[1],
           .z = point[2],
-          .intensity = point[3],
+          .intensity = 0.0,
           .t = evalio::Stamp::from_sec(0),
           .row = 0,
           .col = 0};
 }
 
-inline Eigen::Vector4d to_eigen_point(evalio::Point point) {
-  return {point.x, point.y, point.z, point.intensity};
+inline Eigen::Vector3d to_eigen_point(evalio::Point point) {
+  return {point.x, point.y, point.z};
 }
 
 inline evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
@@ -35,7 +35,7 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
 
 class KissICP : public evalio::Pipeline {
 public:
-  KissICP() : config_(){};
+  KissICP() : config_() {};
 
   // Info
   static std::string name() { return "kiss"; }
@@ -47,7 +47,6 @@ public:
         {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
         {"max_num_iterations", 500},  {"max_num_threads", 0},
         {"max_points_per_voxel", 20}, {"deskew", false},
-        {"intensity_metric", 0},      {"intensity_residual", 0},
     };
   }
 
@@ -58,7 +57,7 @@ public:
   }
 
   const std::vector<evalio::Point> map() override {
-    std::vector<Eigen::Vector4d> map = kiss_icp_->LocalMap();
+    std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
     std::vector<evalio::Point> evalio_map;
     evalio_map.reserve(map.size());
     for (auto point : map) {
@@ -90,10 +89,6 @@ public:
           config_.max_num_iterations = std::get<int>(value);
         } else if (key == "max_num_threads") {
           config_.max_num_threads = std::get<int>(value);
-        } else if (key == "intensity_metric") {
-          config_.intensity_metric = std::get<int>(value);
-        } else if (key == "intensity_residual") {
-          config_.intensity_residual = std::get<int>(value);
         } else {
           throw std::invalid_argument(
               "Invalid parameter, KissICP doesn't have int param " + key);
@@ -133,7 +128,7 @@ public:
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
-    std::vector<Eigen::Vector4d> points;
+    std::vector<Eigen::Vector3d> points;
     points.reserve(mm.points.size());
     std::vector<double> timestamps;
     timestamps.reserve(mm.points.size());

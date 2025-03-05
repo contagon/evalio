@@ -3,36 +3,46 @@
 , python3
 , cmake
 , ninja
+, eigen
+, gis ? import
+    (fetchTarball {
+      url = "https://github.com/icetan/nix-git-ignore-source/archive/v1.0.0.tar.gz";
+      sha256 = "1mnpab6x0bnshpp0acddylpa3dslhzd2m1kk3n0k23jqf9ddz57k";
+    })
+    { }
 ,
 }:
 
 let
-  kiss_icp = callPackage ./cpp/evalio/pipelines/kiss_icp.nix { };
+  # python depends
   rosbags = callPackage ./rosbags.nix { };
+  # pipelines
+  kiss_icp = callPackage ./cpp/evalio/pipelines/kiss_icp.nix { };
 in
 python3.pkgs.buildPythonPackage {
   pname = "evalio";
   version = "0.1.0";
   pyproject = true;
 
-  src = ./.;
+  src = gis.gitIgnoreSource ./.;
 
-  # Example
-  # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/python-modules/rapidfuzz/default.nix
+  dontUseCmakeConfigure = true;
 
-  # TODO: Something isn't working quite right here still
   build-system = with python3.pkgs; [
     cmake
     ninja
-    scikit-build-core
     pybind11
+    scikit-build-core
+    # TODO: Not sure why these are needed
+    pathspec
+    pyproject-metadata
   ];
 
-  # TODO: Need lots more here
   dependencies = with python3.pkgs; [
     # not sure which section to put pipelines in
+    eigen
     kiss_icp
-    # python depends (are these even necessary?)
+    # python depends
     argcomplete
     numpy
     pyyaml

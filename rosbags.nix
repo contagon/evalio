@@ -13,15 +13,14 @@ python3.pkgs.buildPythonPackage rec {
   };
 
   build-system = with python3.pkgs; [
-    # poetry-core
     setuptools
     setuptools_scm
   ];
 
   dependencies = with python3.pkgs; [
-    # poetry-core
     lz4
     numpy
+    typing-extensions
     zstandard
     ruamel-yaml
   ];
