@@ -15,9 +15,13 @@
 
 let
   # python depends
-  rosbags = callPackage ./rosbags.nix { };
+  rosbags = callPackage ./nix/rosbags/derivation.nix { };
+  # cpp depends
+  gtsam = callPackage ./nix/gtsam/derivation.nix { };
   # pipelines
   kiss_icp = callPackage ./cpp/evalio/pipelines/kiss_icp.nix { };
+  lio_sam = callPackage ./cpp/evalio/pipelines/lio_sam.nix { inherit gtsam; };
+
 in
 python3.pkgs.buildPythonPackage {
   pname = "evalio";
@@ -42,6 +46,7 @@ python3.pkgs.buildPythonPackage {
     # not sure which section to put pipelines in
     eigen
     kiss_icp
+    lio_sam
     # python depends
     argcomplete
     numpy
