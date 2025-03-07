@@ -80,7 +80,7 @@ def main():
     from .ls import ls
     from .run import run
     from .stats import eval
-    from evalio.rerun import RerunVis, RerunConfig
+    # from evalio.rerun import RerunVis, RerunConfig
 
     # parse
     if args.command == "ls":
@@ -110,9 +110,9 @@ def main():
             raise ValueError("Output must be a directory")
 
         # parse visualizer
-        vis = RerunVis(args.visualize, RerunConfig())
+        # vis = RerunVis(args.visualize, RerunConfig())
 
-        run(pipelines, datasets, out, vis)
+        run(pipelines, datasets, out)
 
     elif args.command == "stats":
         eval(args.experiments, args.visualize, args.sort)
