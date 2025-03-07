@@ -8,6 +8,7 @@ cd cpp/evalio/pipelines-src
 git clone https://github.com/PRBonn/kiss-icp.git
 cd kiss-icp
 git checkout v1.2.2
+git apply ../../pipelines/kiss_icp.patch
 cd ..
 
 git clone https://github.com/contagon/LIO-SAM.git

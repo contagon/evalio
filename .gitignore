@@ -3,6 +3,7 @@ dist
 **/build*
 result*
 result
+wheelhouse
 
 # other caches
 .mypy_cache

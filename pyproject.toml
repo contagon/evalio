@@ -37,10 +37,19 @@ build-backend = "scikit_build_core.build"
 evalio = "evalio.cli:main"
 
 # -------------- Tools -------------- #
+# building
 [tool.scikit-build]
 minimum-version = "0.8"
 build-dir = "build/{wheel_tag}"
+sdist.include = ["cpp/evalio/pipelines-src/*"]
 
+[tool.cibuildwheel]
+# TODO: Add mac support eventually
+build = "cp*-manylinux_x86_64"
+manylinux-x86_64-image = "evalio_manylinux_2_28_x86_64"
+test-command = "evalio ls pipelines"
+
+# local developtment
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",

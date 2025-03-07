@@ -25,3 +25,6 @@ yum install -y opencv-devel \
 yum install -y metis-devel
 ./install_tbb.sh
 ./install_gtsam.sh
+
+# clean up afterwards
+rm -rf deps

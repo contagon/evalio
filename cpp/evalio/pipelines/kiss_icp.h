@@ -39,7 +39,7 @@ public:
 
   // Info
   static std::string name() { return "kiss"; }
-  static std::string url() { return "https://github.com/contagon/kiss-icp"; }
+  static std::string url() { return "https://github.com/PRBonn/kiss-icp"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
         {"voxel_size", 1.0},          {"max_range", 100.0},

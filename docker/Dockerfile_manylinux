@@ -1,0 +1,9 @@
+ARG ARCH=x86_64
+ARG VERSION=latest
+FROM quay.io/pypa/manylinux_2_28_${ARCH}:${VERSION}
+
+COPY ./ ./
+RUN ./install_deps_manylinux.sh
+
+# locally installed libs are stored here - make sure they can be found
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64
