@@ -42,6 +42,9 @@ minimum-version = "0.8"
 build-dir = "build/{wheel_tag}"
 sdist.include = ["cpp/evalio/pipelines-src/*"]
 
+[tool.scikit-build.cmake.define]
+EVALIO_BUILD_PYTHON = true
+
 [tool.cibuildwheel]
 # TODO: Add mac support eventually
 build = "cp*-manylinux_x86_64"
@@ -57,7 +60,6 @@ dev-dependencies = [
     "pip>=24.3.1",
     "pybind11-stubgen>=2.5.1",
     "pybind11>=2.13.6",
-    "rerun-sdk>=0.18.2",
     "ruff>=0.6.8",
     "scikit-build-core>=0.10.7",
     "types-pyyaml>=6.0.12.20240917",

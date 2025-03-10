@@ -1,0 +1,28 @@
+{
+	"name": "Evalio",
+	"image": "ghcr.io/contagon/evalio_manylinux_2_28_x86_64:latest",
+	"containerEnv": {
+		"EVALIO_DATA": "/data"
+	},
+	"mounts": [
+		// If you have set EVALIO_DATA elsewhere, you can change the source path here
+		"source=${localWorkspaceFolder}/data,target=/data,type=bind,consistency=cached"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				// C++
+				"llvm-vs-code-extensions.vscode-clangd",
+				"ms-vscode.cmake-tools",
+				// Python
+				"charliemarsh.ruff",
+				"ms-pyright.pyright",
+				"ms-python.python",
+				// Misc
+				"tamasfe.even-better-toml"
+			]
+		}
+	},
+	// Make sure the data directory exists
+	"initializeCommand": "mkdir -p data"
+}
