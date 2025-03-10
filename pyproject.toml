@@ -2,17 +2,17 @@
 name = "evalio"
 authors = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
 maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
-version = "0.1.0"
+version = "0.0.1"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "argcomplete>=3.5.0",
-    "numpy>=1.26.4",
-    "pyyaml>=6.0.2",
-    "rosbags>=0.10.4",
-    "tabulate>=0.9.0",
-    "tqdm>=4.66.5",
+    "argcomplete>=3.3.0",
+    "numpy",
+    "pyyaml>=6.0",
+    "rosbags>=0.10",
+    "tabulate>=0.9",
+    "tqdm>=4.66",
 ]
 keywords = [
     "lidar",
@@ -22,21 +22,36 @@ keywords = [
     "dataset",
     "robotics",
 ]
-# TODO
-# license = {file = "LICENSE"}
+license = { file = "LICENSE.txt" }
 
 [project.optional-dependencies]
 fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]
-requires = ["scikit-build-core", "pybind11", "pybind11-stubgen", "numpy"]
+requires = ["scikit-build-core>=0.8", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
 evalio = "evalio.cli:main"
 
 # -------------- Tools -------------- #
+# building
+[tool.scikit-build]
+minimum-version = "0.8"
+build-dir = "build/{wheel_tag}"
+sdist.include = ["cpp/evalio/pipelines-src/*"]
+
+[tool.scikit-build.cmake.define]
+EVALIO_BUILD_PYTHON = true
+
+[tool.cibuildwheel]
+# TODO: Add mac support eventually
+build = "cp*-manylinux_x86_64"
+manylinux-x86_64-image = "evalio_manylinux_2_28_x86_64"
+test-command = "evalio ls pipelines"
+
+# local developtment
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",
@@ -45,7 +60,6 @@ dev-dependencies = [
     "pip>=24.3.1",
     "pybind11-stubgen>=2.5.1",
     "pybind11>=2.13.6",
-    "rerun-sdk>=0.18.2",
     "ruff>=0.6.8",
     "scikit-build-core>=0.10.7",
     "types-pyyaml>=6.0.12.20240917",
@@ -55,6 +69,3 @@ dev-dependencies = [
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
-
-[tool.mypy]
-exclude = ["build/", "build_vscode/", "cpp/", "dist/"]

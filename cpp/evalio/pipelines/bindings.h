@@ -6,8 +6,14 @@
 #include <pybind11/stl.h>
 
 #include "evalio/pipelines/base.h"
+
+#ifdef EVALIO_KISS_ICP
 #include "evalio/pipelines/kiss_icp.h"
+#endif
+
+#ifdef EVALIO_LIO_SAM
 #include "evalio/pipelines/lio_sam.h"
+#endif
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -70,17 +76,22 @@ inline void makePipelines(py::module &m) {
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar);
 
   // List all the pipelines here
+#ifdef EVALIO_KISS_ICP
   py::class_<KissICP, evalio::Pipeline>(m, "KissICP")
       .def(py::init<>())
       .def_static("name", &KissICP::name)
       .def_static("url", &KissICP::url)
       .def_static("default_params", &KissICP::default_params);
 
+#endif
+
+#ifdef EVALIO_LIO_SAM
   py::class_<LioSam, evalio::Pipeline>(m, "LioSAM")
       .def(py::init<>())
       .def_static("name", &LioSam::name)
       .def_static("url", &LioSam::url)
       .def_static("default_params", &LioSam::default_params);
+#endif
 }
 
 } // namespace evalio

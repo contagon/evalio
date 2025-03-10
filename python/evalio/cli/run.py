@@ -2,7 +2,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
-from evalio.rerun import RerunVis
+# from evalio.rerun import RerunVis
 
 from .parser import DatasetBuilder, PipelineBuilder
 from .writer import TrajectoryWriter, save_config, save_gt
@@ -17,7 +17,7 @@ def run(
     pipelines: list[PipelineBuilder],
     datasets: list[DatasetBuilder],
     output: Path,
-    vis: RerunVis,
+    # vis: RerunVis,
 ):
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"

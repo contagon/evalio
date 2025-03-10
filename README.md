@@ -4,30 +4,47 @@ evalio is a tool for **Eval**uating **L**idar-**I**nertial **O**dometry.
 
 Specifically, it provides a common interface for connecting LIO datasets and LIO pipelines. This allows for easy addition of new datasets and pipelines, as well as a common location to evaluate them.
 
+## Usage
+
+TODO! Fill this out
+
+## Installation
+
+Python installation can be done via `pypi`. Simply run
+```bash
+pip install evalio
+```
+
+If you are looking to add a custom C++ pipeline, the header-only C++ library can be added via `CMake` fetch_content.
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  evalio
+  GIT_REPOSITORY https://github.com/contagon/evalio.git
+)
+FetchContent_MakeAvailable(evalio)
+...
+target_link_libraries(my_target PRIVATE evalio)
+```
+
 ## Building
 
 While we recommend simply installing the python package using your preferred python package manager, we've attempted to make building from source as easy as possible.
 
-You'll need,
-- [vcpkg](https://vcpkg.io/en/) installed and the `VCPKG_ROOT` environment variable set to the root of your vcpkg installation. `vcpkg` handles all of the C++ dependencies.
-- [uv](https://github.com/astral-sh/uv) installed and on your `$PATH`
-
-Building the C++ portion can be done as follows,
+The only default dependency is `Eigen3`, thus building can simply be done via `CMake`:
 ```bash
-cmake -B build -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-cmake --build build 
+mkdir build
+cd build
+cmake ..
+make
 ```
 
-Alternatively, you can set `CMAKE_TOOLCHAIN_FILE` as an env variable, which I usually do using [.envrc](.envrc) and [direnv](https://github.com/direnv/direnv).
+By default, all pipelines are not included due to their large dependencies. CMake will look for them in the `cpp/evalio/pipeslines-src` directory. If you'd like to add them, simply run `clone_pipelines.sh` that will clone and patch them appropriately. When these pipelines are included, the number of dependencies increases significantly, so have provided a [docker image](https://github.com/contagon/evalio/pkgs/container/evalio_manylinux_2_28_x86_64) that includes all dependencies for building as well as a VSCode devcontainer configuration. When opening in VSCode, you'll automatically be prompted to open in this container.
 
-To build the python portion, simply set the `CMAKE_TOOLCHAIN_FILE` environment variable and run 
-```bash
-uv sync
-```
-which will build evalio from scratch and install it into the uv virtual env. Evalio can then be run with `uv run evalio <command>`. `uv` will not automatically notice changes and recompile, but will if  you run `touch pyproject.toml`. 
+To build the python package, the python bindings can be enabled by passing `-DEVALIO_BUILD_PYTHON=ON` to cmake. Alternatively (and what we recommend), the package can be built using a python frontend with `scikit-build-core` wrapping the cmake process. We prefer `uv` as our frontend, which allows the python package to be built via `uv build` and installed in the uv venv using `uv sync`.
 
-If you'd prefer an editable (aka incremental) build, you can run
-```bash
-uv run pip install --no-build-isolation --config-settings=editable.rebuild=true -Cbuild-dir=build_pip -ve .
-```
-to install it in the current uv virtual env. If this is done, before each time you run `evalio`, `cmake --build build_pip` will be ran to compile any changes that may have occurred. See [scikit-build-core](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs) for more info.
+## Contributing
+
+### Datasets
+
+### Pipelines
