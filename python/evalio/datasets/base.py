@@ -95,6 +95,26 @@ class Dataset(Protocol):
 
         return gt_traj
 
+    def first_n_lidar_scans(self, n: int = 1) -> list[LidarMeasurement]:
+        scans = []
+        for m in self:
+            if isinstance(m, LidarMeasurement):
+                scans.append(m)
+
+            if len(scans) == n:
+                return scans
+        raise ValueError("No lidar scans found")
+
+    def first_n_imu_measurement(self, n:int = 1) -> list[ImuMeasurement]:
+        imu = []
+        for m in self:
+            if isinstance(m, ImuMeasurement):
+                imu.append(m)
+            if len(imu) == n:
+                return imu
+
+        raise ValueError("No lidar scans found")
+
     def __str__(self):
         return f"{self.name()}/{self.seq}"
 

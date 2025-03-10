@@ -58,7 +58,29 @@ inline void makeTypes(py::module &m) {
       .def_readwrite("t", &Point::t)
       .def_readwrite("row", &Point::row)
       .def_readwrite("col", &Point::col)
-      .def("__repr__", &Point::toString);
+      .def(py::self == py::self)
+      .def(py::self != py::self)
+      .def("__repr__", &Point::toString)
+      .def(py::pickle(
+          [](const Point &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.x, p.y, p.z, p.intensity, p.t, p.range,
+                                  p.row, p.col);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 8)
+              throw std::runtime_error("Invalid state when unpickling Point!");
+            /* Create a new C++ instance */
+            return Point{.x = t[0].cast<double>(),
+                         .y = t[1].cast<double>(),
+                         .z = t[2].cast<double>(),
+                         .intensity = t[3].cast<double>(),
+                         .t = t[4].cast<Stamp>(),
+                         .range = t[5].cast<uint32_t>(),
+                         .row = t[6].cast<uint8_t>(),
+                         .col = t[7].cast<uint16_t>()};
+          }));
+  ;
 
   py::class_<LidarMeasurement>(m, "LidarMeasurement")
       .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
@@ -66,7 +88,22 @@ inline void makeTypes(py::module &m) {
       .def_readonly("points", &LidarMeasurement::points)
       .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
       .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
-      .def("__repr__", &LidarMeasurement::toString);
+      .def(py::self == py::self)
+      .def(py::self != py::self)
+      .def("__repr__", &LidarMeasurement::toString)
+      .def(py::pickle(
+          [](const LidarMeasurement &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.stamp, p.points);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 2)
+              throw std::runtime_error(
+                  "Invalid state when unpickling LidarMeasurement!");
+            /* Create a new C++ instance */
+            return LidarMeasurement(t[0].cast<Stamp>(),
+                                    t[1].cast<std::vector<Point>>());
+          }));
 
   py::class_<LidarParams>(m, "LidarParams")
       .def(py::init<int, int, double, double>(), py::kw_only(), "num_rows"_a,
@@ -84,7 +121,23 @@ inline void makeTypes(py::module &m) {
       .def_readonly("stamp", &ImuMeasurement::stamp)
       .def_readonly("gyro", &ImuMeasurement::gyro)
       .def_readonly("accel", &ImuMeasurement::accel)
-      .def("__repr__", &ImuMeasurement::toString);
+      .def(py::self == py::self)
+      .def(py::self != py::self)
+      .def("__repr__", &ImuMeasurement::toString)
+      .def(py::pickle(
+          [](const ImuMeasurement &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.stamp, p.gyro, p.accel);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 3)
+              throw std::runtime_error(
+                  "Invalid state when unpickling ImuMeasurement!");
+            /* Create a new C++ instance */
+            return ImuMeasurement{.stamp = t[0].cast<Stamp>(),
+                                  .gyro = t[1].cast<Eigen::Vector3d>(),
+                                  .accel = t[2].cast<Eigen::Vector3d>()};
+          }));
 
   py::class_<ImuParams>(m, "ImuParams")
       .def(py::init<double, double, double, double, double, double,

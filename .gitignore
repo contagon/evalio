@@ -15,11 +15,10 @@ __pycache__
 *.csv
 .cache
 python/evalio/_cpp
+*.pkl
 
 # for building
 compile_commands.json
-CMakePresets.json
-CMakeUserPresets.json
 
 # cloned pipelines
 cpp/evalio/pipelines-src

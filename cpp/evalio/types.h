@@ -76,6 +76,14 @@ struct Point {
            ", row: " + std::to_string(row) + ", col: " + std::to_string(col) +
            ")";
   }
+
+  bool operator!=(const Point &other) const { return !(*this == other); }
+
+  bool operator==(const Point &other) const {
+    return x == other.x && y == other.y && z == other.z &&
+           intensity == other.intensity && t == other.t &&
+           range == other.range && row == other.row && col == other.col;
+  }
 };
 
 struct LidarMeasurement {
@@ -111,6 +119,22 @@ struct LidarMeasurement {
     }
     return vec_stamps;
   }
+
+  bool operator!=(const LidarMeasurement &other) const {
+    return !(*this == other);
+  }
+
+  bool operator==(const LidarMeasurement &other) const {
+    if (stamp != other.stamp || points.size() != other.points.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < points.size(); ++i) {
+      if (points[i] != other.points[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 struct LidarParams {
@@ -138,6 +162,14 @@ struct ImuMeasurement {
     oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
         << gyro.transpose() << "]" << ", accel: [" << accel.transpose() << "])";
     return oss.str();
+  }
+
+  bool operator!=(const ImuMeasurement &other) const {
+    return !(*this == other);
+  }
+
+  bool operator==(const ImuMeasurement &other) const {
+    return stamp == other.stamp && gyro == other.gyro && accel == other.accel;
   }
 };
 
