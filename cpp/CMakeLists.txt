@@ -1,37 +1,41 @@
 # Turn off deprecated cmake warning for pipelines
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 set(LIBS Eigen3::Eigen)
-set(LIB_NAME evalio_cpp)
+set(LIB_NAME evalio)
 set(DEF "")
+set(RESULTS "")
+
+set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/evalio/pipelines-src")
 
 # ------------------------- Import all pipelines ------------------------- #
-# options
-option(EVALIO_BUILD_ALL "Build all included pipelines" OFF)
-option(EVALIO_KISS_ICP "Build KISS-ICP" OFF)
-option(EVALIO_LIO_SAM "Build Lio-Sam" OFF)
+function(find_pipeline SRC_DIR TARGET_NAME DEF_NAME)
+    if(EXISTS "${PIPELINES_SRC}/${SRC_DIR}/")
+        message("----------------------- Adding ${SRC_DIR} -----------------------")
+        add_subdirectory(${PIPELINES_SRC}/${SRC_DIR})
+        set(LIBS ${LIBS} ${TARGET_NAME} PARENT_SCOPE)
+        set(DEF ${DEF} ${DEF_NAME} PARENT_SCOPE)
+        set(RESULTS ${RESULTS} "-- ✓ ${DEF_NAME}\n" PARENT_SCOPE)
+        message("----------------------- Finished ${SRC_DIR} -----------------------")
+    else()
+        set(RESULTS ${RESULTS} "-- x ${DEF_NAME}\n" PARENT_SCOPE)
+    endif()
+endfunction()
 
-# KISS-ICP
-if(EVALIO_BUILD_ALL OR EVALIO_KISS_ICP)
-    message(STATUS "Building KISS-ICP")
-    add_subdirectory(evalio/pipelines/kiss-icp/cpp/kiss_icp)
-    list(APPEND LIBS kiss_icp_pipeline)
-    list(APPEND DEF EVALIO_KISS_ICP)
+message("################### Searching for pipelines ###################")
+find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline EVALIO_KISS_ICP)
+find_pipeline(LIO-SAM                lio_sam           EVALIO_LIO_SAM)
+message("###################    Pipeline Results     ###################")
+if(NOT "${RESULTS}" STREQUAL "")
+    message(" ")
+    message(${RESULTS})
 endif()
-
-# LIO-SAM
-if(EVALIO_BUILD_ALL OR EVALIO_LIO_SAM)
-    message(STATUS "Building LIO-SAM")
-    add_subdirectory(evalio/pipelines/lio-sam/)
-    list(APPEND LIBS lio_sam)
-    list(APPEND DEF EVALIO_LIO_SAM)
-endif()
+message("###############################################################")
 
 # ------------------------- Put all wrappers into a target ------------------------- #
-# make position_indepent code for python wrapper
+# make position_independent code for python wrapper
 foreach(L IN LISTS LIBS)
     set_target_properties(${L} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 endforeach()
-
 
 # Create Library
 add_library(${LIB_NAME} INTERFACE) 

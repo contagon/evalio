@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version < '3.13'",
@@ -199,7 +200,7 @@ wheels = [
 
 [[package]]
 name = "evalio"
-version = "0.1.0"
+version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "argcomplete" },
@@ -226,7 +227,6 @@ dev = [
     { name = "pip" },
     { name = "pybind11" },
     { name = "pybind11-stubgen" },
-    { name = "rerun-sdk" },
     { name = "ruff" },
     { name = "scikit-build-core" },
     { name = "types-pyyaml" },
@@ -236,15 +236,16 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "argcomplete", specifier = ">=3.5.0" },
+    { name = "argcomplete", specifier = ">=3.3.0" },
     { name = "gdown", marker = "extra == 'fetch'", specifier = ">=5.2.0" },
-    { name = "numpy", specifier = ">=1.26.4" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "numpy" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
-    { name = "rosbags", specifier = ">=0.10.4" },
-    { name = "tabulate", specifier = ">=0.9.0" },
-    { name = "tqdm", specifier = ">=4.66.5" },
+    { name = "rosbags", specifier = ">=0.10" },
+    { name = "tabulate", specifier = ">=0.9" },
+    { name = "tqdm", specifier = ">=4.66" },
 ]
+provides-extras = ["fetch", "vis"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -254,7 +255,6 @@ dev = [
     { name = "pip", specifier = ">=24.3.1" },
     { name = "pybind11", specifier = ">=2.13.6" },
     { name = "pybind11-stubgen", specifier = ">=2.5.1" },
-    { name = "rerun-sdk", specifier = ">=0.18.2" },
     { name = "ruff", specifier = ">=0.6.8" },
     { name = "scikit-build-core", specifier = ">=0.10.7" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20240917" },
@@ -772,7 +772,7 @@ name = "tqdm"
 version = "4.66.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/83/6ba9844a41128c62e810fddddd72473201f3eacde02046066142a2d96cc5/tqdm-4.66.5.tar.gz", hash = "sha256:e1020aef2e5096702d8a025ac7d16b1577279c9d63f8375b63083e9a5f0fcbad", size = 169504 }
 wheels = [

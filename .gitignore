@@ -1,7 +1,9 @@
-# build artificacts
+# build artifacts
 dist
 **/build*
-vcpkg_installed
+result*
+result
+wheelhouse
 
 # other caches
 .mypy_cache
@@ -14,7 +16,10 @@ __pycache__
 .cache
 python/evalio/_cpp
 
-# for buildling
+# for building
 compile_commands.json
 CMakePresets.json
 CMakeUserPresets.json
+
+# cloned pipelines
+cpp/evalio/pipelines-src

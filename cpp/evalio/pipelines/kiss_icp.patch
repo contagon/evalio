@@ -1,0 +1,43 @@
+diff --git a/cpp/kiss_icp/3rdparty/find_dependencies.cmake b/cpp/kiss_icp/3rdparty/find_dependencies.cmake
+index c4eed75..54fc2b5 100644
+--- a/cpp/kiss_icp/3rdparty/find_dependencies.cmake
++++ b/cpp/kiss_icp/3rdparty/find_dependencies.cmake
+@@ -28,13 +28,7 @@ endif()
+ function(find_external_dependency PACKAGE_NAME TARGET_NAME INCLUDED_CMAKE_PATH)
+   string(TOUPPER ${PACKAGE_NAME} PACKAGE_NAME_UP)
+   set(USE_FROM_SYSTEM_OPTION "USE_SYSTEM_${PACKAGE_NAME_UP}")
+-  if(${${USE_FROM_SYSTEM_OPTION}})
+-    find_package(${PACKAGE_NAME} QUIET NO_MODULE)
+-  endif()
+-  if(NOT ${${USE_FROM_SYSTEM_OPTION}} OR NOT TARGET ${TARGET_NAME})
+-    set(${USE_FROM_SYSTEM_OPTION} OFF PARENT_SCOPE)
+-    include(${INCLUDED_CMAKE_PATH})
+-  endif()
++  find_package(${PACKAGE_NAME} NO_MODULE)
+ endfunction()
+ 
+ find_external_dependency("Eigen3" "Eigen3::Eigen" "${CMAKE_CURRENT_LIST_DIR}/eigen/eigen.cmake")
+diff --git a/cpp/kiss_icp/core/VoxelUtils.hpp b/cpp/kiss_icp/core/VoxelUtils.hpp
+index 580a252..39a6cf3 100644
+--- a/cpp/kiss_icp/core/VoxelUtils.hpp
++++ b/cpp/kiss_icp/core/VoxelUtils.hpp
+@@ -25,6 +25,7 @@
+ 
+ #include <Eigen/Core>
+ #include <cmath>
++#include <cstdint>
+ #include <vector>
+ 
+ namespace kiss_icp {
+diff --git a/cpp/kiss_icp/metrics/Metrics.cpp b/cpp/kiss_icp/metrics/Metrics.cpp
+index 7819558..ca53ccd 100644
+--- a/cpp/kiss_icp/metrics/Metrics.cpp
++++ b/cpp/kiss_icp/metrics/Metrics.cpp
+@@ -27,6 +27,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <cmath>
++#include <cstdint>
+ #include <tuple>
+ #include <vector>
+ 
