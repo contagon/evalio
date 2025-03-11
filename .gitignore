@@ -14,8 +14,9 @@ __pycache__
 *.yaml
 *.csv
 .cache
+.clangd
 python/evalio/_cpp
-*.pkl
+tests/data
 
 # for building
 compile_commands.json

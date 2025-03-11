@@ -131,10 +131,16 @@ template <typename T> std::function<void(T &, const uint8_t *)> blank() {
   return [](T &, const uint8_t *) noexcept {};
 }
 
-inline std::function<void(const unsigned char *pointStart,
-                          evalio::Point &point)>
-point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
-                  const uint8_t *data) {
+inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
+                                              const std::vector<Field> &fields,
+                                              const uint8_t *data) {
+  if (msg.is_bigendian) {
+    throw std::runtime_error("Big endian not supported yet");
+  }
+
+  evalio::LidarMeasurement mm(msg.stamp);
+  mm.points.resize(msg.width * msg.height);
+
   std::function func_x = blank<double>();
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
@@ -169,6 +175,7 @@ point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
   func_t(t, data);
   std::function<void(Stamp &, const uint8_t *)> func_stamp;
   if (t.sec > 100.0) {
+    Stamp scan_stamp = mm.stamp;
     func_stamp = [func_t, scan_stamp](Stamp &stamp,
                                       const uint8_t *data) noexcept {
       func_t(stamp, data);
@@ -178,9 +185,9 @@ point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
     func_stamp = func_t;
   }
 
-  auto func_point = [func_x, func_y, func_z, func_intensity, func_stamp,
-                     func_range, func_row](const unsigned char *pointStart,
-                                           evalio::Point &point) {
+  size_t index = 0;
+  for (evalio::Point &point : mm.points) {
+    const auto pointStart = data + static_cast<size_t>(index * msg.point_step);
     func_x(point.x, pointStart);
     func_y(point.y, pointStart);
     func_z(point.z, pointStart);
@@ -188,124 +195,58 @@ point_loader_func(const std::vector<Field> &fields, Stamp scan_stamp,
     func_stamp(point.t, pointStart);
     func_range(point.range, pointStart);
     func_row(point.row, pointStart);
-  };
-
-  return func_point;
-}
-
-inline evalio::LidarMeasurement
-general_pc2_to_evalio(const PointCloudMetadata &msg,
-                      const std::vector<Field> &fields, const uint8_t *data,
-                      const LidarParams &params) {
-  if (msg.is_bigendian) {
-    throw std::runtime_error("Big endian not supported yet");
-  }
-
-  evalio::LidarMeasurement mm(msg.stamp);
-
-  auto func_point = point_loader_func(fields, msg.stamp, data);
-
-  // check if row or column major
-  Point first, second;
-  func_point(data, first);
-  func_point(data + static_cast<size_t>(msg.point_step), second);
-  bool row_major = (first.row == second.row);
-
-  // Check if there's holes in the cloud
-  bool dense_cloud =
-      (msg.height * msg.width == params.num_columns * params.num_rows);
-
-  // Figure out how to count the columns
-  std::function<void(uint16_t &col, const uint16_t &prev_col,
-                     const uint8_t &prev_row, const uint8_t &curr_row)>
-      func_col;
-  if (row_major) {
-    func_col = [](uint16_t &col, const uint16_t &prev_col,
-                  const uint8_t &prev_row, const uint8_t &curr_row) {
-      if (prev_row != curr_row) {
-        col = 0;
-      } else {
-        col = prev_col + 1;
-      }
-    };
-  } else {
-    func_col = [](uint16_t &col, const uint16_t &prev_col,
-                  const uint8_t &prev_row, const uint8_t &curr_row) {
-      if (curr_row < prev_row) {
-        col = prev_col + 1;
-      } else {
-        col = prev_col;
-      }
-    };
-  }
-
-  mm.points.resize(params.num_columns * params.num_rows);
-  uint16_t prev_col = 0;
-  uint8_t prev_row = 0;
-  // If we got exactly the right number of points in
-  if (dense_cloud) {
-    // If already row major, fill in the points in place
-    if (row_major) {
-      size_t index = 0;
-      for (evalio::Point &point : mm.points) {
-        const auto pointStart =
-            data + static_cast<size_t>(index * msg.point_step);
-        func_point(pointStart, point);
-        func_col(point.col, prev_col, prev_row, point.row);
-        prev_col = point.col;
-        prev_row = point.row;
-        ++index;
-      }
-    }
-    // If not row major, we'll have to organize the points as we go
-    else {
-      for (size_t i = 0; i < msg.height * msg.width; i++) {
-        const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
-        evalio::Point point;
-        func_point(pointStart, point);
-        func_col(point.col, prev_col, prev_row, point.row);
-        prev_col = point.col;
-        prev_row = point.row;
-        mm.points[point.row * params.num_columns + point.col] = point;
-      }
-    }
-  } else {
-    // TODO handle this
-    if (row_major) {
-      throw std::runtime_error(
-          "Non-dense row major point clouds not supported yet");
-    } else {
-      // fill out row/col for blank points
-      for (size_t row = 0; row < params.num_rows; row++) {
-        for (size_t col = 0; col < params.num_columns; col++) {
-          mm.points[row * params.num_columns + col].row = row;
-          mm.points[row * params.num_columns + col].col = col;
-        }
-      }
-      for (size_t i = 0; i < msg.height * msg.width; i++) {
-        const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
-        evalio::Point point;
-        func_point(pointStart, point);
-        func_col(point.col, prev_col, prev_row, point.row);
-        prev_col = point.col;
-        prev_row = point.row;
-        mm.points[point.row * params.num_columns + point.col] = point;
-      }
-    }
+    ++index;
   }
 
   return mm;
 }
 
-// point cloud loader where rows come in in 0, 8, 1, 9, ... order
-inline evalio::LidarMeasurement
-split_row_pc2_to_evalio(const PointCloudMetadata &msg,
-                        const std::vector<Field> &fields, const uint8_t *data,
-                        const LidarParams &params) {
-  if (msg.is_bigendian) {
-    throw std::runtime_error("Big endian not supported yet");
+// -------------------- Helpers to fill out column index -------------------- //
+// Iterates through points to fill in columns
+inline void
+_fill_col(LidarMeasurement &mm,
+          std::function<void(uint16_t &col, const uint16_t &prev_col,
+                             const uint8_t &prev_row, const uint8_t &curr_row)>
+              func_col) {
+  uint16_t prev_col = 0;
+  uint8_t prev_row = 0;
+  for (auto &p : mm.points) {
+    func_col(p.col, prev_col, prev_row, p.row);
+    prev_col = p.col;
+    prev_row = p.row;
   }
+}
 
+// Fills in column index for row major order
+inline void fill_col_row_major(LidarMeasurement &mm) {
+  auto func_col = [](uint16_t &col, const uint16_t &prev_col,
+                     const uint8_t &prev_row, const uint8_t &curr_row) {
+    if (prev_row != curr_row) {
+      col = 0;
+    } else {
+      col = prev_col + 1;
+    }
+  };
+
+  _fill_col(mm, func_col);
+}
+
+// Fills in column index for column major order
+inline void fill_col_col_major(LidarMeasurement &mm) {
+  auto func_col = [](uint16_t &col, const uint16_t &prev_col,
+                     const uint8_t &prev_row, const uint8_t &curr_row) {
+    if (curr_row < prev_row) {
+      col = prev_col + 1;
+    } else {
+      col = prev_col;
+    }
+  };
+
+  _fill_col(mm, func_col);
+}
+
+// point cloud loader where rows come in in 0, 8, 1, 9, ... order
+inline void fill_col_split_row_velodyne(LidarMeasurement &mm) {
   auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
     if (row_idx < 8) {
       return row_idx * 2;
@@ -324,35 +265,33 @@ split_row_pc2_to_evalio(const PointCloudMetadata &msg,
     }
   };
 
-  evalio::LidarMeasurement mm(msg.stamp);
-  auto func_point = point_loader_func(fields, msg.stamp, data);
-  mm.points.resize(params.num_columns * params.num_rows);
+  _fill_col(mm, func_col);
+
+  // TODO: When I fix the duration stuff, remove this hack
+  for (auto &p : mm.points) {
+    p.t = Stamp::from_sec(p.t.to_sec() - 5.0 + 0.1);
+  }
+}
+
+// ------------------------- Helpers for reordering ------------------------- //
+inline void reorder_points(LidarMeasurement &mm, size_t num_rows,
+                           size_t num_cols) {
+  std::vector<Point> points_original = mm.points;
+  mm.points = std::vector<Point>(num_rows * num_cols);
 
   // fill out row/col for blank points
-  uint16_t prev_col = 0;
-  uint8_t prev_row = 0;
-  for (size_t row = 0; row < params.num_rows; row++) {
-    for (size_t col = 0; col < params.num_columns; col++) {
-      mm.points[row * params.num_columns + col].row = row;
-      mm.points[row * params.num_columns + col].col = col;
+  for (size_t row = 0; row < num_rows; row++) {
+    for (size_t col = 0; col < num_cols; col++) {
+      mm.points[row * num_cols + col].row = row;
+      mm.points[row * num_cols + col].col = col;
     }
   }
-  for (size_t i = 0; i < msg.height * msg.width; i++) {
-    const auto pointStart = data + static_cast<size_t>(i * msg.point_step);
-    evalio::Point point;
-    func_point(pointStart, point);
-    func_col(point.col, prev_col, prev_row, point.row);
-    // TODO: Hack to handle negative durations. See constructor of Stamp
-    point.t = Stamp::from_sec(point.t.to_sec() - 5.0 + 0.1);
-    // std::cout << "point.row: " << +point.row << " point.col: " << point.col
-    //           << " point.t: " << point.t.to_sec() << std::endl;
-    prev_col = point.col;
-    prev_row = point.row;
-    mm.points[point.row * params.num_columns + point.col] = point;
+  for (auto p : points_original) {
+    mm.points[p.row * num_cols + p.col] = p;
   }
-
-  return mm;
 }
+
+// ------------------------- Misc other helpers ------------------------- //
 // The helipr stores them in row major order
 // TODO: The helipr format drops points with bad returns - since it's row
 // major, its nigh impossible to infer where these were along a scan line for
@@ -363,6 +302,9 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
                                              const LidarParams &params) {
   LidarMeasurement mm(stamp);
   mm.points.resize(params.num_columns * params.num_rows);
+  for (auto &p : mm.points) {
+    p = Point();
+  }
 
   std::ifstream file;
   file.open(filename, std::ios::in | std::ios::binary);
@@ -375,6 +317,8 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
     // clang-format off
     Point point;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
@@ -436,21 +380,19 @@ inline void makeConversions(py::module &m) {
       .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
       .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("general_pc2_to_evalio",
-        [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
-           char *c, const LidarParams &params) {
-          return general_pc2_to_evalio(msg, fields,
-                                       reinterpret_cast<uint8_t *>(c), params);
-        });
-
-  m.def("split_row_pc2_to_evalio", [](const PointCloudMetadata &msg,
-                                      const std::vector<Field> &fields, char *c,
-                                      const LidarParams &params) {
-    return split_row_pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c),
-                                   params);
+  m.def("pc2_to_evalio", [](const PointCloudMetadata &msg,
+                            const std::vector<Field> &fields, char *c) {
+    return pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c));
   });
 
+  m.def("fill_col_row_major", &fill_col_row_major);
+  m.def("fill_col_col_major", &fill_col_col_major);
+  m.def("reorder_points", &reorder_points);
+
+  // load custom bin format for helipr
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
+  // botanic garden velodyne reordering
+  m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
 }
 
 } // namespace evalio

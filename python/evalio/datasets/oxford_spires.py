@@ -1,5 +1,13 @@
 from dataclasses import dataclass
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 
@@ -10,7 +18,6 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
     DatasetIterator,
 )
@@ -31,6 +38,12 @@ class OxfordSpires(Dataset):
             "/alphasense_driver_ros/imu",
             self.lidar_params(),
             is_mcap=True,
+            lidar_format=LidarFormatParams(
+                stamp=LidarStamp.Start,
+                point_stamp=LidarPointStamp.Start,
+                major=LidarMajor.Column,
+                density=LidarDensity.OnlyValidPoints,
+            ),
         )
 
     def ground_truth_raw(self) -> Trajectory:

@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <cstdint>
 #include <iostream>
 
 namespace evalio {
@@ -141,14 +142,18 @@ struct LidarParams {
   // num_rows = num scan lines / channels / rings
   int num_rows;
   int num_columns;
+  // in meters
   double min_range;
   double max_range;
+  // in Hz
+  double rate = 10.0;
 
   std::string toString() const {
     return "LidarParams(rows: " + std::to_string(num_rows) +
            ", cols: " + std::to_string(num_columns) +
            ", min_range: " + std::to_string(min_range) +
-           ", max_range: " + std::to_string(max_range) + ")";
+           ", max_range: " + std::to_string(max_range) +
+           ", rate: " + std::to_string(rate) + ")";
   };
 };
 

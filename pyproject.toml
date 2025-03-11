@@ -29,7 +29,7 @@ fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]
-requires = ["scikit-build-core>=0.8", "pybind11"]
+requires = ["scikit-build-core>=0.8", "pybind11", "pybind11-stubgen", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from evalio.types import Trajectory
-from evalio._cpp._helpers import helipr_bin_to_evalio
+from evalio._cpp._helpers import helipr_bin_to_evalio  # type: ignore
 
 from .base import (
     EVALIO_DATA,
@@ -49,7 +49,8 @@ class HeLiPR(Dataset):
 
         def lidar_iter():
             for stamp, file in zip(lidar_stamps, lidar_files):
-                yield helipr_bin_to_evalio(str(file), stamp, lidar_params)
+                mm = helipr_bin_to_evalio(str(file), stamp, lidar_params)
+                yield mm
 
         return RawDataIter(
             lidar_stamps,

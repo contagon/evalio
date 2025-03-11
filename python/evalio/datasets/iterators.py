@@ -1,12 +1,15 @@
 from collections.abc import Iterator
-from typing import Iterable, Protocol, Union, Any
+from typing import Callable, Iterable, Protocol, Union, Any, Optional
 from pathlib import Path
 
 from evalio._cpp._helpers import (  # type: ignore
     DataType,
     Field,
     PointCloudMetadata,
-    general_pc2_to_evalio,
+    pc2_to_evalio,
+    fill_col_col_major,
+    fill_col_row_major,
+    reorder_points,
 )
 from evalio.types import (
     ImuMeasurement,
@@ -17,6 +20,8 @@ from evalio.types import (
 from rosbags.highlevel import AnyReader
 from tabulate import tabulate
 import numpy as np
+from dataclasses import dataclass
+from enum import StrEnum, auto
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
@@ -29,57 +34,57 @@ class DatasetIterator(Iterable[Measurement], Protocol):
     def __iter__(self) -> Iterator[Measurement]: ...
 
 
+# Various properties that a pointcloud may have - we iterate over them
+class LidarStamp(StrEnum):
+    Start = auto()
+    End = auto()
+
+
+class LidarPointStamp(StrEnum):
+    Guess = auto()
+    Start = auto()
+    End = auto()
+
+
+class LidarMajor(StrEnum):
+    Guess = auto()
+    Row = auto()
+    Column = auto()
+
+
+class LidarDensity(StrEnum):
+    Guess = auto()
+    AllPoints = auto()
+    OnlyValidPoints = auto()
+
+
+@dataclass
+class LidarFormatParams:
+    stamp: LidarStamp = LidarStamp.Start
+    point_stamp: LidarPointStamp = LidarPointStamp.Guess
+    major: LidarMajor = LidarMajor.Guess
+    density: LidarDensity = LidarDensity.Guess
+
+
 # ------------------------- Iterator over a rosbag ------------------------- #
-def pointcloud2_to_evalio(
-    msg, params: LidarParams, cpp_point_loader=general_pc2_to_evalio
-) -> LidarMeasurement:
-    # Convert to C++ types
-    fields = []
-    for f in msg.fields:
-        fields.append(
-            Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
-        )
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-
-    cloud = PointCloudMetadata(
-        stamp=stamp,
-        height=msg.height,
-        width=msg.width,
-        row_step=msg.row_step,
-        point_step=msg.point_step,
-        is_bigendian=msg.is_bigendian,
-        is_dense=msg.is_dense,
-    )
-
-    return cpp_point_loader(cloud, fields, bytes(msg.data), params)  # type: ignore
-
-
-def imu_to_evalio(msg) -> ImuMeasurement:
-    acc = msg.linear_acceleration
-    acc = np.array([acc.x, acc.y, acc.z])
-    gyro = msg.angular_velocity
-    gyro = np.array([gyro.x, gyro.y, gyro.z])
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-    return ImuMeasurement(stamp, gyro, acc)
-
-
 class RosbagIter(DatasetIterator):
     def __init__(
         self,
         path: Path,
         lidar_topic: str,
         imu_topic: str,
-        params: LidarParams,
+        lidar_params: LidarParams,
         # for mcap files, we point at the directory, not the file
         is_mcap: bool = False,
-        cpp_point_loader=general_pc2_to_evalio,
+        # Reduce compute by telling the iterator how to format the pointcloud
+        lidar_format: LidarFormatParams = LidarFormatParams(),
+        custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
     ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
-        self.params = params
-        self.cpp_point_loader = cpp_point_loader
+        self.lidar_params = lidar_params
+        self.lidar_format = lidar_format
+        self.custom_col_func = custom_col_func
 
         # Glob to get all .bag files in the directory
         if path.is_dir() and is_mcap is False:
@@ -119,6 +124,7 @@ class RosbagIter(DatasetIterator):
     def __len__(self):
         return self.lidar_count
 
+    # ------------------------- Iterators ------------------------- #
     def __iter__(self):
         iterator = self.reader.messages(
             connections=self.connections_lidar + self.connections_imu
@@ -127,9 +133,9 @@ class RosbagIter(DatasetIterator):
         for connection, timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
             if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-                yield pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
+                yield self._lidar_conversion(msg)
             elif connection.msgtype == "sensor_msgs/msg/Imu":
-                yield imu_to_evalio(msg)
+                yield self._imu_conversion(msg)
             else:
                 raise ValueError(f"Unknown message type {connection.msgtype}")
 
@@ -138,17 +144,17 @@ class RosbagIter(DatasetIterator):
 
         for connection, timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
-            yield imu_to_evalio(msg)
+            yield self._imu_conversion(msg)
 
     def lidar_iter(self) -> Iterator[LidarMeasurement]:
         iterator = self.reader.messages(connections=self.connections_lidar)
 
         for connection, timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
-            yield pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
+            yield self._lidar_conversion(msg)
 
-    @staticmethod
-    def _imu_converstion(msg: Any) -> ImuMeasurement:
+    # ------------------------- Convertors ------------------------- #
+    def _imu_conversion(self, msg: Any) -> ImuMeasurement:
         acc = msg.linear_acceleration
         acc = np.array([acc.x, acc.y, acc.z])
         gyro = msg.angular_velocity
@@ -156,6 +162,90 @@ class RosbagIter(DatasetIterator):
 
         stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
         return ImuMeasurement(stamp, gyro, acc)
+
+    def _lidar_conversion(self, msg: Any) -> LidarMeasurement:
+        # ------------------------- Convert to our type ------------------------- #
+        fields = []
+        for f in msg.fields:
+            fields.append(
+                Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
+            )
+
+        stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
+
+        cloud = PointCloudMetadata(
+            stamp=stamp,
+            height=msg.height,
+            width=msg.width,
+            row_step=msg.row_step,
+            point_step=msg.point_step,
+            is_bigendian=msg.is_bigendian,
+            is_dense=msg.is_dense,
+        )
+        scan: LidarMeasurement = pc2_to_evalio(cloud, fields, bytes(msg.data))  # type:ignore
+
+        # ------------------------- Handle formatting properly ------------------------- #
+        # For the ones that have been guessed, use heuristics to figure out format
+        # Will only be ran on the first cloud, afterwords it will be set
+        if self.lidar_format.major == LidarMajor.Guess:
+            if scan.points[0].row == scan.points[1].row:
+                self.lidar_format.major = LidarMajor.Row
+            else:
+                self.lidar_format.major = LidarMajor.Column
+
+        if self.lidar_format.density == LidarDensity.Guess:
+            if (
+                len(scan.points)
+                == self.lidar_params.num_rows * self.lidar_params.num_columns
+            ):
+                self.lidar_format.density = LidarDensity.AllPoints
+            else:
+                self.lidar_format.density = LidarDensity.OnlyValidPoints
+
+        if self.lidar_format.point_stamp == LidarPointStamp.Guess:
+            pass
+
+        # Adjust the stamp to the start of the scan
+        match self.lidar_format.stamp:
+            case LidarStamp.Start:
+                pass
+            case LidarStamp.End:
+                scan.stamp = Stamp.from_sec(
+                    scan.stamp.to_sec() - 1.0 / self.lidar_params.rate
+                )
+
+        if (
+            self.lidar_format.major == LidarMajor.Row
+            and self.lidar_format.density == LidarDensity.OnlyValidPoints
+        ):
+            print(
+                "WARNING: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
+            )
+
+        # Add column indices
+        if self.custom_col_func is not None:
+            self.custom_col_func(scan)
+        else:
+            match self.lidar_format.major:
+                case LidarMajor.Row:
+                    fill_col_row_major(scan)
+                case LidarMajor.Column:
+                    fill_col_col_major(scan)
+
+        # Reorder the points into row major with invalid points in the correct spots
+        if (
+            self.lidar_format.major == LidarMajor.Row
+            and self.lidar_format.density == LidarDensity.AllPoints
+        ):
+            pass
+        else:
+            reorder_points(
+                scan, self.lidar_params.num_rows, self.lidar_params.num_columns
+            )
+
+        # match self.lidar_format.point_stamp:
+
+        return scan
 
 
 # ------------------------- Flexible Iterator for Anything ------------------------- #
@@ -167,6 +257,8 @@ class RawDataIter(DatasetIterator):
         stamps_imu: list[Stamp],
         iterator_imu: Iterator[ImuMeasurement],
     ):
+        # TODO: Probably a clever way to do this that doesn't require the stamps or indices
+        # Need to make the iterators peekable
         self.stamps_lidar = stamps_lidar
         self.stamps_imu = stamps_imu
         self.idx_lidar = 0

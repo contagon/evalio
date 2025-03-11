@@ -1,7 +1,13 @@
 from dataclasses import dataclass
-from pathlib import Path
 
-from evalio.types import LidarMeasurement, ImuMeasurement, Stamp
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 
@@ -11,55 +17,39 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    Measurement,
-    RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
-
-
-# The multi-campus dataset lidar scan timestamps are taken at the end of the scan
-# Offset so they are actually taken from the start of the scan
-class OffsetRosbagIter(RosbagIter):
-    def __init__(
-        self,
-        path: Path,
-        lidar_topic: str,
-        imu_topic: str,
-        params,
-        is_mcap: bool = False,
-    ):
-        super().__init__(path, lidar_topic, imu_topic, params, is_mcap)
-
-    def __next__(self) -> Measurement:
-        msg = super().__next__()
-        if isinstance(msg, ImuMeasurement):
-            return msg
-        elif isinstance(msg, LidarMeasurement):
-            msg.stamp = Stamp.from_sec(msg.stamp.to_sec() - 0.1)
-            return msg
-        else:
-            raise ValueError("Unknown message type")
 
 
 @dataclass
 class MultiCampus2024(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
+        lidar_format = LidarFormatParams(
+            stamp=LidarStamp.End,
+            point_stamp=LidarPointStamp.Start,
+            major=LidarMajor.Row,
+            density=LidarDensity.AllPoints,
+        )
+
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
         if "ntu" in self.seq:
-            return OffsetRosbagIter(
+            return RosbagIter(
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn100/imu",
                 self.lidar_params(),
+                lidar_format=lidar_format,
             )
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
         elif "kth" in self.seq or "tuhh" in self.seq:
-            return OffsetRosbagIter(
+            return RosbagIter(
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn200/imu",
                 self.lidar_params(),
+                lidar_format=lidar_format,
             )
         else:
             raise ValueError(f"Unknown sequence: {self.seq}")

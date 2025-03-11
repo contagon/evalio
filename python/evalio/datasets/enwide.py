@@ -3,6 +3,14 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 from tqdm import tqdm
@@ -14,7 +22,6 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
     DatasetIterator,
 )
@@ -45,6 +52,12 @@ class EnWide(Dataset):
             "/ouster/points",
             "/ouster/imu",
             self.lidar_params(),
+            lidar_format=LidarFormatParams(
+                stamp=LidarStamp.Start,
+                point_stamp=LidarPointStamp.Start,
+                major=LidarMajor.Row,
+                density=LidarDensity.AllPoints,
+            ),
         )
 
     def ground_truth_raw(self) -> Trajectory:
