@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Iterable, Protocol, Union
+from typing import Iterable, Protocol, Union, Any
 from pathlib import Path
 
 from evalio._cpp._helpers import (  # type: ignore
@@ -7,7 +7,6 @@ from evalio._cpp._helpers import (  # type: ignore
     Field,
     PointCloudMetadata,
     general_pc2_to_evalio,
-    helipr_bin_to_evalio,
 )
 from evalio.types import (
     ImuMeasurement,
@@ -147,3 +146,44 @@ class RosbagIter(DatasetIterator):
         for connection, timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
             yield pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
+
+    @staticmethod
+    def _imu_converstion(msg: Any) -> ImuMeasurement:
+        acc = msg.linear_acceleration
+        acc = np.array([acc.x, acc.y, acc.z])
+        gyro = msg.angular_velocity
+        gyro = np.array([gyro.x, gyro.y, gyro.z])
+
+        stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
+        return ImuMeasurement(stamp, gyro, acc)
+
+
+# ------------------------- Flexible Iterator for Anything ------------------------- #
+class RawDataIter(DatasetIterator):
+    def __init__(
+        self,
+        stamps_lidar: list[Stamp],
+        iterator_lidar: Iterator[LidarMeasurement],
+        stamps_imu: list[Stamp],
+        iterator_imu: Iterator[ImuMeasurement],
+    ):
+        self.stamps_lidar = stamps_lidar
+        self.stamps_imu = stamps_imu
+        self.idx_lidar = 0
+        self.idx_imu = 0
+        self.iterator_lidar = iterator_lidar
+        self.iterator_imu = iterator_imu
+
+    def imu_iter(self) -> Iterator[ImuMeasurement]:
+        return self.iterator_imu
+
+    def lidar_iter(self) -> Iterator[LidarMeasurement]:
+        return self.iterator_lidar
+
+    def __iter__(self) -> Iterator[Measurement]:
+        if self.stamps_imu[self.idx_imu] < self.stamps_lidar[self.idx_lidar]:
+            self.idx_imu += 1
+            yield next(self.iterator_imu)
+        else:
+            self.idx_lidar += 1
+            yield next(self.iterator_lidar)

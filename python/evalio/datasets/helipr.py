@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from evalio.types import Trajectory
+from evalio._cpp._helpers import helipr_bin_to_evalio
 
 from .base import (
     EVALIO_DATA,
@@ -14,6 +15,9 @@ from .base import (
     LidarParams,
     RawDataIter,
     load_pose_csv,
+    Stamp,
+    ImuMeasurement,
+    DatasetIterator,
 )
 
 """
@@ -24,11 +28,34 @@ Note, we do everything based off of the Ouster Lidar, mounted at the top of the 
 @dataclass
 class HeLiPR(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
+        imu_file = EVALIO_DATA / HeLiPR.name() / self.seq / "xsens_imu.csv"
+
+        # Load in all IMU data
+        imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
+        imu_stamps = [Stamp.from_nsec(x) for x in imu_stamps]
+        imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16), delimiter=",")
+        assert len(imu_stamps) == len(imu_data)
+        imu_data = [
+            ImuMeasurement(stamp, gyro, acc)
+            for stamp, gyro, acc in zip(imu_stamps, imu_data[:, 3:], imu_data[:, :3])
+        ]
+
+        # setup all the lidar data
+        lidar_path = EVALIO_DATA / HeLiPR.name() / self.seq / "Ouster"
+        lidar_files = sorted(list(lidar_path.glob("*")))
+        lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in lidar_files]
+        lidar_params = self.lidar_params()
+
+        def lidar_iter():
+            for stamp, file in zip(lidar_stamps, lidar_files):
+                yield helipr_bin_to_evalio(str(file), stamp, lidar_params)
+
         return RawDataIter(
-            EVALIO_DATA / HeLiPR.name() / self.seq / "Ouster",
-            EVALIO_DATA / HeLiPR.name() / self.seq / "xsens_imu.csv",
-            self.lidar_params(),
+            lidar_stamps,
+            lidar_iter(),
+            imu_stamps,
+            imu_data.__iter__(),
         )
 
     def ground_truth_raw(self) -> Trajectory:

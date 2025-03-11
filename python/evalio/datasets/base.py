@@ -5,9 +5,6 @@ from pathlib import Path
 from typing import Iterable, Iterator, Optional, Protocol
 
 import numpy as np
-from evalio._cpp._helpers import (  # type: ignore
-    helipr_bin_to_evalio,
-)
 from evalio.types import (
     SE3,
     SO3,
@@ -18,7 +15,12 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
-from evalio.datasets.iterators import DatasetIterator, Measurement, RosbagIter  # noqa: F401
+from evalio.datasets.iterators import (  # noqa: F401
+    DatasetIterator,
+    Measurement,
+    RosbagIter,
+    RawDataIter,
+)
 
 if os.getenv("EVALIO_DATA") is None:
     print(
@@ -120,67 +122,6 @@ class Dataset(Protocol):
 
     def lidar_iter(self) -> Iterable[LidarMeasurement]:
         return self.data_iter().lidar_iter()
-
-
-# ------------------------- Helpers ------------------------- #
-class RawDataIter:
-    # def __init__(
-    #     self,
-    #     lidar_stamps: list[Stamp],
-    #     lidar_iterator: Generator[LidarMeasurement, None, None],
-    #     imu_stamps: list[Stamp],
-    #     imu_iterator: Generator[ImuMeasurement, None, None],
-    # ):
-    #     self.lidar_stamps = lidar_stamps
-    #     self.imu_stamps = imu_stamps
-    #     self.idx_lidar = 0
-    #     self.idx_imu = 0
-
-    def __init__(self, lidar_path: Path, imu_file: Path, lidar_params: LidarParams):
-        self.lidar_path = lidar_path
-        self.imu_file = imu_file
-
-        # Load all IMU data
-        imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
-        self.imu_stamps = [Stamp.from_nsec(x) for x in imu_stamps]
-        imu_data = np.loadtxt(imu_file, usecols=(11, 12, 13, 14, 15, 16), delimiter=",")
-        self.imu_gyro = imu_data[:, 3:]
-        self.imu_acc = imu_data[:, :3]
-
-        self.lidar_params = lidar_params
-        self.lidar_files = sorted(list(lidar_path.glob("*")))
-        self.lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in self.lidar_files]
-
-        self.idx_imu = 0
-        self.idx_lidar = 0
-
-    def __len__(self):
-        return len(self.lidar_files)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> Measurement:
-        if self.idx_imu >= len(self.imu_stamps) or self.idx_lidar >= len(
-            self.lidar_stamps
-        ):
-            raise StopIteration
-
-        if self.imu_stamps[self.idx_imu] < self.lidar_stamps[self.idx_lidar]:
-            mm = ImuMeasurement(
-                self.imu_stamps[self.idx_imu],
-                self.imu_gyro[self.idx_imu],
-                self.imu_acc[self.idx_imu],
-            )
-            self.idx_imu += 1
-            return mm
-        else:
-            file = self.lidar_files[self.idx_lidar]
-            stamp = self.lidar_stamps[self.idx_lidar]
-            self.idx_lidar += 1
-            # short circuit if we don't need lidar scans (ie for bias generation)
-            # return LidarMeasurement(stamp, [])
-            return helipr_bin_to_evalio(str(file), stamp, self.lidar_params)
 
 
 def load_pose_csv(
