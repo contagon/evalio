@@ -16,6 +16,7 @@ from .base import (
     LidarParams,
     RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 
@@ -38,7 +39,7 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 @dataclass
 class EnWide(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         return RosbagIter(
             EVALIO_DATA / EnWide.name() / self.seq,
             "/ouster/points",

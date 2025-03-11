@@ -12,6 +12,7 @@ from .base import (
     LidarParams,
     RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 """
@@ -25,7 +26,7 @@ Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster o
 @dataclass
 class NewerCollege2021(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         return RosbagIter(
             EVALIO_DATA / NewerCollege2021.name() / self.seq,
             "/os_cloud_node/points",

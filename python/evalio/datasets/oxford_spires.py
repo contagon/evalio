@@ -12,6 +12,7 @@ from .base import (
     LidarParams,
     RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 """
@@ -23,7 +24,7 @@ https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/
 @dataclass
 class OxfordSpires(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         return RosbagIter(
             EVALIO_DATA / OxfordSpires.name() / self.seq,
             "/hesai/pandar",

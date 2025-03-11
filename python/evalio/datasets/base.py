@@ -2,17 +2,10 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Optional, Protocol, Union
+from typing import Iterable, Iterator, Optional, Protocol
 
 import numpy as np
-from rosbags.highlevel import AnyReader
-from tabulate import tabulate
-
 from evalio._cpp._helpers import (  # type: ignore
-    DataType,
-    Field,
-    PointCloudMetadata,
-    general_pc2_to_evalio,
     helipr_bin_to_evalio,
 )
 from evalio.types import (
@@ -25,10 +18,13 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
+from evalio.datasets.iterators import DatasetIterator, Measurement, RosbagIter  # noqa: F401
 
-Measurement = Union[ImuMeasurement, LidarMeasurement]
-
-EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
+if os.getenv("EVALIO_DATA") is None:
+    print(
+        "Warning: EVALIO_DATA environment variable is not set. Using default './data'"
+    )
+EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./data"))
 
 
 @dataclass
@@ -37,7 +33,7 @@ class Dataset(Protocol):
     length: Optional[int] = None
 
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self) -> Iterator[Measurement]: ...
+    def data_iter(self) -> DatasetIterator: ...
 
     def ground_truth_raw(self) -> Trajectory: ...
 
@@ -97,135 +93,49 @@ class Dataset(Protocol):
 
     def first_n_lidar_scans(self, n: int = 1) -> list[LidarMeasurement]:
         scans = []
-        for m in self:
-            if isinstance(m, LidarMeasurement):
-                scans.append(m)
-
+        for m in self.lidar_iter():
+            scans.append(m)
             if len(scans) == n:
                 return scans
+
         raise ValueError("No lidar scans found")
 
-    def first_n_imu_measurement(self, n:int = 1) -> list[ImuMeasurement]:
+    def first_n_imu_measurement(self, n: int = 1) -> list[ImuMeasurement]:
         imu = []
-        for m in self:
-            if isinstance(m, ImuMeasurement):
-                imu.append(m)
+        for m in self.imu_iter():
+            imu.append(m)
             if len(imu) == n:
                 return imu
 
-        raise ValueError("No lidar scans found")
+        raise ValueError("No imu mm found")
 
     def __str__(self):
         return f"{self.name()}/{self.seq}"
 
+    def __iter__(self) -> Iterator[Measurement]:
+        return self.data_iter().__iter__()
+
+    def imu_iter(self) -> Iterable[ImuMeasurement]:
+        return self.data_iter().imu_iter()
+
+    def lidar_iter(self) -> Iterable[LidarMeasurement]:
+        return self.data_iter().lidar_iter()
+
 
 # ------------------------- Helpers ------------------------- #
-
-
-def pointcloud2_to_evalio(
-    msg, params: LidarParams, cpp_point_loader=general_pc2_to_evalio
-) -> LidarMeasurement:
-    # Convert to C++ types
-    fields = []
-    for f in msg.fields:
-        fields.append(
-            Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
-        )
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-
-    cloud = PointCloudMetadata(
-        stamp=stamp,
-        height=msg.height,
-        width=msg.width,
-        row_step=msg.row_step,
-        point_step=msg.point_step,
-        is_bigendian=msg.is_bigendian,
-        is_dense=msg.is_dense,
-    )
-
-    return cpp_point_loader(cloud, fields, bytes(msg.data), params)  # type: ignore
-
-
-def imu_to_evalio(msg) -> ImuMeasurement:
-    acc = msg.linear_acceleration
-    acc = np.array([acc.x, acc.y, acc.z])
-    gyro = msg.angular_velocity
-    gyro = np.array([gyro.x, gyro.y, gyro.z])
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-    return ImuMeasurement(stamp, gyro, acc)
-
-
-# These are helpers to help with common dataset types
-class RosbagIter:
-    def __init__(
-        self,
-        path: Path,
-        lidar_topic: str,
-        imu_topic: str,
-        params: LidarParams,
-        is_mcap: bool = False,
-        cpp_point_loader=general_pc2_to_evalio,
-    ):
-        self.lidar_topic = lidar_topic
-        self.imu_topic = imu_topic
-        self.params = params
-        self.cpp_point_loader = cpp_point_loader
-
-        # Glob to get all .bag files in the directory
-        if path.is_dir() and is_mcap is False:
-            self.path = [p for p in path.glob("*.bag") if "orig" not in str(p)]
-            if not self.path:
-                raise FileNotFoundError(f"No .bag files found in directory {path}")
-        else:
-            self.path = [path]
-
-        # Open the bag file
-        self.reader = AnyReader(self.path)
-        self.reader.open()
-        connections = [
-            x
-            for x in self.reader.connections
-            if x.topic in [self.lidar_topic, self.imu_topic]
-        ]
-        if len(connections) == 0:
-            connections_all = [[c.topic, c.msgtype] for c in self.reader.connections]
-            print(
-                tabulate(
-                    connections_all, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
-                )
-            )
-            raise ValueError(
-                f"Could not find topics {self.lidar_topic} or {self.imu_topic}"
-            )
-
-        self.lidar_count = sum(
-            [x.msgcount for x in connections if x.topic == self.lidar_topic]
-        )
-
-        self.iterator = self.reader.messages(connections=connections)
-
-    def __len__(self):
-        return self.lidar_count
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> Measurement:
-        connection, timestamp, rawdata = next(self.iterator)
-
-        msg = self.reader.deserialize(rawdata, connection.msgtype)
-
-        if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg, self.params, self.cpp_point_loader)
-        elif connection.msgtype == "sensor_msgs/msg/Imu":
-            return imu_to_evalio(msg)
-        else:
-            raise ValueError(f"Unknown message type {connection.msgtype}")
-
-
 class RawDataIter:
+    # def __init__(
+    #     self,
+    #     lidar_stamps: list[Stamp],
+    #     lidar_iterator: Generator[LidarMeasurement, None, None],
+    #     imu_stamps: list[Stamp],
+    #     imu_iterator: Generator[ImuMeasurement, None, None],
+    # ):
+    #     self.lidar_stamps = lidar_stamps
+    #     self.imu_stamps = imu_stamps
+    #     self.idx_lidar = 0
+    #     self.idx_imu = 0
+
     def __init__(self, lidar_path: Path, imu_file: Path, lidar_params: LidarParams):
         self.lidar_path = lidar_path
         self.imu_file = imu_file

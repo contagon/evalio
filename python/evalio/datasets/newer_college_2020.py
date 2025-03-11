@@ -12,13 +12,14 @@ from .base import (
     LidarParams,
     RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 
 @dataclass
 class NewerCollege2020(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         # Use Ouster IMU as lidar IMU since the realsense IMU is not time-synced
         return RosbagIter(
             EVALIO_DATA / NewerCollege2020.name() / self.seq,
