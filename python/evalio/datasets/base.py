@@ -2,7 +2,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Protocol
+from typing import Iterable, Iterator, Optional, Protocol, Union
 
 import numpy as np
 from evalio.types import (
@@ -15,18 +15,22 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
-from evalio.datasets.iterators import (  # noqa: F401
-    DatasetIterator,
-    Measurement,
-    RosbagIter,
-    RawDataIter,
-)
 
 if os.getenv("EVALIO_DATA") is None:
     print(
         "Warning: EVALIO_DATA environment variable is not set. Using default './data'"
     )
 EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./data"))
+
+Measurement = Union[ImuMeasurement, LidarMeasurement]
+
+
+class DatasetIterator(Iterable[Measurement], Protocol):
+    def imu_iter(self) -> Iterator[ImuMeasurement]: ...
+
+    def lidar_iter(self) -> Iterator[LidarMeasurement]: ...
+
+    def __iter__(self) -> Iterator[Measurement]: ...
 
 
 @dataclass

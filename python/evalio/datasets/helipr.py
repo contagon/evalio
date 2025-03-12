@@ -13,12 +13,13 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RawDataIter,
     load_pose_csv,
     Stamp,
     ImuMeasurement,
     DatasetIterator,
 )
+from .iterators import RawDataIter
+
 
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.

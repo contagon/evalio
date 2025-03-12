@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Callable, Iterable, Protocol, Union, Any, Optional
+from typing import Callable, Any, Optional
 from pathlib import Path
 
 from evalio._cpp._helpers import (  # type: ignore
@@ -17,23 +17,15 @@ from evalio.types import (
     LidarParams,
     Stamp,
 )
+from evalio.datasets.base import DatasetIterator, Measurement
 from rosbags.highlevel import AnyReader
 from tabulate import tabulate
 import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
 
-Measurement = Union[ImuMeasurement, LidarMeasurement]
 
-
-class DatasetIterator(Iterable[Measurement], Protocol):
-    def imu_iter(self) -> Iterator[ImuMeasurement]: ...
-
-    def lidar_iter(self) -> Iterator[LidarMeasurement]: ...
-
-    def __iter__(self) -> Iterator[Measurement]: ...
-
-
+# ------------------------- Iterator over a rosbag ------------------------- #
 # Various properties that a pointcloud may have - we iterate over them
 class LidarStamp(StrEnum):
     Start = auto()
@@ -66,7 +58,6 @@ class LidarFormatParams:
     density: LidarDensity = LidarDensity.Guess
 
 
-# ------------------------- Iterator over a rosbag ------------------------- #
 class RosbagIter(DatasetIterator):
     def __init__(
         self,
