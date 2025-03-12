@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <cstdint>
 #include <iostream>
 
 namespace evalio {
@@ -11,6 +12,11 @@ struct Stamp {
   uint32_t nsec;
 
   static Stamp from_sec(double sec) {
+    // TODO: Hack for when we have negative seconds
+    // Need to handle negative durations better
+    if (sec < 0) {
+      sec += 5.0;
+    }
     return Stamp{.sec = uint32_t(sec),
                  .nsec = uint32_t((sec - uint32_t(sec)) * 1e9)};
   }
@@ -54,14 +60,14 @@ struct Stamp {
 };
 
 struct Point {
-  double x;
-  double y;
-  double z;
-  double intensity;
-  Stamp t; // in nanoseconds?
-  uint32_t range;
-  uint8_t row;
-  uint16_t col;
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double intensity = 0.0;
+  Stamp t = Stamp{.sec = 0, .nsec = 0}; // in nanoseconds?
+  uint32_t range = 0;
+  uint8_t row = 0;
+  uint16_t col = 0;
 
   std::string toString() const {
     return "Point(x: " + std::to_string(x) + ", y: " + std::to_string(y) +
@@ -70,6 +76,14 @@ struct Point {
            ", t: " + std::to_string(t.to_sec()) +
            ", row: " + std::to_string(row) + ", col: " + std::to_string(col) +
            ")";
+  }
+
+  bool operator!=(const Point &other) const { return !(*this == other); }
+
+  bool operator==(const Point &other) const {
+    return x == other.x && y == other.y && z == other.z &&
+           intensity == other.intensity && t == other.t &&
+           range == other.range && row == other.row && col == other.col;
   }
 };
 
@@ -88,20 +102,58 @@ struct LidarMeasurement {
         << ", num_points: " << points.size() << ")";
     return oss.str();
   }
+
+  std::vector<Eigen::Vector3d> to_vec_positions() const {
+    std::vector<Eigen::Vector3d> eigen_points;
+    eigen_points.reserve(points.size());
+    for (const auto &point : points) {
+      eigen_points.push_back(Eigen::Vector3d(point.x, point.y, point.z));
+    }
+    return eigen_points;
+  }
+
+  std::vector<double> to_vec_stamps() const {
+    std::vector<double> vec_stamps;
+    vec_stamps.reserve(points.size());
+    for (const auto &point : points) {
+      vec_stamps.push_back(point.t.to_sec());
+    }
+    return vec_stamps;
+  }
+
+  bool operator!=(const LidarMeasurement &other) const {
+    return !(*this == other);
+  }
+
+  bool operator==(const LidarMeasurement &other) const {
+    if (stamp != other.stamp || points.size() != other.points.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < points.size(); ++i) {
+      if (points[i] != other.points[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 struct LidarParams {
   // num_rows = num scan lines / channels / rings
   int num_rows;
   int num_columns;
+  // in meters
   double min_range;
   double max_range;
+  // in Hz
+  double rate = 10.0;
 
   std::string toString() const {
     return "LidarParams(rows: " + std::to_string(num_rows) +
            ", cols: " + std::to_string(num_columns) +
            ", min_range: " + std::to_string(min_range) +
-           ", max_range: " + std::to_string(max_range) + ")";
+           ", max_range: " + std::to_string(max_range) +
+           ", rate: " + std::to_string(rate) + ")";
   };
 };
 
@@ -115,6 +167,14 @@ struct ImuMeasurement {
     oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
         << gyro.transpose() << "]" << ", accel: [" << accel.transpose() << "])";
     return oss.str();
+  }
+
+  bool operator!=(const ImuMeasurement &other) const {
+    return !(*this == other);
+  }
+
+  bool operator==(const ImuMeasurement &other) const {
+    return stamp == other.stamp && gyro == other.gyro && accel == other.accel;
   }
 };
 
@@ -179,11 +239,19 @@ struct SO3 {
     return toEigen() * v;
   }
 
+  static SO3 exp(const Eigen::Vector3d &v) {
+    Eigen::AngleAxisd axis(v.norm(), v.normalized());
+    Eigen::Quaterniond q(axis);
+    return fromEigen(q);
+  }
+
   Eigen::Vector3d log() const {
     Eigen::Quaterniond q = toEigen();
     auto axis = Eigen::AngleAxisd(q);
     return axis.angle() * axis.axis();
   }
+
+  Eigen::Matrix3d toMat() const { return toEigen().toRotationMatrix(); }
 
   std::string toString() const {
     return "SO3(x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +

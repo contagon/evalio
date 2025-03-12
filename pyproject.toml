@@ -29,7 +29,7 @@ fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]
-requires = ["scikit-build-core>=0.8", "pybind11"]
+requires = ["scikit-build-core>=0.8", "pybind11", "pybind11-stubgen", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
@@ -65,7 +65,11 @@ dev-dependencies = [
     "types-pyyaml>=6.0.12.20240917",
     "types-tabulate>=0.9.0.20240106",
     "types-tqdm>=4.66.0.20240417",
+    "pytest>=8.3.5",
 ]
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

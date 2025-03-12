@@ -14,12 +14,12 @@ __pycache__
 *.yaml
 *.csv
 .cache
+.clangd
 python/evalio/_cpp
+tests/data
 
 # for building
 compile_commands.json
-CMakePresets.json
-CMakeUserPresets.json
 
 # cloned pipelines
 cpp/evalio/pipelines-src

@@ -1,5 +1,13 @@
 from dataclasses import dataclass
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 
@@ -10,19 +18,27 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 
 @dataclass
 class NewerCollege2020(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
+        # Use Ouster IMU as lidar IMU since the realsense IMU is not time-synced
         return RosbagIter(
             EVALIO_DATA / NewerCollege2020.name() / self.seq,
             "/os1_cloud_node/points",
             "/os1_cloud_node/imu",
+            self.lidar_params(),
+            lidar_format=LidarFormatParams(
+                stamp=LidarStamp.Start,
+                point_stamp=LidarPointStamp.Start,
+                major=LidarMajor.Column,
+                density=LidarDensity.AllPoints,
+            ),
         )
 
     def ground_truth_raw(self) -> Trajectory:

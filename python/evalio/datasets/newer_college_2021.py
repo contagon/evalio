@@ -1,5 +1,13 @@
 from dataclasses import dataclass
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 
@@ -10,19 +18,33 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
+
+"""
+As a reference, we use the built in Ouster IMU instead of the alphasense one
+Extrinsics are more likely to be accurate
+Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster one (ICM-20948)
+
+"""
 
 
 @dataclass
 class NewerCollege2021(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         return RosbagIter(
             EVALIO_DATA / NewerCollege2021.name() / self.seq,
             "/os_cloud_node/points",
             "/os_cloud_node/imu",
+            self.lidar_params(),
+            lidar_format=LidarFormatParams(
+                stamp=LidarStamp.Start,
+                point_stamp=LidarPointStamp.Start,
+                major=LidarMajor.Row,
+                density=LidarDensity.AllPoints,
+            ),
         )
 
     def ground_truth_raw(self) -> Trajectory:
@@ -67,22 +89,23 @@ class NewerCollege2021(Dataset):
         )
 
     def imu_params(self) -> ImuParams:
-        # TODO:
+        # ICM-20948
+        # https://invensense.tdk.com/wp-content/uploads/2024/03/DS-000189-ICM-20948-v1.6.pdf
         return ImuParams(
-            gyro=0.000261799,
-            accel=0.000230,
-            gyro_bias=0.0000261799,
-            accel_bias=0.0000230,
-            bias_init=1e-7,
-            integration=1e-7,
-            gravity=np.array([0, 0, 9.81]),
+            gyro=0.000261799387799,
+            accel=0.0022563,
+            gyro_bias=0.0000261799387799,
+            accel_bias=0.00022563,
+            bias_init=1e-8,
+            integration=1e-8,
+            gravity=np.array([0, 0, -9.81]),
         )
 
     def lidar_params(self) -> LidarParams:
         return LidarParams(
             num_rows=128,
             num_columns=1024,
-            min_range=0.0,
+            min_range=0.1,
             max_range=50.0,
         )
 

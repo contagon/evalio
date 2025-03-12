@@ -3,6 +3,14 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 from tqdm import tqdm
@@ -14,8 +22,8 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 
@@ -26,7 +34,9 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
     ) as response:
         with (
             open(filename, "wb") as fh,
-            tqdm(total=response.length, unit="B", unit_scale=True) as pbar,
+            tqdm(
+                total=response.length, unit="B", unit_scale=True, dynamic_ncols=True
+            ) as pbar,
         ):
             while chunk := response.read(chunk_size):
                 fh.write(chunk)
@@ -36,11 +46,18 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 @dataclass
 class EnWide(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
         return RosbagIter(
             EVALIO_DATA / EnWide.name() / self.seq,
             "/ouster/points",
             "/ouster/imu",
+            self.lidar_params(),
+            lidar_format=LidarFormatParams(
+                stamp=LidarStamp.Start,
+                point_stamp=LidarPointStamp.Start,
+                major=LidarMajor.Row,
+                density=LidarDensity.AllPoints,
+            ),
         )
 
     def ground_truth_raw(self) -> Trajectory:

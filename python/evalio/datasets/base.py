@@ -2,18 +2,9 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol, Union
+from typing import Iterable, Iterator, Optional, Protocol, Union
 
 import numpy as np
-from rosbags.highlevel import AnyReader
-from tabulate import tabulate
-
-from evalio._cpp._helpers import (  # type: ignore
-    DataType,
-    Field,
-    PointCloudMetadata,
-    ros_pc2_to_evalio,
-)
 from evalio.types import (
     SE3,
     SO3,
@@ -25,9 +16,21 @@ from evalio.types import (
     Trajectory,
 )
 
+if os.getenv("EVALIO_DATA") is None:
+    print(
+        "Warning: EVALIO_DATA environment variable is not set. Using default './data'"
+    )
+EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./data"))
+
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
-EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./"))
+
+class DatasetIterator(Iterable[Measurement], Protocol):
+    def imu_iter(self) -> Iterator[ImuMeasurement]: ...
+
+    def lidar_iter(self) -> Iterator[LidarMeasurement]: ...
+
+    def __iter__(self) -> Iterator[Measurement]: ...
 
 
 @dataclass
@@ -36,7 +39,7 @@ class Dataset(Protocol):
     length: Optional[int] = None
 
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self): ...
+    def data_iter(self) -> DatasetIterator: ...
 
     def ground_truth_raw(self) -> Trajectory: ...
 
@@ -56,7 +59,7 @@ class Dataset(Protocol):
 
     def imu_params(self) -> ImuParams: ...
 
-    def lidar_params() -> LidarParams: ...
+    def lidar_params(self) -> LidarParams: ...
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
@@ -87,118 +90,54 @@ class Dataset(Protocol):
         gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
 
-        # Conver to IMU frame
+        # Convert to IMU frame
         for i in range(len(gt_traj)):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
 
         return gt_traj
 
+    def first_n_lidar_scans(self, n: int = 1) -> list[LidarMeasurement]:
+        scans = []
+        for m in self.lidar_iter():
+            scans.append(m)
+            if len(scans) == n:
+                return scans
+
+        raise ValueError("No lidar scans found")
+
+    def first_n_imu_measurement(self, n: int = 1) -> list[ImuMeasurement]:
+        imu = []
+        for m in self.imu_iter():
+            imu.append(m)
+            if len(imu) == n:
+                return imu
+
+        raise ValueError("No imu mm found")
+
     def __str__(self):
         return f"{self.name()}/{self.seq}"
 
+    def __iter__(self) -> Iterator[Measurement]:
+        return self.data_iter().__iter__()
 
-# ------------------------- Helpers ------------------------- #
+    def imu_iter(self) -> Iterable[ImuMeasurement]:
+        return self.data_iter().imu_iter()
 
-
-def pointcloud2_to_evalio(msg) -> LidarMeasurement:
-    # Convert to C++ types
-    fields = []
-    for f in msg.fields:
-        fields.append(
-            Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)
-        )
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-
-    cloud = PointCloudMetadata(
-        stamp=stamp,
-        height=msg.height,
-        width=msg.width,
-        row_step=msg.row_step,
-        point_step=msg.point_step,
-        is_bigendian=msg.is_bigendian,
-        is_dense=msg.is_dense,
-    )
-
-    return ros_pc2_to_evalio(cloud, fields, bytes(msg.data))  # type: ignore
+    def lidar_iter(self) -> Iterable[LidarMeasurement]:
+        return self.data_iter().lidar_iter()
 
 
-def imu_to_evalio(msg) -> ImuMeasurement:
-    acc = msg.linear_acceleration
-    acc = np.array([acc.x, acc.y, acc.z])
-    gyro = msg.angular_velocity
-    gyro = np.array([gyro.x, gyro.y, gyro.z])
-
-    stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
-    return ImuMeasurement(stamp, gyro, acc)
-
-
-# These are helpers to help with common dataset types
-class RosbagIter:
-    def __init__(self, path: Path, lidar_topic: str, imu_topic: str):
-        self.lidar_topic = lidar_topic
-        self.imu_topic = imu_topic
-
-        # Glob to get all .bag files in the directory
-        if path.is_dir():
-            self.path = list(path.glob("*.bag"))
-            if not self.path:
-                raise FileNotFoundError(f"No .bag files found in directory {path}")
-        else:
-            self.path = [path]
-
-        # Open the bag file
-        self.reader = AnyReader(self.path)
-        self.reader.open()
-        connections = [
-            x
-            for x in self.reader.connections
-            if x.topic in [self.lidar_topic, self.imu_topic]
-        ]
-        if len(connections) == 0:
-            connections_all = [[c.topic, c.msgtype] for c in self.reader.connections]
-            print(
-                tabulate(
-                    connections_all, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
-                )
-            )
-            raise ValueError(
-                f"Could not find topics {self.lidar_topic} or {self.imu_topic}"
-            )
-
-        self.lidar_count = sum(
-            [x.msgcount for x in connections if x.topic == self.lidar_topic]
-        )
-
-        self.iterator = self.reader.messages(connections=connections)
-
-    def __len__(self):
-        return self.lidar_count
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> Measurement:
-        # TODO: Ending somehow
-        connection, timestamp, rawdata = next(self.iterator)
-
-        msg = self.reader.deserialize(rawdata, connection.msgtype)
-
-        if connection.msgtype == "sensor_msgs/msg/PointCloud2":
-            return pointcloud2_to_evalio(msg)
-        elif connection.msgtype == "sensor_msgs/msg/Imu":
-            return imu_to_evalio(msg)
-        else:
-            raise ValueError(f"Unknown message type {connection.msgtype}")
-
-
-def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajectory:
+def load_pose_csv(
+    path: Path, fieldnames: list[str], delimiter=",", skip_lines: Optional[int] = None
+) -> Trajectory:
     poses = []
     stamps = []
 
     with open(path) as f:
-        csvfile = filter(lambda row: row[0] != "#", f)
+        csvfile = list(filter(lambda row: row[0] != "#", f))
+        if skip_lines is not None:
+            csvfile = csvfile[skip_lines:]
         reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
         for line in reader:
             r = SO3(
@@ -210,8 +149,13 @@ def load_pose_csv(path: Path, fieldnames: list[str], delimiter=",") -> Trajector
             t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
             pose = SE3(r, t)
 
+            if "t" in fieldnames:
+                line["sec"] = line["t"]
+
             if "nsec" not in fieldnames:
-                stamp = Stamp.from_sec(float(line["sec"]))
+                s, ns = line["sec"].split(".")  # parse separately to get exact stamp
+                ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
+                stamp = Stamp(sec=int(s), nsec=int(ns))
             elif "sec" not in fieldnames:
                 stamp = Stamp.from_nsec(int(line["nsec"]))
             else:

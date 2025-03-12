@@ -1,30 +1,46 @@
 from dataclasses import dataclass
 
+from evalio.datasets.iterators import (
+    LidarDensity,
+    LidarFormatParams,
+    LidarMajor,
+    LidarPointStamp,
+    LidarStamp,
+    RosbagIter,
+)
 from evalio.types import Trajectory
 import numpy as np
 
 from .base import (
     EVALIO_DATA,
     SE3,
-    SO3,
     Dataset,
     ImuParams,
     LidarParams,
-    RosbagIter,
     load_pose_csv,
+    DatasetIterator,
 )
 
 
 @dataclass
 class MultiCampus2024(Dataset):
     # ------------------------- For loading data ------------------------- #
-    def __iter__(self):
+    def data_iter(self) -> DatasetIterator:
+        lidar_format = LidarFormatParams(
+            stamp=LidarStamp.End,
+            point_stamp=LidarPointStamp.Start,
+            major=LidarMajor.Row,
+            density=LidarDensity.AllPoints,
+        )
+
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
         if "ntu" in self.seq:
             return RosbagIter(
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn100/imu",
+                self.lidar_params(),
+                lidar_format=lidar_format,
             )
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
         elif "kth" in self.seq or "tuhh" in self.seq:
@@ -32,26 +48,18 @@ class MultiCampus2024(Dataset):
                 EVALIO_DATA / MultiCampus2024.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn200/imu",
+                self.lidar_params(),
+                lidar_format=lidar_format,
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
             EVALIO_DATA / MultiCampus2024.name() / self.seq / "pose_inW.csv",
-            ["num", "sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            skip_lines=1,
         )
-
-    def ground_truth(self) -> Trajectory:
-        gt_traj = self.ground_truth_raw()
-        # The MCD dataset does not have a fixed initial transform so use the first pose
-        # For details on the coordinate system see: https://mcdviral.github.io/UserManual.html#coordinate-systems
-        w_T_gt0 = gt_traj.poses[0]
-
-        # Conver to IMU frame
-        for i in range(len(gt_traj)):
-            w_T_gt_i = gt_traj.poses[i]
-            gt_traj.poses[i] = w_T_gt0.inverse() * w_T_gt_i
-
-        return gt_traj
 
     # ------------------------- For loading params ------------------------- #
     @staticmethod
@@ -142,12 +150,11 @@ class MultiCampus2024(Dataset):
                     ]
                 )
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     def imu_T_gt(self) -> SE3:
-        # No constant transform, so ground_truth is overridden above
-        raise NotImplementedError(
-            "MultiCampus2024 dataset does not have a fixed imu_T_gt transform."
-        )
+        return SE3.identity()
 
     def imu_params(self) -> ImuParams:
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
@@ -156,8 +163,8 @@ class MultiCampus2024(Dataset):
         return ImuParams(
             gyro=0.000061087,  # VectorNav Datasheet
             accel=0.00137,  # VectorNav Datasheet
-            gyro_bias=0.0000261799,  # TODO (dan) - Fix currently stolen from newer college
-            accel_bias=0.0000230,  # TODO (dan) - Fix currently stolen from newer college
+            gyro_bias=0.000061087,
+            accel_bias=0.000137,
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
@@ -181,6 +188,8 @@ class MultiCampus2024(Dataset):
                 min_range=0.1,
                 max_range=120.0,
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq}")
 
     # ------------------------- For downloading ------------------------- #
     @staticmethod
@@ -190,7 +199,11 @@ class MultiCampus2024(Dataset):
             return False
         elif not (dir / "pose_inW.csv").exists():
             return False
-        elif len(list(dir.glob("*.bag"))) != 2:
+        # elif not (dir / "spline.csv").exists():
+        #     return False
+        elif not (dir / "ouster.bag").exists():
+            return False
+        elif not (dir / "vectornav.bag").exists():
             return False
         else:
             return True
@@ -260,12 +273,35 @@ class MultiCampus2024(Dataset):
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
         }[seq]
 
+        gt_spline_url = {
+            "ntu_day_01": "13PwhWOuIEJmaCtWY8JvZAJ-uTA4vcmV3",
+            "ntu_day_02": "19j_KBh8Tmfhi6DALY-soZDd90bsXy35X",
+            "ntu_day_10": "1AR0H2c3MYlU3qYMCrS6CuUlwJ0QkP2mJ",
+            "ntu_night_04": "1oOiSH6l6Au_9HNlw7wtKri_hKil8syJY",
+            "ntu_night_08": "1rNXsVACfYFGzApQVk4s0nJoau53Y6Kn5",
+            "ntu_night_13": "1uXqwSo_PqsqNQT4LC7-3p9OCSIeeWZQn",
+            "kth_day_06": "1omeDSQt5XowK4F9dM0ur5PSmjZfDrVgS",
+            "kth_day_09": "1ZkqJ9mmGhcbbkwHWoSNYoJP1TKw5ChXF",
+            "kth_day_10": "1lSQgTH4cgY77c-Mw7PGqxndOj7v7vhfg",
+            "kth_night_01": "15rKuojnx1apTA7C1XkzFLBkrY5jp_9gS",
+            "kth_night_04": "1X7i89QWFsl0UkYtIfJYBXXBz9exPAAeI",
+            "kth_night_05": "1tdHyg4tmFrJiP17cCP-cDaGcgS69G4Pg",
+            "tuhh_day_02": "1mWwXjk7rCOJytMH8809hrvy5i-wqnwoL",
+            "tuhh_day_03": "19rvvdCcE-o5bZr-1UGWXN9GBz4YHC7TX",
+            "tuhh_day_04": "1EXQI70rvFbJkvZ8Fww6PvcQxwJsJAo1W",
+            "tuhh_night_07": "1CIhyAK7bqwrdj3YoGWBc_AvtBDMY3pAi",
+            "tuhh_night_08": "1fWRpwboPgkk1KVrVKB_4Vu-nVe3YObuX",
+            "tuhh_night_09": "1ERnoR7Thtmsib6yu_4GACUODSyzyMLCk",
+        }[seq]
+
         import gdown  # type: ignore
 
         folder = EVALIO_DATA / MultiCampus2024.name() / seq
 
         print(f"Downloading {seq} to {folder}...")
         folder.mkdir(parents=True, exist_ok=True)
+
         gdown.download(id=gt_url, output=str(folder / "pose_inW.csv"), resume=True)
+        gdown.download(id=gt_spline_url, output=str(folder / "spline.csv"), resume=True)
         gdown.download(id=ouster_url, output=str(folder / "ouster.bag"), resume=True)
         gdown.download(id=imu_url, output=str(folder / "vectornav.bag"), resume=True)
