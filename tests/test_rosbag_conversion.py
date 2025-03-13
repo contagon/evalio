@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
 from evalio.types import ImuMeasurement, LidarMeasurement, Stamp, Point, LidarParams
-from evalio.datasets.iterators import RosbagIter
+from evalio.datasets.iterators import LidarDensity, LidarMajor, RosbagIter
 import numpy as np
 import pytest
 
-from utils import rosbag_saver
+from utils import rosbag_saver, check_lidar_eq
 
 # Create a row major point cloud
 WIDTH = 256
@@ -88,14 +88,10 @@ def test_all_row_major(all_row_major: Fixture):
 
     imu, lidar = get_mm(iterator)
     assert imu == all_row_major.imu
-    if lidar != all_row_major.lidar:
-        assert lidar.stamp == all_row_major.lidar.stamp, "stamps do not match"
-        for i, (got, exp) in enumerate(zip(lidar.points, all_row_major.lidar.points)):
-            assert got == exp, f"p{i}, {got} != {exp}"
+    check_lidar_eq(all_row_major.lidar, lidar)
 
-
-# TODO: Test for column major, and all/onlyvalid points
-# TODO: Also test relative begin/endstamps??
+    assert iterator.lidar_format.major == LidarMajor.Row
+    assert iterator.lidar_format.density == LidarDensity.AllPoints
 
 
 # all points col major
@@ -129,7 +125,124 @@ def test_all_col_major(all_col_major: Fixture):
 
     imu, lidar = get_mm(iterator)
     assert imu == all_col_major.imu
-    if lidar != all_col_major.lidar:
-        assert lidar.stamp == all_col_major.lidar.stamp, "stamps do not match"
-        for i, (got, exp) in enumerate(zip(lidar.points, all_col_major.lidar.points)):
-            assert got == exp, f"p{i}, {got} != {exp}"
+    check_lidar_eq(all_col_major.lidar, lidar)
+
+    assert iterator.lidar_format.major == LidarMajor.Column
+    assert iterator.lidar_format.density == LidarDensity.AllPoints
+
+
+# only valid row major
+@pytest.fixture(scope="session")
+def only_valid_row_major(tmp_path_factory):
+    bag = tmp_path_factory.mktemp("bag") / "only_valid_row_major.bag"
+
+    imu = make_imu()
+    lidar = make_lidar()
+
+    # sort into rows
+    points_to_save = lidar.points
+    points_expected = [
+        points_to_save[i : i + WIDTH] for i in range(0, len(points_to_save), WIDTH)
+    ]
+    # Get points to randomly drop
+    drop_points = [
+        (r * WIDTH + i, r, i)
+        for r in range(HEIGHT)
+        for i in np.random.choice(range(WIDTH), WIDTH // 8, replace=False)
+    ]
+    drop_points.sort(reverse=True)
+
+    for idx, r, i in drop_points:
+        # Move an empty point to end of the row for expected
+        points_expected[r].pop(i)
+        points_expected[r].append(Point(row=r))
+        # drop the point from the list to save
+        points_to_save.pop(idx)
+
+    # fill out col guesses - it's what we expect to do
+    for r in range(HEIGHT):
+        for i in range(WIDTH):
+            points_expected[r][i].col = i
+
+    # Save the bag with missing points
+    rosbag_saver(bag, [imu], [LidarMeasurement(lidar.stamp, points_to_save)])
+    # return the others
+    points_expected = sum(points_expected, [])
+    return Fixture(imu, LidarMeasurement(lidar.stamp, points_expected), bag)
+
+
+def test_only_valid_row_major(capsys, only_valid_row_major: Fixture):
+    iterator = RosbagIter(
+        only_valid_row_major.bag,
+        lidar_topic="/lidar",
+        imu_topic="/imu",
+        lidar_params=PARAMS,
+    )
+
+    imu, lidar = get_mm(iterator)
+
+    assert imu == only_valid_row_major.imu
+    check_lidar_eq(only_valid_row_major.lidar, lidar)
+
+    assert iterator.lidar_format.major == LidarMajor.Row
+    assert iterator.lidar_format.density == LidarDensity.OnlyValidPoints
+
+    # also check that we were warned this is undefined
+    captured = capsys.readouterr()
+    exp_err = "WARNING: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
+    assert exp_err == captured.out.strip()
+
+
+# only valid col major
+@pytest.fixture(scope="session")
+def only_valid_col_major(tmp_path_factory):
+    bag = tmp_path_factory.mktemp("bag") / "only_valid_col_major.bag"
+
+    imu = make_imu()
+    lidar = make_lidar()
+
+    # Switch points to column major
+    to_return = lidar.points
+    to_save = []
+    for i in range(WIDTH):
+        for j in range(HEIGHT):
+            to_save.append(to_return[j * WIDTH + i])
+
+    # Get points to randomly drop
+    drop_points = [
+        (c * HEIGHT + r, r, c)
+        for r in range(HEIGHT)
+        for c in np.random.choice(range(WIDTH), WIDTH // 8, replace=False)
+    ]
+    # sort in reverse order so we can pop from the end to the start
+    drop_points.sort(reverse=True)
+
+    for idx, r, c in drop_points:
+        # Set the empty point to zero in our expected return
+        to_return[r * WIDTH + c] = Point(row=r, col=c)
+        # remove it from the saved return
+        to_save.pop(idx)
+
+    # Save the bag with missing points
+    rosbag_saver(bag, [imu], [LidarMeasurement(lidar.stamp, to_save)])
+    return Fixture(imu, LidarMeasurement(lidar.stamp, to_return), bag)
+
+
+def test_only_valid_col_major(only_valid_col_major: Fixture):
+    iterator = RosbagIter(
+        only_valid_col_major.bag,
+        lidar_topic="/lidar",
+        imu_topic="/imu",
+        lidar_params=PARAMS,
+    )
+
+    imu, lidar = get_mm(iterator)
+
+    assert imu == only_valid_col_major.imu
+    check_lidar_eq(only_valid_col_major.lidar, lidar)
+
+    assert iterator.lidar_format.major == LidarMajor.Column
+    assert iterator.lidar_format.density == LidarDensity.OnlyValidPoints
+
+
+# TODO: Add check for LidarPointStamp auto guessing in the future

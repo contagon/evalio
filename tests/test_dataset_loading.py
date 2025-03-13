@@ -5,6 +5,8 @@ import pytest
 from pathlib import Path
 import pickle
 
+from utils import check_lidar_eq
+
 data_dir = Path("tests/data")
 dataset_classes = DatasetBuilder._all_datasets()
 datasets = [
@@ -33,9 +35,4 @@ def test_load_lidar(dataset: Dataset):
     with open(data_dir / f"lidar_{dataset.name()}.pkl", "rb") as f:
         lidar_cached: LidarMeasurement = pickle.load(f)
 
-    if lidar != lidar_cached:
-        assert (
-            lidar.stamp == lidar_cached.stamp
-        ), f"{dataset.name()} - stamps do not match"
-        for i, (got, exp) in enumerate(zip(lidar.points, lidar_cached.points)):
-            assert got == exp, f"{dataset.name()} - p{i}, {got} != {exp}"
+    check_lidar_eq(lidar, lidar_cached)

@@ -19,6 +19,13 @@ from evalio.types import ImuMeasurement, LidarMeasurement, Point
 import numpy as np
 
 
+def check_lidar_eq(exp: LidarMeasurement, got: LidarMeasurement):
+    if got != exp:
+        assert got.stamp == exp.stamp, "stamps do not match"
+        for i, (got_pt, exp_pt) in enumerate(zip(got.points, exp.points)):
+            assert got_pt == exp_pt, f"p{i}, {got_pt} != {exp_pt}"
+
+
 def point_to_bytes(point: Point) -> bytes:
     """Convert a point to a byte array."""
     return (
