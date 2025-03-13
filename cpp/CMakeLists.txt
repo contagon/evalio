@@ -32,11 +32,6 @@ endif()
 message("###############################################################")
 
 # ------------------------- Put all wrappers into a target ------------------------- #
-# make position_independent code for python wrapper
-foreach(L IN LISTS LIBS)
-    set_target_properties(${L} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-endforeach()
-
 # Create Library
 add_library(${LIB_NAME} INTERFACE) 
 add_library(${PROJECT_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})

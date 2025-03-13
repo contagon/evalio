@@ -165,7 +165,8 @@ struct ImuMeasurement {
   std::string toString() const {
     std::ostringstream oss;
     oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
-        << gyro.transpose() << "]" << ", accel: [" << accel.transpose() << "])";
+        << gyro.transpose() << "]"
+        << ", accel: [" << accel.transpose() << "])";
     return oss.str();
   }
 
@@ -296,8 +297,8 @@ struct SE3 {
 
   std::string toString() const {
     std::ostringstream oss;
-    oss << "SE3(rot: [" << rot.toStringBrief() << "], " << "t: ["
-        << trans.transpose() << "])";
+    oss << "SE3(rot: [" << rot.toStringBrief() << "], "
+        << "t: [" << trans.transpose() << "])";
     return oss.str();
   }
 };

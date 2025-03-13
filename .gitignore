@@ -16,7 +16,7 @@ __pycache__
 .cache
 .clangd
 python/evalio/_cpp
-tests/data
+tests/data-old
 
 # for building
 compile_commands.json
