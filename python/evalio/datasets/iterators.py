@@ -68,13 +68,16 @@ class RosbagIter(DatasetIterator):
         # for mcap files, we point at the directory, not the file
         is_mcap: bool = False,
         # Reduce compute by telling the iterator how to format the pointcloud
-        lidar_format: LidarFormatParams = LidarFormatParams(),
+        lidar_format: Optional[LidarFormatParams] = None,
         custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
     ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
         self.lidar_params = lidar_params
-        self.lidar_format = lidar_format
+        if lidar_format is None:
+            self.lidar_format = LidarFormatParams()
+        else:
+            self.lidar_format = lidar_format
         self.custom_col_func = custom_col_func
 
         # Glob to get all .bag files in the directory
@@ -193,6 +196,7 @@ class RosbagIter(DatasetIterator):
             else:
                 self.lidar_format.density = LidarDensity.OnlyValidPoints
 
+        # TODO
         if self.lidar_format.point_stamp == LidarPointStamp.Guess:
             pass
 
@@ -234,6 +238,7 @@ class RosbagIter(DatasetIterator):
                 scan, self.lidar_params.num_rows, self.lidar_params.num_columns
             )
 
+        # TODO
         # match self.lidar_format.point_stamp:
 
         return scan

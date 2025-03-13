@@ -3,6 +3,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Protocol, Union
+from itertools import islice
 
 import numpy as np
 from evalio.types import (
@@ -97,23 +98,11 @@ class Dataset(Protocol):
 
         return gt_traj
 
-    def first_n_lidar_scans(self, n: int = 1) -> list[LidarMeasurement]:
-        scans = []
-        for m in self.lidar_iter():
-            scans.append(m)
-            if len(scans) == n:
-                return scans
+    def get_one_lidar(self, idx: int = 0) -> LidarMeasurement:
+        return next(islice(self.lidar_iter(), idx, idx + 1))
 
-        raise ValueError("No lidar scans found")
-
-    def first_n_imu_measurement(self, n: int = 1) -> list[ImuMeasurement]:
-        imu = []
-        for m in self.imu_iter():
-            imu.append(m)
-            if len(imu) == n:
-                return imu
-
-        raise ValueError("No imu mm found")
+    def get_one_imu(self, idx: int = 0) -> ImuMeasurement:
+        return next(islice(self.imu_iter(), idx, idx + 1))
 
     def __str__(self):
         return f"{self.name()}/{self.seq}"

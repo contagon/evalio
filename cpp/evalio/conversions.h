@@ -208,12 +208,13 @@ _fill_col(LidarMeasurement &mm,
           std::function<void(uint16_t &col, const uint16_t &prev_col,
                              const uint8_t &prev_row, const uint8_t &curr_row)>
               func_col) {
+  // fill out the first one to kickstart
   uint16_t prev_col = 0;
-  uint8_t prev_row = 0;
-  for (auto &p : mm.points) {
-    func_col(p.col, prev_col, prev_row, p.row);
-    prev_col = p.col;
-    prev_row = p.row;
+  uint8_t prev_row = mm.points[0].row;
+  for (auto p = mm.points.begin() + 1; p != mm.points.end(); ++p) {
+    func_col(p->col, prev_col, prev_row, p->row);
+    prev_col = p->col;
+    prev_row = p->row;
   }
 }
 
