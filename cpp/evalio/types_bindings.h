@@ -185,6 +185,7 @@ inline void makeTypes(py::module &m) {
       .def_static("fromMat", &SE3::fromMat)
       .def_readonly("rot", &SE3::rot)
       .def_readonly("trans", &SE3::trans)
+      .def("toMat", &SE3::toMat)
       .def("inverse", &SE3::inverse)
       .def(py::self * py::self)
       .def("__repr__", &SE3::toString)

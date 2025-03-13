@@ -278,6 +278,13 @@ struct SE3 {
     return SE3(SO3::fromMat(T.block<3, 3>(0, 0)), T.block<3, 1>(0, 3));
   }
 
+  Eigen::Matrix4d toMat() const {
+    Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+    T.block<3, 3>(0, 0) = rot.toMat();
+    T.block<3, 1>(0, 3) = trans;
+    return T;
+  }
+
   SE3 inverse() const {
     const auto inv_rot = rot.inverse();
     return SE3(inv_rot, inv_rot.rotate(-trans));
