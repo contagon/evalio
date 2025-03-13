@@ -54,9 +54,7 @@ class HeLiPR(Dataset):
                 yield mm
 
         return RawDataIter(
-            lidar_stamps,
             lidar_iter(),
-            imu_stamps,
             imu_data.__iter__(),
         )
 
