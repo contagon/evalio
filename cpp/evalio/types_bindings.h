@@ -46,10 +46,10 @@ inline void makeTypes(py::module &m) {
 
   // Lidar
   py::class_<Point>(m, "Point")
-      .def(py::init<double, double, double, double, uint32_t, uint32_t, uint8_t,
+      .def(py::init<double, double, double, double, Stamp, uint32_t, uint8_t,
                     uint16_t>(),
            py::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
-           "t"_a = 0, "range"_a = 0, "row"_a = 0, "col"_a = 0)
+           "t"_a = Stamp::from_nsec(0), "range"_a = 0, "row"_a = 0, "col"_a = 0)
       .def_readwrite("x", &Point::x)
       .def_readwrite("y", &Point::y)
       .def_readwrite("z", &Point::z)
@@ -83,9 +83,10 @@ inline void makeTypes(py::module &m) {
   ;
 
   py::class_<LidarMeasurement>(m, "LidarMeasurement")
+      .def(py::init<Stamp>(), "stamp"_a)
       .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
       .def_readwrite("stamp", &LidarMeasurement::stamp)
-      .def_readonly("points", &LidarMeasurement::points)
+      .def_readwrite("points", &LidarMeasurement::points)
       .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
       .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
       .def(py::self == py::self)
@@ -185,6 +186,7 @@ inline void makeTypes(py::module &m) {
       .def_static("fromMat", &SE3::fromMat)
       .def_readonly("rot", &SE3::rot)
       .def_readonly("trans", &SE3::trans)
+      .def("toMat", &SE3::toMat)
       .def("inverse", &SE3::inverse)
       .def(py::self * py::self)
       .def("__repr__", &SE3::toString)

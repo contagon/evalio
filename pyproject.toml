@@ -5,7 +5,7 @@ maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
 version = "0.0.1"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "argcomplete>=3.3.0",
     "numpy",
@@ -48,24 +48,24 @@ EVALIO_BUILD_PYTHON = true
 [tool.cibuildwheel]
 # TODO: Add mac support eventually
 build = "cp*-manylinux_x86_64"
-manylinux-x86_64-image = "evalio_manylinux_2_28_x86_64"
-test-command = "evalio ls pipelines"
+skip = "cp310-*"
+manylinux-x86_64-image = "ghcr.io/contagon/evalio_manylinux_2_28_x86_64:latest"
+test-requires = "pytest>=8.3.5 scipy>=1.15.2"
+test-command = "evalio ls pipelines && pytest {project}/tests"
 
 # local developtment
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",
     "compdb>=0.2.0",
-    "mypy>=1.11.2",
-    "pip>=24.3.1",
     "pybind11-stubgen>=2.5.1",
-    "pybind11>=2.13.6",
     "ruff>=0.6.8",
-    "scikit-build-core>=0.10.7",
     "types-pyyaml>=6.0.12.20240917",
     "types-tabulate>=0.9.0.20240106",
     "types-tqdm>=4.66.0.20240417",
     "pytest>=8.3.5",
+    "scipy>=1.15.2",
+    "scipy-stubs>=1.15.2.1",
 ]
 
 [tool.ruff]

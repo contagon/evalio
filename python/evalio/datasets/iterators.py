@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, TypeVar
 from pathlib import Path
 
 from evalio._cpp._helpers import (  # type: ignore
@@ -68,13 +68,16 @@ class RosbagIter(DatasetIterator):
         # for mcap files, we point at the directory, not the file
         is_mcap: bool = False,
         # Reduce compute by telling the iterator how to format the pointcloud
-        lidar_format: LidarFormatParams = LidarFormatParams(),
+        lidar_format: Optional[LidarFormatParams] = None,
         custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
     ):
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
         self.lidar_params = lidar_params
-        self.lidar_format = lidar_format
+        if lidar_format is None:
+            self.lidar_format = LidarFormatParams()
+        else:
+            self.lidar_format = lidar_format
         self.custom_col_func = custom_col_func
 
         # Glob to get all .bag files in the directory
@@ -193,6 +196,7 @@ class RosbagIter(DatasetIterator):
             else:
                 self.lidar_format.density = LidarDensity.OnlyValidPoints
 
+        # TODO
         if self.lidar_format.point_stamp == LidarPointStamp.Guess:
             pass
 
@@ -234,6 +238,7 @@ class RosbagIter(DatasetIterator):
                 scan, self.lidar_params.num_rows, self.lidar_params.num_columns
             )
 
+        # TODO
         # match self.lidar_format.point_stamp:
 
         return scan
@@ -241,32 +246,52 @@ class RosbagIter(DatasetIterator):
 
 # ------------------------- Flexible Iterator for Anything ------------------------- #
 class RawDataIter(DatasetIterator):
+    T = TypeVar("T", ImuMeasurement, LidarMeasurement)
+
     def __init__(
         self,
-        stamps_lidar: list[Stamp],
-        iterator_lidar: Iterator[LidarMeasurement],
-        stamps_imu: list[Stamp],
-        iterator_imu: Iterator[ImuMeasurement],
+        iter_lidar: Iterator[LidarMeasurement],
+        iter_imu: Iterator[ImuMeasurement],
     ):
-        # TODO: Probably a clever way to do this that doesn't require the stamps or indices
-        # Need to make the iterators peekable
-        self.stamps_lidar = stamps_lidar
-        self.stamps_imu = stamps_imu
-        self.idx_lidar = 0
-        self.idx_imu = 0
-        self.iterator_lidar = iterator_lidar
-        self.iterator_imu = iterator_imu
+        self.iter_lidar = iter_lidar
+        self.iter_imu = iter_imu
+        # These hold the current values for iteration to compare stamps on what should be returned
+        self.next_lidar = None
+        self.next_imu = None
 
     def imu_iter(self) -> Iterator[ImuMeasurement]:
-        return self.iterator_imu
+        return self.iter_imu
 
     def lidar_iter(self) -> Iterator[LidarMeasurement]:
-        return self.iterator_lidar
+        return self.iter_lidar
+
+    @staticmethod
+    def _step(iter: Iterator[T]) -> Optional[T]:
+        try:
+            return next(iter)
+        except StopIteration:
+            return None
 
     def __iter__(self) -> Iterator[Measurement]:
-        if self.stamps_imu[self.idx_imu] < self.stamps_lidar[self.idx_lidar]:
-            self.idx_imu += 1
-            yield next(self.iterator_imu)
-        else:
-            self.idx_lidar += 1
-            yield next(self.iterator_lidar)
+        self.next_imu = next(self.iter_imu)
+        self.next_lidar = next(self.iter_lidar)
+        return self
+
+    def __next__(self) -> Measurement:
+        # fmt: off
+        match (self.next_imu, self.next_lidar):
+            case (None, None):
+                raise StopIteration
+            case (None, _):
+                to_return, self.next_lidar = self.next_lidar, self._step(self.iter_lidar)
+                return to_return
+            case (_, None):
+                to_return, self.next_imu = self.next_imu, self._step(self.iter_imu)
+                return to_return
+            case (imu, lidar):
+                if imu.stamp < lidar.stamp:
+                    to_return, self.next_imu = self.next_imu, self._step(self.iter_imu)
+                    return to_return
+                else:
+                    to_return, self.next_lidar = self.next_lidar, self._step(self.iter_lidar)
+                    return to_return

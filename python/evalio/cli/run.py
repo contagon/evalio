@@ -36,7 +36,7 @@ def run(
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
 
             # Initialize params
-            first_scan_done = False
+            # first_scan_done = False
             data_iter = iter(dataset)
             length = len(data_iter)
             if dbuilder.length is not None and dbuilder.length < length:
@@ -48,15 +48,15 @@ def run(
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
-                    features = pipe.add_lidar(data)
+                    # features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
-                    if not first_scan_done:
-                        vis.new_recording(dataset)
-                        first_scan_done = True
+                    # if not first_scan_done:
+                    #     vis.new_recording(dataset)
+                    #     first_scan_done = True
 
-                    vis.log(data, features, pose)
+                    # vis.log(data, features, pose)
 
                     loop.update()
                     if loop.n >= length:
