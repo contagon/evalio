@@ -110,7 +110,7 @@ class NewerCollege2021(Dataset):
             "quad_medium": [
                 "2021-07-01-11-31-35_0-quad-medium.bag",
             ],
-            "maths-hard": [
+            "maths_hard": [
                 "2021-04-07-13-58-54_0-math-hard.bag",
                 "2021-04-07-14-02-18_1-math-hard.bag",
             ],
@@ -187,6 +187,7 @@ class NewerCollege2021(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
+        # TODO: Make this download to matching name as online
         gdown.download(
             id=gt_ids, output=str(self.folder / "ground_truth.csv"), resume=True
         )

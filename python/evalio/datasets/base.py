@@ -34,6 +34,9 @@ class DatasetIterator(Iterable[Measurement]):
 
     def __iter__(self) -> Iterator[Measurement]: ...
 
+    # Return the number of lidar scans
+    def __len__(self) -> int: ...
+
 
 class Dataset(StrEnum):
     # ------------------------- For loading data ------------------------- #
@@ -85,17 +88,16 @@ class Dataset(StrEnum):
 
         return gt_traj
 
-    def get_one_lidar(self, idx: int = 0) -> LidarMeasurement:
-        return next(islice(self.lidar(), idx, idx + 1))
-
-    def get_one_imu(self, idx: int = 0) -> ImuMeasurement:
-        return next(islice(self.imu(), idx, idx + 1))
-
     def _fail_not_downloaded(self):
         if not self.is_downloaded():
             raise ValueError(
                 f"Data for {self} not found, please use `evalio download {self}` to download"
             )
+
+    # ------------------------- Helpers that leverage from the iterator ------------------------- #
+
+    def __len__(self) -> int:
+        return self.data_iter().__len__()
 
     def __iter__(self) -> Iterator[Measurement]:  # type: ignore
         self._fail_not_downloaded()
@@ -108,6 +110,12 @@ class Dataset(StrEnum):
     def lidar(self) -> Iterable[LidarMeasurement]:
         self._fail_not_downloaded()
         return self.data_iter().lidar_iter()
+
+    def get_one_lidar(self, idx: int = 0) -> LidarMeasurement:
+        return next(islice(self.lidar(), idx, idx + 1))
+
+    def get_one_imu(self, idx: int = 0) -> ImuMeasurement:
+        return next(islice(self.imu(), idx, idx + 1))
 
     # ------------------------- Misc name helpers ------------------------- #
     def __str__(self):

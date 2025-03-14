@@ -8,9 +8,9 @@ def ls(kind):
         data = [["Name", "Sequences", "Down", "Link"]]
         for d in DatasetBuilder._all_datasets().values():
             seq = "\n".join(d.sequences())
-            downloaded = [d.check_download(s) for s in d.sequences()]
+            downloaded = [d(s).is_downloaded() for s in d.sequences()]
             downloaded = "\n".join(["✔" if d else "-" for d in downloaded])
-            data.append([d.name(), seq, downloaded, d.url()])
+            data.append([d.dataset_name(), seq, downloaded, d.url()])
         print(
             tabulate(
                 data,
@@ -28,6 +28,9 @@ def ls(kind):
             keys = "\n".join(params.keys())
             values = "\n".join([str(v) for v in params.values()])
             data.append([p.name(), keys, values, p.url()])
+        if len(data) == 1:
+            print("No pipelines found")
+            return
         print(
             tabulate(
                 data,

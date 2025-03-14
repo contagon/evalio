@@ -16,19 +16,20 @@ from evalio.pipelines import Pipeline
 def find_types(module, skip=None) -> dict[str, type]:
     found: dict[str, type] = {}
     found |= dict(
-        (cls.name(), cls)  # type:ignore
+        (cls.dataset_name(), cls)
         for cls in module.__dict__.values()
-        if isinstance(cls, type) and cls.__name__ != skip.__name__
+        if isinstance(cls, type) and cls.__name__ != skip.__name__  # type:ignore
     )
 
     return found
 
 
 # ------------------------- Parsing input ------------------------- #
+# TODO: Find a better way to handle lengths here
+# TODO: Make an experiment class to wrap all of this?
 @dataclass
 class DatasetBuilder:
-    dataset: type[Dataset]
-    seq: str
+    dataset: Dataset
     length: Optional[int] = None
 
     @staticmethod
@@ -48,7 +49,7 @@ class DatasetBuilder:
         return DatasetType
 
     @classmethod
-    def parse(cls, d: dict | str | Sequence[dict | str]) -> Sequence["DatasetBuilder"]:
+    def parse(cls, d: dict | str | Sequence[dict | str]) -> list["DatasetBuilder"]:
         # If empty just return
         if d is None:
             return []
@@ -58,11 +59,11 @@ class DatasetBuilder:
             name, seq = d.split("/")
             if seq == "*":
                 return [
-                    DatasetBuilder(cls._get_dataset(name), seq)
+                    DatasetBuilder(cls._get_dataset(name)(seq))
                     for seq in cls._get_dataset(name).sequences()
                 ]
             else:
-                return [DatasetBuilder(cls._get_dataset(name), seq)]
+                return [DatasetBuilder(cls._get_dataset(name)(seq))]
 
         # If given a dictionary
         elif isinstance(d, dict):
@@ -71,11 +72,11 @@ class DatasetBuilder:
             assert len(d) == 0, f"Invalid dataset configuration {d}"
             if seq == "*":
                 return [
-                    DatasetBuilder(cls._get_dataset(name), seq, length)
+                    DatasetBuilder(cls._get_dataset(name)(seq), length)
                     for seq in cls._get_dataset(name).sequences()
                 ]
             else:
-                return [DatasetBuilder(cls._get_dataset(name), seq, length)]
+                return [DatasetBuilder(cls._get_dataset(name)(seq), length)]
 
         # If given a list, iterate
         elif isinstance(d, list):
@@ -86,26 +87,23 @@ class DatasetBuilder:
             raise ValueError(f"Invalid dataset configuration {d}")
 
     def as_dict(self) -> dict[str, str | int]:
-        out: dict[str, str | int] = {"name": f"{self.dataset.name()}/{self.seq}"}
+        out: dict[str, str | int] = {"name": self.dataset.full_name}
         if self.length is not None:
             out["length"] = self.length
 
         return out
 
-    def __post_init__(self):
-        self.seq = self.dataset.process_seq(self.seq)
-
-    def check_download(self) -> bool:
-        return self.dataset.check_download(self.seq)
+    def is_downloaded(self) -> bool:
+        return self.dataset.is_downloaded()
 
     def download(self) -> None:
-        self.dataset.download(self.seq)
+        self.dataset.download()
 
     def build(self) -> Dataset:
-        return self.dataset(self.seq, self.length)
+        return self.dataset
 
-    def __str__(self):
-        return f"{self.dataset.name()}/{self.seq}"
+    def __str__(self) -> str:
+        return self.dataset
 
 
 @dataclass
@@ -117,13 +115,11 @@ class PipelineBuilder:
     def __post_init__(self):
         # Make sure all parameters are valid
         all_params = self.pipeline.default_params()
-        # TODO: Find a way to handle this gracefully for the wrapper
-        # Maybe a function in the pipeline class?
-        # for key in self.params.keys():
-        #     if key not in all_params:
-        #         raise ValueError(
-        #             f"Invalid parameter {key} for pipeline {self.pipeline.name()}"
-        #         )
+        for key in self.params.keys():
+            if key not in all_params:
+                raise ValueError(
+                    f"Invalid parameter {key} for pipeline {self.pipeline.name()}"
+                )
 
         # Save all params to file later
         all_params.update(self.params)
@@ -146,7 +142,7 @@ class PipelineBuilder:
         return PipelineType
 
     @classmethod
-    def parse(cls, p: dict | str | Sequence[dict | str]) -> Sequence["PipelineBuilder"]:
+    def parse(cls, p: dict | str | Sequence[dict | str]) -> list["PipelineBuilder"]:
         # If empty just return
         if p is None:
             return []
@@ -205,7 +201,7 @@ class PipelineBuilder:
 
 def parse_config(
     config_file: Optional[Path],
-) -> tuple[Sequence[PipelineBuilder], Sequence[DatasetBuilder], Optional[Path]]:
+) -> tuple[list[PipelineBuilder], list[DatasetBuilder], Optional[Path]]:
     if config_file is None:
         return ([], [], None)
 

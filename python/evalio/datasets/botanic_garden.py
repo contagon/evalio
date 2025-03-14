@@ -120,7 +120,7 @@ class BotanicGarden(Dataset):
 
     def files(self) -> list[str]:
         out = [f"{self.seq_name[1:]}.bag", f"{self.seq_name[1:]}_GT_output.txt"]
-        if self.seq_name == "1008_03":
+        if self.seq_name == "b1008_03":
             out[1] = f"{self.seq_name[1:]}_gt_output.txt"
 
         return out

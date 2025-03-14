@@ -165,7 +165,6 @@ class NewerCollege2020(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        gdown.download(
-            id=gt_url, output=str(self.folder / "ground_truth.csv"), resume=True
-        )
+        # TODO: Make this download to an identical name as it is online
+        gdown.download(id=gt_url, output=self.folder, resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)

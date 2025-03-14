@@ -26,7 +26,7 @@ def save_config(
 
 class TrajectoryWriter:
     def __init__(self, path: Path, pipeline: PipelineBuilder, dataset: DatasetBuilder):
-        path = path / dataset.dataset.name() / dataset.seq
+        path = path / dataset.dataset.full_name
         path.mkdir(parents=True, exist_ok=True)
         path /= f"{pipeline.name}.csv"
 
@@ -38,8 +38,8 @@ class TrajectoryWriter:
         for key, value in pipeline.params.items():
             self.file.write(f"# {key}: {value}\n")
         self.file.write("#\n")
-        self.file.write(f"# dataset: {dataset.dataset.name()}\n")
-        self.file.write(f"# sequence: {dataset.seq}\n")
+        self.file.write(f"# dataset: {dataset.dataset.dataset_name()}\n")
+        self.file.write(f"# sequence: {dataset.dataset.seq_name}\n")
         if dataset.length is not None:
             self.file.write(f"# length: {dataset.length}\n")
         self.file.write("#\n")
@@ -73,12 +73,12 @@ class TrajectoryWriter:
 
 def save_gt(output: Path, dataset: DatasetBuilder):
     gt = dataset.build().ground_truth()
-    path = output / dataset.dataset.name() / dataset.seq
+    path = output / dataset.dataset.full_name
     path.mkdir(parents=True, exist_ok=True)
     path = path / "gt.csv"
     with open(path, "w") as f:
-        f.write(f"# dataset: {dataset.dataset.name()}\n")
-        f.write(f"# sequence: {dataset.seq}\n")
+        f.write(f"# dataset: {dataset.dataset.dataset_name()}\n")
+        f.write(f"# sequence: {dataset.dataset.seq_name}\n")
         f.write("# gt: True\n")
         f.write("#\n")
         f.write("# timestamp, x, y, z, qx, qy, qz, qw\n")

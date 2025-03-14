@@ -114,7 +114,6 @@ class RosbagIter(DatasetIterator):
             [x.msgcount for x in self.connections_lidar if x.topic == self.lidar_topic]
         )
 
-    # TODO: Formalize the lengths somehow?
     def __len__(self):
         return self.lidar_count
 
@@ -252,9 +251,11 @@ class RawDataIter(DatasetIterator):
         self,
         iter_lidar: Iterator[LidarMeasurement],
         iter_imu: Iterator[ImuMeasurement],
+        num_lidar: int,
     ):
         self.iter_lidar = iter_lidar
         self.iter_imu = iter_imu
+        self.num_lidar = num_lidar
         # These hold the current values for iteration to compare stamps on what should be returned
         self.next_lidar = None
         self.next_imu = None
@@ -264,6 +265,9 @@ class RawDataIter(DatasetIterator):
 
     def lidar_iter(self) -> Iterator[LidarMeasurement]:
         return self.iter_lidar
+
+    def __len__(self) -> int:
+        return self.num_lidar
 
     @staticmethod
     def _step(iter: Iterator[T]) -> Optional[T]:

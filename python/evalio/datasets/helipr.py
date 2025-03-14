@@ -64,6 +64,7 @@ class HeLiPR(Dataset):
         return RawDataIter(
             lidar_iter(),
             imu_data.__iter__(),
+            len(lidar_stamps),
         )
 
     def ground_truth_raw(self) -> Trajectory:

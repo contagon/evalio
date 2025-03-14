@@ -121,9 +121,36 @@ class EnWide(Dataset):
             max_range=100.0,
         )
 
+    @classmethod
+    def dataset_name(cls) -> str:
+        return "enwide"
+
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        raise NotImplementedError
+        return {
+            "intersection_s": [
+                "2023-08-09-16-19-09-intersection_s.bag",
+                "gt-intersection_s.csv",
+            ],
+            "runway_s": ["2023-08-09-18-44-24-runway_s.bag", "gt-runway_s.csv"],
+            "katzensee_s": [
+                "2023-08-21-10-20-22-katzensee_s.bag",
+                "gt-katzensee_s.csv",
+            ],
+            "runway_d": ["2023-08-09-18-52-05-runway_d.bag", "gt-runway_d.csv"],
+            "tunnel_d": ["2023-08-08-17-50-31-tunnel_d.bag", "gt-tunnel_d.csv"],
+            "field_d": ["2023-08-09-19-25-45-field_d.bag", "gt-field_d.csv"],
+            "katzensee_d": [
+                "2023-08-21-10-29-20-katzensee_d.bag",
+                "gt-katzensee_d.csv",
+            ],
+            "tunnel_s": ["2023-08-08-17-12-37-tunnel_s.bag", "gt-tunnel_s.csv"],
+            "intersection_d": [
+                "2023-08-09-17-58-11-intersection_d.bag",
+                "gt-intersection_d.csv",
+            ],
+            "field_s": ["2023-08-09-19-05-05-field_s.bag", "gt-field_s.csv"],
+        }[self.seq_name]
 
     def download(self):
         bag_date = {

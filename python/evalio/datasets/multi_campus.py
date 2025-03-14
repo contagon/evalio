@@ -253,7 +253,7 @@ class MultiCampus(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-
+        # TODO: Make these download without changing the filename
         gdown.download(id=gt_url, output=str(self.folder / "pose_inW.csv"), resume=True)
         gdown.download(
             id=ouster_url, output=str(self.folder / "ouster.bag"), resume=True
