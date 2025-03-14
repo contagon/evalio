@@ -12,7 +12,7 @@ from .parser import DatasetBuilder, PipelineBuilder, parse_config
 def dataset_completer(**kwargs):
     datasets = DatasetBuilder._all_datasets()
     datasets = itertools.chain.from_iterable(
-        [f"{d.name()}/{seq}" for seq in d.sequences()] for d in datasets.values()
+        [seq.full_name for seq in d.sequences()] for d in datasets.values()
     )
     return datasets
 
@@ -34,7 +34,7 @@ def main():
     download = subparsers.add_parser("download", help="Download datasets")
     download.add_argument(
         "datasets", type=str, help="Dataset(s) to download", nargs="+"
-    ).completer = dataset_completer
+    ).completer = dataset_completer  # type: ignore
 
     # ls
     ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
@@ -47,10 +47,10 @@ def main():
     by_hand = run.add_argument_group("Manually specify options")
     by_hand.add_argument(
         "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
-    ).completer = dataset_completer
+    ).completer = dataset_completer  # type: ignore
     by_hand.add_argument(
         "-p", "--pipeline", type=str, nargs="+", help="Pipeline(s) to run"
-    ).completer = pipeline_completer
+    ).completer = pipeline_completer  # type: ignore
     by_hand.add_argument("-o", "--output", type=Path, help="Output directory")
     by_hand.add_argument(
         "-l", "--length", type=int, help="Number of scans to process for each dataset"

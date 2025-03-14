@@ -34,7 +34,7 @@ def make_lidars(num: int = 10) -> list[LidarMeasurement]:
 def test_rawdata():
     imus = make_imus()
     lidars = make_lidars()
-    iterator = RawDataIter(iter(lidars), iter(imus))
+    iterator = RawDataIter(iter(lidars), iter(imus), len(lidars))
 
     last_stamp = Stamp.from_sec(0.0)
 

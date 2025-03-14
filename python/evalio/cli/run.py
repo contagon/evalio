@@ -37,7 +37,7 @@ def run(
 
             # Initialize params
             # first_scan_done = False
-            data_iter = iter(dataset)
+            data_iter = dataset.data_iter()
             length = len(data_iter)
             if dbuilder.length is not None and dbuilder.length < length:
                 length = dbuilder.length

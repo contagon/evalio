@@ -1,6 +1,6 @@
+from enum import auto
 import urllib
 import urllib.request
-from dataclasses import dataclass
 from pathlib import Path
 
 from evalio.datasets.iterators import (
@@ -16,7 +16,6 @@ import numpy as np
 from tqdm import tqdm
 
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -43,13 +42,19 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
                 pbar.update(len(chunk))
 
 
-@dataclass
 class Hilti2022(Dataset):
+    construction_upper_level_1 = auto()
+    construction_upper_level_2 = auto()
+    construction_upper_level_3 = auto()
+    basement_2 = auto()
+    attic_to_upper_gallery_2 = auto()
+    corridor_lower_gallery_2 = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
-        bag, _ = Hilti2022.get_files(self.seq)
+        bag, _ = self.files()
         return RosbagIter(
-            EVALIO_DATA / Hilti2022.name() / self.seq / bag,
+            self.folder / bag,
             "/hesai/pandar",
             "/alphasense/imu",
             self.lidar_params(),
@@ -63,9 +68,9 @@ class Hilti2022(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         # TODO: Update the path to the ground truth file
-        _, gt = Hilti2022.get_files(self.seq)
+        _, gt = self.files()
         return load_pose_csv(
-            EVALIO_DATA / Hilti2022.name() / self.seq / gt,
+            self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -74,21 +79,6 @@ class Hilti2022(Dataset):
     @staticmethod
     def url() -> str:
         return "https://hilti-challenge.com/dataset-2022.html"
-
-    @staticmethod
-    def name() -> str:
-        return "hilti_2022"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "construction_upper_level_1",
-            "construction_upper_level_2",
-            "construction_upper_level_3",
-            "basement_2",
-            "attic_to_upper_gallery_2",
-            "corridor_lower_gallery_2",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         return SE3(
@@ -123,8 +113,7 @@ class Hilti2022(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def get_files(seq: str) -> tuple[str, str]:
+    def files(self) -> list[str]:
         filename = {
             "construction_upper_level_1": "exp04_construction_upper_level",
             "construction_upper_level_2": "exp05_construction_upper_level_2",
@@ -132,44 +121,27 @@ class Hilti2022(Dataset):
             "basement_2": "exp14_basement_2",
             "attic_to_upper_gallery_2": "exp16_attic_to_upper_gallery_2",
             "corridor_lower_gallery_2": "exp18_corridor_lower_gallery_2",
-        }[seq]
+        }[self.seq_name]
 
         bag_file = f"{filename}.bag"
         gt_file = f"{filename}_imu.txt"
 
         # Extra space in these ones for some reason
-        if "construction" in seq:
+        if "construction" in self.seq_name:
             gt_file = "exp_" + gt_file[3:]
 
-        return bag_file, gt_file
+        return [bag_file, gt_file]
 
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        folder = EVALIO_DATA / Hilti2022.name() / seq
+    def download(self):
+        bag_file, gt_file = self.files()
 
-        bag_file, gt_file = Hilti2022.get_files(seq)
-
-        if not folder.exists():
-            return False
-        elif not (folder / gt_file).exists():
-            return False
-        elif not (folder / bag_file).exists():
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def download(seq: str):
-        bag_file, gt_file = Hilti2022.get_files(seq)
-
-        folder = EVALIO_DATA / Hilti2022.name() / seq
         url = "https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/"
 
-        print(f"Downloading to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        if not (folder / gt_file).exists():
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        if not (self.folder / gt_file).exists():
             print(f"Downloading {gt_file}")
-            _urlretrieve(url + gt_file, folder / gt_file)
-        if not (folder / bag_file).exists():
+            _urlretrieve(url + gt_file, self.folder / gt_file)
+        if not (self.folder / bag_file).exists():
             print(f"Downloading {bag_file}")
-            _urlretrieve(url + bag_file, folder / bag_file)
+            _urlretrieve(url + bag_file, self.folder / bag_file)
