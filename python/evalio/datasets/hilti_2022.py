@@ -52,7 +52,7 @@ class Hilti2022(Dataset):
 
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
-        bag, _ = self.get_files()
+        bag, _ = self.files()
         return RosbagIter(
             self.folder / bag,
             "/hesai/pandar",
@@ -68,7 +68,7 @@ class Hilti2022(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         # TODO: Update the path to the ground truth file
-        _, gt = self.get_files()
+        _, gt = self.files()
         return load_pose_csv(
             self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
@@ -114,9 +114,6 @@ class Hilti2022(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        raise NotImplementedError
-
-    def get_files(self) -> tuple[str, str]:
         filename = {
             "construction_upper_level_1": "exp04_construction_upper_level",
             "construction_upper_level_2": "exp05_construction_upper_level_2",
@@ -133,10 +130,10 @@ class Hilti2022(Dataset):
         if "construction" in self.seq_name:
             gt_file = "exp_" + gt_file[3:]
 
-        return bag_file, gt_file
+        return [bag_file, gt_file]
 
     def download(self):
-        bag_file, gt_file = self.get_files()
+        bag_file, gt_file = self.files()
 
         url = "https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/"
 

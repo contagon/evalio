@@ -124,7 +124,7 @@ class HeLiPR(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        raise NotImplementedError
+        return ["Ouster", "Ouster_gt.txt", "xsens_imu.csv"]
 
     def download(self):
         id_gt = {

@@ -34,7 +34,7 @@ class BotanicGarden(Dataset):
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         return RosbagIter(
-            self.folder / f"{self.seq_name}.bag",
+            self.folder / f"{self.seq_name[1:]}.bag",
             "/velodyne_points",
             "/imu/data",
             self.lidar_params(),
@@ -49,9 +49,9 @@ class BotanicGarden(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         if self.seq_name == "1008_03":
-            filename = f"{self.seq_name}_gt_output.txt"
+            filename = f"{self.seq_name[1:]}_gt_output.txt"
         else:
-            filename = f"{self.seq_name}_GT_output.txt"
+            filename = f"{self.seq_name[1:]}_GT_output.txt"
 
         return load_pose_csv(
             self.folder / filename,
@@ -119,4 +119,8 @@ class BotanicGarden(Dataset):
         )
 
     def files(self) -> list[str]:
-        raise NotImplementedError
+        out = [f"{self.seq_name[1:]}.bag", f"{self.seq_name[1:]}_GT_output.txt"]
+        if self.seq_name == "1008_03":
+            out[1] = f"{self.seq_name[1:]}_gt_output.txt"
+
+        return out

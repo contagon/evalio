@@ -100,12 +100,9 @@ class NewerCollege2020(Dataset):
     def files(self) -> list[str]:
         return {
             "dynamic_spinning": [
-                "ground_truth.csv",
                 "rooster_2020-07-10-09-23-18_0.bag",
             ],
             "short_experiment": [
-                "ground_truth.csv",
-                "imu_integration_results.pkl",
                 "rooster_2020-03-10-10-36-30_0.bag",
                 "rooster_2020-03-10-10-39-18_1.bag",
                 "rooster_2020-03-10-10-42-05_2.bag",
@@ -118,7 +115,6 @@ class NewerCollege2020(Dataset):
                 "rooster_2020-03-10-11-01-34_9.bag",
             ],
             "long_experiment": [
-                "ground_truth.csv",
                 "rooster_2020-03-10-11-36-51_0.bag",
                 "rooster_2020-03-10-11-39-38_1.bag",
                 "rooster_2020-03-10-11-42-25_2.bag",
@@ -137,18 +133,16 @@ class NewerCollege2020(Dataset):
                 "rooster_2020-03-10-12-18-36_15.bag",
             ],
             "quad_with_dynamics": [
-                "ground_truth.csv",
                 "rooster_2020-07-10-09-13-52_0.bag",
                 "rooster_2020-07-10-09-16-39_1.bag",
                 "rooster_2020-07-10-09-19-26_2.bag",
             ],
             "parkland_mound": [
-                "ground_truth.csv",
                 "rooster_2020-07-10-09-31-24_0.bag",
                 "rooster_2020-07-10-09-34-11_1.bag",
                 "rooster_2020-07-10-09-36-58_2.bag",
             ],
-        }[self.seq_name]
+        }[self.seq_name] + ["ground_truth.csv"]
 
     def download(self):
         folder_id = {

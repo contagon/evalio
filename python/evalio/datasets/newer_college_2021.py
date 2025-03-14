@@ -99,7 +99,45 @@ class NewerCollege2021(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        raise NotImplementedError
+        return {
+            "cloister": [
+                "2021-12-02-10-15-59_0-cloister.bag",
+                "2021-12-02-10-19-05_1-cloister.bag",
+            ],
+            "maths_medium": [
+                "2021-04-07-13-55-18-math-medium.bag",
+            ],
+            "quad_medium": [
+                "2021-07-01-11-31-35_0-quad-medium.bag",
+            ],
+            "maths-hard": [
+                "2021-04-07-13-58-54_0-math-hard.bag",
+                "2021-04-07-14-02-18_1-math-hard.bag",
+            ],
+            "quad_hard": [
+                "2021-07-01-11-35-14_0-quad-hard.bag",
+            ],
+            "quad_easy": [
+                "2021-07-01-10-37-38-quad-easy.bag",
+            ],
+            "park": [
+                "2021-11-30-17-09-49_0-park.bag",
+                "2021-11-30-17-13-13_1-park.bag",
+                "2021-11-30-17-16-38_2-park.bag",
+                "2021-11-30-17-20-07_3-park.bag",
+                "2021-11-30-17-23-25_4-park.bag",
+                "2021-11-30-17-26-36_5-park.bag",
+                "2021-11-30-17-30-06_6-park.bag",
+                "2021-11-30-17-33-19_7-park.bag",
+            ],
+            "maths_easy": [
+                "2021-04-07-13-49-03_0-math-easy.bag",
+                "2021-04-07-13-52-31_1-math-easy.bag",
+            ],
+            "stairs": [
+                "2021-07-01-10-40-50_0-stairs.bag",
+            ],
+        }[self.seq_name] + ["ground_truth.csv"]
 
     def download(self):
         # TODO:

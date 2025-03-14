@@ -21,7 +21,7 @@ from .base import (
 )
 
 
-class MultiCampus2024(Dataset):
+class MultiCampus(Dataset):
     ntu_day_01 = auto()
     ntu_day_02 = auto()
     ntu_day_10 = auto()
@@ -183,7 +183,7 @@ class MultiCampus2024(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        raise NotImplementedError
+        return ["ouster.bag", "pose_inW.csv", "vectornav.bag"]
 
     def download(self):
         ouster_url = {
@@ -249,36 +249,12 @@ class MultiCampus2024(Dataset):
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
         }[self.seq_name]
 
-        gt_spline_url = {
-            "ntu_day_01": "13PwhWOuIEJmaCtWY8JvZAJ-uTA4vcmV3",
-            "ntu_day_02": "19j_KBh8Tmfhi6DALY-soZDd90bsXy35X",
-            "ntu_day_10": "1AR0H2c3MYlU3qYMCrS6CuUlwJ0QkP2mJ",
-            "ntu_night_04": "1oOiSH6l6Au_9HNlw7wtKri_hKil8syJY",
-            "ntu_night_08": "1rNXsVACfYFGzApQVk4s0nJoau53Y6Kn5",
-            "ntu_night_13": "1uXqwSo_PqsqNQT4LC7-3p9OCSIeeWZQn",
-            "kth_day_06": "1omeDSQt5XowK4F9dM0ur5PSmjZfDrVgS",
-            "kth_day_09": "1ZkqJ9mmGhcbbkwHWoSNYoJP1TKw5ChXF",
-            "kth_day_10": "1lSQgTH4cgY77c-Mw7PGqxndOj7v7vhfg",
-            "kth_night_01": "15rKuojnx1apTA7C1XkzFLBkrY5jp_9gS",
-            "kth_night_04": "1X7i89QWFsl0UkYtIfJYBXXBz9exPAAeI",
-            "kth_night_05": "1tdHyg4tmFrJiP17cCP-cDaGcgS69G4Pg",
-            "tuhh_day_02": "1mWwXjk7rCOJytMH8809hrvy5i-wqnwoL",
-            "tuhh_day_03": "19rvvdCcE-o5bZr-1UGWXN9GBz4YHC7TX",
-            "tuhh_day_04": "1EXQI70rvFbJkvZ8Fww6PvcQxwJsJAo1W",
-            "tuhh_night_07": "1CIhyAK7bqwrdj3YoGWBc_AvtBDMY3pAi",
-            "tuhh_night_08": "1fWRpwboPgkk1KVrVKB_4Vu-nVe3YObuX",
-            "tuhh_night_09": "1ERnoR7Thtmsib6yu_4GACUODSyzyMLCk",
-        }[self.seq_name]
-
         import gdown  # type: ignore
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
 
         gdown.download(id=gt_url, output=str(self.folder / "pose_inW.csv"), resume=True)
-        gdown.download(
-            id=gt_spline_url, output=str(self.folder / "spline.csv"), resume=True
-        )
         gdown.download(
             id=ouster_url, output=str(self.folder / "ouster.bag"), resume=True
         )

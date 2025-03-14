@@ -61,6 +61,7 @@ class Dataset(StrEnum):
     def download(self) -> None:
         raise NotImplementedError("Download not implemented")
 
+    # TODO: This would match better as a "classproperty", but not will involve some work
     @classmethod
     def dataset_name(cls) -> str:
         return pascal_to_snake(cls.__name__)
@@ -118,7 +119,7 @@ class Dataset(StrEnum):
 
     @property
     def full_name(self) -> str:
-        return f"{self.dataset_name}/{self.seq_name}"
+        return f"{self.dataset_name()}/{self.seq_name}"
 
     @classmethod
     def sequences(cls) -> list["Dataset"]:
