@@ -10,18 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        name: checkout
+        name: Checkout
       - uses: astral-sh/ruff-action@v3
-        name: ruff
+        name: Ruff
 
   # check cpp formatting
   clang-format:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      name: checkout
+      name: Checkout
     - uses: jidicula/clang-format-action@v4.14.0
-      name: clang-Format
+      name: Clang-Format
 
   # run tests
   test:
@@ -34,15 +34,15 @@ jobs:
           - "3.13"
     steps:
       - uses: actions/checkout@v4
-        name: checkout
-      - name: install uv
+        name: Checkout
+      - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: install the project
+      - name: Install the project
         run: uv sync --dev
-      - name: run tests
+      - name: Run tests
         run: uv run pytest -v
 
   # later extend this to automatically release on pypi
@@ -53,10 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        name: checkout
+        name: Checkout
       - run: ./clone_pipelines.sh
-        name: clone pipelines
+        name: Clone pipelines
       - uses: pypa/cibuildwheel@v2.23.0
-        name: build wheel
+        name: Build wheel
         env:
           CIBW_BUILD: cp311-manylinux_x86_64
