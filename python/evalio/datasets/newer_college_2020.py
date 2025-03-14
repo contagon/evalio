@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from evalio.datasets.iterators import (
     LidarDensity,
     LidarFormatParams,
@@ -10,9 +8,9 @@ from evalio.datasets.iterators import (
 )
 from evalio.types import Trajectory
 import numpy as np
+from enum import auto
 
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -23,13 +21,18 @@ from .base import (
 )
 
 
-@dataclass
 class NewerCollege2020(Dataset):
+    short_experiment = auto()
+    long_experiment = auto()
+    quad_with_dynamics = auto()
+    dynamic_spinning = auto()
+    parkland_mound = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         # Use Ouster IMU as lidar IMU since the realsense IMU is not time-synced
         return RosbagIter(
-            EVALIO_DATA / NewerCollege2020.name() / self.seq,
+            self.folder,
             "/os1_cloud_node/points",
             "/os1_cloud_node/imu",
             self.lidar_params(),
@@ -43,15 +46,15 @@ class NewerCollege2020(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         # For some reason bag #7 is different
-        if self.seq == "07_parkland_mound":
+        if self.seq_name == "parkland_mound":
             return load_pose_csv(
-                EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+                self.folder / "ground_truth.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+            self.folder / "ground_truth.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -59,20 +62,6 @@ class NewerCollege2020(Dataset):
     @staticmethod
     def url() -> str:
         return "https://ori-drs.github.io/newer-college-dataset/stereo-cam/"
-
-    @staticmethod
-    def name() -> str:
-        return "newer_college_2020"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "01_short_experiment",
-            "02_long_experiment",
-            "05_quad_with_dynamics",
-            "06_dynamic_spinning",
-            "07_parkland_mound",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         return SE3(
@@ -108,50 +97,81 @@ class NewerCollege2020(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / NewerCollege2020.name() / seq
-        # Check how many bag files it should have
-        should_have = {
-            "01_short_experiment": 10,
-            "02_long_experiment": 16,
-            "05_quad_with_dynamics": 3,
-            "06_dynamic_spinning": 1,
-            "07_parkland_mound": 3,
-        }[seq]
+    def files(self) -> list[str]:
+        return {
+            "dynamic_spinning": [
+                "ground_truth.csv",
+                "rooster_2020-07-10-09-23-18_0.bag",
+            ],
+            "short_experiment": [
+                "ground_truth.csv",
+                "imu_integration_results.pkl",
+                "rooster_2020-03-10-10-36-30_0.bag",
+                "rooster_2020-03-10-10-39-18_1.bag",
+                "rooster_2020-03-10-10-42-05_2.bag",
+                "rooster_2020-03-10-10-44-52_3.bag",
+                "rooster_2020-03-10-10-47-39_4.bag",
+                "rooster_2020-03-10-10-50-26_5.bag",
+                "rooster_2020-03-10-10-53-13_6.bag",
+                "rooster_2020-03-10-10-56-00_7.bag",
+                "rooster_2020-03-10-10-58-47_8.bag",
+                "rooster_2020-03-10-11-01-34_9.bag",
+            ],
+            "long_experiment": [
+                "ground_truth.csv",
+                "rooster_2020-03-10-11-36-51_0.bag",
+                "rooster_2020-03-10-11-39-38_1.bag",
+                "rooster_2020-03-10-11-42-25_2.bag",
+                "rooster_2020-03-10-11-45-12_3.bag",
+                "rooster_2020-03-10-11-47-59_4.bag",
+                "rooster_2020-03-10-11-50-46_5.bag",
+                "rooster_2020-03-10-11-53-33_6.bag",
+                "rooster_2020-03-10-11-56-20_7.bag",
+                "rooster_2020-03-10-11-59-07_8.bag",
+                "rooster_2020-03-10-12-01-54_9.bag",
+                "rooster_2020-03-10-12-04-41_10.bag",
+                "rooster_2020-03-10-12-07-28_11.bag",
+                "rooster_2020-03-10-12-10-15_12.bag",
+                "rooster_2020-03-10-12-13-02_13.bag",
+                "rooster_2020-03-10-12-15-49_14.bag",
+                "rooster_2020-03-10-12-18-36_15.bag",
+            ],
+            "quad_with_dynamics": [
+                "ground_truth.csv",
+                "rooster_2020-07-10-09-13-52_0.bag",
+                "rooster_2020-07-10-09-16-39_1.bag",
+                "rooster_2020-07-10-09-19-26_2.bag",
+            ],
+            "parkland_mound": [
+                "ground_truth.csv",
+                "rooster_2020-07-10-09-31-24_0.bag",
+                "rooster_2020-07-10-09-34-11_1.bag",
+                "rooster_2020-07-10-09-36-58_2.bag",
+            ],
+        }[self.seq_name]
 
-        if not dir.exists():
-            return False
-        elif not (dir / "ground_truth.csv").exists():
-            return False
-        elif len(list(dir.glob("*.bag"))) != should_have:
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def download(seq: str):
+    def download(self):
         folder_id = {
-            "01_short_experiment": "1WWtyU6bv4-JKwe-XuSeKEEEBhbgoFHRG",
-            "02_long_experiment": "1pg3jzNF59YJX_lqVf4dcYI99TyBHcJX_",
-            "05_quad_with_dynamics": "1ScfmWiRQ_nGy3Xj5VqRSpzkEJl5BHPQv",
-            "06_dynamic_spinning": "1x1f_WfkQIf5AtdRhnWblhkPLur5_5ck0",
-            "07_parkland_mound": "1PAywZT8T9TbKy_XJEgWXJkFvr5C6M1pS",
-        }[seq]
+            "short_experiment": "1WWtyU6bv4-JKwe-XuSeKEEEBhbgoFHRG",
+            "long_experiment": "1pg3jzNF59YJX_lqVf4dcYI99TyBHcJX_",
+            "quad_with_dynamics": "1ScfmWiRQ_nGy3Xj5VqRSpzkEJl5BHPQv",
+            "dynamic_spinning": "1x1f_WfkQIf5AtdRhnWblhkPLur5_5ck0",
+            "parkland_mound": "1PAywZT8T9TbKy_XJEgWXJkFvr5C6M1pS",
+        }[self.seq_name]
 
         gt_url = {
-            "01_short_experiment": "11VWvHxjitd4ijARD4dJ3WjFuZ_QbInVy",
-            "02_long_experiment": "1fT1_MhFkCn_RWzLTzo4i-sjoKa_TbIUW",
-            "05_quad_with_dynamics": "1Cc7fiYUCtNL8qnvA0x-m4uQvRWQLdrWO",
-            "06_dynamic_spinning": "16lLgl2iqVs5qSz-N3OZv9bZWBbvAXyP3",
-            "07_parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
-        }[seq]
+            "short_experiment": "11VWvHxjitd4ijARD4dJ3WjFuZ_QbInVy",
+            "long_experiment": "1fT1_MhFkCn_RWzLTzo4i-sjoKa_TbIUW",
+            "quad_with_dynamics": "1Cc7fiYUCtNL8qnvA0x-m4uQvRWQLdrWO",
+            "dynamic_spinning": "16lLgl2iqVs5qSz-N3OZv9bZWBbvAXyP3",
+            "parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
+        }[self.seq_name]
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / NewerCollege2020.name() / seq
-
-        print(f"Downloading {seq} to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        gdown.download(id=gt_url, output=str(folder / "ground_truth.csv"), resume=True)
-        gdown.download_folder(id=folder_id, output=str(folder), resume=True)
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        gdown.download(
+            id=gt_url, output=str(self.folder / "ground_truth.csv"), resume=True
+        )
+        gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)

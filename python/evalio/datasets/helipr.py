@@ -1,13 +1,11 @@
 import tarfile
-from dataclasses import dataclass
 
 import numpy as np
 
 from evalio.types import Trajectory
 from evalio._cpp._helpers import helipr_bin_to_evalio  # type: ignore
-
+from enum import auto
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -26,11 +24,21 @@ Note, we do everything based off of the Ouster Lidar, mounted at the top of the 
 """
 
 
-@dataclass
 class HeLiPR(Dataset):
+    # Had to remove a couple of them due to not having imu data
+    # kaist_04 = auto()
+    kaist_05 = auto()
+    kaist_06 = auto()
+    # dcc_04 = auto()
+    dcc_05 = auto()
+    dcc_06 = auto()
+    # riverside_04 = auto()
+    riverside_05 = auto()
+    riverside_06 = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
-        imu_file = EVALIO_DATA / HeLiPR.name() / self.seq / "xsens_imu.csv"
+        imu_file = self.folder / "xsens_imu.csv"
 
         # Load in all IMU data
         imu_stamps = np.loadtxt(imu_file, usecols=0, dtype=np.int64, delimiter=",")
@@ -43,7 +51,7 @@ class HeLiPR(Dataset):
         ]
 
         # setup all the lidar data
-        lidar_path = EVALIO_DATA / HeLiPR.name() / self.seq / "Ouster"
+        lidar_path = self.folder / "Ouster"
         lidar_files = sorted(list(lidar_path.glob("*")))
         lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in lidar_files]
         lidar_params = self.lidar_params()
@@ -60,7 +68,7 @@ class HeLiPR(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
-            EVALIO_DATA / HeLiPR.name() / self.seq / "Ouster_gt.txt",
+            self.folder / "Ouster_gt.txt",
             ["nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -70,24 +78,9 @@ class HeLiPR(Dataset):
     def url() -> str:
         return "https://sites.google.com/view/heliprdataset/"
 
-    @staticmethod
-    def name() -> str:
+    @classmethod
+    def dataset_name(cls) -> str:
         return "helipr"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        # Had to remove a couple of them due to not having imu data
-        return [
-            # "kaist_04",
-            "kaist_05",
-            "kaist_06",
-            # "dcc_04",
-            "dcc_05",
-            "dcc_06",
-            # "riverside_04",
-            "riverside_05",
-            "riverside_06",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         return SE3(
@@ -130,22 +123,10 @@ class HeLiPR(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / HeLiPR.name() / seq
-        if not dir.exists():
-            return False
-        elif not (dir / "Ouster_gt.txt").exists():
-            return False
-        elif not (dir / "xsens_imu.csv").exists():
-            return False
-        elif not (dir / "Ouster").exists():
-            return False
-        else:
-            return True
+    def files(self) -> list[str]:
+        raise NotImplementedError
 
-    @staticmethod
-    def download(seq: str):
+    def download(self):
         id_gt = {
             # "kaist_04": "",
             "kaist_05": "17S4649polOCfN0IOBCCxQ85UrdXf1jhF",
@@ -156,7 +137,7 @@ class HeLiPR(Dataset):
             # "riverside_04": "",
             "riverside_05": "1IWj2bI7D5mPZWoh_09x0nyaM2Uf36VJM",
             "riverside_06": "1z7i2kxQV7edKmBtJ0jTjQKlShbc7MTeJ",
-        }[seq]
+        }[self.seq_name]
 
         id_imu = {
             # "kaist_04": "",
@@ -168,7 +149,7 @@ class HeLiPR(Dataset):
             # "riverside_04": "",
             "riverside_05": "1mqiOrq9gJLtrZn6QZdEts4yM2rGk_xfY",
             "riverside_06": "11EvRS44Eny6uwaT0RyfYRCxwvOPzSN4X",
-        }[seq]
+        }[self.seq_name]
 
         id_lidar = {
             # "kaist_04": "",
@@ -180,24 +161,22 @@ class HeLiPR(Dataset):
             # "riverside_04": "",
             "riverside_05": "1v1ZdYkNwlxXuFCpTug80pNdFfc5ZTWWG",
             "riverside_06": "1-ll0t8goMGb0Qb86nvkerC4quJS3mzPU",
-        }[seq]
+        }[self.seq_name]
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / HeLiPR.name() / seq
-
-        print(f"Downloading {seq} to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        folder_trail = f"{folder}/"
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        folder_trail = f"{self.folder}/"
         gdown.download(id=id_gt, output=folder_trail, resume=True)
         gdown.download(id=id_imu, output=folder_trail, resume=True)
 
-        if not (folder / "Ouster").exists():
+        if not (self.folder / "Ouster").exists():
             gdown.download(id=id_lidar, output=folder_trail, resume=True)
             # extract the lidar data
             print("Extracting lidar data...")
-            tar_file = folder / "Ouster.tar.gz"
+            tar_file = self.folder / "Ouster.tar.gz"
             with tarfile.open(str(tar_file)) as tar:
-                tar.extractall(path=folder)
+                tar.extractall(path=self.folder)
             print("Removing tar file...")
             tar_file.unlink()

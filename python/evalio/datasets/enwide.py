@@ -1,7 +1,7 @@
 import urllib
 import urllib.request
-from dataclasses import dataclass
 from pathlib import Path
+from enum import auto
 
 from evalio.datasets.iterators import (
     LidarDensity,
@@ -16,7 +16,6 @@ import numpy as np
 from tqdm import tqdm
 
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -43,12 +42,22 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
                 pbar.update(len(chunk))
 
 
-@dataclass
 class EnWide(Dataset):
+    field_d = auto()
+    field_s = auto()
+    intersection_d = auto()
+    intersection_s = auto()
+    katzensee_d = auto()
+    katzensee_s = auto()
+    runway_d = auto()
+    runway_s = auto()
+    tunnel_d = auto()
+    tunnel_s = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         return RosbagIter(
-            EVALIO_DATA / EnWide.name() / self.seq,
+            self.folder,
             "/ouster/points",
             "/ouster/imu",
             self.lidar_params(),
@@ -62,7 +71,7 @@ class EnWide(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
-            EVALIO_DATA / EnWide.name() / self.seq / f"gt-{self.seq}.csv",
+            self.folder / f"gt-{self.seq_name}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -71,25 +80,6 @@ class EnWide(Dataset):
     @staticmethod
     def url() -> str:
         return "https://projects.asl.ethz.ch/datasets/enwide"
-
-    @staticmethod
-    def name() -> str:
-        return "enwide"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "field_d",
-            "field_s",
-            "intersection_d",
-            "intersection_s",
-            "katzensee_d",
-            "katzensee_s",
-            "runway_d",
-            "runway_s",
-            "tunnel_d",
-            "tunnel_s",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         scale = 100
@@ -132,23 +122,10 @@ class EnWide(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / EnWide.name() / seq
+    def files(self) -> list[str]:
+        raise NotImplementedError
 
-        if not dir.exists():
-            return False
-        elif not (dir / f"gt-{seq}.csv").exists():
-            return False
-        elif len(list(dir.glob("*.bag"))) == 0:
-            return False
-        elif len(list(dir.glob("*.bag"))) > 1:
-            raise ValueError(f"Too many bag files found, should only be 1 in {dir}")
-        else:
-            return True
-
-    @staticmethod
-    def download(seq: str):
+    def download(self):
         bag_date = {
             "field_d": "2023-08-09-19-25-45",
             "field_s": "2023-08-09-19-05-05",
@@ -160,16 +137,15 @@ class EnWide(Dataset):
             "runway_s": "2023-08-09-18-44-24",
             "tunnel_d": "2023-08-08-17-50-31",
             "tunnel_s": "2023-08-08-17-12-37",
-        }[seq]
-        bag_file = f"{bag_date}-{seq}.bag"
-        gt_file = f"gt-{seq}.csv"
+        }[self.seq_name]
+        bag_file = f"{bag_date}-{self.seq_name}.bag"
+        gt_file = f"gt-{self.seq_name}.csv"
 
-        folder = EVALIO_DATA / EnWide.name() / seq
-        url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{seq}/"
+        url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{self.seq_name}/"
 
-        print(f"Downloading to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        if not (folder / gt_file).exists():
-            _urlretrieve(url + gt_file, folder / gt_file)
-        if not (folder / bag_file).exists():
-            _urlretrieve(url + bag_file, folder / bag_file)
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        if not (self.folder / gt_file).exists():
+            _urlretrieve(url + gt_file, self.folder / gt_file)
+        if not (self.folder / bag_file).exists():
+            _urlretrieve(url + bag_file, self.folder / bag_file)

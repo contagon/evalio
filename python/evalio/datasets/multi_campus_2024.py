@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from enum import auto
 
 from evalio.datasets.iterators import (
     LidarDensity,
@@ -12,7 +12,6 @@ from evalio.types import Trajectory
 import numpy as np
 
 from .base import (
-    EVALIO_DATA,
     SE3,
     Dataset,
     ImuParams,
@@ -22,8 +21,26 @@ from .base import (
 )
 
 
-@dataclass
 class MultiCampus2024(Dataset):
+    ntu_day_01 = auto()
+    ntu_day_02 = auto()
+    ntu_day_10 = auto()
+    ntu_night_04 = auto()
+    ntu_night_08 = auto()
+    ntu_night_13 = auto()
+    kth_day_06 = auto()
+    kth_day_09 = auto()
+    kth_day_10 = auto()
+    kth_night_01 = auto()
+    kth_night_04 = auto()
+    kth_night_05 = auto()
+    tuhh_day_02 = auto()
+    tuhh_day_03 = auto()
+    tuhh_day_04 = auto()
+    tuhh_night_07 = auto()
+    tuhh_night_08 = auto()
+    tuhh_night_09 = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         lidar_format = LidarFormatParams(
@@ -34,29 +51,29 @@ class MultiCampus2024(Dataset):
         )
 
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
-        if "ntu" in self.seq:
+        if "ntu" in self.seq_name:
             return RosbagIter(
-                EVALIO_DATA / MultiCampus2024.name() / self.seq,
+                self.folder,
                 "/os_cloud_node/points",
                 "/vn100/imu",
                 self.lidar_params(),
                 lidar_format=lidar_format,
             )
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
-        elif "kth" in self.seq or "tuhh" in self.seq:
+        elif "kth" in self.seq_name or "tuhh" in self.seq_name:
             return RosbagIter(
-                EVALIO_DATA / MultiCampus2024.name() / self.seq,
+                self.folder,
                 "/os_cloud_node/points",
                 "/vn200/imu",
                 self.lidar_params(),
                 lidar_format=lidar_format,
             )
         else:
-            raise ValueError(f"Unknown sequence: {self.seq}")
+            raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
-            EVALIO_DATA / MultiCampus2024.name() / self.seq / "pose_inW.csv",
+            self.folder / "pose_inW.csv",
             ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,
         )
@@ -66,37 +83,10 @@ class MultiCampus2024(Dataset):
     def url() -> str:
         return "https://mcdviral.github.io/"
 
-    @staticmethod
-    def name() -> str:
-        return "multi_campus_2024"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "ntu_day_01",
-            "ntu_day_02",
-            "ntu_day_10",
-            "ntu_night_04",
-            "ntu_night_08",
-            "ntu_night_13",
-            "kth_day_06",
-            "kth_day_09",
-            "kth_day_10",
-            "kth_night_01",
-            "kth_night_04",
-            "kth_night_05",
-            "tuhh_day_02",
-            "tuhh_day_03",
-            "tuhh_day_04",
-            "tuhh_night_07",
-            "tuhh_night_08",
-            "tuhh_night_09",
-        ]
-
     def imu_T_lidar(self) -> SE3:
         # The NTU sequences use the ATV platform
         # Taken from calib file at: https://mcdviral.github.io/Download.html#calibration
-        if "ntu" in self.seq:
+        if "ntu" in self.seq_name:
             return SE3.fromMat(
                 np.array(
                     [
@@ -124,7 +114,7 @@ class MultiCampus2024(Dataset):
             )
         # The KTH and TUHH sequences use the hand-held platform
         # Taken from calib file at: https://mcdviral.github.io/Download.html#calibration
-        elif "kth" in self.seq or "tuhh" in self.seq:
+        elif "kth" in self.seq_name or "tuhh" in self.seq_name:
             return SE3.fromMat(
                 np.array(
                     [
@@ -151,7 +141,7 @@ class MultiCampus2024(Dataset):
                 )
             )
         else:
-            raise ValueError(f"Unknown sequence: {self.seq}")
+            raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     def imu_T_gt(self) -> SE3:
         return SE3.identity()
@@ -173,7 +163,7 @@ class MultiCampus2024(Dataset):
 
     def lidar_params(self) -> LidarParams:
         # The NTU sequences use the ATV platform and an Ouster OS1 - 128
-        if "ntu" in self.seq:
+        if "ntu" in self.seq_name:
             return LidarParams(
                 num_rows=128,
                 num_columns=1024,
@@ -181,7 +171,7 @@ class MultiCampus2024(Dataset):
                 max_range=120.0,
             )
         # The KTH and TUHH sequences use the hand-held platform and an Ouster OS1 - 64
-        elif "kth" in self.seq or "tuhh" in self.seq:
+        elif "kth" in self.seq_name or "tuhh" in self.seq_name:
             return LidarParams(
                 num_rows=64,
                 num_columns=1024,
@@ -189,27 +179,13 @@ class MultiCampus2024(Dataset):
                 max_range=120.0,
             )
         else:
-            raise ValueError(f"Unknown sequence: {self.seq}")
+            raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / MultiCampus2024.name() / seq
-        if not dir.exists():
-            return False
-        elif not (dir / "pose_inW.csv").exists():
-            return False
-        # elif not (dir / "spline.csv").exists():
-        #     return False
-        elif not (dir / "ouster.bag").exists():
-            return False
-        elif not (dir / "vectornav.bag").exists():
-            return False
-        else:
-            return True
+    def files(self) -> list[str]:
+        raise NotImplementedError
 
-    @staticmethod
-    def download(seq: str):
+    def download(self):
         ouster_url = {
             "ntu_day_01": "127Rk2jX4I95CEWK1AOZRD9AQRxRVlWjY",
             "ntu_day_02": "1jDS84WvHCfM_L73EptXKp-BKPIPKoE0Z",
@@ -229,7 +205,7 @@ class MultiCampus2024(Dataset):
             "tuhh_night_07": "1y1GJkaofleWVU8ZoUByGkmXkq2lwm-k-",
             "tuhh_night_08": "16t33lVBzbSxrtt0vFt-ztWAxiciONWTX",
             "tuhh_night_09": "1_FsTTQe-NKvQ-1shlYNeG0uWqngA2XzC",
-        }[seq]
+        }[self.seq_name]
 
         imu_url = {
             "ntu_day_01": "1bBKRlzwG4v7K4mBmLAQzfwp_O6yOR0Ld",
@@ -250,7 +226,7 @@ class MultiCampus2024(Dataset):
             "tuhh_night_07": "1Ngy1_UXOfhjhwr-BEpG6Rsh1gi1rrMho",
             "tuhh_night_08": "1bDjyQLINKWBVOg_7Q1n1mooUfM3VifOu",
             "tuhh_night_09": "1jVQTmFX2pnYNULU5CjbOVa6hp_7zQoez",
-        }[seq]
+        }[self.seq_name]
 
         gt_url = {
             "ntu_day_01": "1Pdj4_0SRES4v9WiyCVp8dYMcRvE8X3iH",
@@ -271,7 +247,7 @@ class MultiCampus2024(Dataset):
             "tuhh_night_07": "1QDQflr2OLCNJZ1dNUWfULICf70VhV0bt",
             "tuhh_night_08": "1bF-uj8gw7HkBXzvWXwtDNS-BBbEtuKrb",
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
-        }[seq]
+        }[self.seq_name]
 
         gt_spline_url = {
             "ntu_day_01": "13PwhWOuIEJmaCtWY8JvZAJ-uTA4vcmV3",
@@ -292,16 +268,20 @@ class MultiCampus2024(Dataset):
             "tuhh_night_07": "1CIhyAK7bqwrdj3YoGWBc_AvtBDMY3pAi",
             "tuhh_night_08": "1fWRpwboPgkk1KVrVKB_4Vu-nVe3YObuX",
             "tuhh_night_09": "1ERnoR7Thtmsib6yu_4GACUODSyzyMLCk",
-        }[seq]
+        }[self.seq_name]
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / MultiCampus2024.name() / seq
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
 
-        print(f"Downloading {seq} to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-
-        gdown.download(id=gt_url, output=str(folder / "pose_inW.csv"), resume=True)
-        gdown.download(id=gt_spline_url, output=str(folder / "spline.csv"), resume=True)
-        gdown.download(id=ouster_url, output=str(folder / "ouster.bag"), resume=True)
-        gdown.download(id=imu_url, output=str(folder / "vectornav.bag"), resume=True)
+        gdown.download(id=gt_url, output=str(self.folder / "pose_inW.csv"), resume=True)
+        gdown.download(
+            id=gt_spline_url, output=str(self.folder / "spline.csv"), resume=True
+        )
+        gdown.download(
+            id=ouster_url, output=str(self.folder / "ouster.bag"), resume=True
+        )
+        gdown.download(
+            id=imu_url, output=str(self.folder / "vectornav.bag"), resume=True
+        )

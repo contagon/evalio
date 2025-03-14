@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from evalio.datasets.iterators import (
     LidarDensity,
     LidarFormatParams,
@@ -11,8 +9,8 @@ from evalio.datasets.iterators import (
 from evalio.types import Trajectory
 import numpy as np
 
+from enum import auto
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -28,12 +26,25 @@ https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/
 """
 
 
-@dataclass
 class OxfordSpires(Dataset):
+    blenheim_palace_01 = auto()
+    blenheim_palace_02 = auto()
+    blenheim_palace_05 = auto()
+    bodleian_library_02 = auto()
+    christ_church_01 = auto()
+    christ_church_02 = auto()
+    christ_church_03 = auto()
+    christ_church_05 = auto()
+    keble_college_02 = auto()
+    keble_college_03 = auto()
+    keble_college_04 = auto()
+    observatory_quarter_01 = auto()
+    observatory_quarter_02 = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         return RosbagIter(
-            EVALIO_DATA / OxfordSpires.name() / self.seq,
+            self.folder,
             "/hesai/pandar",
             "/alphasense_driver_ros/imu",
             self.lidar_params(),
@@ -50,7 +61,7 @@ class OxfordSpires(Dataset):
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
         traj = load_pose_csv(
-            EVALIO_DATA / OxfordSpires.name() / self.seq / "gt-tum.csv",
+            self.folder / "gt-tum.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -91,28 +102,6 @@ class OxfordSpires(Dataset):
     def url() -> str:
         return "https://dynamic.robots.ox.ac.uk/datasets/oxford-spires/"
 
-    @staticmethod
-    def name() -> str:
-        return "oxford_spires"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "blenheim_palace_01",
-            "blenheim_palace_02",
-            "blenheim_palace_05",
-            "bodleian_library_02",
-            "christ_church_01",
-            "christ_church_02",
-            "christ_church_03",
-            "christ_church_05",
-            "keble_college_02",
-            "keble_college_03",
-            "keble_college_04",
-            "observatory_quarter_01",
-            "observatory_quarter_02",
-        ]
-
     def imu_T_lidar(self) -> SE3:
         return self.cam_T_imu().inverse() * self.cam_T_lidar()
 
@@ -150,23 +139,10 @@ class OxfordSpires(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / OxfordSpires.name() / seq
+    def files(self) -> list[str]:
+        raise NotImplementedError
 
-        if not dir.exists():
-            return False
-        elif not (dir / "gt-tum.csv").exists():
-            return False
-        elif not (dir / "metadata.yaml").exists():
-            return False
-        elif len(list(dir.glob("*.db3"))) < 1:
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def download(seq: str):
+    def download(self):
         folder_id = {
             "blenheim_palace_01": "1sQZhbdWZqyR0fLStesW2sJYuvIW9xyCD",
             "blenheim_palace_02": "1vaU7pn0cxbrBbJk1XKr9hOeeF7Zv00K9",
@@ -184,7 +160,7 @@ class OxfordSpires(Dataset):
             "keble_college_04": "1VJB8oIAoVVIhGCnbXKYz_uHfiNkwn9_i",
             "observatory_quarter_01": "1Wys3blrdfPVn-EFsXn_a0_0ngvzgSiFb",
             "observatory_quarter_02": "109uXFhqzYhn2bHv_37aQF7xPrJhOOu-_",
-        }[seq]
+        }[self.seq_name]
 
         gt_url = {
             "blenheim_palace_01": "16et7vJhZ15yOCNYYU-i8HVOXemJM3puz",
@@ -200,13 +176,11 @@ class OxfordSpires(Dataset):
             "keble_college_04": "1iaGvgpDN-3CrwPPZzQjwAveXQOyQnAU4",
             "observatory_quarter_01": "1IOqvzepLesYecizYJh6JU0lJZu2WeW68",
             "observatory_quarter_02": "1iPQQD2zijlCf8a6J8YW5QBlVE2KsYRdZ",
-        }[seq]
+        }[self.seq_name]
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / OxfordSpires.name() / seq
-
-        print(f"Downloading {seq} to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        gdown.download(id=gt_url, output=str(folder / "gt-tum.csv"), resume=True)
-        gdown.download_folder(id=folder_id, output=str(folder), resume=True)
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        gdown.download(id=gt_url, output=str(self.folder / "gt-tum.csv"), resume=True)
+        gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)

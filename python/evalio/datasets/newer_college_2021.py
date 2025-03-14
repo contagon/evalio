@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from evalio.datasets.iterators import (
     LidarDensity,
     LidarFormatParams,
@@ -10,9 +8,8 @@ from evalio.datasets.iterators import (
 )
 from evalio.types import Trajectory
 import numpy as np
-
+from enum import auto
 from .base import (
-    EVALIO_DATA,
     SE3,
     SO3,
     Dataset,
@@ -30,12 +27,21 @@ Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster o
 """
 
 
-@dataclass
 class NewerCollege2021(Dataset):
+    quad_easy = auto()
+    quad_medium = auto()
+    quad_hard = auto()
+    stairs = auto()
+    cloister = auto()
+    park = auto()
+    maths_easy = auto()
+    maths_medium = auto()
+    maths_hard = auto()
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         return RosbagIter(
-            EVALIO_DATA / NewerCollege2021.name() / self.seq,
+            self.folder,
             "/os_cloud_node/points",
             "/os_cloud_node/imu",
             self.lidar_params(),
@@ -49,7 +55,7 @@ class NewerCollege2021(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv",
+            self.folder / "ground_truth.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -57,24 +63,6 @@ class NewerCollege2021(Dataset):
     @staticmethod
     def url() -> str:
         return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
-
-    @staticmethod
-    def name() -> str:
-        return "newer_college_2021"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "quad-easy",
-            "quad-medium",
-            "quad-hard",
-            "stairs",
-            "cloister",
-            "park",
-            "maths-easy",
-            "maths-medium",
-            "maths-hard",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         return SE3(
@@ -110,39 +98,15 @@ class NewerCollege2021(Dataset):
         )
 
     # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        # TODO:
-        dir = EVALIO_DATA / NewerCollege2021.name() / seq
-        # Check how many bag files it should have
-        should_have = {
-            "quad-easy": 1,
-            "quad-medium": 1,
-            "quad-hard": 1,
-            "stairs": 1,
-            "cloister": 2,
-            "park": 8,
-            "maths-easy": 2,
-            "maths-medium": 1,
-            "maths-hard": 2,
-        }[seq]
+    def files(self) -> list[str]:
+        raise NotImplementedError
 
-        if not dir.exists():
-            return False
-        elif not (dir / "ground_truth.csv").exists():
-            return False
-        elif len(list(dir.glob("*.bag"))) != should_have:
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def download(seq: str) -> None:
+    def download(self):
         # TODO:
         bag_ids = {
-            "quad-easy": ["1hF2h83E1THbFAvs7wpR6ORmrscIHxKMo"],
-            "quad-medium": ["11bZfJce1MCM4G9YUTCyUifM715N7FSbO"],
-            "quad-hard": ["1ss6KPSTZ4CRS7uHAMgqnd4GQ6tKEEiZD"],
+            "quad_easy": ["1hF2h83E1THbFAvs7wpR6ORmrscIHxKMo"],
+            "quad_medium": ["11bZfJce1MCM4G9YUTCyUifM715N7FSbO"],
+            "quad_hard": ["1ss6KPSTZ4CRS7uHAMgqnd4GQ6tKEEiZD"],
             "stairs": ["1ql0C8el5PJs6O0x4xouqaW9n2RZy53q9"],
             "cloister": [
                 "1zzX_ZrMkVOtpSoD2jQg6Gdrtv8-UjYbF",
@@ -158,35 +122,35 @@ class NewerCollege2021(Dataset):
                 "10o1oR7guReYKiVk3nBiPrFWp1MnERTiH",
                 "1VpLV_WUJqr770NBjF-O-DrXb5dhXRWyM",
             ],
-            "maths-easy": [
+            "maths_easy": [
                 "1wRnRSni9bcBRauJEJ80sxHIaJaonrC3C",
                 "1ORkYwGpQNvD48WRXICDDecbweg8MxYA8",
             ],
-            "maths-medium": ["1IOq2e8Nfx79YFauBHCgdBSW9Ur5710GD"],
-            "maths-hard": [
+            "maths_medium": ["1IOq2e8Nfx79YFauBHCgdBSW9Ur5710GD"],
+            "maths_hard": [
                 "1qD147UWPo30B9lK3gABggCOxSAU6Pop2",
                 "1_Mps_pCeUz3ZOc53lj6Hy_zDeJfPAqy8",
             ],
-        }[seq]
+        }[self.seq_name]
 
         gt_ids = {
-            "quad-easy": "1BdQiOhb_NW7VqjNtbbRAjI0JH56uKFI-",
-            "quad-medium": "18aHhzTcVzXsppmk2WpiZnJhzOfREUwYP",
-            "quad-hard": "1KMAG65pH8PsHUld-hTkFK4-SIIBqT5yP",
+            "quad_easy": "1BdQiOhb_NW7VqjNtbbRAjI0JH56uKFI-",
+            "quad_medium": "18aHhzTcVzXsppmk2WpiZnJhzOfREUwYP",
+            "quad_hard": "1KMAG65pH8PsHUld-hTkFK4-SIIBqT5yP",
             "stairs": "17q_NYxn1SLBmUq20jgljO8HSlFF9LjDs",
             "cloister": "15I8qquSPWlySuY5_4ZBa_wL4UC7c-rQ7",
             "park": "1AkJ7lm5x2WdS3aGhKwe1PnUn6w0rbUjf",
-            "maths-easy": "1dq1PqMODQBb4Hkn82h2Txgf5ZygS5udp",
-            "maths-medium": "1H1U3aXv2AJQ_dexTnjaHIfzYfx8xVXpS",
-            "maths-hard": "1Rb2TBKP7ISC2XzDGU68ix5lFjEB6jXeX",
-        }[seq]
+            "maths_easy": "1dq1PqMODQBb4Hkn82h2Txgf5ZygS5udp",
+            "maths_medium": "1H1U3aXv2AJQ_dexTnjaHIfzYfx8xVXpS",
+            "maths_hard": "1Rb2TBKP7ISC2XzDGU68ix5lFjEB6jXeX",
+        }[self.seq_name]
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / NewerCollege2021.name() / seq
-
-        print(f"Downloading {seq} to {folder}...")
-        folder.mkdir(parents=True, exist_ok=True)
-        gdown.download(id=gt_ids, output=str(folder / "ground_truth.csv"), resume=True)
+        print(f"Downloading to {self.folder}...")
+        self.folder.mkdir(parents=True, exist_ok=True)
+        gdown.download(
+            id=gt_ids, output=str(self.folder / "ground_truth.csv"), resume=True
+        )
         for bid in bag_ids:
-            gdown.download(id=bid, output=str(folder) + "/", resume=True)
+            gdown.download(id=bid, output=str(self.folder) + "/", resume=True)

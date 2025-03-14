@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from enum import auto
 
 from evalio.datasets.iterators import (
     LidarDensity,
@@ -13,7 +13,6 @@ from evalio.types import Trajectory
 import numpy as np
 
 from .base import (
-    EVALIO_DATA,
     SE3,
     Dataset,
     ImuParams,
@@ -23,13 +22,19 @@ from .base import (
 )
 
 
-@dataclass
 class BotanicGarden(Dataset):
+    b1005_00 = auto()
+    b1005_01 = auto()
+    b1005_07 = auto()
+    b1006_01 = auto()
+    b1008_03 = auto()
+    b1018_00 = auto()
+    b1018_13 = auto()
+
     # ------------------------- For loading data ------------------------- #
-    # TODO: This timestamp needs to be shifted!
     def data_iter(self) -> DatasetIterator:
         return RosbagIter(
-            EVALIO_DATA / BotanicGarden.name() / self.seq / f"{self.seq}.bag",
+            self.folder / f"{self.seq_name}.bag",
             "/velodyne_points",
             "/imu/data",
             self.lidar_params(),
@@ -43,13 +48,13 @@ class BotanicGarden(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        if self.seq == "1008_03":
-            filename = f"{self.seq}_gt_output.txt"
+        if self.seq_name == "1008_03":
+            filename = f"{self.seq_name}_gt_output.txt"
         else:
-            filename = f"{self.seq}_GT_output.txt"
+            filename = f"{self.seq_name}_GT_output.txt"
 
         return load_pose_csv(
-            EVALIO_DATA / BotanicGarden.name() / self.seq / filename,
+            self.folder / filename,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -58,22 +63,6 @@ class BotanicGarden(Dataset):
     @staticmethod
     def url() -> str:
         return "https://github.com/robot-pesg/BotanicGarden"
-
-    @staticmethod
-    def name() -> str:
-        return "botanic_garden"
-
-    @staticmethod
-    def sequences() -> list[str]:
-        return [
-            "1005_00",
-            "1005_01",
-            "1005_07",
-            "1006_01",
-            "1008_03",
-            "1018_00",
-            "1018_13",
-        ]
 
     def imu_T_lidar(self) -> SE3:
         # https://github.com/robot-pesg/BotanicGarden/blob/main/calib/extrinsics/calib_chain.yaml
@@ -129,18 +118,5 @@ class BotanicGarden(Dataset):
             max_range=100.0,
         )
 
-    # ------------------------- For downloading ------------------------- #
-    @staticmethod
-    def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / BotanicGarden.name() / seq
-        if not dir.exists():
-            return False
-        elif not (dir / f"{seq}.bag").exists():
-            return False
-        elif not (
-            (dir / f"{seq}_GT_output.txt").exists()
-            or (dir / f"{seq}_gt_output.txt").exists()
-        ):
-            return False
-        else:
-            return True
+    def files(self) -> list[str]:
+        raise NotImplementedError
