@@ -7,12 +7,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
 #################### C++ Half ####################
-# Eigen 
+# Pull eigen if it's not available already
 FetchContent_Declare(
     Eigen3
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG        3.4.0
-    FIND_PACKAGE_ARGS
+    FIND_PACKAGE_ARGS NO_MODULE
 )
 FetchContent_MakeAvailable(Eigen3)
 add_subdirectory(cpp)

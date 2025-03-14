@@ -22,7 +22,7 @@ jobs:
     - uses: jidicula/clang-format-action@v4.14.0
 
   # run tests
-  tests:
+  test:
     name: python
     runs-on: ubuntu-latest
     strategy:
@@ -31,18 +31,27 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          
     steps:
       - uses: actions/checkout@v4
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-
       - name: Install the project
         run: uv sync --dev
-
       - name: Run tests
         run: uv run pytest -v
+
+  # later extend this to automatically release on pypi
+  # https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
+
+  # make sure everything still builds
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./clone_pipelines.sh
+      - uses: pypa/cibuildwheel@v2.23.0
+        env:
+          CIBW_BUILD: cp311-manylinux_x86_64
