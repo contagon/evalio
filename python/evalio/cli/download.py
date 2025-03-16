@@ -8,7 +8,7 @@ def download_datasets(datasets: list[str]) -> None:
     # Check if already downloaded
     to_download = []
     for builder in valid_datasets:
-        if builder.check_download():
+        if builder.is_downloaded():
             print(f"Skipping download for {builder}, already exists")
         else:
             to_download.append(builder)
