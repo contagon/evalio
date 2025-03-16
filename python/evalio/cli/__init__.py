@@ -108,6 +108,10 @@ def main():
             raise ValueError("Must specify output directory")
         if out.suffix == ".csv":
             raise ValueError("Output must be a directory")
+        if len(pipelines) == 0:
+            raise ValueError("Must specify at least one pipeline")
+        if len(datasets) == 0:
+            raise ValueError("Must specify at least one dataset")
 
         # parse visualizer
         # vis = RerunVis(args.visualize, RerunConfig())

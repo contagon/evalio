@@ -6,7 +6,7 @@ dataset_classes = DatasetBuilder._all_datasets()
 datasets = [
     cls(cls.sequences()[0])
     for cls in dataset_classes.values()
-    if cls.check_download(cls.sequences()[0])
+    if cls.is_downloaded(cls.sequences()[0])
 ]
 
 

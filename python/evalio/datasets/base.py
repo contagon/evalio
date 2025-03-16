@@ -72,7 +72,7 @@ class Dataset(StrEnum):
     # ------------------------- Helpers that wrap the above ------------------------- #
     def is_downloaded(self) -> bool:
         for f in self.files():
-            if not (EVALIO_DATA / self / f).exists():
+            if not (self.folder / f).exists():
                 return False
 
         return True
@@ -124,6 +124,10 @@ class Dataset(StrEnum):
     @property
     def seq_name(self) -> str:
         return self.value
+
+    @classmethod
+    def name(cls) -> str:  # type: ignore
+        return cls.dataset_name()
 
     @property
     def full_name(self) -> str:
