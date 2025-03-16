@@ -12,18 +12,6 @@ from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
 
 
-# ------------------------- Finding types ------------------------- #
-def find_types(module, skip=None) -> dict[str, type]:
-    found: dict[str, type] = {}
-    found |= dict(
-        (cls.dataset_name(), cls)
-        for cls in module.__dict__.values()
-        if isinstance(cls, type) and cls.__name__ != skip.__name__  # type:ignore
-    )
-
-    return found
-
-
 # ------------------------- Parsing input ------------------------- #
 # TODO: Find a better way to handle lengths here
 # TODO: Make an experiment class to wrap all of this?
@@ -35,9 +23,11 @@ class DatasetBuilder:
     @staticmethod
     @functools.cache
     def _all_datasets() -> dict[str, type[Dataset]]:
-        return find_types(
-            evalio.datasets,
-            skip=evalio.datasets.Dataset,
+        return dict(
+            (cls.dataset_name(), cls)
+            for cls in evalio.datasets.__dict__.values()
+            if isinstance(cls, type)
+            and cls.__name__ != evalio.datasets.Dataset.__name__
         )
 
     @classmethod
@@ -128,9 +118,11 @@ class PipelineBuilder:
     @staticmethod
     @functools.lru_cache
     def _all_pipelines() -> dict[str, type[Pipeline]]:
-        return find_types(
-            evalio.pipelines,
-            skip=evalio.pipelines.Pipeline,
+        return dict(
+            (cls.name(), cls)
+            for cls in evalio.pipelines.__dict__.values()
+            if isinstance(cls, type)
+            and cls.__name__ != evalio.pipelines.Pipeline.__name__
         )
 
     @classmethod

@@ -125,10 +125,6 @@ class Dataset(StrEnum):
     def seq_name(self) -> str:
         return self.value
 
-    @classmethod
-    def name(cls) -> str:  # type: ignore
-        return cls.dataset_name()
-
     @property
     def full_name(self) -> str:
         return f"{self.dataset_name()}/{self.seq_name}"
