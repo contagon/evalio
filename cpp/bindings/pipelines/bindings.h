@@ -11,11 +11,11 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #ifdef EVALIO_KISS_ICP
-#include "evalio/pipelines/kiss_icp.h"
+#include "bindings/pipelines/kiss_icp.h"
 #endif
 
 #ifdef EVALIO_LIO_SAM
-#include "evalio/pipelines/lio_sam.h"
+#include "bindings/pipelines/lio_sam.h"
 #endif
 
 namespace evalio {

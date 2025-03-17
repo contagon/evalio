@@ -4,7 +4,7 @@ set(LIBS evalio Eigen3::Eigen)
 set(DEF "")
 set(RESULTS "")
 
-set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/evalio/pipelines-src")
+set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pipelines-src")
 
 # ------------------------- Import all pipelines ------------------------- #
 function(find_pipeline SRC_DIR TARGET_NAME DEF_NAME)
@@ -39,7 +39,7 @@ FetchContent_Declare(
     pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
     GIT_TAG v2.13.6
-    # FIND_PACKAGE_ARGS
+    FIND_PACKAGE_ARGS # uses find_package first, git if it fails
 )
 FetchContent_MakeAvailable(pybind11)
 

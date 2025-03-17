@@ -1,7 +1,35 @@
-# Create Library
+# ------------------------- Library ------------------------- #
 add_library(evalio INTERFACE)
+target_include_directories(
+    evalio
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+        $<INSTALL_INTERFACE:include>
+)
 
-# Set Library Properties
-target_include_directories(evalio INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
+# ------------------------- Install ------------------------- #
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
-# TODO: Add in install method to include in python package
+# config file
+install(TARGETS evalio EXPORT EvalioConfig)
+install(EXPORT EvalioConfig DESTINATION "${CMAKE_INSTALL_DATADIR}/evalio/cmake")
+
+# headers
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+
+# version file
+write_basic_package_version_file(
+    EvalioConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMinorVersion
+)
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/EvalioConfigVersion.cmake
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/evalio/cmake"
+)
