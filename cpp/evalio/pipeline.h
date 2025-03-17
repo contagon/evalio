@@ -12,12 +12,11 @@ using Param = std::variant<bool, int, double, std::string>;
 
 class Pipeline {
 public:
-  virtual ~Pipeline(){};
+  virtual ~Pipeline() {};
 
   // Info
   static std::string name() { throw std::runtime_error("Not implemented"); }
   static std::string url() { throw std::runtime_error("Not implemented"); }
-  // TODO: Make this return a map filled with the default values
   static std::map<std::string, Param> default_params() {
     throw std::runtime_error("Not implemented");
   }

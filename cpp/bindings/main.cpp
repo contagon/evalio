@@ -3,9 +3,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "evalio/conversions.h"
-#include "evalio/pipelines/bindings.h"
-#include "evalio/types_bindings.h"
+#include "bindings/pipeline.h"
+#include "bindings/pipelines/bindings.h"
+#include "bindings/ros_pc2.h"
+#include "bindings/types.h"
 
 PYBIND11_MODULE(_cpp, m) {
   auto m_types = m.def_submodule(
@@ -18,5 +19,6 @@ PYBIND11_MODULE(_cpp, m) {
   evalio::makeConversions(m_helpers);
 
   auto m_pipelines = m.def_submodule("pipelines", "Pipelines used in evalio.");
+  evalio::makeBasePipeline(m_pipelines);
   evalio::makePipelines(m_pipelines);
 }

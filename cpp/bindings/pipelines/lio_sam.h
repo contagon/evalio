@@ -7,7 +7,7 @@
 
 #include "LIO-SAM/lio-sam.h"
 #include "LIO-SAM/types.h"
-#include "evalio/pipelines/base.h"
+#include "evalio/pipeline.h"
 #include "evalio/types.h"
 
 inline void to_evalio_point(evalio::Point &ev_point,
@@ -48,7 +48,7 @@ inline evalio::SE3 to_evalio_se3(lio_sam::Odometry pose) {
 
 class LioSam : public evalio::Pipeline {
 public:
-  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()){};
+  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()) {};
 
   // Info
   static std::string name() { return "liosam"; }
