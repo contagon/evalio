@@ -57,17 +57,19 @@ def load(path: Path) -> Trajectory:
     return Trajectory(metadata=metadata, stamps=stamps, poses=poses)
 
 
-def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Trajectory]:
+def align_stamps(
+    traj1: Trajectory, traj2: Trajectory, tol: float = 1e-2
+) -> tuple[Trajectory, Trajectory]:
     # Check if we need to skip poses in traj1
     first_pose_idx = 0
-    while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
+    while (traj1.stamps[first_pose_idx] - traj2.stamps[0]) < -tol:
         first_pose_idx += 1
     traj1.stamps = traj1.stamps[first_pose_idx:]
     traj1.poses = traj1.poses[first_pose_idx:]
 
     # Check if we need to skip poses in traj2
     first_pose_idx = 0
-    while traj2.stamps[first_pose_idx] < traj1.stamps[0]:
+    while (traj2.stamps[first_pose_idx] - traj1.stamps[0]) < -tol:
         first_pose_idx += 1
     traj2.stamps = traj2.stamps[first_pose_idx:]
     traj2.poses = traj2.poses[first_pose_idx:]
@@ -75,7 +77,9 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Traj
     # Find the one that is at a higher frame rate
     # Leaves us with traj1 being the one with the higher frame rate
     swapped = False
-    if traj1.stamps[1] - traj1.stamps[0] < traj2.stamps[1] - traj2.stamps[0]:
+    traj_1_rate = (traj1.stamps[-1] - traj1.stamps[0]) / len(traj1.stamps)
+    traj_2_rate = (traj2.stamps[-1] - traj2.stamps[0]) / len(traj2.stamps)
+    if (traj_1_rate - traj_2_rate) < -tol:
         traj1, traj2 = traj2, traj1
         swapped = True
 
@@ -84,7 +88,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Traj
     traj1_stamps = []
     traj1_poses = []
     for i, stamp in enumerate(traj2.stamps):
-        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
+        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] - stamp < -tol:
             traj1_idx += 1
 
         traj1_stamps.append(traj1.stamps[traj1_idx])
