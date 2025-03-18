@@ -10,6 +10,14 @@ Specifically, it provides a common interface for connecting LIO datasets and LIO
 - Run pipelines via the CLI interface and yml config files
 - Compute statistics for resulting trajectory runs
 
+## Installation
+
+evalio is available on PyPi, so simply install via your favorite python package manager,
+```bash
+uv add evalio      # uv
+pip install evalio # pip
+```
+
 ## Usage
 
 Once installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the newer-college 2020 dataset,
@@ -76,7 +84,7 @@ This can then be run via
 ```bash
 evalio run -c config.yml
 ```
-That's about the jist of it! Try playing around the CLI interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems.
+That's about the gist of it! Try playing around the CLI interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems.
 
 It should also be mentioned, autocomplete can be installed via [argcomplete](https://github.com/kislyuk/argcomplete),
 ```bash
@@ -84,26 +92,8 @@ evalio "$(register-python-argcomplete evalio)"
 ```
 This is extra useful for specifying the datasets when downloading or running, as they can get particularly long.
 
-## Installation
-
-Python packages are available via PyPi, so simply install via pip,
-```bash
-pip install evalio
-```
-or for usage in `uv`,
-```bash
-uv add evalio
-```
-
-If you are looking to add a custom C++ pipeline, the header-only C++ library is included in the python package, and can be found via,
-```cmake
-find_package(evalio REQUIRED)
-target_link_libraries(my_target PRIVATE evalio)
-```
-Alternatively, the library can be pulled via CMake's `FetchContent` module. See our [examples](https://github.com/contagon/evalio-example) for more information.
-
 ## Custom Datasets & Pipelines
-We understand that using an internal or work-in-progress datasets and pipelines will be a requirement, thus evalio has full support for this. As mentioned above, we recommend checking out our [example](https://github.com/contagon/evalio-example) for more information how to to do this (it's pretty easy!). 
+We understand that using an internal or work-in-progress datasets and pipelines will often be needed, thus evalio has full support for this. As mentioned above, we recommend checking out our [example](https://github.com/contagon/evalio-example) for more information how to to do this (it's pretty easy!). 
 
 The TL;DR version, a custom dataset can be made via inheriting from the `Dataset` class in python only, and a custom pipeline from inheriting the `Pipeline` class in either C++ or python. These can then be made available to evalio via the `EVALIO_CUSTOM` env variable point to the python module that contains them.
 
@@ -125,6 +115,6 @@ cmake ..
 make
 ```
 
-By default, all pipelines are not included due to their large dependencies. CMake will look for them in the `cpp/bindings/pipeslines-src` directory. If you'd like to add them, simply run the `clone_pipelines.sh` script that will clone and patch them appropriately. 
+By default, all pipelines are not included due to their large dependencies. CMake will look for them in the `cpp/bindings/pipelines-src` directory. If you'd like to add them, simply run the `clone_pipelines.sh` script that will clone and patch them appropriately. 
 
 When these pipelines are included, the number of dependencies increases significantly, so have provided a [docker image](https://github.com/contagon/evalio/pkgs/container/evalio_manylinux_2_28_x86_64) that includes all dependencies for building as well as a VSCode devcontainer configuration. When opening in VSCode, you'll automatically be prompted to open in this container.
