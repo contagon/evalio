@@ -1,12 +1,13 @@
 from enum import auto
 
-from evalio.datasets.iterators import (
+from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
     LidarMajor,
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
+    load_pose_csv,
 )
 from evalio._cpp._helpers import fill_col_split_row_velodyne  # type: ignore
 from evalio.types import Trajectory
@@ -17,7 +18,6 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    load_pose_csv,
     DatasetIterator,
 )
 

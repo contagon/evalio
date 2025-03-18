@@ -3,7 +3,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include "evalio/pipelines/base.h"
+#include "evalio/pipeline.h"
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
 

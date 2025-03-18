@@ -1,21 +1,20 @@
-from evalio.datasets.iterators import (
+from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
     LidarMajor,
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
+    load_pose_csv,
 )
-from evalio.types import Trajectory
+from evalio.types import Trajectory, SO3
 import numpy as np
 from enum import auto
 from .base import (
     SE3,
-    SO3,
     Dataset,
     ImuParams,
     LidarParams,
-    load_pose_csv,
     DatasetIterator,
 )
 

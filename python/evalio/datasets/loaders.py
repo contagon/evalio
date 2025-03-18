@@ -23,6 +23,51 @@ from tabulate import tabulate
 import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
+from evalio.types import Trajectory, SE3, SO3
+import csv
+
+
+# ------------------------- Simple csv loaders ------------------------- #
+def load_pose_csv(
+    path: Path, fieldnames: list[str], delimiter=",", skip_lines: Optional[int] = None
+) -> Trajectory:
+    poses = []
+    stamps = []
+
+    with open(path) as f:
+        csvfile = list(filter(lambda row: row[0] != "#", f))
+        if skip_lines is not None:
+            csvfile = csvfile[skip_lines:]
+        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
+        for line in reader:
+            r = SO3(
+                qw=float(line["qw"]),
+                qx=float(line["qx"]),
+                qy=float(line["qy"]),
+                qz=float(line["qz"]),
+            )
+            t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
+            pose = SE3(r, t)
+
+            if "t" in fieldnames:
+                line["sec"] = line["t"]
+
+            if "nsec" not in fieldnames:
+                s, ns = line["sec"].split(".")  # parse separately to get exact stamp
+                ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
+                stamp = Stamp(sec=int(s), nsec=int(ns))
+            elif "sec" not in fieldnames:
+                stamp = Stamp.from_nsec(int(line["nsec"]))
+            else:
+                stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
+            poses.append(pose)
+            stamps.append(stamp)
+
+    return Trajectory(metadata={}, stamps=stamps, poses=poses)
+
+
+def load_tum(path: Path) -> Trajectory:
+    return load_pose_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
 
 # ------------------------- Iterator over a rosbag ------------------------- #

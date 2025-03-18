@@ -23,4 +23,4 @@ data
 compile_commands.json
 
 # cloned pipelines
-cpp/evalio/pipelines-src
+cpp/bindings/pipelines-src

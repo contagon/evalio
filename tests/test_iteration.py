@@ -1,6 +1,6 @@
 from evalio.types import LidarParams, Point
 from evalio.types import ImuMeasurement, LidarMeasurement, Stamp
-from evalio.datasets.iterators import RawDataIter, RosbagIter
+from evalio.datasets.loaders import RawDataIter, RosbagIter
 import numpy as np
 
 from utils import rosbag_saver

@@ -6,17 +6,14 @@ from evalio.types import Trajectory
 from evalio._cpp._helpers import helipr_bin_to_evalio  # type: ignore
 from enum import auto
 from .base import (
-    SE3,
-    SO3,
     Dataset,
     ImuParams,
     LidarParams,
-    load_pose_csv,
-    Stamp,
     ImuMeasurement,
     DatasetIterator,
 )
-from .iterators import RawDataIter
+from evalio.types import SE3, SO3, Stamp
+from evalio.datasets.loaders import RawDataIter, load_pose_csv
 
 
 """
