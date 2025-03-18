@@ -47,19 +47,18 @@ FetchContent_MakeAvailable(pybind11)
 pybind11_add_module(_cpp main.cpp)
 target_link_libraries(_cpp PRIVATE ${LIBS})
 target_compile_definitions(_cpp PRIVATE ${DEF})
+install(TARGETS _cpp DESTINATION evalio)
 
 # Build stubs
-add_custom_command(
-    TARGET _cpp
-    POST_BUILD
-    COMMAND
-        "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o
-        "${CMAKE_CURRENT_BINARY_DIR}" --numpy-array-wrap-with-annotated
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating pybind11 stubs"
-    VERBATIM
-)
-
-# install the bindings
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_cpp DESTINATION evalio)
-install(TARGETS _cpp DESTINATION evalio)
+# TODO: Something about this breaks python 3.12 and 3.13 builds
+# add_custom_command(
+#     TARGET _cpp
+#     POST_BUILD
+#     COMMAND
+#         "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o
+#         "${CMAKE_CURRENT_BINARY_DIR}" --numpy-array-wrap-with-annotated
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     COMMENT "Generating pybind11 stubs"
+#     VERBATIM
+# )
+# install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_cpp DESTINATION evalio)
