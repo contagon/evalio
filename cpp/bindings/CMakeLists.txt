@@ -35,6 +35,7 @@ endif()
 message("###############################################################")
 
 # ------------------------- Make Python Bindings ------------------------- #
+set(PYBIND11_FINDPYTHON ON)
 FetchContent_Declare(
     pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
@@ -48,16 +49,15 @@ target_link_libraries(_cpp PUBLIC ${LIBS})
 target_compile_definitions(_cpp PUBLIC ${DEF})
 install(TARGETS _cpp DESTINATION evalio)
 
-# TODO: This breaks import for some reason.. will have to investigate
 # Build stubs
-# set(STUBGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-# message(STATUS "STUBGEN_OUTPUT_DIR: ${STUBGEN_OUTPUT_DIR}")
-# add_custom_command(
-#     TARGET _cpp POST_BUILD
-#     COMMAND
-#       "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o "${STUBGEN_OUTPUT_DIR}"
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     COMMENT "Generating pybind11 stubs"
-#     VERBATIM
-# )
-# install(DIRECTORY ${STUBGEN_OUTPUT_DIR}/_cpp DESTINATION evalio)
+add_custom_command(
+    TARGET _cpp
+    POST_BUILD
+    COMMAND
+        "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o
+        "${CMAKE_CURRENT_BINARY_DIR}" --numpy-array-wrap-with-annotated
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating pybind11 stubs"
+    VERBATIM
+)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_cpp DESTINATION evalio)

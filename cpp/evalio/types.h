@@ -4,6 +4,7 @@
 #include <Eigen/Geometry>
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 namespace evalio {
 

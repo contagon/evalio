@@ -1,12 +1,13 @@
 from enum import auto
 
-from evalio.datasets.iterators import (
+from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
     LidarMajor,
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
+    load_pose_csv,
 )
 from evalio.types import Trajectory
 import numpy as np
@@ -16,7 +17,6 @@ from .base import (
     Dataset,
     ImuParams,
     LidarParams,
-    load_pose_csv,
     DatasetIterator,
 )
 

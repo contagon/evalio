@@ -1,4 +1,4 @@
-from .base import Dataset
+from .base import Dataset, DatasetIterator
 from .botanic_garden import BotanicGarden
 from .enwide import EnWide
 from .helipr import HeLiPR
@@ -8,11 +8,12 @@ from .newer_college_2021 import NewerCollege2021
 from .multi_campus import MultiCampus
 from .oxford_spires import OxfordSpires
 
-from . import iterators
+from . import loaders
 
 __all__ = [
-    "iterators",
+    "loaders",
     "Dataset",
+    "DatasetIterator",
     "BotanicGarden",
     "EnWide",
     "HeLiPR",

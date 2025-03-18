@@ -1,5 +1,6 @@
 # ------------------------- Library ------------------------- #
 add_library(evalio INTERFACE)
+target_link_libraries(evalio INTERFACE Eigen3::Eigen)
 target_include_directories(
     evalio
     INTERFACE
@@ -12,8 +13,8 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 # config file
-install(TARGETS evalio EXPORT EvalioConfig)
-install(EXPORT EvalioConfig DESTINATION "${CMAKE_INSTALL_DATADIR}/evalio/cmake")
+install(TARGETS evalio EXPORT evalioConfig)
+install(EXPORT evalioConfig DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/evalio")
 
 # headers
 install(
@@ -25,11 +26,11 @@ install(
 
 # version file
 write_basic_package_version_file(
-    EvalioConfigVersion.cmake
+    evalioConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMinorVersion
 )
 install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/EvalioConfigVersion.cmake
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/evalio/cmake"
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/evalioConfigVersion.cmake
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/evalio"
 )

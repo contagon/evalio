@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from evalio.types import ImuMeasurement, LidarMeasurement, Stamp, Point, LidarParams
-from evalio.datasets.iterators import LidarDensity, LidarMajor, RosbagIter
+from evalio.datasets.loaders import LidarDensity, LidarMajor, RosbagIter
 import numpy as np
 import pytest
 

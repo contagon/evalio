@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(EVALIO VERSION 0.0.1 LANGUAGES CXX)
 
+# Enforce C++17 for std::variant amongst others
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
@@ -12,7 +13,8 @@ FetchContent_Declare(
     Eigen3
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG 3.4.0
-    FIND_PACKAGE_ARGS NO_MODULE # uses find_package first, git if it fails
+    FIND_PACKAGE_ARGS
+        NO_MODULE # uses find_package first, git if it fails
 )
 FetchContent_MakeAvailable(Eigen3)
 

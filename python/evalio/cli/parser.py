@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
+from inspect import isclass
 import yaml
 
 import evalio
@@ -26,7 +27,8 @@ class DatasetBuilder:
         return dict(
             (cls.dataset_name(), cls)
             for cls in evalio.datasets.__dict__.values()
-            if isinstance(cls, type)
+            if isclass(cls)
+            and issubclass(cls, Dataset)
             and cls.__name__ != evalio.datasets.Dataset.__name__
         )
 
@@ -121,7 +123,8 @@ class PipelineBuilder:
         return dict(
             (cls.name(), cls)
             for cls in evalio.pipelines.__dict__.values()
-            if isinstance(cls, type)
+            if isclass(cls)
+            and issubclass(cls, Pipeline)
             and cls.__name__ != evalio.pipelines.Pipeline.__name__
         )
 
