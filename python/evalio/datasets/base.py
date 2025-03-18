@@ -16,9 +16,9 @@ from evalio.types import (
 
 if os.getenv("EVALIO_DATA") is None:
     print(
-        "Warning: EVALIO_DATA environment variable is not set. Using default './data'"
+        "Warning: EVALIO_DATA environment variable is not set. Using default './evalio_data'"
     )
-EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./data"))
+EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./evalio_data"))
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
