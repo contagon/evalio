@@ -12,7 +12,7 @@ using Param = std::variant<bool, int, double, std::string>;
 
 class Pipeline {
 public:
-  virtual ~Pipeline() {};
+  virtual ~Pipeline(){};
 
   // Info
   static std::string name() { throw std::runtime_error("Not implemented"); }
