@@ -7,6 +7,8 @@ from typing import Optional, Sequence
 
 from inspect import isclass
 import yaml
+import os
+import importlib
 
 import evalio
 from evalio.datasets import Dataset
@@ -22,15 +24,27 @@ class DatasetBuilder:
     length: Optional[int] = None
 
     @staticmethod
-    @functools.cache
-    def _all_datasets() -> dict[str, type[Dataset]]:
+    def _search_module(module) -> dict[str, type[Dataset]]:
         return dict(
             (cls.dataset_name(), cls)
-            for cls in evalio.datasets.__dict__.values()
+            for cls in module.__dict__.values()
             if isclass(cls)
             and issubclass(cls, Dataset)
             and cls.__name__ != evalio.datasets.Dataset.__name__
         )
+
+    @staticmethod
+    @functools.cache
+    def _all_datasets() -> dict[str, type[Dataset]]:
+        datasets = DatasetBuilder._search_module(evalio.datasets)
+
+        # Parse env variable for more
+        if "EVALIO_DATASETS" in os.environ:
+            for dataset in os.environ["EVALIO_DATASETS"].split(","):
+                module = importlib.import_module(dataset)
+                datasets |= DatasetBuilder._search_module(module)
+
+        return datasets
 
     @classmethod
     @functools.cache
@@ -118,15 +132,27 @@ class PipelineBuilder:
         self.params = all_params
 
     @staticmethod
-    @functools.lru_cache
-    def _all_pipelines() -> dict[str, type[Pipeline]]:
+    def _search_module(module) -> dict[str, type[Pipeline]]:
         return dict(
             (cls.name(), cls)
-            for cls in evalio.pipelines.__dict__.values()
+            for cls in module.__dict__.values()
             if isclass(cls)
             and issubclass(cls, Pipeline)
             and cls.__name__ != evalio.pipelines.Pipeline.__name__
         )
+
+    @staticmethod
+    @functools.lru_cache
+    def _all_pipelines() -> dict[str, type[Pipeline]]:
+        pipelines = PipelineBuilder._search_module(evalio.pipelines)
+
+        # Parse env variable for more
+        if "EVALIO_PIPELINES" in os.environ:
+            for dataset in os.environ["EVALIO_PIPELINES"].split(","):
+                module = importlib.import_module(dataset)
+                pipelines |= PipelineBuilder._search_module(module)
+
+        return pipelines
 
     @classmethod
     @functools.lru_cache

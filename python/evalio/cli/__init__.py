@@ -39,6 +39,13 @@ def main():
     # ls
     ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
     ls_opt.add_argument("options", type=str, choices=["datasets", "pipelines"])
+    ls_opt.add_argument("-s", "--search", type=str, help="Search for a specific item")
+    ls_opt.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Omit params and trajectories to shorten output",
+    )
 
     # run
     run = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
@@ -84,7 +91,7 @@ def main():
 
     # parse
     if args.command == "ls":
-        ls(args.options)
+        ls(args.options, args.search, args.quiet)
 
     elif args.command == "download":
         download_datasets(args.datasets)

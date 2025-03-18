@@ -60,12 +60,12 @@ inline void makeBasePipeline(py::module &m) {
       .def("pose", &evalio::Pipeline::pose)
       .def("map", &evalio::Pipeline::map)
       .def("initialize", &evalio::Pipeline::initialize)
-      .def("add_imu", &evalio::Pipeline::add_imu)
-      .def("add_lidar", &evalio::Pipeline::add_lidar)
-      .def("set_params", &evalio::Pipeline::set_params)
-      .def("set_imu_params", &evalio::Pipeline::set_imu_params)
-      .def("set_lidar_params", &evalio::Pipeline::set_lidar_params)
-      .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar);
+      .def("add_imu", &evalio::Pipeline::add_imu, "mm"_a)
+      .def("add_lidar", &evalio::Pipeline::add_lidar, "mm"_a)
+      .def("set_params", &evalio::Pipeline::set_params, "params"_a)
+      .def("set_imu_params", &evalio::Pipeline::set_imu_params, "params"_a)
+      .def("set_lidar_params", &evalio::Pipeline::set_lidar_params, "params"_a)
+      .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a);
 }
 
 } // namespace evalio
