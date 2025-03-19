@@ -87,7 +87,7 @@ def main():
     from .ls import ls
     from .run import run
     from .stats import eval
-    # from evalio.rerun import RerunVis, RerunConfig
+    from evalio.rerun import RerunVis
 
     # parse
     if args.command == "ls":
@@ -121,9 +121,9 @@ def main():
             raise ValueError("Must specify at least one dataset")
 
         # parse visualizer
-        # vis = RerunVis(args.visualize, RerunConfig())
+        vis = RerunVis(args.visualize)
 
-        run(pipelines, datasets, out)
+        run(pipelines, datasets, out, vis)
 
     elif args.command == "stats":
         eval(args.experiments, args.visualize, args.sort)

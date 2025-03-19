@@ -184,6 +184,7 @@ version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "argcomplete" },
+    { name = "gdown" },
     { name = "numpy" },
     { name = "pyyaml" },
     { name = "rosbags" },
@@ -192,9 +193,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-fetch = [
-    { name = "gdown" },
-]
 vis = [
     { name = "rerun-sdk" },
 ]
@@ -216,7 +214,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "argcomplete", specifier = ">=3.3.0" },
-    { name = "gdown", marker = "extra == 'fetch'", specifier = ">=5.2.0" },
+    { name = "gdown", specifier = ">=5.2.0" },
     { name = "numpy" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },

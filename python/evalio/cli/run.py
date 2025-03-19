@@ -2,7 +2,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
-# from evalio.rerun import RerunVis
+from evalio.rerun import RerunVis
 
 from .parser import DatasetBuilder, PipelineBuilder
 from .writer import TrajectoryWriter, save_config, save_gt
@@ -10,14 +10,14 @@ from .stats import eval
 
 
 def plural(num: int, word: str) -> str:
-    return f"{num} {word}{ 's' if num > 1 else ''}"
+    return f"{num} {word}{'s' if num > 1 else ''}"
 
 
 def run(
     pipelines: list[PipelineBuilder],
     datasets: list[DatasetBuilder],
     output: Path,
-    # vis: RerunVis,
+    vis: RerunVis,
 ):
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
@@ -36,7 +36,7 @@ def run(
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
 
             # Initialize params
-            # first_scan_done = False
+            first_scan_done = False
             data_iter = dataset.data_iter()
             length = len(data_iter)
             if dbuilder.length is not None and dbuilder.length < length:
@@ -48,15 +48,15 @@ def run(
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
-                    # features = pipe.add_lidar(data)
+                    features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
-                    # if not first_scan_done:
-                    #     vis.new_recording(dataset)
-                    #     first_scan_done = True
+                    if not first_scan_done:
+                        vis.new_recording(dataset)
+                        first_scan_done = True
 
-                    # vis.log(data, features, pose)
+                    vis.log(data, features, pose)
 
                     loop.update()
                     if loop.n >= length:
