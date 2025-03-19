@@ -39,8 +39,8 @@ class DatasetBuilder:
         datasets = DatasetBuilder._search_module(evalio.datasets)
 
         # Parse env variable for more
-        if "EVALIO_DATASETS" in os.environ:
-            for dataset in os.environ["EVALIO_DATASETS"].split(","):
+        if "EVALIO_CUSTOM" in os.environ:
+            for dataset in os.environ["EVALIO_CUSTOM"].split(","):
                 module = importlib.import_module(dataset)
                 datasets |= DatasetBuilder._search_module(module)
 
@@ -147,8 +147,8 @@ class PipelineBuilder:
         pipelines = PipelineBuilder._search_module(evalio.pipelines)
 
         # Parse env variable for more
-        if "EVALIO_PIPELINES" in os.environ:
-            for dataset in os.environ["EVALIO_PIPELINES"].split(","):
+        if "EVALIO_CUSTOM" in os.environ:
+            for dataset in os.environ["EVALIO_CUSTOM"].split(","):
                 module = importlib.import_module(dataset)
                 pipelines |= PipelineBuilder._search_module(module)
 
