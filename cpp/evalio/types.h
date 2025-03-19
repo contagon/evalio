@@ -8,16 +8,48 @@
 
 namespace evalio {
 
+struct Duration {
+  // Also tried saving this in seconds, but found we had occasional floating
+  // point errors when adding/subtracting durations.
+  int64_t nsec;
+
+  static Duration from_sec(double sec) {
+    return Duration{.nsec = int64_t(sec * 1e9)};
+  }
+
+  static Duration from_nsec(int64_t nsec) { return Duration{.nsec = nsec}; }
+
+  double to_sec() const { return double(nsec) / 1e9; }
+
+  int64_t to_nsec() const { return nsec; }
+
+  std::string toString() const { return "Duration(" + toStringBrief() + ")"; }
+
+  std::string toStringBrief() const { return std::to_string(to_sec()); };
+
+  bool operator<(const Duration &other) const { return nsec < other.nsec; }
+
+  bool operator>(const Duration &other) const { return nsec > other.nsec; }
+
+  // Check equality using nsec to avoid floating point error
+  bool operator==(const Duration &other) const { return nsec == other.nsec; }
+
+  bool operator!=(const Duration &other) const { return !(*this == other); }
+
+  Duration operator-(const Duration &other) const {
+    return Duration::from_nsec(nsec - other.nsec);
+  }
+
+  Duration operator+(const Duration &other) const {
+    return Duration::from_nsec(nsec + other.nsec);
+  }
+};
+
 struct Stamp {
   uint32_t sec;
   uint32_t nsec;
 
   static Stamp from_sec(double sec) {
-    // TODO: Hack for when we have negative seconds
-    // Need to handle negative durations better
-    if (sec < 0) {
-      sec += 5.0;
-    }
     return Stamp{.sec = uint32_t(sec),
                  .nsec = uint32_t((sec - uint32_t(sec)) * 1e9)};
   }
@@ -55,8 +87,16 @@ struct Stamp {
 
   bool operator!=(const Stamp &other) const { return !(*this == other); }
 
-  double operator-(const Stamp &other) const {
-    return to_sec() - other.to_sec();
+  Stamp operator-(const Duration &other) const {
+    return Stamp::from_nsec(to_nsec() - other.nsec);
+  }
+
+  Stamp operator+(const Duration &other) const {
+    return Stamp::from_nsec(to_nsec() + other.nsec);
+  }
+
+  Duration operator-(const Stamp &other) const {
+    return Duration::from_sec(to_sec() - other.to_sec());
   }
 };
 
@@ -65,7 +105,7 @@ struct Point {
   double y = 0.0;
   double z = 0.0;
   double intensity = 0.0;
-  Stamp t = Stamp{.sec = 0, .nsec = 0}; // in nanoseconds?
+  Duration t = Duration{.nsec = 0};
   uint32_t range = 0;
   uint8_t row = 0;
   uint16_t col = 0;
@@ -156,6 +196,8 @@ struct LidarParams {
            ", max_range: " + std::to_string(max_range) +
            ", rate: " + std::to_string(rate) + ")";
   };
+
+  Duration delta_time() const { return Duration::from_sec(1.0 / rate); }
 };
 
 struct ImuMeasurement {

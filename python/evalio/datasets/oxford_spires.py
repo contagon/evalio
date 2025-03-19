@@ -7,7 +7,7 @@ from evalio.datasets.loaders import (
     RosbagIter,
     load_pose_csv,
 )
-from evalio.types import Trajectory, SO3
+from evalio.types import Trajectory, SO3, Duration
 import numpy as np
 
 from enum import auto
@@ -68,7 +68,7 @@ class OxfordSpires(Dataset):
         poses = []
         stamps = []
         for i in range(1, len(traj)):
-            if traj.stamps[i] - traj.stamps[i - 1] > 1e-2:
+            if traj.stamps[i] - traj.stamps[i - 1] > Duration.from_sec(1e-2):
                 poses.append(traj.poses[i])
                 stamps.append(traj.stamps[i])
 

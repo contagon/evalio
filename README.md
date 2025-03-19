@@ -30,10 +30,10 @@ Once evalio is installed, datasets can be listed and downloaded via the CLI inte
 evalio ls datasets
 evalio download hilti_2022/basement_2
 ```
-evalio downloads data to the `EVALIO_DATA` environment variable, or if unset to the local folder `./evalio_data`. 
+evalio downloads data to the `EVALIO_DATA` environment variable, or if unset to the local folder `./evalio_data`. All the trajectories in a dataset can also be downloaded by using the wildcard `hilti_2022/*`, making sure to escape the asterisk as needed.
 
 > [!NOTE]
-> Many datasets use [gdown](https://github.com/wkentaro/gdown) to download datasets from google drive. Unfortunately, this can occasionally be finicky due to google's download limits, [downloading cookies from your browser](https://github.com/wkentaro/gdown?tab=readme-ov-file#i-set-the-permission-anyone-with-link-but-i-still-cant-download) can often help.
+> Many datasets use [gdown](https://github.com/wkentaro/gdown) to download datasets from google drive. Unfortunately, this can occasionally be finicky due to google's download limits, however [downloading cookies from your browser](https://github.com/wkentaro/gdown?tab=readme-ov-file#i-set-the-permission-anyone-with-link-but-i-still-cant-download) can often help.
 
 Once downloaded, a trajectory can then be easily used in python,
 ```python
@@ -56,6 +56,7 @@ For example, you can easily get a single scan to plot a bird-eye view,
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
+
 # get the 10th scan
 scan = Hilti2022.basement_2.get_one_lidar(10)
 # always in row-major order, with stamp at start of scan
@@ -70,6 +71,7 @@ evalio also comes with a built wrapper for converting to [rerun](rerun.io) types
 ```python
 import rerun as rr
 from evalio.rerun import convert
+
 rr.init("evalio")
 rr.connect_tcp()
 for scan in Hilti2022.basement_2.lidar():
@@ -88,9 +90,9 @@ The other half of evalio is the pipelines that can be run on various datasets. A
 ```bash
 evalio ls pipelines
 ```
-For example, to run KissICP on the dataset,
+For example, to run KissICP on a dataset,
 ```bash
-evalio run -o results -d newer_college_2020/short_experiment -p kiss
+evalio run -o results -d hilti_2022/basement_2 -p kiss
 ```
 This will run the pipeline on the dataset and save the results to the `results` folder. The results can then be used to compute statistics on the trajectory,
 ```bash
@@ -102,7 +104,7 @@ output_dir: ./results/
 
 datasets:
   # Run on all of newer college trajectories
-  - newer_college_2020/*
+  - hilti_2022/*
   # Run on first 1000 scans of multi campus
   - name: multi_campus/ntu_day_01
     length: 1000
@@ -156,3 +158,15 @@ make
 By default, all pipelines are not included due to their large dependencies. CMake will look for them in the `cpp/bindings/pipelines-src` directory. If you'd like to add them, simply run the `clone_pipelines.sh` script that will clone and patch them appropriately. 
 
 When these pipelines are included, the number of dependencies increases significantly, so have provided a [docker image](https://github.com/contagon/evalio/pkgs/container/evalio_manylinux_2_28_x86_64) that includes all dependencies for building as well as a VSCode devcontainer configuration. When opening in VSCode, you'll automatically be prompted to open in this container.
+
+## Contributing
+
+Contributions are always welcome! Feel free to open an issue, pull request, etc. We're happy to help you get started. The following are rough instructions for specifically adding additional datasets or pipelines.
+
+### Datasets
+Datasets are easy to add, simply drop your file into the [python/evalio/datasets](python/evalio/datasets/) folder, and add it into the [init](python/evalio/datasets/__init__.py) file.
+
+### Pipelines
+If adding in a python pipeline, it's near identical to adding a dataset. Drop your file into the [python/evalio/pipelines](python/evalio/pipelines/) folder, and add it into the [init](python/evalio/pipelines/__init__.py) file.
+
+C++ pipelines are more involved (and probably worth the effort). Your header file belongs in the [cpp/bindings/pipelines](cpp/bindings/pipelines/) folder. To get it to build, make sure it's added to [clone_pipelines.sh](clone_pipelines.sh), the proper [CMakeLists.txt](cpp/bindings/CMakeLists.txt), and the [bindings.h] header. Finally, make sure all dependencies are also added to the docker build script, found in the [docker](docker/) folder.

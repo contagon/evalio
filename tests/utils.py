@@ -21,7 +21,7 @@ import numpy as np
 
 def check_lidar_eq(exp: LidarMeasurement, got: LidarMeasurement):
     if got != exp:
-        assert got.stamp == exp.stamp, "stamps do not match"
+        assert got.stamp == exp.stamp, f"stamps do not match {exp.stamp} != {got.stamp}"
         for i, (got_pt, exp_pt) in enumerate(zip(got.points, exp.points)):
             assert got_pt == exp_pt, f"p{i}, {got_pt} != {exp_pt}"
 
@@ -33,7 +33,7 @@ def point_to_bytes(point: Point) -> bytes:
         + np.float64(point.y).tobytes()
         + np.float64(point.z).tobytes()
         + np.float64(point.intensity).tobytes()
-        + np.uint32(point.t.to_nsec()).tobytes()
+        + np.int32(point.t.to_nsec()).tobytes()
         + np.uint32(point.range).tobytes()
         + np.uint16(point.col).tobytes()
         + np.uint8(point.row).tobytes()
@@ -98,9 +98,7 @@ def rosbag_saver(
                     RosPointField(
                         name="intensity", offset=24, datatype=8, count=1
                     ),  # float64
-                    RosPointField(
-                        name="time", offset=32, datatype=6, count=1
-                    ),  # uint32
+                    RosPointField(name="time", offset=32, datatype=5, count=1),  # int32
                     RosPointField(
                         name="range", offset=36, datatype=6, count=1
                     ),  # uint32

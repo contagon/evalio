@@ -1,6 +1,7 @@
 from ._cpp.types import (  # type: ignore
     SE3,
     SO3,
+    Duration,
     Stamp,
     Point,
     LidarMeasurement,
@@ -36,6 +37,7 @@ __all__ = [
     "ImuParams",
     "LidarMeasurement",
     "LidarParams",
+    "Duration",
     "Point",
     "SO3",
     "SE3",

@@ -1,11 +1,25 @@
 from dataclasses import dataclass
 from pathlib import Path
-from evalio.types import ImuMeasurement, LidarMeasurement, Stamp, Point, LidarParams
-from evalio.datasets.loaders import LidarDensity, LidarMajor, RosbagIter
+from evalio.types import (
+    ImuMeasurement,
+    LidarMeasurement,
+    Stamp,
+    Point,
+    LidarParams,
+    Duration,
+)
+from evalio.datasets.loaders import (
+    LidarDensity,
+    LidarMajor,
+    LidarPointStamp,
+    RosbagIter,
+)
 import numpy as np
 import pytest
 
 from utils import rosbag_saver, check_lidar_eq
+
+from copy import deepcopy
 
 # Create a row major point cloud
 WIDTH = 256
@@ -34,7 +48,7 @@ def make_lidar() -> LidarMeasurement:
     all_points = []
     for i in range(HEIGHT):
         for j in range(WIDTH):
-            t = Stamp.from_sec(j / (WIDTH * 10))
+            t = Duration.from_sec(j / (WIDTH * 10))
             x, y, z, intensity = np.random.rand(4)
             r = np.random.randint(0, 1000)
             point = Point(
@@ -92,6 +106,7 @@ def test_all_row_major(all_row_major: Fixture):
 
     assert iterator.lidar_format.major == LidarMajor.Row
     assert iterator.lidar_format.density == LidarDensity.AllPoints
+    assert iterator.lidar_format.point_stamp == LidarPointStamp.Start
 
 
 # all points col major
@@ -129,6 +144,7 @@ def test_all_col_major(all_col_major: Fixture):
 
     assert iterator.lidar_format.major == LidarMajor.Column
     assert iterator.lidar_format.density == LidarDensity.AllPoints
+    assert iterator.lidar_format.point_stamp == LidarPointStamp.Start
 
 
 # only valid row major
@@ -142,7 +158,8 @@ def only_valid_row_major(tmp_path_factory):
     # sort into rows
     points_to_save = lidar.points
     points_expected = [
-        points_to_save[i : i + WIDTH] for i in range(0, len(points_to_save), WIDTH)
+        deepcopy(points_to_save[i : i + WIDTH])
+        for i in range(0, len(points_to_save), WIDTH)
     ]
     # Get points to randomly drop
     drop_points = [
@@ -186,6 +203,7 @@ def test_only_valid_row_major(capsys, only_valid_row_major: Fixture):
 
     assert iterator.lidar_format.major == LidarMajor.Row
     assert iterator.lidar_format.density == LidarDensity.OnlyValidPoints
+    assert iterator.lidar_format.point_stamp == LidarPointStamp.Start
 
     # also check that we were warned this is undefined
     captured = capsys.readouterr()
@@ -206,7 +224,7 @@ def only_valid_col_major(tmp_path_factory):
     to_save = []
     for i in range(WIDTH):
         for j in range(HEIGHT):
-            to_save.append(to_return[j * WIDTH + i])
+            to_save.append(deepcopy(to_return[j * WIDTH + i]))
 
     # Get points to randomly drop
     drop_points = [
@@ -243,6 +261,38 @@ def test_only_valid_col_major(only_valid_col_major: Fixture):
 
     assert iterator.lidar_format.major == LidarMajor.Column
     assert iterator.lidar_format.density == LidarDensity.OnlyValidPoints
+    assert iterator.lidar_format.point_stamp == LidarPointStamp.Start
 
 
-# TODO: Add check for LidarPointStamp auto guessing in the future
+# time stamps relative to the end
+@pytest.fixture(scope="session")
+def point_stamp_relative_end(tmp_path_factory):
+    bag = tmp_path_factory.mktemp("bag") / "point_stamp_relative_end.bag"
+
+    imu = make_imu()
+    lidar = make_lidar()
+
+    # Move the lidar points to be relative to the end
+    original_points = lidar.points
+    points: list[Point] = []
+    for i in range(len(original_points)):
+        points.append(deepcopy(original_points[i]))
+        points[i].t = points[i].t - PARAMS.delta_time()
+
+    rosbag_saver(bag, [imu], [LidarMeasurement(lidar.stamp, points)])
+    return Fixture(imu, lidar, bag)
+
+
+def test_point_stamp_relative_end(point_stamp_relative_end: Fixture):
+    iterator = RosbagIter(
+        point_stamp_relative_end.bag,
+        lidar_topic="/lidar",
+        imu_topic="/imu",
+        lidar_params=PARAMS,
+    )
+
+    imu, lidar = get_mm(iterator)
+    assert imu == point_stamp_relative_end.imu
+    check_lidar_eq(point_stamp_relative_end.lidar, lidar)
+
+    assert iterator.lidar_format.point_stamp == LidarPointStamp.End

@@ -26,9 +26,9 @@ def test_load_imu(dataset: Dataset):
     with open(data_dir / f"imu_{dataset.dataset_name()}.pkl", "rb") as f:
         imu_cached: ImuMeasurement = pickle.load(f)
 
-    assert (
-        imu == imu_cached
-    ), f"IMU measurements do not match for {dataset.dataset_name()}"
+    assert imu == imu_cached, (
+        f"IMU measurements do not match for {dataset.dataset_name()}"
+    )
 
 
 @pytest.mark.parametrize("dataset", datasets)
@@ -37,4 +37,4 @@ def test_load_lidar(dataset: Dataset):
     with open(data_dir / f"lidar_{dataset.dataset_name()}.pkl", "rb") as f:
         lidar_cached: LidarMeasurement = pickle.load(f)
 
-    check_lidar_eq(lidar, lidar_cached)
+    check_lidar_eq(lidar_cached, lidar)
