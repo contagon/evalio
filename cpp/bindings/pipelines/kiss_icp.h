@@ -12,7 +12,7 @@ inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
           .y = point[1],
           .z = point[2],
           .intensity = 0.0,
-          .t = evalio::Stamp::from_sec(0),
+          .t = evalio::Duration::from_sec(0),
           .row = 0,
           .col = 0};
 }
@@ -35,7 +35,7 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
 
 class KissICP : public evalio::Pipeline {
 public:
-  KissICP() : config_(){};
+  KissICP() : config_() {};
 
   // Info
   static std::string name() { return "kiss"; }
@@ -67,8 +67,8 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override{};
-  void set_lidar_params(evalio::LidarParams params) override{};
+  void set_imu_params(evalio::ImuParams params) override {};
+  void set_lidar_params(evalio::LidarParams params) override {};
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
   };
@@ -124,7 +124,7 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override{};
+  void add_imu(evalio::ImuMeasurement mm) override {};
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
