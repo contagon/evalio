@@ -35,7 +35,7 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
 
 class KissICP : public evalio::Pipeline {
 public:
-  KissICP() : config_() {};
+  KissICP() : config_(){};
 
   // Info
   static std::string name() { return "kiss"; }
