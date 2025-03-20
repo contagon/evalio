@@ -11,6 +11,7 @@
 		// If you have set EVALIO_DATA elsewhere, you can change the source path here
 		"source=${localWorkspaceFolder}/data,target=/data,type=bind,consistency=cached"
 	],
+	"containerUser": "evalio",
 	"customizations": {
 		"vscode": {
 			"extensions": [

@@ -48,7 +48,7 @@ inline evalio::SE3 to_evalio_se3(lio_sam::Odometry pose) {
 
 class LioSam : public evalio::Pipeline {
 public:
-  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()){};
+  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()) {};
 
   // Info
   static std::string name() { return "liosam"; }
@@ -61,7 +61,7 @@ public:
         {"edgeFeatureMinValidNum", 10},
         {"surfFeatureMinValidNum", 100},
 
-        // voxel filter paprams
+        // voxel filter params
         {"odometrySurfLeafSize", 0.4},
         {"mappingCornerLeafSize", 0.2},
         {"mappingSurfLeafSize", 0.4},
