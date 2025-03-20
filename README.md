@@ -5,9 +5,10 @@ evalio is a tool for **Eval**uating **L**idar-**I**nertial **O**dometry.
 Specifically, it provides a common interface for connecting LIO datasets and LIO pipelines. This allows for easy addition of new datasets and pipelines, as well as a common location to evaluate them making benchmarks significantly easier to run. It features,
 - No ROS dependency! (though it can still load rosbag datasets using the wonderful [rosbags](https://ternaris.gitlab.io/rosbags/) package)
 - Easy to add new datasets and pipelines, see the [example](https://github.com/contagon/evalio-example)
+- Unified representation of lidar scan, e.g. row (scan-line) major order, stamped at the start of the scan, point stamps are relative from the start of the scan.
 - Download and manage datasets via the CLI interface
-- Simply to use API for friction-free access to data
-- Run pipelines via the CLI interface and yml config files
+- Simple to use API for friction-free access to data
+- Run pipelines via the CLI interface and yaml config files
 - Compute statistics for resulting trajectory runs
 
 ## Installation
@@ -20,39 +21,78 @@ pip install evalio # pip
 
 ## Usage
 
-Once installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the newer-college 2020 dataset,
+evalio can be used both as a python library and as a CLI for both datasets and pipelines.
+
+### Datasets
+
+Once evalio is installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the newer-college 2020 dataset,
 ```bash
 evalio ls datasets
-evalio download newer_college_2020/short_experiment
+evalio download hilti_2022/basement_2
 ```
-evalio downloads data to the `EVALIO_DATA` environment variable, or if unset to the local folder `./evalio_data`. Once downloaded, a trajectory can then be easily used in python,
+evalio downloads data to the `EVALIO_DATA` environment variable, or if unset to the local folder `./evalio_data`. All the trajectories in a dataset can also be downloaded by using the wildcard `hilti_2022/*`, making sure to escape the asterisk as needed.
+
+> [!NOTE]
+> Many datasets use [gdown](https://github.com/wkentaro/gdown) to download datasets from google drive. Unfortunately, this can occasionally be finicky due to google's download limits, however [downloading cookies from your browser](https://github.com/wkentaro/gdown?tab=readme-ov-file#i-set-the-permission-anyone-with-link-but-i-still-cant-download) can often help.
+
+Once downloaded, a trajectory can then be easily used in python,
 ```python
-from evalio.datasets import NewerCollege2020
+from evalio.datasets import Hilti2022
 
 # for all data
-for mm in NewerCollege2020.short_experiment:
+for mm in Hilti2022.basement_2:
     print(mm)
 
 # for lidars
-for scan in NewerCollege2020.short_experiment.lidar():
+for scan in Hilti2022.basement_2.lidar():
     print(scan)
 
 # for imu
-for imu in NewerCollege2020.short_experiment.imu():
+for imu in Hilti2022.basement_2.imu():
     print(imu)
-
-# get a single scan
-scan = NewerCollege2020.short_experiment.get_one_lidar(100)
 ```
+
+For example, you can easily get a single scan to plot a bird-eye view,
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+# get the 10th scan
+scan = Hilti2022.basement_2.get_one_lidar(10)
+# always in row-major order, with stamp at start of scan
+x = np.array([p.x for p in scan.points])
+y = np.array([p.y for p in scan.points])
+z = np.array([p.z for p in scan.points])
+plt.scatter(x, y, c=z, s=1)
+plt.axis('equal')
+plt.show()
+```
+evalio also comes with a built wrapper for converting to [rerun](rerun.io) types,
+```python
+import rerun as rr
+from evalio.rerun import convert
+
+rr.init("evalio")
+rr.connect_tcp()
+for scan in Hilti2022.basement_2.lidar():
+    rr.set_time_seconds("timeline", seconds=scan.stamp.to_sec())
+    rr.log("lidar", convert(scan, color=[255, 0, 255]))
+```
+
+> [!NOTE]  
+> To run the rerun visualization, rerun must be installed. This can be done by installing `rerun-sdk` or `evalio[vis]` from PyPi.
+
 We recommend checking out the [base dataset class](python/evalio/datasets/base.py) for more information on how to interact with datasets.
 
-Once downloaded, pipelines can then be run on the dataset. All pipelines and their parameters can be shown via,
+### Pipelines
+
+The other half of evalio is the pipelines that can be run on various datasets. All pipelines and their parameters can be shown via,
 ```bash
 evalio ls pipelines
 ```
-For example, to run KissICP on the dataset,
+For example, to run KissICP on a dataset,
 ```bash
-evalio run -o results -d newer_college_2020/short_experiment -p kiss
+evalio run -o results -d hilti_2022/basement_2 -p kiss
 ```
 This will run the pipeline on the dataset and save the results to the `results` folder. The results can then be used to compute statistics on the trajectory,
 ```bash
@@ -64,7 +104,7 @@ output_dir: ./results/
 
 datasets:
   # Run on all of newer college trajectories
-  - newer_college_2020/*
+  - hilti_2022/*
   # Run on first 1000 scans of multi campus
   - name: multi_campus/ntu_day_01
     length: 1000
@@ -118,3 +158,15 @@ make
 By default, all pipelines are not included due to their large dependencies. CMake will look for them in the `cpp/bindings/pipelines-src` directory. If you'd like to add them, simply run the `clone_pipelines.sh` script that will clone and patch them appropriately. 
 
 When these pipelines are included, the number of dependencies increases significantly, so have provided a [docker image](https://github.com/contagon/evalio/pkgs/container/evalio_manylinux_2_28_x86_64) that includes all dependencies for building as well as a VSCode devcontainer configuration. When opening in VSCode, you'll automatically be prompted to open in this container.
+
+## Contributing
+
+Contributions are always welcome! Feel free to open an issue, pull request, etc. We're happy to help you get started. The following are rough instructions for specifically adding additional datasets or pipelines.
+
+### Datasets
+Datasets are easy to add, simply drop your file into the [python/evalio/datasets](python/evalio/datasets/) folder, and add it into the [init](python/evalio/datasets/__init__.py) file.
+
+### Pipelines
+If adding in a python pipeline, it's near identical to adding a dataset. Drop your file into the [python/evalio/pipelines](python/evalio/pipelines/) folder, and add it into the [init](python/evalio/pipelines/__init__.py) file.
+
+C++ pipelines are more involved (and probably worth the effort). Your header file belongs in the [cpp/bindings/pipelines](cpp/bindings/pipelines/) folder. To get it to build, make sure it's added to [clone_pipelines.sh](clone_pipelines.sh), the proper [CMakeLists.txt](cpp/bindings/CMakeLists.txt), and the [bindings.h] header. Finally, make sure all dependencies are also added to the docker build script, found in the [docker](docker/) folder.

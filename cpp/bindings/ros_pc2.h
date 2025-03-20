@@ -8,7 +8,7 @@
 
 #include <fstream>
 
-#include "types.h"
+#include "evalio/types.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -95,34 +95,38 @@ std::function<void(T &, const uint8_t *)> data_getter(DataType datatype,
   }
 }
 
-// Specialization for Stamp
-inline std::function<void(Stamp &, const uint8_t *)>
-data_getter(DataType datatype, const uint32_t offset) {
+// Specialization for Stamp & Duration
+template <typename T>
+std::function<void(T &, const uint8_t *)> time_getter(DataType datatype,
+                                                      const uint32_t offset) {
   switch (datatype) {
   case UINT16: {
-    return [offset](Stamp &value, const uint8_t *data) noexcept {
-      value =
-          Stamp::from_nsec(*reinterpret_cast<const uint16_t *>(data + offset));
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = T::from_nsec(*reinterpret_cast<const uint16_t *>(data + offset));
     };
   }
   case UINT32: {
-    return [offset](Stamp &value, const uint8_t *data) noexcept {
-      value =
-          Stamp::from_nsec(*reinterpret_cast<const uint32_t *>(data + offset));
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = T::from_nsec(*reinterpret_cast<const uint32_t *>(data + offset));
+    };
+  }
+  case INT32: {
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = T::from_nsec(*reinterpret_cast<const int32_t *>(data + offset));
     };
   }
   case FLOAT32: {
-    return [offset](Stamp &value, const uint8_t *data) noexcept {
-      value = Stamp::from_sec(*reinterpret_cast<const float *>(data + offset));
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = T::from_sec(*reinterpret_cast<const float *>(data + offset));
     };
   }
   case FLOAT64: {
-    return [offset](Stamp &value, const uint8_t *data) noexcept {
-      value = Stamp::from_sec(*reinterpret_cast<const double *>(data + offset));
+    return [offset](T &value, const uint8_t *data) noexcept {
+      value = T::from_sec(*reinterpret_cast<const double *>(data + offset));
     };
   }
   default: {
-    throw std::runtime_error("Unsupported datatype for stamp");
+    throw std::runtime_error("Unsupported datatype for time");
   }
   }
 }
@@ -145,7 +149,8 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
   std::function func_y = blank<double>();
   std::function func_z = blank<double>();
   std::function func_intensity = blank<double>();
-  std::function func_t = blank<Stamp>();
+  std::function func_duration = blank<Duration>();
+  std::function func_stamp = blank<Stamp>();
   std::function func_range = blank<uint32_t>();
   std::function func_row = blank<uint8_t>();
 
@@ -161,7 +166,8 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
     } else if (field.name == "t" || field.name == "time" ||
                field.name == "stamp" || field.name == "time_offset" ||
                field.name == "timeOffset" || field.name == "timestamp") {
-      func_t = data_getter(field.datatype, field.offset);
+      func_duration = time_getter<Duration>(field.datatype, field.offset);
+      func_stamp = time_getter<Stamp>(field.datatype, field.offset);
     } else if (field.name == "range") {
       func_range = data_getter<uint32_t>(field.datatype, field.offset);
     } else if (field.name == "row" || field.name == "ring" ||
@@ -170,19 +176,23 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
     }
   }
 
-  // Check if stamp is absolute or relative
-  Stamp t;
-  func_t(t, data);
-  std::function<void(Stamp &, const uint8_t *)> func_stamp;
-  if (t.sec > 100.0) {
+  // We can pretty easily figure out if the point time is either absolute or
+  // relative. We'll handle relative to start/end of scan later
+  Duration t;
+  func_duration(t, data);
+  std::function<void(Duration &, const uint8_t *)> func_t = func_duration;
+
+  // Convert from absolute time
+  if (t.to_sec() > 100.0) {
     Stamp scan_stamp = mm.stamp;
-    func_stamp = [func_t, scan_stamp](Stamp &stamp,
+    func_t = [func_stamp, scan_stamp](Duration &duration,
                                       const uint8_t *data) noexcept {
-      func_t(stamp, data);
-      stamp = Stamp::from_sec(stamp - scan_stamp);
+      Stamp absolute_stamp;
+      func_stamp(absolute_stamp, data);
+      duration = absolute_stamp - scan_stamp;
     };
   } else {
-    func_stamp = func_t;
+    func_t = func_duration;
   }
 
   size_t index = 0;
@@ -192,7 +202,7 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
     func_y(point.y, pointStart);
     func_z(point.z, pointStart);
     func_intensity(point.intensity, pointStart);
-    func_stamp(point.t, pointStart);
+    func_t(point.t, pointStart);
     func_range(point.range, pointStart);
     func_row(point.row, pointStart);
     ++index;
@@ -267,11 +277,6 @@ inline void fill_col_split_row_velodyne(LidarMeasurement &mm) {
   };
 
   _fill_col(mm, func_col);
-
-  // TODO: When I fix the duration stuff, remove this hack
-  for (auto &p : mm.points) {
-    p.t = Stamp::from_sec(p.t.to_sec() - 5.0 + 0.1);
-  }
 }
 
 // ------------------------- Helpers for reordering ------------------------- //
@@ -289,6 +294,13 @@ inline void reorder_points(LidarMeasurement &mm, size_t num_rows,
   }
   for (auto p : points_original) {
     mm.points[p.row * num_cols + p.col] = p;
+  }
+}
+
+// ------------------------- Shift point stamps ------------------------- //
+inline void shift_point_stamps(LidarMeasurement &mm, const Duration &shift) {
+  for (auto &p : mm.points) {
+    p.t = p.t + shift;
   }
 }
 
@@ -323,7 +335,7 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
-    file.read(reinterpret_cast<char *>(&nsec), sizeof(uint32_t)); point.t = Stamp::from_nsec(nsec);
+    file.read(reinterpret_cast<char *>(&nsec), sizeof(uint32_t)); point.t = Duration::from_nsec(nsec);
     // file.read(reinterpret_cast<char *>(&point.reflectivity), sizeof(uint16_t));
     file.ignore(sizeof(uint16_t));
     file.read(reinterpret_cast<char *>(&ring), sizeof(uint16_t)); point.row = ring;
@@ -389,6 +401,7 @@ inline void makeConversions(py::module &m) {
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);
   m.def("reorder_points", &reorder_points);
+  m.def("shift_point_stamps", &shift_point_stamps);
 
   // load custom bin format for helipr
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);

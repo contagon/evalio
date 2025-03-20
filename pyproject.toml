@@ -8,6 +8,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "argcomplete>=3.3.0",
+    "gdown>=5.2.0",
     "numpy",
     "pyyaml>=6.0",
     "rosbags>=0.10",
@@ -25,7 +26,6 @@ keywords = [
 license = { file = "LICENSE.txt" }
 
 [project.optional-dependencies]
-fetch = ["gdown>=5.2.0"]
 vis = ["rerun-sdk>=0.18.2"]
 
 [build-system]

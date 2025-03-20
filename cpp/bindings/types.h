@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -12,6 +13,38 @@ using namespace pybind11::literals;
 namespace evalio {
 
 inline void makeTypes(py::module &m) {
+  py::class_<Duration>(m, "Duration")
+      .def(py::init<double>(), py::kw_only(), "sec"_a)
+      .def_static("from_sec", &Duration::from_sec)
+      .def_static("from_nsec", &Duration::from_nsec)
+      .def("to_sec", &Duration::to_sec)
+      .def("to_nsec", &Duration::to_nsec)
+      .def_readonly("nsec", &Duration::nsec)
+      .def(py::self < py::self)
+      .def(py::self > py::self)
+      .def(py::self == py::self)
+      .def(py::self != py::self)
+      .def(py::self - py::self)
+      .def(py::self + py::self)
+      .def("__repr__", &Duration::toString)
+      .def("__copy__", [](const Duration &self) { return Duration(self); })
+      .def(
+          "__deepcopy__",
+          [](const Duration &self, py::dict) { return Duration(self); },
+          "memo"_a)
+      .def(py::pickle(
+          [](const Duration &p) { // __getstate__
+            /* Return a tuple that fully encodes the state of the object */
+            return py::make_tuple(p.nsec);
+          },
+          [](py::tuple t) { // __setstate__
+            if (t.size() != 1)
+              throw std::runtime_error("Invalid state when unpickling Stamp!");
+            /* Create a new C++ instance */
+            Duration p{.nsec = t[0].cast<int64_t>()};
+            return p;
+          }));
+
   py::class_<Stamp>(m, "Stamp")
       .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
       .def_static("from_sec", &Stamp::from_sec)
@@ -25,6 +58,8 @@ inline void makeTypes(py::module &m) {
       .def(py::self == py::self)
       .def(py::self != py::self)
       .def(py::self - py::self)
+      .def(py::self + Duration())
+      .def(py::self - Duration())
       .def("__repr__", &Stamp::toString)
       .def("__copy__", [](const Stamp &self) { return Stamp(self); })
       .def(
@@ -46,10 +81,11 @@ inline void makeTypes(py::module &m) {
 
   // Lidar
   py::class_<Point>(m, "Point")
-      .def(py::init<double, double, double, double, Stamp, uint32_t, uint8_t,
+      .def(py::init<double, double, double, double, Duration, uint32_t, uint8_t,
                     uint16_t>(),
            py::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
-           "t"_a = Stamp::from_nsec(0), "range"_a = 0, "row"_a = 0, "col"_a = 0)
+           "t"_a = Duration::from_sec(0.0), "range"_a = 0, "row"_a = 0,
+           "col"_a = 0)
       .def_readwrite("x", &Point::x)
       .def_readwrite("y", &Point::y)
       .def_readwrite("z", &Point::z)
@@ -75,7 +111,7 @@ inline void makeTypes(py::module &m) {
                          .y = t[1].cast<double>(),
                          .z = t[2].cast<double>(),
                          .intensity = t[3].cast<double>(),
-                         .t = t[4].cast<Stamp>(),
+                         .t = t[4].cast<Duration>(),
                          .range = t[5].cast<uint32_t>(),
                          .row = t[6].cast<uint8_t>(),
                          .col = t[7].cast<uint16_t>()};
@@ -115,6 +151,7 @@ inline void makeTypes(py::module &m) {
       .def_readonly("min_range", &LidarParams::min_range)
       .def_readonly("max_range", &LidarParams::max_range)
       .def_readonly("rate", &LidarParams::rate)
+      .def("delta_time", &LidarParams::delta_time)
       .def("__repr__", &LidarParams::toString);
 
   // Imu

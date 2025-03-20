@@ -19,5 +19,5 @@ for d in datasets:
     lidar = d.get_one_lidar()
     imu = d.get_one_imu()
     # cache them
-    pickle.dump(imu, open(data_dir / f"imu_{d.name()}.pkl", "wb"))
-    pickle.dump(lidar, open(data_dir / f"lidar_{d.name()}.pkl", "wb"))
+    pickle.dump(imu, open(data_dir / f"imu_{d.dataset_name()}.pkl", "wb"))
+    pickle.dump(lidar, open(data_dir / f"lidar_{d.dataset_name()}.pkl", "wb"))

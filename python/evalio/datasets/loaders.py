@@ -10,12 +10,14 @@ from evalio._cpp._helpers import (  # type: ignore
     fill_col_col_major,
     fill_col_row_major,
     reorder_points,
+    shift_point_stamps,
 )
 from evalio.types import (
     ImuMeasurement,
     LidarMeasurement,
     LidarParams,
     Stamp,
+    Duration,
 )
 from evalio.datasets.base import DatasetIterator, Measurement
 from rosbags.highlevel import AnyReader
@@ -211,6 +213,14 @@ class RosbagIter(DatasetIterator):
 
         stamp = Stamp(sec=msg.header.stamp.sec, nsec=msg.header.stamp.nanosec)
 
+        # Adjust the stamp to the start of the scan
+        # Do this early so we can use the stamp for the rest of the conversion
+        match self.lidar_format.stamp:
+            case LidarStamp.Start:
+                pass
+            case LidarStamp.End:
+                stamp = stamp - self.lidar_params.delta_time()
+
         cloud = PointCloudMetadata(
             stamp=stamp,
             height=msg.height,
@@ -225,12 +235,13 @@ class RosbagIter(DatasetIterator):
         # ------------------------- Handle formatting properly ------------------------- #
         # For the ones that have been guessed, use heuristics to figure out format
         # Will only be ran on the first cloud, afterwords it will be set
+        # row major
         if self.lidar_format.major == LidarMajor.Guess:
             if scan.points[0].row == scan.points[1].row:
                 self.lidar_format.major = LidarMajor.Row
             else:
                 self.lidar_format.major = LidarMajor.Column
-
+        # density
         if self.lidar_format.density == LidarDensity.Guess:
             if (
                 len(scan.points)
@@ -239,19 +250,15 @@ class RosbagIter(DatasetIterator):
                 self.lidar_format.density = LidarDensity.AllPoints
             else:
                 self.lidar_format.density = LidarDensity.OnlyValidPoints
-
-        # TODO
+        # point stamp
         if self.lidar_format.point_stamp == LidarPointStamp.Guess:
-            pass
-
-        # Adjust the stamp to the start of the scan
-        match self.lidar_format.stamp:
-            case LidarStamp.Start:
-                pass
-            case LidarStamp.End:
-                scan.stamp = Stamp.from_sec(
-                    scan.stamp.to_sec() - 1.0 / self.lidar_params.rate
-                )
+            # Leave a little fudge room just in case
+            # 2000ns = 0.002ms
+            min_time = min(scan.points, key=lambda x: x.t).t
+            if min_time < Duration.from_nsec(-2000):
+                self.lidar_format.point_stamp = LidarPointStamp.End
+            else:
+                self.lidar_format.point_stamp = LidarPointStamp.Start
 
         if (
             self.lidar_format.major == LidarMajor.Row
@@ -260,6 +267,15 @@ class RosbagIter(DatasetIterator):
             print(
                 "WARNING: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
             )
+
+        # Begin standardizing the pointcloud
+
+        # Make point stamps relative to the start of the scan
+        match self.lidar_format.point_stamp:
+            case LidarPointStamp.Start:
+                pass
+            case LidarPointStamp.End:
+                shift_point_stamps(scan, self.lidar_params.delta_time())
 
         # Add column indices
         if self.custom_col_func is not None:
@@ -281,9 +297,6 @@ class RosbagIter(DatasetIterator):
             reorder_points(
                 scan, self.lidar_params.num_rows, self.lidar_params.num_columns
             )
-
-        # TODO
-        # match self.lidar_format.point_stamp:
 
         return scan
 

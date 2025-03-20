@@ -16,7 +16,7 @@ inline void to_evalio_point(evalio::Point &ev_point,
   ev_point.y = ls_point.y;
   ev_point.z = ls_point.z;
   ev_point.intensity = ls_point.intensity;
-  ev_point.t = evalio::Stamp::from_sec(ls_point.time);
+  ev_point.t = evalio::Duration::from_sec(ls_point.time);
   ev_point.row = ls_point.ring;
 }
 

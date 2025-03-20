@@ -12,7 +12,7 @@ inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
           .y = point[1],
           .z = point[2],
           .intensity = 0.0,
-          .t = evalio::Stamp::from_sec(0),
+          .t = evalio::Duration::from_sec(0),
           .row = 0,
           .col = 0};
 }
