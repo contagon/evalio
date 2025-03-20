@@ -4,17 +4,17 @@ archs=(
     "x86_64"
 )
 
-versions=(
-    "latest"
+glibcs=(
+    "2_34"
+    "2_28"
 )
 
 for arch in "${archs[@]}"; do
-    for version in "${versions[@]}"; do
-        echo "Building for arch: $arch, version: $version"
-        # Add your build commands here
-        docker build -f Dockerfile_manylinux -t "ghcr.io/contagon/evalio_manylinux_2_28_$arch:$version" --build-arg ARCH=$arch --build-arg VERSION=$version .
-
-        docker push ghcr.io/contagon/evalio_manylinux_2_28_$arch:$version
+    for glibc in "${glibcs[@]}"; do
+        echo "Building for arch: $arch, glibc: $glibc"
+        
+        docker build -f Dockerfile_manylinux -t "ghcr.io/contagon/evalio_manylinux_${glibc}_${arch}" --build-arg ARCH=$arch --build-arg GLIBC=$glibc .
+        docker push ghcr.io/contagon/evalio_manylinux_${glibc}_$arch
     done
 done
 

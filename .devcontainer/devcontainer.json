@@ -1,12 +1,13 @@
 {
 	"name": "Evalio",
-	"image": "ghcr.io/contagon/evalio_manylinux_2_28_x86_64:latest",
+	"image": "ghcr.io/contagon/evalio_manylinux_2_34_x86_64",
 	"containerEnv": {
 		"EVALIO_DATA": "/data",
 		"CMAKE_GENERATOR": "Ninja",
 		// Set the link mode as uv doesn't symlink well in docker
 		"UV_LINK_MODE": "copy"
 	},
+	"containerUser": "evalio",
 	"mounts": [
 		// If you have set EVALIO_DATA elsewhere, you can change the source path here
 		"source=${localWorkspaceFolder}/data,target=/data,type=bind,consistency=cached"
