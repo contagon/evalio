@@ -35,7 +35,7 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
 
 class KissICP : public evalio::Pipeline {
 public:
-  KissICP() : config_(){};
+  KissICP() : config_() {};
 
   // Info
   static std::string name() { return "kiss"; }
@@ -67,8 +67,8 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override{};
-  void set_lidar_params(evalio::LidarParams params) override{};
+  void set_imu_params(evalio::ImuParams params) override {};
+  void set_lidar_params(evalio::LidarParams params) override {};
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
   };
@@ -124,41 +124,36 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override{};
+  void add_imu(evalio::ImuMeasurement mm) override {};
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+    if (!last_scan_.has_value()) {
+      last_scan_ = mm;
+      return {};
+    }
+
     // Set everything up
     std::vector<Eigen::Vector3d> points;
     points.reserve(mm.points.size());
     std::vector<double> timestamps;
     timestamps.reserve(mm.points.size());
 
-    // Assuming our mm stamp from middle of scan seems to work well
-    // => kiss expects timestamps in range [0, 1] and mid_pose_timestamp = 0.5
-    auto min_timestamp = *std::min_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-    auto max_timestamp = *std::max_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-
-    double diff = max_timestamp.t.to_sec() - min_timestamp.t.to_sec();
-    double scale = 1.0 / diff;
-    double offset = min_timestamp.t.to_sec();
-
+    // copy
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
-      double sec = point.t.to_sec();
-      sec = (sec + offset) * scale;
-      timestamps.push_back(sec);
+      timestamps.push_back(point.t.to_sec());
     }
 
+    // run
     const auto &[_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());
     for (auto point : used_points) {
       result.push_back(to_evalio_point(point));
     }
+
+    last_scan_ = mm;
+
     return result;
   }
 
@@ -166,4 +161,11 @@ private:
   std::unique_ptr<kiss_icp::pipeline::KissICP> kiss_icp_;
   kiss_icp::pipeline::KISSConfig config_;
   Sophus::SE3d lidar_T_imu_;
+
+  // Currently KiSS-ICP returns poses from the end of scans,
+  // mostly due to how they handle deskewing. We'll likely move to doing the
+  // same with evalio, but until then we optimize over the previous scan to
+  // essentially do the same. This should have minimal effect besides having one
+  // extra identity at the start (may impact ATE, not RTE)
+  std::optional<evalio::LidarMeasurement> last_scan_;
 };
