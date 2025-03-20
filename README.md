@@ -98,6 +98,9 @@ This will run the pipeline on the dataset and save the results to the `results` 
 ```bash
 evalio stats results
 ```
+> [!NOTE]  
+> KissICP does poorly by default on hilti_2022/basement_2, due to the close range and large default voxel size. You can visualize this by adding `-vvv` to the `run` command to visualize the trajectory in rerun.
+
 More complex experiments can be run, including varying pipeline parameters, via specifying a config file,
 ```yaml
 output_dir: ./results/
@@ -114,17 +117,18 @@ pipelines:
   - kiss
   # Tweak kiss parameters
   - name: kiss_tweaked
+    pipeline: kiss
     deskew: true
-    # Sweep over parameters is available as well
+    # Some of these datasets need smaller voxel sizes
     sweep:
-      min_motion_th: [0.01, 0.1, 1.0]
+      voxel_size: [0.1, 0.5, 1.0]
       
 ```
 This can then be run via
 ```bash
 evalio run -c config.yml
 ```
-That's about the gist of it! Try playing around the CLI interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems.
+That's about the gist of it! Try playing around the CLI interface to see what else is possible, such as a number of visualization options using rerun. Feel free to open an issue if you have any questions, suggestions, or problems.
 
 It should also be mentioned, autocomplete can be installed via [argcomplete](https://github.com/kislyuk/argcomplete),
 ```bash
