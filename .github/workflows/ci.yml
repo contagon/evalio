@@ -55,16 +55,17 @@ jobs:
       - name: Run tests
         run: uv run pytest -v
 
-  # later extend this to automatically release on pypi
-  # https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
-
-  # make sure everything still builds
-  # TODO: Make run with vcpkg
+  # make sure everything still builds, but only once per system
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+      # If things fail, this allows us to ssh in to fix things
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
@@ -90,7 +91,11 @@ jobs:
 
       # save vcpkg
       - name: Save vcpkg
-        id: cache-primes-save
+        id: cache-vcpkg-save
+        # make sure we always save the vcpkg cache
+        if: always()
+        # always save vcpkg cache unless there is already a cache, then don't bother
+        # if: always() && steps.cache-vcpkg-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
