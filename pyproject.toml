@@ -45,6 +45,7 @@ sdist.include = ["cpp/bindings/pipelines-src/*"]
 [tool.scikit-build.cmake.define]
 EVALIO_BUILD_PYTHON = true
 CMAKE_BUILD_TYPE = "Release"
+VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 
 [tool.cibuildwheel]
 # TODO: Add mac support eventually
@@ -54,7 +55,7 @@ manylinux-x86_64-image = "ghcr.io/contagon/evalio_manylinux_2_28_x86_64:latest"
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
 
-# local developtment
+# local development
 [tool.uv]
 dev-dependencies = [
     "cmake>=3.30.3",
