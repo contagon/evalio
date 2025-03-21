@@ -87,7 +87,7 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD: cp311-manylinux_x86_64
+          CIBW_BUILD: cp311-*
           CIBW_BUILD_VERBOSITY: 3
 
       # save vcpkg
