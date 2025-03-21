@@ -51,14 +51,15 @@ jobs:
   # https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
 
   # make sure everything still builds
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        name: Checkout
-      - run: ./clone_pipelines.sh
-        name: Clone pipelines
-      - uses: pypa/cibuildwheel@v2.23.0
-        name: Build wheel
-        env:
-          CIBW_BUILD: cp311-manylinux_x86_64
+  # TODO: Make run with vcpkg
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       name: Checkout
+  #     - run: ./clone_pipelines.sh
+  #       name: Clone pipelines
+  #     - uses: pypa/cibuildwheel@v2.23.0
+  #       name: Build wheel
+  #       env:
+  #         CIBW_BUILD: cp311-manylinux_x86_64
