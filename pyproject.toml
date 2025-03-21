@@ -51,9 +51,14 @@ VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 # TODO: Add mac support eventually
 build = "cp*-manylinux_x86_64"
 skip = "cp310-*"
-manylinux-x86_64-image = "ghcr.io/contagon/evalio_manylinux_2_28_x86_64:latest"
+manylinux-x86_64-image = "manylinux_2_28"
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
+
+[tool.cibuildwheel.linux]
+before-all = '''
+yum -y install curl zip unzip tar
+'''
 
 # local development
 [tool.uv]

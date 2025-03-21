@@ -4,6 +4,14 @@ on:
   pull_request:
     branches: [ "master", "dev" ]
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
 jobs:
   # check python formatting
   ruff:
@@ -52,14 +60,40 @@ jobs:
 
   # make sure everything still builds
   # TODO: Make run with vcpkg
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       name: Checkout
-  #     - run: ./clone_pipelines.sh
-  #       name: Clone pipelines
-  #     - uses: pypa/cibuildwheel@v2.23.0
-  #       name: Build wheel
-  #       env:
-  #         CIBW_BUILD: cp311-manylinux_x86_64
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      # Restore vcpkg
+      - name: Restore vcpkg
+        id: cache-vcpkg-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .vcpkg
+            .vcpkg_installed
+          key: ${{ runner.os }}-vcpkg
+
+      # Do all the building
+      - run: ./setup_pipelines.sh
+        name: Clone pipelines & vcpkg
+      - uses: pypa/cibuildwheel@v2.23.0
+        name: Build wheel
+        env:
+          CIBW_BUILD: cp311-manylinux_x86_64
+          CIBW_BUILD_VERBOSITY: 3
+
+      # save vcpkg
+      - name: Save vcpkg
+        id: cache-primes-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .vcpkg
+            .vcpkg_installed
+          key: ${{ steps.cache-vcpkg-restore.outputs.cache-primary-key }}
