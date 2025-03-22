@@ -5,7 +5,6 @@
 :: Create the pipelines-src directory if it doesn't exist
 if not exist cpp\bindings\pipelines-src (
     mkdir cpp\bindings\pipelines-src
-    echo "doesn't exist"
 )
 cd "cpp/bindings/pipelines-src"
 

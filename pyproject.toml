@@ -58,7 +58,7 @@ test-command = "evalio ls pipelines && pytest {project}/tests"
 before-all = "yum -y install curl zip unzip tar"
 
 [tool.cibuildwheel.macos]
-before-all = "brew install libomp llvm"
+before-all = "brew install llvm libomp"
 
 # local development
 [tool.uv]

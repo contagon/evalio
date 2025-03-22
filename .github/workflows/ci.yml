@@ -97,8 +97,6 @@ jobs:
           CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
           # pass to linux container as well
           CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
-          # help mac find openmp
-          CIBW_ENVIRONMENT_MACOS: LDFLAGS="-L/usr/local/opt/libomp/lib" CPPFLAGS="-I/usr/local/opt/libomp/include"
-
-    # export LDFLAGS="-L/usr/local/opt/libomp/lib"
-    # export CPPFLAGS="-I/usr/local/opt/libomp/include"
+          # make mac find brew llvm for openmp
+          CIBW_ENVIRONMENT_MACOS: PATH="/usr/local/opt/llvm/bin:$PATH"
+          # CIBW_ENVIRONMENT_MACOS: LDFLAGS="-L/usr/local/opt/libomp/lib" CPPFLAGS="-I/usr/local/opt/libomp/include" PATH="/usr/local/opt/llvm/bin:$PATH"
