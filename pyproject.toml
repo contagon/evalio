@@ -48,8 +48,8 @@ CMAKE_BUILD_TYPE = "Release"
 VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 
 [tool.cibuildwheel]
-build = "cp*"
-skip = ["pp*", "cp310-*", "*-win32", "*-manylinux_i686"]
+build = ["cp*-manylinux_x86_64", "cp*-macosx_universal2", "cp*-win_amd64"]
+skip = ["cp310-*"]
 manylinux-x86_64-image = "manylinux_2_28"
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
