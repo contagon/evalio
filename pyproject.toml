@@ -48,22 +48,17 @@ CMAKE_BUILD_TYPE = "Release"
 VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 
 [tool.cibuildwheel]
-# TODO: Add mac support eventually
 build = "cp*"
-skip = "cp310-*"
+skip = ["pp*", "cp310-*", "*-win32", "*-manylinux_i686"]
 manylinux-x86_64-image = "manylinux_2_28"
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
 
 [tool.cibuildwheel.linux]
-before-all = '''
-yum -y install curl zip unzip tar
-'''
+before-all = "yum -y install curl zip unzip tar"
 
 [tool.cibuildwheel.macos]
-before-all = '''
-brew install libomp
-'''
+before-all = "brew install libomp"
 
 # local development
 [tool.uv]
