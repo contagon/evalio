@@ -60,6 +60,11 @@ before-all = '''
 yum -y install curl zip unzip tar
 '''
 
+[tool.cibuildwheel.macos]
+before-all = '''
+brew install libomp
+'''
+
 # local development
 [tool.uv]
 dev-dependencies = [
