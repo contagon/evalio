@@ -95,9 +95,8 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
-          # pass to linux container as well
-          # CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
+          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
           # make mac find brew llvm for openmp
           # replaces the above, so you have to pass the other vars again
-          CIBW_ENVIRONMENT_MACOS: PATH="/usr/local/opt/llvm/bin:$PATH" VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
+          # CIBW_ENVIRONMENT_MACOS: PATH="/usr/local/opt/llvm/bin:$PATH" VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
           # CIBW_ENVIRONMENT_MACOS: LDFLAGS="-L/usr/local/opt/libomp/lib" CPPFLAGS="-I/usr/local/opt/libomp/include" PATH="/usr/local/opt/llvm/bin:$PATH"
