@@ -4,6 +4,8 @@ dist
 result*
 result
 wheelhouse
+.vcpkg_installed
+.vcpkg
 
 # other caches
 .mypy_cache

@@ -1,9 +1,16 @@
+# First thing, we check if vcpkg is installed and if so, use it for dependencies
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.vcpkg/scripts/buildsystems/vcpkg.cmake")
+    set(CMAKE_TOOLCHAIN_FILE
+        "${CMAKE_CURRENT_SOURCE_DIR}/.vcpkg/scripts/buildsystems/vcpkg.cmake"
+    )
+endif()
+
 # ------------------------- Basics ------------------------- #
 cmake_minimum_required(VERSION 3.16)
 project(EVALIO VERSION 0.0.1 LANGUAGES CXX)
 
 # Enforce C++17 for std::variant amongst others
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 

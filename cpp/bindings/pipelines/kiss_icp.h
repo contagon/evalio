@@ -35,15 +35,14 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
 
 class KissICP : public evalio::Pipeline {
 public:
-  KissICP() : config_(){};
+  KissICP() : config_() {};
 
   // Info
   static std::string name() { return "kiss"; }
   static std::string url() { return "https://github.com/PRBonn/kiss-icp"; }
   static std::map<std::string, evalio::Param> default_params() {
     return {
-        {"voxel_size", 1.0},          {"max_range", 100.0},
-        {"min_range", 5.0},           {"min_motion_th", 0.1},
+        {"voxel_size", 1.0},          {"min_motion_th", 0.1},
         {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
         {"max_num_iterations", 500},  {"max_num_threads", 0},
         {"max_points_per_voxel", 20}, {"deskew", false},
@@ -67,8 +66,11 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override{};
-  void set_lidar_params(evalio::LidarParams params) override{};
+  void set_imu_params(evalio::ImuParams params) override {};
+  void set_lidar_params(evalio::LidarParams params) override {
+    config_.max_range = params.max_range;
+    config_.min_range = params.min_range;
+  };
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
   };
@@ -96,10 +98,6 @@ public:
       } else if (std::holds_alternative<double>(value)) {
         if (key == "voxel_size") {
           config_.voxel_size = std::get<double>(value);
-        } else if (key == "max_range") {
-          config_.max_range = std::get<double>(value);
-        } else if (key == "min_range") {
-          config_.min_range = std::get<double>(value);
         } else if (key == "min_motion_th") {
           config_.min_motion_th = std::get<double>(value);
         } else if (key == "initial_threshold") {
@@ -124,7 +122,7 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override{};
+  void add_imu(evalio::ImuMeasurement mm) override {};
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
@@ -133,26 +131,13 @@ public:
     std::vector<double> timestamps;
     timestamps.reserve(mm.points.size());
 
-    // Assuming our mm stamp from middle of scan seems to work well
-    // => kiss expects timestamps in range [0, 1] and mid_pose_timestamp = 0.5
-    auto min_timestamp = *std::min_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-    auto max_timestamp = *std::max_element(
-        mm.points.begin(), mm.points.end(),
-        [](evalio::Point a, evalio::Point b) { return a.t < b.t; });
-
-    double diff = max_timestamp.t.to_sec() - min_timestamp.t.to_sec();
-    double scale = 1.0 / diff;
-    double offset = min_timestamp.t.to_sec();
-
+    // Copy
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
-      double sec = point.t.to_sec();
-      sec = (sec + offset) * scale;
-      timestamps.push_back(sec);
+      timestamps.push_back(point.t.to_sec());
     }
 
+    // Run through pipeline
     const auto &[_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());

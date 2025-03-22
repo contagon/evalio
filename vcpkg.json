@@ -1,0 +1,43 @@
+{
+  "name": "evalio",
+  "version": "0.1.0",
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "baseline": "b2a47d316de1f3625ea43a7ca3e42dd28c52ece7",
+      "repository": "https://github.com/microsoft/vcpkg"
+    },
+    "registries": [
+      {
+        "kind": "artifact",
+        "location": "https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip",
+        "name": "microsoft"
+      }
+    ]
+  },
+  "dependencies": [
+    "eigen3",
+    "gtsam",
+    {
+      "name": "opencv",
+      "default-features": false,
+      "features": [
+        "eigen"
+      ]
+    },
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": [
+        "eigen"
+      ]
+    },
+    {
+      "name": "pcl",
+      "default-features": false
+    },
+    "sophus",
+    "tbb",
+    "robin-map"
+  ]
+}

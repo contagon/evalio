@@ -4,6 +4,14 @@ on:
   pull_request:
     branches: [ "master", "dev" ]
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
 jobs:
   # check python formatting
   ruff:
@@ -23,7 +31,7 @@ jobs:
     - uses: jidicula/clang-format-action@v4.14.0
       name: Clang-Format
       with:
-        clang-format-version: '10'
+        clang-format-version: '20'
 
   # run tests
   test:
@@ -47,18 +55,49 @@ jobs:
       - name: Run tests
         run: uv run pytest -v
 
-  # later extend this to automatically release on pypi
-  # https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
-
-  # make sure everything still builds
+  # make sure everything still builds, but only once per system
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-13]
     steps:
       - uses: actions/checkout@v4
         name: Checkout
-      - run: ./clone_pipelines.sh
-        name: Clone pipelines
+      # If things fail, this allows us to ssh in to fix things
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
+
+      # Let vcpkg store caches in github actions
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      # Do all the building
+      - run: ./cpp/setup_pipelines.sh
+        if: matrix.os != 'windows-latest'
+        name: Clone pipelines & vcpkg
+      - run: ./cpp/setup_pipelines.bat
+        if: matrix.os == 'windows-latest'
+        name: Clone pipelines & vcpkg
+
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD: cp311-manylinux_x86_64
+          CIBW_BUILD: "cp311-manylinux_x86_64 cp313-macosx_x86_64 cp311-win_amd64"
+          CIBW_BUILD_VERBOSITY: 1
+          # for vcpkg caches
+          CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
+          # pass to linux container as well
+          # CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
+          # make mac find brew llvm for openmp
+          # replaces the above, so you have to pass the other vars again
+          CIBW_ENVIRONMENT_MACOS: PATH="/usr/local/opt/llvm/bin:$PATH" VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
+          # CIBW_ENVIRONMENT_MACOS: LDFLAGS="-L/usr/local/opt/libomp/lib" CPPFLAGS="-I/usr/local/opt/libomp/include" PATH="/usr/local/opt/llvm/bin:$PATH"
