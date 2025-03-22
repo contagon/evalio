@@ -84,7 +84,7 @@ jobs:
       - run: ./cpp/setup_pipelines.sh
         if: matrix.os != 'windows-latest'
         name: Clone pipelines & vcpkg
-      - run: ./cpp/build_pipelines.bat
+      - run: ./cpp/setup_pipelines.bat
         if: matrix.os == 'windows-latest'
         name: Clone pipelines & vcpkg
 
