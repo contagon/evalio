@@ -59,6 +59,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
         # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
@@ -71,15 +72,13 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      # Restore vcpkg
-      - name: Restore vcpkg
-        id: cache-vcpkg-restore
-        uses: actions/cache/restore@v4
+      # Let vcpkg store caches in github actions
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
         with:
-          path: |
-            .vcpkg
-            .vcpkg_installed
-          key: ${{ runner.os }}-vcpkg
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       # Do all the building
       - run: ./setup_pipelines.sh
@@ -89,17 +88,6 @@ jobs:
         env:
           CIBW_BUILD: cp311-*
           CIBW_BUILD_VERBOSITY: 3
-
-      # save vcpkg
-      - name: Save vcpkg
-        id: cache-vcpkg-save
-        # make sure we always save the vcpkg cache
-        if: always()
-        # always save vcpkg cache unless there is already a cache, then don't bother
-        # if: always() && steps.cache-vcpkg-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .vcpkg
-            .vcpkg_installed
-          key: ${{ steps.cache-vcpkg-restore.outputs.cache-primary-key }}
+          # for vcpkg caches
+          CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
+          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
