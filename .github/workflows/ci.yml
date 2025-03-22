@@ -81,8 +81,13 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       # Do all the building
-      - run: ./setup_pipelines.sh
+      - run: ./cpp/setup_pipelines.sh
+        if: matrix.os != 'windows-latest'
         name: Clone pipelines & vcpkg
+      - run: ./cpp/build_pipelines.bat
+        if: matrix.os == 'windows-latest'
+        name: Clone pipelines & vcpkg
+
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
