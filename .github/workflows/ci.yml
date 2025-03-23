@@ -53,9 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, macos-13, macos-14]
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -76,25 +74,13 @@ jobs:
 
       # Do all the building
       - run: ./cpp/setup_pipelines.sh
-        if: matrix.os != 'windows-latest'
-        name: Clone pipelines & vcpkg
-      - run: ./cpp/setup_pipelines.bat
-        if: matrix.os == 'windows-latest'
         name: Clone pipelines & vcpkg
 
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD: "cp311-manylinux_x86_64 cp311-win_amd64 cp313-macosx_x86_64 cp311-macosx_arm64"
+          CIBW_BUILD: "cp311-manylinux_x86_64 cp313-macosx_x86_64 cp311-macosx_arm64"
           CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
           CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
-          # for repairing windows wheels
-          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
