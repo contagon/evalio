@@ -4,14 +4,6 @@ on:
   pull_request:
     branches: [ "master", "dev" ]
 
-  workflow_dispatch:
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-        required: false
-        default: false
-
 jobs:
   # check python formatting
   ruff:
@@ -63,14 +55,14 @@ jobs:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
         # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
     steps:
       - uses: actions/checkout@v4
         name: Checkout
       # If things fail, this allows us to ssh in to fix things
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ inputs.debug_enabled }}
+        if: ${{ runner.debug }} == '1'
 
       # Let vcpkg store caches in github actions
       - name: Export GitHub Actions cache environment variables
@@ -91,12 +83,8 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD: "cp311-manylinux_x86_64 cp313-macosx_x86_64 cp311-win_amd64"
+          CIBW_BUILD: "cp311-manylinux_x86_64 cp311-win_amd64 cp313-macosx_x86_64 cp311-macosx_arm64"
           CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
           CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
-          # make mac find brew llvm for openmp
-          # replaces the above, so you have to pass the other vars again
-          # CIBW_ENVIRONMENT_MACOS: PATH="/usr/local/opt/llvm/bin:$PATH" VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
-          # CIBW_ENVIRONMENT_MACOS: LDFLAGS="-L/usr/local/opt/libomp/lib" CPPFLAGS="-I/usr/local/opt/libomp/include" PATH="/usr/local/opt/llvm/bin:$PATH"
