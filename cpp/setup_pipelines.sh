@@ -27,7 +27,9 @@ git checkout master
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then
-    git clone --depth 1 https://github.com/microsoft/vcpkg.git .vcpkg/
+    git clone https://github.com/microsoft/vcpkg.git .vcpkg/
 fi
+cd .vcpkg
+git switch --detach 2025.03.19
+cd ..
 ./.vcpkg/bootstrap-vcpkg.sh
-# ./.vcpkg/vcpkg install --x-install-root=.vcpkg_installed/
