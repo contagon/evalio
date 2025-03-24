@@ -164,21 +164,29 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     gt_og = gt_list[0]
 
     # Setup visualization
-    # if visualize:
-    #     import rerun as rr
+    if visualize:
+        try:
+            import rerun as rr
+        except Exception:
+            print("Rerun not found, visualization disabled")
+            visualize = False
 
-    #     import evalio.vis as evis
+    rr = None
+    convert = None
+    if visualize:
+        import rerun as rr
+        from evalio.rerun import convert
 
-    #     rr.init(
-    #         str(dir),
-    #         spawn=False,
-    #     )
-    #     rr.connect("0.0.0.0:9876")
-    #     rr.log(
-    #         "gt",
-    #         evis.poses_to_points(gt_og.poses, color=[0, 0, 255]),
-    #         static=True,
-    #     )
+        rr.init(
+            str(dir),
+            spawn=False,
+        )
+        rr.connect_tcp("0.0.0.0:9876")
+        rr.log(
+            "gt",
+            convert(gt_og, color=[0, 0, 255]),
+            static=True,
+        )
 
     # Group into pipelines
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
@@ -212,12 +220,12 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
                 ]
             )
 
-            # if visualize:
-            #     rr.log(
-            #         traj.metadata["name"],
-            #         evis.poses_to_points(traj.poses, color=[255, 0, 0]),
-            #         static=True,
-            #     )
+            if rr is not None and convert is not None and visualize:
+                rr.log(
+                    traj.metadata["name"],
+                    convert(traj),
+                    static=True,
+                )
 
         if sort is None:
             pass

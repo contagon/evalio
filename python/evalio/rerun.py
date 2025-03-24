@@ -28,13 +28,12 @@ try:
                 self.blueprint = rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
-                        rrb.BarChartView(),  # bar chart
                         # TODO: Error as well?
                         rrb.Spatial3DView(  # 3d view
                             overrides=overrides,
                             background=rrb.BackgroundKind.GradientBright,
                         ),
-                        row_shares=[1, 1, 3],
+                        row_shares=[1, 3],
                     ),
                     collapse_panels=True,
                 )
@@ -88,18 +87,22 @@ try:
                 if self.gt_o_T_imu_o is not None:
                     rr.log("imu", convert(self.gt_o_T_imu_o * pose))
 
-            # If level is 2 or greater, include the image
+            # If level is 2 or greater, include the features from the scan
             if self.level >= 2:
+                if len(features) > 0:
+                    rr.log("imu/lidar/features", convert(list(features)))
+
+
+            # If level is 3 or greater, include the image and original point cloud
+            if self.level >= 3:
                 intensity = np.array([d.intensity for d in data.points])
                 # row major order
                 image = intensity.reshape(
                     (self.lidar_params.num_rows, self.lidar_params.num_columns)
                 )
                 rr.log("image", rr.Image(image))
+                rr.log("imu/lidar/scan", convert(data))
 
-            # If level is 3 or greater, include the features from the scan
-            if self.level >= 3:
-                rr.log("imu/lidar/frame", convert(list(features)))
 
     # ------------------------- For converting to rerun types ------------------------- #
     @overload
@@ -114,9 +117,9 @@ try:
     def convert(obj: np.ndarray, color: Optional[np.ndarray] = None) -> rr.Points3D: ...
 
     @overload
-    def convert(obj: list[SE3]) -> rr.Points3D: ...
+    def convert(obj: list[SE3], color: Optional[list[int]] = None) -> rr.Points3D: ...
     @overload
-    def convert(obj: Trajectory) -> rr.Points3D: ...
+    def convert(obj: Trajectory, color: Optional[list[int]] = None) -> rr.Points3D: ...
 
     @overload
     def convert(obj: SE3) -> rr.Transform3D: ...
@@ -147,7 +150,7 @@ try:
             return convert(np.asarray(obj.to_vec_positions()), color_parsed)
 
         elif isinstance(obj, list) and isinstance(obj[0], Point):
-            return convert(np.asarray(LidarMeasurement(Stamp.from_sec(0), obj), color))
+            return convert(LidarMeasurement(Stamp.from_sec(0), obj), color)
 
         elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:
             return rr.Points3D(obj, colors=color)
@@ -171,7 +174,7 @@ try:
             points = np.zeros((len(obj), 3))
             for i, pose in enumerate(obj):
                 points[i] = pose.trans
-            return rr.Points3D(points)
+            return rr.Points3D(points, colors=color)
 
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")
@@ -181,6 +184,10 @@ except Exception as _:
     class RerunVis:
         def __init__(self, level: int) -> None:
             if level != 0:
-                raise ValueError(
-                    "Attempting to visualize something, but rerun isn't installed!"
-                )
+                print("Rerun not found, visualization disabled")
+
+        def new_recording(self, dataset: Dataset):
+            pass
+
+        def log(self, data: LidarMeasurement, features: Sequence[Point], pose: SE3):
+            pass
