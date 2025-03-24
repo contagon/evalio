@@ -1,3 +1,5 @@
+name: CI
+
 on:
   push:
     branches: [ "master", "dev" ]
@@ -25,11 +27,14 @@ jobs:
       with:
         clang-format-version: '20'
 
-  # run tests
+  # run tests on both mac and ubuntu, across all python versions
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-14
         python-version:
           - "3.11"
           - "3.12"
@@ -47,7 +52,7 @@ jobs:
       - name: Run tests
         run: uv run pytest -v
 
-  # make sure everything still builds, but only once per system
+  # make sure everything still builds, but only one python per system
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -79,7 +84,7 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD: "cp311-manylinux_x86_64 cp313-macosx_x86_64 cp311-macosx_arm64"
+          CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
