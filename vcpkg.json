@@ -39,11 +39,5 @@
     "sophus",
     "tbb",
     "robin-map"
-  ],
-  "overrides": [
-    {
-      "name": "tbb",
-      "version": "2021.13.0"
-    }
   ]
 }
