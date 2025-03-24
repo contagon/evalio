@@ -80,23 +80,11 @@ exclude = ["cpp/**/*"]
 testpaths = ["tests"]
 
 [tool.bumpversion]
-current_version = "0.0.1"
-parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
-serialize = ["{major}.{minor}.{patch}"]
-search = "{current_version}"
-replace = "{new_version}"
-regex = false
-ignore_missing_version = false
-ignore_missing_files = false
-tag = true
-sign_tags = false
-tag_name = "v{new_version}"
-tag_message = "Bump version: {current_version} → {new_version}"
-allow_dirty = false
+allow_dirty = true
 commit = true
 message = "Bump version: {current_version} → {new_version}"
-moveable_tags = []
-commit_args = ""
-setup_hooks = []
-pre_commit_hooks = []
-post_commit_hooks = []
+tag = true
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+regex = true
+files = [{ filename = "CMakeLists.txt" }, { filename = "pyproject.toml" }]
