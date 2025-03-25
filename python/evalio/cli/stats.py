@@ -57,39 +57,49 @@ def load(path: Path) -> Trajectory:
     return Trajectory(metadata=metadata, stamps=stamps, poses=poses)
 
 
-def align_stamps(
-    traj1: Trajectory, traj2: Trajectory, tol: float = 1e-2
-) -> tuple[Trajectory, Trajectory]:
+def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
+    return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
+
+
+def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Trajectory]:
     # Check if we need to skip poses in traj1
     first_pose_idx = 0
-    while (traj1.stamps[first_pose_idx] - traj2.stamps[0]) < -tol:
+    while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
         first_pose_idx += 1
+    if _check_overstep(traj1.stamps, traj2.stamps[0], first_pose_idx):
+        first_pose_idx -= 1
     traj1.stamps = traj1.stamps[first_pose_idx:]
     traj1.poses = traj1.poses[first_pose_idx:]
 
     # Check if we need to skip poses in traj2
     first_pose_idx = 0
-    while (traj2.stamps[first_pose_idx] - traj1.stamps[0]) < -tol:
+    while traj2.stamps[first_pose_idx] < traj1.stamps[0]:
         first_pose_idx += 1
+    if _check_overstep(traj2.stamps, traj1.stamps[0], first_pose_idx):
+        first_pose_idx -= 1
     traj2.stamps = traj2.stamps[first_pose_idx:]
     traj2.poses = traj2.poses[first_pose_idx:]
 
     # Find the one that is at a higher frame rate
     # Leaves us with traj1 being the one with the higher frame rate
     swapped = False
-    traj_1_rate = (traj1.stamps[-1] - traj1.stamps[0]) / len(traj1.stamps)
-    traj_2_rate = (traj2.stamps[-1] - traj2.stamps[0]) / len(traj2.stamps)
-    if (traj_1_rate - traj_2_rate) < -tol:
+    traj_1_dt = (traj1.stamps[-1] - traj1.stamps[0]).to_sec() / len(traj1.stamps)
+    traj_2_dt = (traj2.stamps[-1] - traj2.stamps[0]).to_sec() / len(traj2.stamps)
+    if traj_1_dt > traj_2_dt:
         traj1, traj2 = traj2, traj1
         swapped = True
 
-    # Align the two trajectories by selectively keeping traj1 stamps
+    # Align the two trajectories by subsampling keeping traj1 stamps
     traj1_idx = 0
     traj1_stamps = []
     traj1_poses = []
     for i, stamp in enumerate(traj2.stamps):
-        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] - stamp < -tol:
+        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
             traj1_idx += 1
+
+        # go back one if we overshot
+        if _check_overstep(traj1.stamps, stamp, traj1_idx):
+            traj1_idx -= 1
 
         traj1_stamps.append(traj1.stamps[traj1_idx])
         traj1_poses.append(traj1.poses[traj1_idx])
@@ -108,7 +118,7 @@ def align_stamps(
 
 
 def align_poses(traj: Trajectory, gt: Trajectory):
-    """Transforms the first to look like the second"""
+    """Transforms the first to have to same origin as the second"""
     imu_o_T_imu_0 = traj.poses[0]
     gt_o_T_imu_0 = gt.poses[0]
     gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
