@@ -14,9 +14,20 @@ from rosbags.typesys.stores.ros1_noetic import (
     geometry_msgs__msg__Quaternion as RosQuaternion,
 )
 
-from evalio.types import ImuMeasurement, LidarMeasurement, Point
+from evalio.types import ImuMeasurement, LidarMeasurement, Point, SE3, SO3
 
 import numpy as np
+
+
+def isclose_se3(a: SE3, b: SE3) -> bool:
+    diff = a * b.inverse()
+    return np.allclose(diff.trans, np.zeros(3)) and np.allclose(
+        diff.rot.log(), np.zeros(3)
+    )
+
+
+def rand_se3():
+    return SE3(rot=SO3.exp(np.random.rand(3)), trans=np.random.rand(3))
 
 
 def check_lidar_eq(exp: LidarMeasurement, got: LidarMeasurement):

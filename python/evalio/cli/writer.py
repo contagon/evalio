@@ -54,7 +54,7 @@ class TrajectoryWriter:
     def write(self, stamp: Stamp, pose: SE3):
         self.writer.writerow(
             [
-                stamp.to_sec(),
+                f"{stamp.sec}.{stamp.nsec:09}",
                 pose.trans[0],
                 pose.trans[1],
                 pose.trans[2],
