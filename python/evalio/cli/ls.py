@@ -37,25 +37,25 @@ def ls(kind: str, search: Optional[str] = None, quiet: bool = False):
         )
 
     if kind == "pipelines":
-        data = [["Name", "Params", "Default", "Link"]]
+        data = [["Name", "Version", "Params", "Default", "Link"]]
         for p in PipelineBuilder._all_pipelines().values():
             if search is not None and search not in p.name():
                 continue
             params = p.default_params()
             keys = "\n".join(params.keys())
             values = "\n".join([str(v) for v in params.values()])
-            data.append([p.name(), keys, values, p.url()])
+            data.append([p.name(), p.version(), keys, values, p.url()])
 
         if len(data) == 1:
             print("No pipelines found")
             return
 
-        align = ("center", "right", "left", "center")
+        align = ("center", "center", "right", "left", "center")
 
         # delete unneeded columns if quiet
         if quiet:
-            data = [[d[0], d[3]] for d in data]
-            align = ("center", "center")
+            data = [[d[0], d[1], d[-1]] for d in data]
+            align = ("center", "center", "center")
 
         print(
             tabulate(

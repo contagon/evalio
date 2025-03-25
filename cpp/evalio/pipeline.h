@@ -18,6 +18,11 @@
 #endif
 #endif
 
+// For converting version definitions to string
+// https://stackoverflow.com/a/10791845
+#define STR(x) #x
+#define XSTR(x) STR(x)
+
 namespace evalio {
 
 using Param = std::variant<bool, int, double, std::string>;
@@ -27,8 +32,9 @@ public:
   virtual ~Pipeline() {};
 
   // Info
+  static std::string version() { return "0.0.0"; }
+  static std::string url() { return "url-not-set"; }
   static std::string name() { throw std::runtime_error("Not implemented"); }
-  static std::string url() { throw std::runtime_error("Not implemented"); }
   static std::map<std::string, Param> default_params() {
     throw std::runtime_error("Not implemented");
   }

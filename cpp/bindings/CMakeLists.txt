@@ -6,7 +6,37 @@ set(RESULTS "")
 
 set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pipelines-src")
 
-# ------------------------- Import all pipelines ------------------------- #
+# ------------------------- Helpers ------------------------- #
+# Extract version of a project which was previously included with add_subdirectory().
+# https://stackoverflow.com/a/49551280
+function(subproject_version SRC_DIR VERSION_VAR)
+    # Read CMakeLists.txt for subproject and extract project() call(s) from it.
+    file(
+        STRINGS
+        "${PIPELINES_SRC}/${SRC_DIR}/CMakeLists.txt"
+        project_calls
+        REGEX "[ \t]*project\\("
+    )
+    # For every project() call try to extract its VERSION option
+    foreach(project_call ${project_calls})
+        string(
+            REGEX MATCH
+            "VERSION[ ]+([^ )]+)"
+            version_param
+            "${project_call}"
+        )
+        if(version_param)
+            set(version_value "${CMAKE_MATCH_1}")
+        endif()
+    endforeach()
+    if(version_value)
+        set(${VERSION_VAR} "${version_value}" PARENT_SCOPE)
+    else()
+        message("WARNING: Cannot extract version for '${SRC_DIR}'")
+    endif()
+endfunction(subproject_version)
+
+# iterates over pipeline folders to find them
 function(find_pipeline SRC_DIR TARGET_NAME DEF_NAME)
     if(EXISTS "${PIPELINES_SRC}/${SRC_DIR}/")
         message(
@@ -14,8 +44,13 @@ function(find_pipeline SRC_DIR TARGET_NAME DEF_NAME)
         )
         add_subdirectory(${PIPELINES_SRC}/${SRC_DIR})
         set(LIBS ${LIBS} ${TARGET_NAME} PARENT_SCOPE)
-        set(DEF ${DEF} ${DEF_NAME} PARENT_SCOPE)
-        set(RESULTS ${RESULTS} "-- ✓ ${DEF_NAME}\n" PARENT_SCOPE)
+        subproject_version(${SRC_DIR} ${DEF_NAME}_version)
+        set(DEF ${DEF} ${DEF_NAME}=${${DEF_NAME}_version} PARENT_SCOPE)
+        set(RESULTS
+            ${RESULTS}
+            "-- ✓ ${DEF_NAME} ${${DEF_NAME}_version}\n"
+            PARENT_SCOPE
+        )
         message(
             "----------------------- Finished ${SRC_DIR} -----------------------"
         )
@@ -24,12 +59,13 @@ function(find_pipeline SRC_DIR TARGET_NAME DEF_NAME)
     endif()
 endfunction()
 
+# ------------------------- Import all pipelines ------------------------- #
 message("################### Searching for pipelines ###################")
 find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline EVALIO_KISS_ICP)
 find_pipeline(LIO-SAM                lio_sam           EVALIO_LIO_SAM)
 message("###################    Pipeline Results     ###################")
 if(NOT "${RESULTS}" STREQUAL "")
-    message(" ")
+    string(STRIP "${RESULTS}" RESULTS)
     message(${RESULTS})
 endif()
 message("###############################################################")
@@ -40,7 +76,7 @@ FetchContent_Declare(
     pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
     GIT_TAG v2.13.6
-    FIND_PACKAGE_ARGS # uses find_package first, git if it fails
+    # FIND_PACKAGE_ARGS # uses find_package first, git if it fails
 )
 FetchContent_MakeAvailable(pybind11)
 
