@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Optional, Union
 from itertools import islice
 
 from enum import StrEnum, auto, Enum
@@ -132,6 +132,12 @@ class Dataset(StrEnum):
     @property
     def folder(self) -> Path:
         return EVALIO_DATA / self.full_name
+
+    def size_on_disk(self) -> Optional[float]:
+        if not self.is_downloaded():
+            return None
+        else:
+            return sum(f.stat().st_size for f in self.folder.glob("**/*")) / 1e9
 
 
 class CharKinds(Enum):
