@@ -1,14 +1,15 @@
-import csv
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
-import yaml
 from dataclasses import dataclass
 from tabulate import tabulate
 
-from evalio.types import SE3, SO3, Stamp, Trajectory
+from evalio.types import Stamp, Trajectory
+from evalio.datasets.loaders import load_pose_csv
+
+import yaml
 
 
 @dataclass(kw_only=True)
@@ -17,44 +18,30 @@ class Ate:
     rot: float
 
 
-def load(path: Path) -> Trajectory:
-    fieldnames = ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+def load_trajectory(path: Path) -> "Trajectory":
+    """Load a saved experiment trajectory from file.
 
-    poses = []
-    stamps = []
+    Args:
+        path (Path): Location of trajectory results.
 
+    Returns:
+        Trajectory: Loaded trajectory with metadata, stamps, and poses.
+    """
     with open(path) as file:
         metadata_filter = filter(lambda row: row[0] == "#", file)
         metadata_list = [row[1:].strip() for row in metadata_filter]
+        # remove the header row
         metadata_list.pop(-1)
         metadata_str = "\n".join(metadata_list)
-        # remove the header row
         metadata = yaml.safe_load(metadata_str)
 
-        # Load trajectory
-        file.seek(0)
-        csvfile = filter(lambda row: row[0] != "#", file)
-        reader = csv.DictReader(csvfile, fieldnames=fieldnames)
-        for line in reader:
-            r = SO3(
-                qw=float(line["qw"]),
-                qx=float(line["qx"]),
-                qy=float(line["qy"]),
-                qz=float(line["qz"]),
-            )
-            t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
-            pose = SE3(r, t)
+    trajectory = load_pose_csv(
+        path,
+        fieldnames=["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
+    )
+    trajectory.metadata = metadata
 
-            if "nsec" not in fieldnames:
-                stamp = Stamp.from_sec(float(line["sec"]))
-            elif "sec" not in fieldnames:
-                stamp = Stamp.from_nsec(int(line["nsec"]))
-            else:
-                stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
-            poses.append(pose)
-            stamps.append(stamp)
-
-    return Trajectory(metadata=metadata, stamps=stamps, poses=poses)
+    return trajectory
 
 
 def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
@@ -166,7 +153,7 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
-        traj = load(file_path)
+        traj = load_trajectory(file_path)
         trajectories.append(traj)
 
     gt_list: list[Trajectory] = []
