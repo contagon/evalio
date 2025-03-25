@@ -49,6 +49,9 @@ target_link_libraries(_cpp PRIVATE ${LIBS})
 target_compile_definitions(_cpp PRIVATE ${DEF})
 install(TARGETS _cpp DESTINATION evalio)
 
+# install licenses as well
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)
+
 # Build stubs
 # TODO: Something about this breaks python 3.12 and 3.13 builds
 # add_custom_command(

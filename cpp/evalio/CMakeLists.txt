@@ -34,6 +34,3 @@ install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/evalioConfigVersion.cmake
     DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/evalio"
 )
-
-# licenses
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)
