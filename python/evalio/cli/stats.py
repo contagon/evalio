@@ -118,7 +118,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Traj
 
 
 def align_poses(traj: Trajectory, gt: Trajectory):
-    """Transforms the first to look like the second"""
+    """Transforms the first to have to same origin as the second"""
     imu_o_T_imu_0 = traj.poses[0]
     gt_o_T_imu_0 = gt.poses[0]
     gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()

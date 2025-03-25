@@ -1,6 +1,8 @@
+from evalio.types import SO3
 from evalio.types import Stamp
 from evalio.types import SE3, Trajectory
-from evalio.cli.stats import align_stamps
+from evalio.cli.stats import align_stamps, align_poses
+import numpy as np
 
 ID = SE3.identity()
 
@@ -70,3 +72,35 @@ def test_overstep():
         raise ValueError(
             f"traj2out is wrong exp: {traj2.stamps}, got: {traj2_out.stamps}"
         )
+
+
+def _rand_se3():
+    return SE3(rot=SO3.exp(np.random.rand(3)), trans=np.random.rand(3))
+
+
+def _isclose_se3(a: SE3, b: SE3):
+    diff = a * b.inverse()
+    assert np.allclose(diff.trans, np.zeros(3)), "Translations are off"
+    assert np.allclose(diff.rot.log(), np.zeros(3)), "Rotations are off"
+
+
+def test_align_poses():
+    np.random.seed(0)
+    gt = Trajectory(
+        metadata={},
+        stamps=[s(i) for i in range(10)],
+        poses=[_rand_se3() for _ in range(10)],
+    )
+
+    offset = _rand_se3()
+
+    traj2 = Trajectory(
+        metadata={},
+        stamps=[s(i) for i in range(10)],
+        poses=[offset * pose for pose in gt.poses],
+    )
+
+    align_poses(traj2, gt)
+
+    for a, b in zip(traj2.poses, gt.poses):
+        _isclose_se3(a, b)
