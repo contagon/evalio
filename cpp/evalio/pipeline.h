@@ -6,11 +6,23 @@
 
 #include "evalio/types.h"
 
+// Gotten from here, so we don't have to use pybind here directly
+// https://github.com/pybind/pybind11/blob/master/include/pybind11/detail/common.h#L164C1-L170C7
+// Helps evalio bindings be found in other modules
+// Licensed via BSD-3-Clause
+#if !defined(PYBIND11_EXPORT)
+#if defined(WIN32) || defined(_WIN32)
+#define PYBIND11_EXPORT __declspec(dllexport)
+#else
+#define PYBIND11_EXPORT __attribute__((visibility("default")))
+#endif
+#endif
+
 namespace evalio {
 
 using Param = std::variant<bool, int, double, std::string>;
 
-class Pipeline {
+class PYBIND11_EXPORT Pipeline {
 public:
   virtual ~Pipeline() {};
 
