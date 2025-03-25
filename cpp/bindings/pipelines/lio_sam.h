@@ -51,6 +51,7 @@ public:
   LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()) {};
 
   // Info
+  static std::string version() { return XSTR(EVALIO_LIO_SAM); }
   static std::string name() { return "liosam"; }
   static std::string url() { return "https://github.com/contagon/LIO-SAM"; }
   static std::map<std::string, evalio::Param> default_params() {

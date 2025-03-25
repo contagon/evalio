@@ -38,6 +38,7 @@ public:
   KissICP() : config_() {};
 
   // Info
+  static std::string version() { return XSTR(EVALIO_KISS_ICP); }
   static std::string name() { return "kiss"; }
   static std::string url() { return "https://github.com/PRBonn/kiss-icp"; }
   static std::map<std::string, evalio::Param> default_params() {
