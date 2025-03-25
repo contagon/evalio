@@ -12,7 +12,7 @@ using namespace pybind11::literals;
 
 namespace evalio {
 
-class PyPipeline : public evalio::Pipeline {
+class PYBIND11_EXPORT PyPipeline : public evalio::Pipeline {
 public:
   using evalio::Pipeline::Pipeline;
 

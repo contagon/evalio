@@ -85,7 +85,6 @@ jobs:
         name: Build wheel
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
-          CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: >
             VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" 

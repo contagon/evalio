@@ -30,7 +30,6 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          CIBW_BUILD_VERBOSITY: 1
           # for vcpkg caches
           CIBW_ENVIRONMENT: >
             VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" 
