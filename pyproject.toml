@@ -11,9 +11,11 @@ dependencies = [
     "gdown>=5.2.0",
     "numpy",
     "pyyaml>=6.0",
+    "rapidfuzz>=3.12.2",
     "rosbags>=0.10",
     "tabulate>=0.9",
     "tqdm>=4.66",
+    "typer>=0.15.2",
 ]
 keywords = [
     "lidar",
@@ -34,6 +36,7 @@ build-backend = "scikit_build_core.build"
 
 [project.scripts]
 evalio = "evalio.cli:main"
+evalio2 = "evalio.cli:app"
 
 # -------------- Tools -------------- #
 # building

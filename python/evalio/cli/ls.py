@@ -2,14 +2,58 @@ from tabulate import tabulate
 
 from .parser import DatasetBuilder, PipelineBuilder
 from typing import Optional
+import typer
+from typing_extensions import Annotated
+from enum import StrEnum, auto
+from rapidfuzz.process import extract_iter
+
+app = typer.Typer()
 
 
-def ls(kind: str, search: Optional[str] = None, quiet: bool = False):
-    if kind == "datasets":
+class Kind(StrEnum):
+    datasets = auto()
+    pipelines = auto()
+
+
+@app.command(no_args_is_help=True)
+def ls(
+    kind: Annotated[Kind, typer.Argument(help="The kind of object to list")],
+    search: Annotated[
+        Optional[str],
+        typer.Option(
+            "--search",
+            "-s",
+            help="Fuzzy search for a dataset by name",
+        ),
+    ] = None,
+    quiet: Annotated[
+        bool,
+        typer.Option(
+            "--quiet",
+            "-q",
+            help="Output less verbose information",
+        ),
+    ] = False,
+):
+    """
+    List dataset and pipeline information
+    """
+    if kind == Kind.datasets:
         data = [["Name", "Sequences", "Down", "Link"]]
-        for d in DatasetBuilder._all_datasets().values():
-            if search is not None and search not in d.dataset_name():
-                continue
+
+        # Search for datasets using rapidfuzz
+        # TODO: Make it search through sequences as well?
+        all_datasets = list(DatasetBuilder._all_datasets().values())
+        if search is not None:
+            to_include = extract_iter(
+                search, [d.dataset_name() for d in all_datasets], score_cutoff=90
+            )
+            to_include = [all_datasets[idx] for _name, _score, idx in to_include]
+        else:
+            to_include = all_datasets
+
+        # Fill out table
+        for d in to_include:
             seq = "\n".join(d.sequences())
             downloaded = [d(s).is_downloaded() for s in d.sequences()]
             downloaded = "\n".join(["✔" if d else "-" for d in downloaded])
@@ -36,11 +80,22 @@ def ls(kind: str, search: Optional[str] = None, quiet: bool = False):
             )
         )
 
-    if kind == "pipelines":
+    if kind == Kind.pipelines:
         data = [["Name", "Params", "Default", "Link"]]
-        for p in PipelineBuilder._all_pipelines().values():
-            if search is not None and search not in p.name():
-                continue
+
+        # Search for pipelines using rapidfuzz
+        # TODO: Make it search through parameters as well?
+        all_pipelines = list(PipelineBuilder._all_pipelines().values())
+        if search is not None:
+            to_include = extract_iter(
+                search, [d.name() for d in all_pipelines], score_cutoff=90
+            )
+            to_include = [all_pipelines[idx] for _name, _score, idx in to_include]
+        else:
+            to_include = all_pipelines
+
+        # Fill out table
+        for p in to_include:
             params = p.default_params()
             keys = "\n".join(params.keys())
             values = "\n".join([str(v) for v in params.values()])

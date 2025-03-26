@@ -8,6 +8,8 @@ import itertools
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
 
+from .typer import app
+
 
 def dataset_completer(**kwargs):
     datasets = DatasetBuilder._all_datasets()
@@ -83,7 +85,7 @@ def main():
     args = args.parse_args()
 
     # Import these now to spend up argcomplete
-    from .download import download_datasets
+    from .data_manager import dl as download_datasets
     from .ls import ls
     from .run import run
     from .stats import eval
