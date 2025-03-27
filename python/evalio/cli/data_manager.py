@@ -1,28 +1,19 @@
 from .parser import DatasetBuilder
 import typer
 from typing_extensions import Annotated
-from .completions import complete_dataset, validate_datasets
+from .completions import DatasetArg, ModuleArg
 
 
 app = typer.Typer()
 
 
 @app.command(no_args_is_help=True)
-def dl(
-    datasets: Annotated[
-        list[str],
-        typer.Argument(
-            help="The dataset(s) to download",
-            autocompletion=complete_dataset,
-            callback=validate_datasets,
-        ),
-    ],
-) -> None:
+def dl(datasets: DatasetArg, modules: ModuleArg = None) -> None:
     """
     Download datasets to EVALIO_DATA
     """
     # parse all datasets
-    valid_datasets = DatasetBuilder.parse(datasets)
+    valid_datasets = DatasetBuilder.parse(datasets, custom_modules=modules)
 
     # Check if already downloaded
     to_download = []
@@ -53,14 +44,7 @@ def dl(
 
 @app.command(no_args_is_help=True)
 def rm(
-    datasets: Annotated[
-        list[str],
-        typer.Argument(
-            help="The dataset(s) to remove",
-            autocompletion=complete_dataset,
-            callback=validate_datasets,
-        ),
-    ],
+    datasets: DatasetArg,
     force: Annotated[
         bool,
         typer.Option(
@@ -70,6 +54,7 @@ def rm(
             help="Force deletion without confirmation",
         ),
     ] = False,
+    modules: ModuleArg = None,
 ):
     """
     Remove dataset(s) from EVALIO_DATA
