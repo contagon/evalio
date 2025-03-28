@@ -32,8 +32,15 @@ evalio download hilti_2022/basement_2
 ```
 evalio downloads data to the `EVALIO_DATA` environment variable, or if unset to the local folder `./evalio_data`. All the trajectories in a dataset can also be downloaded by using the wildcard `hilti_2022/*`, making sure to escape the asterisk as needed.
 
+> [!TIP]
+> evalio also comes with autocomplete, which makes typing the long dataset and pipeline names much easier. To install, do one of the following,
+> ```bash
+> eval "$(evalio --show-completion)" # install for the current session
+> evalio --install-completion        # install for all future sessions
+
 > [!NOTE]
 > Many datasets use [gdown](https://github.com/wkentaro/gdown) to download datasets from google drive. Unfortunately, this can occasionally be finicky due to google's download limits, however [downloading cookies from your browser](https://github.com/wkentaro/gdown?tab=readme-ov-file#i-set-the-permission-anyone-with-link-but-i-still-cant-download) can often help.
+
 
 Once downloaded, a trajectory can then be easily used in python,
 ```python
@@ -129,12 +136,6 @@ This can then be run via
 evalio run -c config.yml
 ```
 That's about the gist of it! Try playing around the CLI interface to see what else is possible, such as a number of visualization options using rerun. Feel free to open an issue if you have any questions, suggestions, or problems.
-
-It should also be mentioned, autocomplete can be installed via [argcomplete](https://github.com/kislyuk/argcomplete),
-```bash
-evalio "$(register-python-argcomplete evalio)"
-```
-This is extra useful for specifying the datasets when downloading or running, as they can get particularly long.
 
 ## Custom Datasets & Pipelines
 We understand that using an internal or work-in-progress datasets and pipelines will often be needed, thus evalio has full support for this. As mentioned above, we recommend checking out our [example](https://github.com/contagon/evalio-example) for more information how to to do this (it's pretty easy!). 

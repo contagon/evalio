@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from evalio.types import LidarParams, Trajectory, Stamp
 from evalio.datasets import Dataset
+from evalio.utils import print_warning
 import numpy as np
 
 
@@ -92,7 +93,6 @@ try:
                 if len(features) > 0:
                     rr.log("imu/lidar/features", convert(list(features)))
 
-
             # If level is 3 or greater, include the image and original point cloud
             if self.level >= 3:
                 intensity = np.array([d.intensity for d in data.points])
@@ -102,7 +102,6 @@ try:
                 )
                 rr.log("image", rr.Image(image))
                 rr.log("imu/lidar/scan", convert(data))
-
 
     # ------------------------- For converting to rerun types ------------------------- #
     @overload
@@ -184,7 +183,7 @@ except Exception as _:
     class RerunVis:
         def __init__(self, level: int) -> None:
             if level != 0:
-                print("Rerun not found, visualization disabled")
+                print_warning("Rerun not found, visualization disabled")
 
         def new_recording(self, dataset: Dataset):
             pass

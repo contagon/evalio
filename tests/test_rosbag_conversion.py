@@ -207,7 +207,7 @@ def test_only_valid_row_major(capsys, only_valid_row_major: Fixture):
 
     # also check that we were warned this is undefined
     captured = capsys.readouterr()
-    exp_err = "WARNING: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
+    exp_err = "Warning: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
     assert exp_err == captured.out.strip()
 
 
