@@ -1,4 +1,8 @@
+import evalio
+from evalio.datasets import set_data_dir
 import typer
+from typing import Annotated, Optional
+from pathlib import Path
 
 # import functions
 from .data_manager import dl, rm
@@ -16,6 +20,58 @@ app = typer.Typer(
 
 app.add_typer(app_dl)
 app.add_typer(app_ls)
+
+
+def version_callback(value: bool):
+    """
+    Show version and exit.
+    """
+    if value:
+        print(evalio.__version__)
+        raise typer.Exit()
+
+
+def data_callback(value: Optional[str]):
+    """
+    Set the data directory.
+    """
+    if value:
+        set_data_dir(Path(value))
+
+
+@app.callback()
+def global_options(
+    # Marking this as a str for now to get autocomplete to work,
+    # Once this fix is released (hasn't been as of 0.15.2), we can change it to a Path
+    # https://github.com/fastapi/typer/pull/1138
+    data_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "-d",
+            "--data-dir",
+            help="Directory to store downloaded datasets.",
+            show_default=False,
+            rich_help_panel="Global options",
+            callback=data_callback,
+        ),
+    ] = None,
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            "-V",
+            help="Show version and exit.",
+            is_eager=True,
+            show_default=False,
+            callback=version_callback,
+        ),
+    ] = False,
+):
+    """
+    Global options for the evalio CLI.
+    """
+    pass
+
 
 # eval "$(evalio2 --show-completion)"
 __all__ = [

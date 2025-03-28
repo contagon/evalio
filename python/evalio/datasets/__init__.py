@@ -1,4 +1,4 @@
-from .base import Dataset, DatasetIterator
+from .base import Dataset, DatasetIterator, set_data_dir, get_data_dir
 from .botanic_garden import BotanicGarden
 from .enwide import EnWide
 from .helipr import HeLiPR
@@ -11,6 +11,8 @@ from .oxford_spires import OxfordSpires
 from . import loaders
 
 __all__ = [
+    "get_data_dir",
+    "set_data_dir",
     "loaders",
     "Dataset",
     "DatasetIterator",

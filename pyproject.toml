@@ -95,4 +95,8 @@ tag = true
 tag_name = "v{new_version}"
 tag_message = "Bump version: {current_version} → {new_version}"
 regex = true
-files = [{ filename = "CMakeLists.txt" }, { filename = "pyproject.toml" }]
+files = [
+    { filename = "CMakeLists.txt" },
+    { filename = "pyproject.toml" },
+    { filename = "python/evalio/__init__.py" },
+]

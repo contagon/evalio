@@ -1,35 +1,36 @@
-import itertools
-from typing import TypeAlias, Optional
-from .parser import DatasetBuilder, PipelineBuilder
+from typing import TypeAlias
+
+from .parser import PipelineBuilder, DatasetBuilder
 import typer
 from rapidfuzz.process import extractOne
-import importlib
 from typing_extensions import Annotated
+import itertools
+
+from rich.console import Console
+
+
+err_console = Console(stderr=True)
+
+all_sequences_names = list(
+    itertools.chain.from_iterable(
+        [seq.full_name for seq in d.sequences()] + [f"{d.dataset_name()}/*"]
+        for d in DatasetBuilder._all_datasets().values()
+    )
+)
 
 
 # ------------------------- Completions ------------------------- #
-def valid_sequences(custom_modules: Optional[list[str]] = None):
-    return list(
-        itertools.chain.from_iterable(
-            [seq.full_name for seq in d.sequences()] + [f"{d.dataset_name()}/*"]
-            for d in DatasetBuilder._all_datasets(custom_modules).values()
-        )
-    )
-
-
 def complete_dataset(incomplete: str, ctx: typer.Context):
     # TODO: Check for * to remove autocompletion for all of that dataset
     already_listed = ctx.params.get("datasets") or []
-    custom_modules = ctx.params.get("modules", None)
 
-    for name in valid_sequences(custom_modules):
+    for name in all_sequences_names:
         if name not in already_listed and name.startswith(incomplete):
             yield name
 
 
-def validate_datasets(datasets: list[str], ctx: typer.Context):
-    custom_modules = ctx.params.get("modules", None)
-    all_seq = valid_sequences(custom_modules)
+def validate_datasets(datasets: list[str]):
+    all_seq = all_sequences_names
 
     for dataset in datasets:
         if dataset not in all_seq:
@@ -51,10 +52,11 @@ def validate_datasets(datasets: list[str], ctx: typer.Context):
 valid_pipelines = list(PipelineBuilder._all_pipelines().keys())
 
 
-# TODO: Upgrade pipeline autocompletion with custom modules like dataset
-def complete_pipeline(incomplete: str):
+def complete_pipeline(incomplete: str, ctx: typer.Context):
+    already_listed = ctx.params.get("pipelines") or []
+
     for name in valid_pipelines:
-        if name.startswith(incomplete):
+        if name not in already_listed and name.startswith(incomplete):
             yield name
 
 
@@ -74,21 +76,6 @@ def validate_pipelines(pipelines: list[str]):
     return pipelines
 
 
-def validate_modules(modules: Optional[list[str]] = None):
-    if modules is None:
-        return []
-
-    for module in modules:
-        try:
-            importlib.import_module(module)
-        except ImportError:
-            raise typer.BadParameter(
-                f"Failed to import '{module}'", param_hint="module"
-            )
-
-    return modules
-
-
 # ------------------------- Type aliases ------------------------- #
 
 DatasetArg: TypeAlias = Annotated[
@@ -97,15 +84,5 @@ DatasetArg: TypeAlias = Annotated[
         help="The dataset(s) to download",
         autocompletion=complete_dataset,
         callback=validate_datasets,
-    ),
-]
-
-ModuleArg: TypeAlias = Annotated[
-    Optional[list[str]],
-    typer.Option(
-        "--module",
-        "-m",
-        help="Additional python modules to search for datasets or pipelines",
-        callback=validate_modules,
     ),
 ]

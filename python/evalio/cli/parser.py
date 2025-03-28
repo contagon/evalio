@@ -1,3 +1,4 @@
+import functools
 import itertools
 from copy import deepcopy
 from dataclasses import dataclass
@@ -9,16 +10,9 @@ import yaml
 import os
 import importlib
 
-from rich import print
-
 import evalio
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-
-
-# TODO: Would it be better to have modules as some form of global variable we can register to?
-# It's kind of a pain to have to pass it around everywhere
-# Maybe a class variable in the parser?
 
 
 # ------------------------- Parsing input ------------------------- #
@@ -40,9 +34,8 @@ class DatasetBuilder:
         )
 
     @staticmethod
-    def _all_datasets(
-        custom_modules: Optional[list[str]] = None,
-    ) -> dict[str, type[Dataset]]:
+    @functools.cache
+    def _all_datasets() -> dict[str, type[Dataset]]:
         datasets = DatasetBuilder._search_module(evalio.datasets)
 
         # Parse env variable for more
@@ -51,33 +44,18 @@ class DatasetBuilder:
                 module = importlib.import_module(dataset)
                 datasets |= DatasetBuilder._search_module(module)
 
-        if custom_modules is not None:
-            for c in custom_modules:
-                module = importlib.import_module(c)
-                new = DatasetBuilder._search_module(module)
-                if len(new) == 0:
-                    print(
-                        f"[bold red]Warning:[/bold red] Unable to find any datasets in [green]{c}[/green]"
-                    )
-                datasets |= new
-
         return datasets
 
     @classmethod
-    def _get_dataset(
-        cls, name: str, custom_modules: Optional[list[str]] = None
-    ) -> type[Dataset]:
-        DatasetType = cls._all_datasets(custom_modules).get(name, None)
+    @functools.cache
+    def _get_dataset(cls, name: str) -> type[Dataset]:
+        DatasetType = cls._all_datasets().get(name, None)
         if DatasetType is None:
             raise ValueError(f"Dataset {name} not found")
         return DatasetType
 
     @classmethod
-    def parse(
-        cls,
-        d: dict | str | Sequence[dict | str],
-        custom_modules: Optional[list[str]] = None,
-    ) -> list["DatasetBuilder"]:
+    def parse(cls, d: dict | str | Sequence[dict | str]) -> list["DatasetBuilder"]:
         # If empty just return
         if d is None:
             return []
@@ -87,11 +65,11 @@ class DatasetBuilder:
             name, seq = d.split("/")
             if seq == "*":
                 return [
-                    DatasetBuilder(cls._get_dataset(name, custom_modules)(seq))
-                    for seq in cls._get_dataset(name, custom_modules).sequences()
+                    DatasetBuilder(cls._get_dataset(name)(seq))
+                    for seq in cls._get_dataset(name).sequences()
                 ]
             else:
-                return [DatasetBuilder(cls._get_dataset(name, custom_modules)(seq))]
+                return [DatasetBuilder(cls._get_dataset(name)(seq))]
 
         # If given a dictionary
         elif isinstance(d, dict):
@@ -100,17 +78,15 @@ class DatasetBuilder:
             assert len(d) == 0, f"Invalid dataset configuration {d}"
             if seq == "*":
                 return [
-                    DatasetBuilder(cls._get_dataset(name, custom_modules)(seq), length)
-                    for seq in cls._get_dataset(name, custom_modules).sequences()
+                    DatasetBuilder(cls._get_dataset(name)(seq), length)
+                    for seq in cls._get_dataset(name).sequences()
                 ]
             else:
-                return [
-                    DatasetBuilder(cls._get_dataset(name, custom_modules)(seq), length)
-                ]
+                return [DatasetBuilder(cls._get_dataset(name)(seq), length)]
 
         # If given a list, iterate
         elif isinstance(d, list):
-            results = [DatasetBuilder.parse(x, custom_modules) for x in d]
+            results = [DatasetBuilder.parse(x) for x in d]
             return list(itertools.chain.from_iterable(results))
 
         else:
@@ -166,9 +142,8 @@ class PipelineBuilder:
         )
 
     @staticmethod
-    def _all_pipelines(
-        custom_modules: Optional[list[str]] = None,
-    ) -> dict[str, type[Pipeline]]:
+    @functools.lru_cache
+    def _all_pipelines() -> dict[str, type[Pipeline]]:
         pipelines = PipelineBuilder._search_module(evalio.pipelines)
 
         # Parse env variable for more
@@ -177,48 +152,31 @@ class PipelineBuilder:
                 module = importlib.import_module(dataset)
                 pipelines |= PipelineBuilder._search_module(module)
 
-        if custom_modules is not None:
-            for c in custom_modules:
-                module = importlib.import_module(c)
-                new = PipelineBuilder._search_module(module)
-                if len(new) == 0:
-                    print(
-                        f"[bold red]Warning:[/bold red] Unable to find any pipelines in [green]{c}[/green]"
-                    )
-                pipelines |= new
-
         return pipelines
 
     @classmethod
-    def _get_pipeline(
-        cls,
-        name: str,
-        custom_modules: Optional[list[str]] = None,
-    ) -> type[Pipeline]:
-        PipelineType = cls._all_pipelines(custom_modules).get(name, None)
+    @functools.lru_cache
+    def _get_pipeline(cls, name: str) -> type[Pipeline]:
+        PipelineType = cls._all_pipelines().get(name, None)
         if PipelineType is None:
             raise ValueError(f"Pipeline {name} not found")
         return PipelineType
 
     @classmethod
-    def parse(
-        cls,
-        p: dict | str | Sequence[dict | str],
-        custom_modules: Optional[list[str]] = None,
-    ) -> list["PipelineBuilder"]:
+    def parse(cls, p: dict | str | Sequence[dict | str]) -> list["PipelineBuilder"]:
         # If empty just return
         if p is None:
             return []
 
         # If just given a pipeline name
         if isinstance(p, str):
-            return [PipelineBuilder(p, cls._get_pipeline(p, custom_modules), {})]
+            return [PipelineBuilder(p, cls._get_pipeline(p), {})]
 
         # If given a dictionary
         elif isinstance(p, dict):
             kind = p.pop("pipeline")
             name = p.pop("name", kind)
-            kind = cls._get_pipeline(kind, custom_modules)
+            kind = cls._get_pipeline(kind)
             # If the dictionary has a sweep parameter in it
             if "sweep" in p:
                 sweep = p.pop("sweep")

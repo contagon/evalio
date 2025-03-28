@@ -1,4 +1,3 @@
-from evalio.cli.completions import ModuleArg
 from tabulate import tabulate
 
 from .parser import DatasetBuilder, PipelineBuilder
@@ -35,7 +34,6 @@ def ls(
             help="Output less verbose information",
         ),
     ] = False,
-    modules: ModuleArg = None,
 ):
     """
     List dataset and pipeline information
@@ -45,7 +43,7 @@ def ls(
 
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
-        all_datasets = list(DatasetBuilder._all_datasets(modules).values())
+        all_datasets = list(DatasetBuilder._all_datasets().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.dataset_name() for d in all_datasets], score_cutoff=90
@@ -87,7 +85,7 @@ def ls(
 
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
-        all_pipelines = list(PipelineBuilder._all_pipelines(modules).values())
+        all_pipelines = list(PipelineBuilder._all_pipelines().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.name() for d in all_pipelines], score_cutoff=90
