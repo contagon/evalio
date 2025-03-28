@@ -71,6 +71,7 @@ def rm(
     for builder in to_remove:
         print(f"---------- Beginning {builder} ----------")
         try:
+            print(f"Removing from {builder.dataset.folder}")
             for f in builder.dataset.files():
                 print(f"  Removing {f}")
                 (builder.dataset.folder / f).unlink()

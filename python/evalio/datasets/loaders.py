@@ -21,13 +21,16 @@ from evalio.types import (
 )
 from evalio.datasets.base import DatasetIterator, Measurement
 from rosbags.highlevel import AnyReader
-from tabulate import tabulate
 import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from evalio.types import Trajectory, SE3, SO3
 from evalio.utils import print_warning
 import csv
+
+from rich.table import Table
+from rich.console import Console
+from rich import box
 
 
 # ------------------------- Simple csv loaders ------------------------- #
@@ -147,12 +150,13 @@ class RosbagIter(DatasetIterator):
         ]
 
         if len(self.connections_imu) == 0 or len(self.connections_lidar) == 0:
-            connections_all = [[c.topic, c.msgtype] for c in self.reader.connections]
-            print(
-                tabulate(
-                    connections_all, headers=["Topic", "MsgType"], tablefmt="fancy_grid"
-                )
-            )
+            table = Table(title="Rosbag Connections", highlight=True, box=box.ROUNDED)
+            table.add_column("Topic", justify="right")
+            table.add_column("MsgType", justify="left")
+            for c in self.reader.connections:
+                table.add_row(c.topic, c.msgtype)
+            Console().print(table)
+
             if len(self.connections_imu) == 0:
                 raise ValueError(f"Could not find topic {self.imu_topic}")
             if len(self.connections_lidar) == 0:

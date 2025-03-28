@@ -88,6 +88,11 @@ def run_from_cli(
 
         pipelines = PipelineBuilder.parse(in_pipelines)
         datasets = DatasetBuilder.parse(in_datasets)
+
+        if length:
+            for d in datasets:
+                d.length = length
+
         if in_out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
@@ -153,4 +158,4 @@ def run(
 
             writer.close()
 
-    eval([output], False, "atet")
+    eval([str(output)], False, "atet")

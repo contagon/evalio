@@ -1,11 +1,13 @@
-from tabulate import tabulate
-
 from .parser import DatasetBuilder, PipelineBuilder
 from typing import Optional
 import typer
 from typing_extensions import Annotated
 from enum import StrEnum, auto
 from rapidfuzz.process import extract_iter
+
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
 app = typer.Typer()
 
@@ -17,13 +19,16 @@ class Kind(StrEnum):
 
 @app.command(no_args_is_help=True)
 def ls(
-    kind: Annotated[Kind, typer.Argument(help="The kind of object to list")],
+    kind: Annotated[
+        Kind, typer.Argument(help="The kind of object to list", show_default=False)
+    ],
     search: Annotated[
         Optional[str],
         typer.Option(
             "--search",
             "-s",
-            help="Fuzzy search for a dataset by name",
+            help="Fuzzy search for a pipeline or dataset by name",
+            show_default=False,
         ),
     ] = None,
     quiet: Annotated[
@@ -39,8 +44,6 @@ def ls(
     List dataset and pipeline information
     """
     if kind == Kind.datasets:
-        data = [["Name", "Sequences", "Down", "Link"]]
-
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
         all_datasets = list(DatasetBuilder._all_datasets().values())
@@ -52,37 +55,52 @@ def ls(
         else:
             to_include = all_datasets
 
-        # Fill out table
-        for d in to_include:
-            seq = "\n".join(d.sequences())
-            downloaded = [d(s).is_downloaded() for s in d.sequences()]
-            downloaded = "\n".join(["✔" if d else "-" for d in downloaded])
-            data.append([d.dataset_name(), seq, downloaded, d.url()])
+        # For future self: To add a new column, the following needs to be done:
+        # 1. Add the column to all_info
+        # 2. Gather the info for that column in the for loop
+        # 3. Add the column to the table
+        # That should be about it, making the rest should be automatic
 
-        if len(data) == 1:
+        # Gather all info
+        all_info = {"Name": [], "Sequences": [], "Down": [], "More Info": []}
+        for d in to_include:
+            all_info["Name"].append(d.dataset_name())
+            all_info["More Info"].append(d.url())
+
+            if not quiet:
+                all_info["Sequences"].append("\n".join(d.sequences()))
+                downloaded = [d(s).is_downloaded() for s in d.sequences()]
+                downloaded = "\n".join(
+                    ["[green]✔[/green]" if d else "[red]-[/red]" for d in downloaded]
+                )
+                all_info["Down"].append(downloaded)
+
+        if len(all_info["Name"]) == 0:
             print("No datasets found")
             return
 
-        align = ("center", "right", "center", "center")
-
-        # delete unneeded columns if quiet
-        if quiet:
-            data = [[d[0], d[3]] for d in data]
-            align = ("center", "center")
-
-        print(
-            tabulate(
-                data,
-                headers="firstrow",
-                tablefmt="fancy_grid",
-                rowalign="center",
-                colalign=align,
-            )
+        # Fill out table
+        table = Table(
+            title="Datasets",
+            show_lines=not quiet,
+            highlight=True,
+            box=box.ROUNDED,
         )
+        col_opts = {"vertical": "middle"}
+
+        table.add_column("Name", justify="center", **col_opts)  # type: ignore
+        if not quiet:
+            table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
+            table.add_column("Down", justify="center", **col_opts)  # type: ignore
+        table.add_column("More Info", justify="center", **col_opts)  # type: ignore
+
+        for i in range(len(all_info["Name"])):
+            row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
+            table.add_row(*row_info)
+
+        Console().print(table)
 
     if kind == Kind.pipelines:
-        data = [["Name", "Params", "Default", "Link"]]
-
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
         all_pipelines = list(PipelineBuilder._all_pipelines().values())
@@ -94,30 +112,46 @@ def ls(
         else:
             to_include = all_pipelines
 
-        # Fill out table
-        for p in to_include:
-            params = p.default_params()
-            keys = "\n".join(params.keys())
-            values = "\n".join([str(v) for v in params.values()])
-            data.append([p.name(), keys, values, p.url()])
+        # For future self: To add a new column, the following needs to be done:
+        # 1. Add the column to all_info
+        # 2. Gather the info for that column in the for loop
+        # 3. Add the column to the table
+        # That should be about it, making the rest should be automatic
 
-        if len(data) == 1:
+        # Gather all info
+        all_info = {"Name": [], "Params": [], "Default": [], "More Info": []}
+        for p in to_include:
+            all_info["Name"].append(p.name())
+            all_info["More Info"].append(p.url())
+
+            if not quiet:
+                params = p.default_params()
+                keys = "\n".join(params.keys())
+                values = "\n".join([str(v) for v in params.values()])
+                all_info["Params"].append(keys)
+                all_info["Default"].append(values)
+
+        if len(all_info["Name"]) == 0:
             print("No pipelines found")
             return
 
-        align = ("center", "right", "left", "center")
-
-        # delete unneeded columns if quiet
-        if quiet:
-            data = [[d[0], d[3]] for d in data]
-            align = ("center", "center")
-
-        print(
-            tabulate(
-                data,
-                headers="firstrow",
-                tablefmt="fancy_grid",
-                rowalign="center",
-                colalign=align,
-            )
+        # Fill out table
+        table = Table(
+            title="Pipelines",
+            show_lines=not quiet,
+            highlight=True,
+            box=box.ROUNDED,
         )
+        col_opts = {"vertical": "middle"}
+
+        table.add_column("Name", justify="center", **col_opts)  # type: ignore
+        if not quiet:
+            table.add_column("Params", justify="right", **col_opts)  # type: ignore
+            table.add_column("Default", justify="left", **col_opts)  # type: ignore
+        table.add_column("More Info", justify="center", **col_opts)  # type: ignore
+
+        for i in range(len(all_info["Name"])):
+            row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
+            table.add_row(*row_info)
+
+        Console().print(table)

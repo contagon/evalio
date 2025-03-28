@@ -4,7 +4,9 @@ from typing import Annotated, Optional, Sequence
 
 import numpy as np
 from dataclasses import dataclass
-from tabulate import tabulate
+from rich.table import Table
+from rich.console import Console
+from rich import box
 
 from evalio.types import Stamp, Trajectory
 from evalio.datasets.loaders import load_pose_csv
@@ -208,9 +210,6 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
             keys.remove("name")
             keys_to_print += keys
 
-    header = ["ATEt", "ATEr", *keys_to_print]
-
-    print(f"\nResults for {dir}")
     results = []
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
@@ -240,7 +239,25 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
         elif sort.lower() == "ater":
             results = sorted(results, key=lambda x: x[1])
 
-    print(tabulate(results, headers=header, tablefmt="fancy"))
+    table = Table(
+        title=str(dir),
+        highlight=True,
+        box=box.ROUNDED,
+        min_width=len(str(dir)) + 5,
+    )
+    table.add_column("ATEt", justify="right")
+    table.add_column("ATEr", justify="right")
+    for key in keys_to_print:
+        table.add_column(key.title(), justify="center")
+
+    for result in results:
+        row = [
+            f"{item:.3f}" if isinstance(item, float) else str(item) for item in result
+        ]
+        table.add_row(*row)
+
+    Console().print(table)
+    print()
 
 
 def _contains_dir(directory: Path) -> bool:
@@ -250,7 +267,7 @@ def _contains_dir(directory: Path) -> bool:
 @app.command("stats", no_args_is_help=True)
 def eval(
     directories: Annotated[
-        list[Path], typer.Argument(help="Directory of results to evaluate.")
+        list[str], typer.Argument(help="Directory of results to evaluate.")
     ],
     visualize: Annotated[
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
@@ -264,9 +281,11 @@ def eval(
     Evaluate the results of experiments.
     """
 
+    directories_path = [Path(d) for d in directories]
+
     # Collect all bottom level directories
     bottom_level_dirs = []
-    for directory in directories:
+    for directory in directories_path:
         for subdir in directory.glob("**/"):
             if not _contains_dir(subdir):
                 bottom_level_dirs.append(subdir)
