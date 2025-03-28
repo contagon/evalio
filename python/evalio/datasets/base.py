@@ -14,7 +14,7 @@ from evalio.types import (
     Trajectory,
 )
 
-from rich import print
+from evalio.utils import print_warning
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
@@ -95,8 +95,8 @@ class Dataset(StrEnum):
     def _warn_default_dir(cls):
         global _DATA_DIR, _WARNED
         if not _WARNED and _DATA_DIR == Path("./evalio_data"):
-            print(
-                "[bold red]Warning[/bold red]: Data directory has not been set. Using default './evalio_data'"
+            print_warning(
+                "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
             )
             _WARNED = True
 
@@ -141,6 +141,7 @@ class Dataset(StrEnum):
 
     @property
     def folder(self) -> Path:
+        global _DATA_DIR
         return _DATA_DIR / self.full_name
 
 
