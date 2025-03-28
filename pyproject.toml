@@ -35,8 +35,7 @@ requires = ["scikit-build-core>=0.8", "pybind11", "pybind11-stubgen", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
-evalio = "evalio.cli:main"
-evalio2 = "evalio.cli:app"
+evalio = "evalio.cli:app"
 
 # -------------- Tools -------------- #
 # building

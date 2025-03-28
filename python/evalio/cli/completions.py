@@ -3,7 +3,7 @@ from typing import TypeAlias
 from .parser import PipelineBuilder, DatasetBuilder
 import typer
 from rapidfuzz.process import extractOne
-from typing_extensions import Annotated
+from typing import Annotated, Optional
 import itertools
 
 from rich.console import Console
@@ -30,11 +30,12 @@ def complete_dataset(incomplete: str, ctx: typer.Context):
 
 
 def validate_datasets(datasets: list[str]):
-    all_seq = all_sequences_names
+    if not datasets:
+        return []
 
     for dataset in datasets:
-        if dataset not in all_seq:
-            closest, score, _idx = extractOne(dataset, all_seq)
+        if dataset not in all_sequences_names:
+            closest, score, _idx = extractOne(dataset, all_sequences_names)
             if score < 80:
                 msg = dataset
             else:
@@ -61,10 +62,12 @@ def complete_pipeline(incomplete: str, ctx: typer.Context):
 
 
 def validate_pipelines(pipelines: list[str]):
+    if not pipelines:
+        return []
+
     for pipeline in pipelines:
         if pipeline not in valid_pipelines:
             closest, score, _idx = extractOne(pipeline, valid_pipelines)
-            print(score)
             if score < 80:
                 msg = pipeline
             else:
@@ -81,8 +84,45 @@ def validate_pipelines(pipelines: list[str]):
 DatasetArg: TypeAlias = Annotated[
     list[str],
     typer.Argument(
-        help="The dataset(s) to download",
+        help="The dataset(s) to use",
         autocompletion=complete_dataset,
         callback=validate_datasets,
+        show_default=False,
+    ),
+]
+
+DatasetOpt: TypeAlias = Annotated[
+    Optional[list[str]],
+    typer.Option(
+        "--datasets",
+        "-d",
+        help="The dataset(s) to use",
+        autocompletion=complete_dataset,
+        callback=validate_datasets,
+        rich_help_panel="Manual options",
+        show_default=False,
+    ),
+]
+
+PipelineArg: TypeAlias = Annotated[
+    list[str],
+    typer.Argument(
+        help="The pipeline(s) to use",
+        autocompletion=complete_pipeline,
+        callback=validate_pipelines,
+        show_default=False,
+    ),
+]
+
+PipelineOpt: TypeAlias = Annotated[
+    Optional[list[str]],
+    typer.Option(
+        "--pipelines",
+        "-p",
+        help="The pipeline(s) to use",
+        autocompletion=complete_pipeline,
+        callback=validate_pipelines,
+        rich_help_panel="Manual options",
+        show_default=False,
     ),
 ]

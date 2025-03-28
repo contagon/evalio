@@ -26,6 +26,7 @@ import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from evalio.types import Trajectory, SE3, SO3
+from evalio.utils import print_warning
 import csv
 
 
@@ -264,8 +265,8 @@ class RosbagIter(DatasetIterator):
             self.lidar_format.major == LidarMajor.Row
             and self.lidar_format.density == LidarDensity.OnlyValidPoints
         ):
-            print(
-                "WARNING: Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
+            print_warning(
+                "Loading row major scan with only valid points. Can't identify where missing points should go, putting at end of scanline"
             )
 
         # Begin standardizing the pointcloud

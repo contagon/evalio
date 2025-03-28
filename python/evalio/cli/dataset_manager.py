@@ -10,7 +10,7 @@ app = typer.Typer()
 @app.command(no_args_is_help=True)
 def dl(datasets: DatasetArg) -> None:
     """
-    Download datasets to EVALIO_DATA
+    Download datasets
     """
     # parse all datasets
     valid_datasets = DatasetBuilder.parse(datasets)
@@ -56,9 +56,24 @@ def rm(
     ] = False,
 ):
     """
-    Remove dataset(s) from EVALIO_DATA
+    Remove dataset(s)
 
     If --force is not used, will ask for confirmation.
     """
-    # TODO: This needs to be filled out
-    pass
+    # parse all datasets
+    to_remove = DatasetBuilder.parse(datasets)
+
+    print("Will remove: ")
+    for builder in to_remove:
+        print(f"  {builder}")
+    print()
+
+    for builder in to_remove:
+        print(f"---------- Beginning {builder} ----------")
+        try:
+            for f in builder.dataset.files():
+                print(f"  Removing {f}")
+                (builder.dataset.folder / f).unlink()
+        except Exception as e:
+            print(f"Error removing {builder}\n: {e}")
+        print(f"---------- Finished {builder} ----------")

@@ -1,135 +1,79 @@
-#!/usr/bin/env python
-# PYTHON_ARGCOMPLETE_OK
-import argparse
+import evalio
+from evalio.datasets import set_data_dir
+import typer
+from typing import Annotated, Optional
 from pathlib import Path
 
-import argcomplete
-import itertools
+# import typer apps
+from .dataset_manager import app as app_dl
+from .ls import app as app_ls
+from .run import app as app_run
+from .stats import app as app_stats
 
-from .parser import DatasetBuilder, PipelineBuilder, parse_config
+app = typer.Typer(
+    help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
+    rich_markup_mode="rich",
+    no_args_is_help=True,
+)
 
-from .typer import app
-
-
-def dataset_completer(**kwargs):
-    datasets = DatasetBuilder._all_datasets()
-    datasets = itertools.chain.from_iterable(
-        [seq.full_name for seq in d.sequences()] for d in datasets.values()
-    )
-    return datasets
-
-
-def pipeline_completer(**kwargs):
-    pipelines = PipelineBuilder._all_pipelines()
-    pipelines = [p.name() for p in pipelines.values()]
-    return pipelines
+app.add_typer(app_dl)
+app.add_typer(app_ls)
+app.add_typer(app_run)
+app.add_typer(app_stats)
 
 
-def main():
-    # TODO: Load in rerun ip from here somehow
-    args = argparse.ArgumentParser(
-        "Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets"
-    )
-    subparsers = args.add_subparsers(dest="command")
-
-    # downloading
-    download = subparsers.add_parser("download", help="Download datasets")
-    download.add_argument(
-        "datasets", type=str, help="Dataset(s) to download", nargs="+"
-    ).completer = dataset_completer  # type: ignore
-
-    # ls
-    ls_opt = subparsers.add_parser("ls", help="List available datasets and pipelines")
-    ls_opt.add_argument("options", type=str, choices=["datasets", "pipelines"])
-    ls_opt.add_argument("-s", "--search", type=str, help="Search for a specific item")
-    ls_opt.add_argument(
-        "-q",
-        "--quiet",
-        action="store_true",
-        help="Omit params and trajectories to shorten output",
-    )
-
-    # run
-    run = subparsers.add_parser("run", help="Run a pipeline on a specific dataset")
-    from_file = run.add_argument_group("Load config from a file")
-    from_file.add_argument("-c", "--config", type=Path, help="Path to a config file")
-    by_hand = run.add_argument_group("Manually specify options")
-    by_hand.add_argument(
-        "-d", "--datasets", type=str, nargs="+", help="Dataset(s) to run on"
-    ).completer = dataset_completer  # type: ignore
-    by_hand.add_argument(
-        "-p", "--pipeline", type=str, nargs="+", help="Pipeline(s) to run"
-    ).completer = pipeline_completer  # type: ignore
-    by_hand.add_argument("-o", "--output", type=Path, help="Output directory")
-    by_hand.add_argument(
-        "-l", "--length", type=int, help="Number of scans to process for each dataset"
-    )
-    run.add_argument(
-        "-v",
-        "--visualize",
-        action="count",
-        default=0,
-        help="Visualize results. Repeat up to 3 times for more detail",
-    )
-
-    # stats
-    stats = subparsers.add_parser("stats", help="Compute statistics on experiments")
-    stats.add_argument(
-        "experiments", type=Path, nargs="+", help="Directory(s) to experiments"
-    )
-    stats.add_argument("-v", "--visualize", action="store_true")
-    stats.add_argument("-s", "--sort", type=str, help="Sort by this key")
-
-    # autocomplete
-    argcomplete.autocomplete(args)
-    args = args.parse_args()
-
-    # Import these now to spend up argcomplete
-    from .data_manager import dl as download_datasets
-    from .ls import ls
-    from .run import run
-    from .stats import eval
-    from evalio.rerun import RerunVis
-
-    # parse
-    if args.command == "ls":
-        ls(args.options, args.search, args.quiet)
-
-    elif args.command == "download":
-        download_datasets(args.datasets)
-
-    elif args.command == "run":
-        # Parse config file
-        pipelines, datasets, out = parse_config(args.config)
-
-        # Parse manually specified options
-        manual_pipelines = PipelineBuilder.parse(args.pipeline)
-        manual_datasets = DatasetBuilder.parse(args.datasets)
-        if args.length:
-            for d in manual_datasets:
-                d.length = args.length
-
-        out = args.output if args.output else out
-        pipelines += manual_pipelines
-        datasets += manual_datasets
-
-        if out is None:
-            raise ValueError("Must specify output directory")
-        if out.suffix == ".csv":
-            raise ValueError("Output must be a directory")
-        if len(pipelines) == 0:
-            raise ValueError("Must specify at least one pipeline")
-        if len(datasets) == 0:
-            raise ValueError("Must specify at least one dataset")
-
-        # parse visualizer
-        vis = RerunVis(args.visualize)
-
-        run(pipelines, datasets, out, vis)
-
-    elif args.command == "stats":
-        eval(args.experiments, args.visualize, args.sort)
+def version_callback(value: bool):
+    """
+    Show version and exit.
+    """
+    if value:
+        print(evalio.__version__)
+        raise typer.Exit()
 
 
-if __name__ == "__main__":
-    main()
+def data_callback(value: Optional[str]):
+    """
+    Set the data directory.
+    """
+    if value:
+        set_data_dir(Path(value))
+
+
+@app.callback()
+def global_options(
+    # Marking this as a str for now to get autocomplete to work,
+    # Once this fix is released (hasn't been as of 0.15.2), we can change it to a Path
+    # https://github.com/fastapi/typer/pull/1138
+    data_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "-D",
+            "--data-dir",
+            help="Directory to store downloaded datasets.",
+            show_default=False,
+            rich_help_panel="Global options",
+            callback=data_callback,
+        ),
+    ] = None,
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            "-V",
+            help="Show version and exit.",
+            is_eager=True,
+            show_default=False,
+            callback=version_callback,
+        ),
+    ] = False,
+):
+    """
+    Global options for the evalio CLI.
+    """
+    pass
+
+
+# eval "$(evalio2 --show-completion)"
+__all__ = [
+    "app",
+]

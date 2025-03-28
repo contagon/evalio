@@ -1,6 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Annotated, Optional, Sequence
 
 import numpy as np
 from dataclasses import dataclass
@@ -9,7 +9,12 @@ from tabulate import tabulate
 from evalio.types import Stamp, Trajectory
 from evalio.datasets.loaders import load_pose_csv
 
+import typer
+
 import yaml
+
+
+app = typer.Typer()
 
 
 @dataclass(kw_only=True)
@@ -242,7 +247,23 @@ def _contains_dir(directory: Path) -> bool:
     return any(directory.is_dir() for directory in directory.glob("*"))
 
 
-def eval(directories: list[Path], visualize: bool, sort: Optional[str] = None):
+@app.command("stats", no_args_is_help=True)
+def eval(
+    directories: Annotated[
+        list[Path], typer.Argument(help="Directory of results to evaluate.")
+    ],
+    visualize: Annotated[
+        bool, typer.Option("--visualize", "-v", help="Visualize results.")
+    ] = False,
+    sort: Annotated[
+        Optional[str],
+        typer.Option("-s", "--sort", help="Sort results by either [atet|ater]"),
+    ] = None,
+):
+    """
+    Evaluate the results of experiments.
+    """
+
     # Collect all bottom level directories
     bottom_level_dirs = []
     for directory in directories:
