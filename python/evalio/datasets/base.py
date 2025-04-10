@@ -1,8 +1,8 @@
-import os
 from pathlib import Path
 from typing import Iterable, Iterator, Union
 from itertools import islice
 
+import os
 from enum import StrEnum, auto, Enum
 
 from evalio.types import (
@@ -14,13 +14,12 @@ from evalio.types import (
     Trajectory,
 )
 
-if os.getenv("EVALIO_DATA") is None:
-    print(
-        "Warning: EVALIO_DATA environment variable is not set. Using default './evalio_data'"
-    )
-EVALIO_DATA = Path(os.getenv("EVALIO_DATA", "./evalio_data"))
+from evalio.utils import print_warning
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
+
+_DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
+_WARNED = False
 
 
 class DatasetIterator(Iterable[Measurement]):
@@ -67,6 +66,7 @@ class Dataset(StrEnum):
 
     # ------------------------- Helpers that wrap the above ------------------------- #
     def is_downloaded(self) -> bool:
+        self._warn_default_dir()
         for f in self.files():
             if not (self.folder / f).exists():
                 return False
@@ -86,9 +86,19 @@ class Dataset(StrEnum):
 
     def _fail_not_downloaded(self):
         if not self.is_downloaded():
+            # TODO: Make this print with rich?
             raise ValueError(
                 f"Data for {self} not found, please use `evalio download {self}` to download"
             )
+
+    @classmethod
+    def _warn_default_dir(cls):
+        global _DATA_DIR, _WARNED
+        if not _WARNED and _DATA_DIR == Path("./evalio_data"):
+            print_warning(
+                "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
+            )
+            _WARNED = True
 
     # ------------------------- Helpers that leverage from the iterator ------------------------- #
 
@@ -131,9 +141,11 @@ class Dataset(StrEnum):
 
     @property
     def folder(self) -> Path:
-        return EVALIO_DATA / self.full_name
+        global _DATA_DIR
+        return _DATA_DIR / self.full_name
 
 
+# For converting dataset names to snake case
 class CharKinds(Enum):
     LOWER = auto()
     UPPER = auto()
@@ -163,3 +175,21 @@ def pascal_to_snake(identifier):
 
     parts = [identifier[i:j] for i, j in zip([0] + splits, splits + [None])]
     return "_".join(parts).lower()
+
+
+# ------------------------- Helpers ------------------------- #
+def set_data_dir(directory: Path):
+    """
+    Set the location where datasets are stored. This will be used to store the downloaded data.
+    """
+    global _DATA_DIR, _WARNED
+    _DATA_DIR = directory
+    _WARNED = True
+
+
+def get_data_dir() -> Path:
+    """
+    Get the data directory for the dataset. This will be used to store the downloaded data.
+    """
+    global _DATA_DIR
+    return _DATA_DIR
