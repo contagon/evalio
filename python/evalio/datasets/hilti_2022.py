@@ -51,6 +51,7 @@ class Hilti2022(Dataset):
 
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
+        """Returns an iterator over the data."""
         bag, _ = self.files()
         return RosbagIter(
             self.folder / bag,

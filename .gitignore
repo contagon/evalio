@@ -11,6 +11,7 @@ wheelhouse
 # other caches
 .mypy_cache
 .ruff_cache
+.pytest_cache
 .vscode
 .venv
 __pycache__

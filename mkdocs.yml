@@ -1,0 +1,82 @@
+# Configuration for mkdocs
+
+site_name: evalio
+site_url: http://contagon.github.io/evalio
+repo_url: https://github.com/contagon/evalio
+
+theme:
+  name: material
+  features:
+    - navigation.instant # Instant loading of pages
+    - navigation.sections # split nav bar into sections
+    - navigation.path # show breadcrumbs in the nav bar
+    - content.code.copy # add code copy button
+  #   - navigation.expand
+  #   - navigation.footer
+  #   - navigation.tracking
+  icon:
+    logo: material/circle-double
+    repo: material/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+
+watch:
+  - python/evalio
+  - cpp/evalio
+
+nav:
+  - Installation: install.md
+  - Quickstart: quickstart.md
+  - Examples:
+    - Python: python.md
+    - C++: cpp.md
+  - Builtins:
+    - Datasets: builtins/datasets.md
+    - Pipelines: builtins/pipelines.md
+  - Reference:
+    - Types: ref/types.md
+    - Datasets: ref/datasets.md
+    - Pipelines: ref/pipelines.md
+
+plugins:
+  search:
+    lang: en
+  mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        options:
+          # TODO: May want to remove this once all docs are added
+          # show_if_no_docstring: true # show everything
+          show_source: false # don't show source code
+          separate_signature: true # show the signature in a separate section
+          show_signature_annotations: true # include types
+          signature_crossrefs: true # show cross-references in the signature
+          unwrap_annotated: true # remove Annotated[] from the signature
+          show_symbol_type_toc: true # include printed symbol inline with meth/class/etc
+          show_symbol_type_heading: true # include printed symbol in toc with meth/class/etc
+
+          docstring_section_style: list # show parameters/args in a list
+          # show_labels: false
+          # show_category_heading: true
+          docstring_style: google
+# markdown_extensions:
+#   - pymdownx.highlight:
+#       anchor_linenums: true
+#       line_spans: __span
+#       pygments_lang_class: true
+#   - pymdownx.inlinehilite:
+#   - pymdownx.snippets:
+#   - pymdownx.superfences:
+#   - pymdownx.details:
+#   - admonition:
+#   - attr_list:

@@ -37,6 +37,18 @@ from rich import box
 def load_pose_csv(
     path: Path, fieldnames: list[str], delimiter=",", skip_lines: Optional[int] = None
 ) -> Trajectory:
+    """_summary_
+
+    Args:
+        path (Path): _description_
+        fieldnames (list[str]): _description_
+        delimiter (str, optional): _description_. Defaults to ",".
+        skip_lines (Optional[int], optional): _description_. Defaults to None.
+
+    Returns:
+        Trajectory: _description_
+    """
+
     poses = []
     stamps = []
 

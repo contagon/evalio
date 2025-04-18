@@ -15,17 +15,20 @@ namespace evalio {
 inline void makeTypes(py::module &m) {
   py::class_<Duration>(m, "Duration")
       .def(py::init<double>(), py::kw_only(), "sec"_a)
-      .def_static("from_sec", &Duration::from_sec)
-      .def_static("from_nsec", &Duration::from_nsec)
-      .def("to_sec", &Duration::to_sec)
-      .def("to_nsec", &Duration::to_nsec)
-      .def_readonly("nsec", &Duration::nsec)
-      .def(py::self < py::self)
-      .def(py::self > py::self)
-      .def(py::self == py::self)
-      .def(py::self != py::self)
-      .def(py::self - py::self)
-      .def(py::self + py::self)
+      .def_static("from_sec", &Duration::from_sec, "sec"_a,
+                  "Create a Duration from seconds")
+      .def_static("from_nsec", &Duration::from_nsec, "nsec"_a,
+                  "Create a Duration from nanoseconds")
+      .def("to_sec", &Duration::to_sec, "Convert to seconds")
+      .def("to_nsec", &Duration::to_nsec, "Convert to nanoseconds")
+      .def_readonly("nsec", &Duration::nsec,
+                    "Underlying nanoseconds representation")
+      .def(py::self < py::self, "Compare two Durations by length")
+      .def(py::self > py::self, "Compare two Durations by length")
+      .def(py::self == py::self, "Check for equality")
+      .def(py::self != py::self, "Check for equality")
+      .def(py::self - py::self, "Computer the difference between two Durations")
+      .def(py::self + py::self, "Add two Durations")
       .def("__repr__", &Duration::toString)
       .def("__copy__", [](const Duration &self) { return Duration(self); })
       .def(
@@ -43,23 +46,32 @@ inline void makeTypes(py::module &m) {
             /* Create a new C++ instance */
             Duration p{.nsec = t[0].cast<int64_t>()};
             return p;
-          }));
+          }))
+      .doc() =
+      "Duration class for representing a positive or negative delta time, uses "
+      "int64 as the underlying data storage for nanoseconds.";
 
   py::class_<Stamp>(m, "Stamp")
-      .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a)
-      .def_static("from_sec", &Stamp::from_sec)
-      .def_static("from_nsec", &Stamp::from_nsec)
-      .def("to_sec", &Stamp::to_sec)
-      .def("to_nsec", &Stamp::to_nsec)
-      .def_readonly("sec", &Stamp::sec)
-      .def_readonly("nsec", &Stamp::nsec)
-      .def(py::self < py::self)
-      .def(py::self > py::self)
-      .def(py::self == py::self)
-      .def(py::self != py::self)
-      .def(py::self - py::self)
-      .def(py::self + Duration())
-      .def(py::self - Duration())
+      .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a,
+           "Create a Stamp from seconds and nanoseconds")
+      .def_static("from_sec", &Stamp::from_sec, "sec"_a,
+                  "Create a Stamp from seconds")
+      .def_static("from_nsec", &Stamp::from_nsec, "nsec"_a,
+                  "Create a Stamp from nanoseconds")
+      .def("to_sec", &Stamp::to_sec, "Convert to seconds")
+      .def("to_nsec", &Stamp::to_nsec, "Convert to nanoseconds")
+      .def_readonly("sec", &Stamp::sec, "Underlying seconds storage")
+      .def_readonly("nsec", &Stamp::nsec, "Underlying nanoseconds storage")
+      .def(py::self < py::self,
+           "Compare two Stamps to see which happened first")
+      .def(py::self > py::self,
+           "Compare two Stamps to see which happened first")
+      .def(py::self == py::self, "Check for equality")
+      .def(py::self != py::self, "Check for equality")
+      .def(py::self - py::self,
+           "Compute the difference between two Stamps, returning a duration")
+      .def(py::self + Duration(), "Add a Duration to a Stamp")
+      .def(py::self - Duration(), "Subtract a Duration from a Stamp")
       .def("__repr__", &Stamp::toString)
       .def("__copy__", [](const Stamp &self) { return Stamp(self); })
       .def(
@@ -77,7 +89,10 @@ inline void makeTypes(py::module &m) {
             Stamp p{.sec = t[0].cast<uint32_t>(),
                     .nsec = t[1].cast<uint32_t>()};
             return p;
-          }));
+          }))
+      .doc() =
+      "Stamp class for representing an absolute point in time, uses uint32 as "
+      "the underlying data storage for seconds and nanoseconds.";
 
   // Lidar
   py::class_<Point>(m, "Point")
