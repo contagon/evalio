@@ -58,13 +58,33 @@ def rich_table_to_markdown(
     return markdown
 
 
+DATASETS = """---
+hide:
+  - toc
+---
+evalio comes with a variety of datasets that can be used for easy loading. Below is a table of all datasets that are included, which mirrors the output of `evalio ls datasets`.
+"""
+
 with mkdocs_gen_files.open("included/datasets.md", "w") as f:
+    f.write(DATASETS)
+    f.write("\n")
+
     table = ls(Kind.datasets, show=False)
     if table is not None:
         f.write(rich_table_to_markdown(table, skip_columns=["Down"]))
 
 
+PIPELINES = """---
+hide:
+  - toc
+---
+evalio comes with a variety of pipelines that can be used for evaluation. Below is a table of all pipelines that are included and their parameters, which mirrors the output of `evalio ls pipelines`.
+"""
+
 with mkdocs_gen_files.open("included/pipelines.md", "w") as f:
+    f.write(PIPELINES)
+    f.write("\n")
+
     table = ls(Kind.pipelines, show=False)
     if table is not None:
         f.write(rich_table_to_markdown(table))

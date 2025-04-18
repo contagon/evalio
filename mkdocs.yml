@@ -3,6 +3,7 @@
 site_name: evalio
 site_url: http://contagon.github.io/evalio
 repo_url: https://github.com/contagon/evalio
+repo_name: contagon/evalio
 
 theme:
   name: material
@@ -11,23 +12,26 @@ theme:
     - navigation.sections # split nav bar into sections
     - navigation.path # show breadcrumbs in the nav bar
     - content.code.copy # add code copy button
-  #   - navigation.expand
-  #   - navigation.footer
-  #   - navigation.tracking
   icon:
     logo: material/circle-double
-    repo: material/github
-  palette:
-    - media: "(prefers-color-scheme: light)"
+    favicon: material/circle-double # TODO: Not sure if this works
+  palette:         
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: light)'
       scheme: default
+      primary: black
+      toggle:
+          icon: material/brightness-7
+          name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: black
       toggle:
         icon: material/brightness-4
-        name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      toggle:
-        icon: material/brightness-7
-        name: Switch to light mode
+        name: Switch to system preference
 
 watch:
   - python/evalio
