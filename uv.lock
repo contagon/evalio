@@ -290,6 +290,7 @@ dev = [
     { name = "cmake" },
     { name = "compdb" },
     { name = "mkdocs" },
+    { name = "mkdocs-gen-files" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "pybind11-stubgen" },
@@ -321,6 +322,7 @@ dev = [
     { name = "cmake", specifier = ">=3.30.3" },
     { name = "compdb", specifier = ">=0.2.0" },
     { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
     { name = "mkdocs-material", specifier = ">=9.6.11" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29.1" },
     { name = "pybind11-stubgen", specifier = ">=2.5.1" },
@@ -597,6 +599,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c2/44/140469d87379c02f1e1870315f3143718036a983dd0416650827b8883192/mkdocs_autorefs-1.4.1.tar.gz", hash = "sha256:4b5b6235a4becb2b10425c2fa191737e415b37aa3418919db33e5d774c9db079", size = 4131355 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/29/1125f7b11db63e8e32bcfa0752a4eea30abff3ebd0796f808e14571ddaa2/mkdocs_autorefs-1.4.1-py3-none-any.whl", hash = "sha256:9793c5ac06a6ebbe52ec0f8439256e66187badf4b5334b5fde0b128ec134df4f", size = 5782047 },
+]
+
+[[package]]
+name = "mkdocs-gen-files"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mkdocs" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/85/2d634462fd59136197d3126ca431ffb666f412e3db38fd5ce3a60566303e/mkdocs_gen_files-0.5.0.tar.gz", hash = "sha256:4c7cf256b5d67062a788f6b1d035e157fc1a9498c2399be9af5257d4ff4d19bc", size = 7539 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/0f/1e55b3fd490ad2cecb6e7b31892d27cb9fc4218ec1dab780440ba8579e74/mkdocs_gen_files-0.5.0-py3-none-any.whl", hash = "sha256:7ac060096f3f40bd19039e7277dd3050be9a453c8ac578645844d4d91d7978ea", size = 8380 },
 ]
 
 [[package]]

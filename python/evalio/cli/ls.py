@@ -39,7 +39,13 @@ def ls(
             help="Output less verbose information",
         ),
     ] = False,
-):
+    show: Annotated[
+        bool,
+        typer.Option(
+            hidden=True,
+        ),
+    ] = True,
+) -> Optional[Table]:
     """
     List dataset and pipeline information
     """
@@ -98,7 +104,10 @@ def ls(
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
             table.add_row(*row_info)
 
-        Console().print(table)
+        if show:
+            Console().print(table)
+
+        return table
 
     if kind == Kind.pipelines:
         # Search for pipelines using rapidfuzz
@@ -154,4 +163,7 @@ def ls(
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
             table.add_row(*row_info)
 
-        Console().print(table)
+        if show:
+            Console().print(table)
+
+        return table

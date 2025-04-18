@@ -39,17 +39,25 @@ nav:
   - Examples:
     - Python: python.md
     - C++: cpp.md
-  - Builtins:
-    - Datasets: builtins/datasets.md
-    - Pipelines: builtins/pipelines.md
+  - Included:
+    - Datasets: included/datasets.md
+    - Pipelines: included/pipelines.md
   - Reference:
     - Types: ref/types.md
     - Datasets: ref/datasets.md
     - Pipelines: ref/pipelines.md
 
 plugins:
+  # Add top level search
   search:
     lang: en
+
+  # autogenerate evalio ls pages
+  gen-files:
+    scripts:
+      - docs/included.py
+
+  # Autogenerate docs from docstrings
   mkdocstrings:
     default_handler: python
     handlers:
@@ -69,7 +77,15 @@ plugins:
           # show_labels: false
           # show_category_heading: true
           docstring_style: google
-# markdown_extensions:
+
+markdown_extensions:
+  - tables
+
+# https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
+extra_javascript:
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/tablesort.js
+
 #   - pymdownx.highlight:
 #       anchor_linenums: true
 #       line_spans: __span
