@@ -86,6 +86,11 @@ dev-dependencies = [
 [tool.ruff]
 exclude = ["cpp/**/*"]
 
+[tool.ruff.format]
+# https://docs.astral.sh/ruff/configuration/
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

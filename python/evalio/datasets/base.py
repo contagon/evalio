@@ -23,6 +23,13 @@ _WARNED = False
 
 
 class DatasetIterator(Iterable[Measurement]):
+    """This is the base class for iterating over datasets.
+
+    This class is the main interface used to iterate over the dataset's measurements.
+    It provides an interface for iterating over IMU and Lidar measurements, as well as all measurements interleaved.
+    This allows for standardizing access to loading data, while allowing for loading parameters in [Dataset][evalio.datasets.Dataset] without having to load the data.
+    """
+
     def imu_iter(self) -> Iterator[ImuMeasurement]:
         """Main interface for iterating over IMU measurements.
 
@@ -49,10 +56,22 @@ class DatasetIterator(Iterable[Measurement]):
         ...
 
     # Return the number of lidar scans
-    def __len__(self) -> int: ...
+    def __len__(self) -> int:
+        """Number of lidar scans.
+
+        Returns:
+            int: Number of lidar scans.
+        """
+        ...
 
 
 class Dataset(StrEnum):
+    """The base class for all datasets.
+
+    This class provides an interface for loading datasets, including loading parameters and iterating over measurements.
+    All datasets are string enums, where each enum member represents a trajectory sequence in the dataset.
+    """
+
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         """
@@ -210,21 +229,56 @@ class Dataset(StrEnum):
         return self.data_iter().__len__()
 
     def __iter__(self) -> Iterator[Measurement]:  # type: ignore
+        """Main interface for iterating over measurements of all types.
+
+        Returns:
+            Iterator[Measurement]: Iterator of all measurements (IMU and Lidar).
+        """
         self._fail_not_downloaded()
         return self.data_iter().__iter__()
 
     def imu(self) -> Iterable[ImuMeasurement]:
+        """Iterate over just IMU measurements.
+
+        Returns:
+            Iterable[ImuMeasurement]: Iterator of IMU measurements.
+        """
         self._fail_not_downloaded()
         return self.data_iter().imu_iter()
 
     def lidar(self) -> Iterable[LidarMeasurement]:
+        """Iterate over just Lidar measurements.
+
+        Returns:
+            Iterable[LidarMeasurement]: Iterator of Lidar measurements.
+        """
         self._fail_not_downloaded()
         return self.data_iter().lidar_iter()
 
     def get_one_lidar(self, idx: int = 0) -> LidarMeasurement:
+        """Get a single Lidar measurement.
+
+        Note, this can be expensive to compute, as it will iterate over the entire dataset until it finds the measurement.
+
+        Args:
+            idx (int, optional): Index of measurement to get. Defaults to 0.
+
+        Returns:
+            LidarMeasurement: The Lidar measurement at the given index.
+        """
         return next(islice(self.lidar(), idx, idx + 1))
 
     def get_one_imu(self, idx: int = 0) -> ImuMeasurement:
+        """Get a single IMU measurement.
+
+        Note, this can be expensive to compute, as it will iterate over the entire dataset until it finds the measurement.
+
+        Args:
+            idx (int, optional): Index of measurement to get. Defaults to 0.
+
+        Returns:
+            ImuMeasurement: The IMU measurement at the given index.
+        """
         return next(islice(self.imu(), idx, idx + 1))
 
     # ------------------------- Misc name helpers ------------------------- #
@@ -233,14 +287,31 @@ class Dataset(StrEnum):
 
     @property
     def seq_name(self) -> str:
+        """Name of the sequence, in snake case.
+
+        Returns:
+            str: Name of the sequence.
+        """
         return self.value
 
     @property
     def full_name(self) -> str:
+        """Full name of the dataset, including the dataset name and sequence name.
+
+        Example: "dataset_name/sequence_name"
+
+        Returns:
+            str: Full name of the dataset.
+        """
         return f"{self.dataset_name()}/{self.seq_name}"
 
     @classmethod
     def sequences(cls) -> list["Dataset"]:
+        """All sequences in the dataset.
+
+        Returns:
+            list[Dataset]: List of all sequences in the dataset.
+        """
         return list(cls.__members__.values())
 
     @property
@@ -288,8 +359,10 @@ def pascal_to_snake(identifier):
 
 # ------------------------- Helpers ------------------------- #
 def set_data_dir(directory: Path):
-    """
-    Set the global location where datasets are stored. This will be used to store the downloaded data.
+    """Set the global location where datasets are stored. This will be used to store the downloaded data.
+
+    Args:
+        directory (Path): Directory
     """
     global _DATA_DIR, _WARNED
     _DATA_DIR = directory
@@ -297,8 +370,10 @@ def set_data_dir(directory: Path):
 
 
 def get_data_dir() -> Path:
-    """
-    Get the global data directory. This will be used to store the downloaded data.
+    """Get the global data directory. This will be used to store the downloaded data.
+
+    Returns:
+        Path: Directory where datasets are stored.
     """
     global _DATA_DIR
     return _DATA_DIR

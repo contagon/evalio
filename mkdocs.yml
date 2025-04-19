@@ -47,9 +47,9 @@ nav:
     - Datasets: included/datasets.md
     - Pipelines: included/pipelines.md
   - Reference:
-    - Types: ref/types.md
-    - Datasets: ref/datasets.md
-    - Pipelines: ref/pipelines.md
+    - types: ref/types.md
+    - datasets: ref/datasets.md
+    - pipelines: ref/pipelines.md
 
 plugins:
   # Add top level search
@@ -85,18 +85,20 @@ plugins:
 markdown_extensions:
   - tables
 
-# https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
-extra_javascript:
-  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
-  - javascripts/tablesort.js
-
-#   - pymdownx.highlight:
-#       anchor_linenums: true
-#       line_spans: __span
-#       pygments_lang_class: true
-#   - pymdownx.inlinehilite:
-#   - pymdownx.snippets:
-#   - pymdownx.superfences:
-#   - pymdownx.details:
+  # syntax highlighting
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite:
+  - pymdownx.superfences:
+  - pymdownx.details:
 #   - admonition:
 #   - attr_list:
+
+extra_javascript:
+  # auto sorting tables
+  # https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/tablesort.js
