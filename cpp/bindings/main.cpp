@@ -19,6 +19,6 @@ PYBIND11_MODULE(_cpp, m) {
   evalio::makeConversions(m_helpers);
 
   auto m_pipelines = m.def_submodule("pipelines", "Pipelines used in evalio.");
-  evalio::makeBasePipeline(m_pipelines, "Pipeline");
+  evalio::makeBasePipeline(m_pipelines);
   evalio::makePipelines(m_pipelines);
 }
