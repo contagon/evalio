@@ -12,6 +12,8 @@ from evalio.datasets.loaders import (
 from evalio.types import Trajectory
 import numpy as np
 
+import os
+
 from .base import (
     SE3,
     Dataset,
@@ -183,7 +185,18 @@ class MultiCampus(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        return ["ouster.bag", "pose_inW.csv", "vectornav.bag"]
+        if "ntu" in self.seq_name:
+            beams = 128
+            imu = "vn100"
+        else:
+            beams = 64
+            imu = "vn200"
+
+        return [
+            f"{self.seq_name}_{imu}.bag",
+            f"{self.seq_name}_os1_{beams}.bag",
+            "pose_inW.csv",
+        ]
 
     def download(self):
         ouster_url = {
@@ -253,11 +266,7 @@ class MultiCampus(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        # TODO: Make these download without changing the filename
-        gdown.download(id=gt_url, output=str(self.folder / "pose_inW.csv"), resume=True)
-        gdown.download(
-            id=ouster_url, output=str(self.folder / "ouster.bag"), resume=True
-        )
-        gdown.download(
-            id=imu_url, output=str(self.folder / "vectornav.bag"), resume=True
-        )
+        folder = f"{self.folder}{os.sep}"
+        gdown.download(id=gt_url, output=folder, resume=True)
+        gdown.download(id=ouster_url, output=folder, resume=True)
+        gdown.download(id=imu_url, output=folder, resume=True)

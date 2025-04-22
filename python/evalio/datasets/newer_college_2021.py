@@ -18,6 +18,8 @@ from .base import (
     DatasetIterator,
 )
 
+import os
+
 """
 As a reference, we use the built in Ouster IMU instead of the alphasense one
 Extrinsics are more likely to be accurate
@@ -53,8 +55,9 @@ class NewerCollege2021(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
+        gt_file = self.files()[-1]
         return load_pose_csv(
-            self.folder / "ground_truth.csv",
+            self.folder / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -98,6 +101,14 @@ class NewerCollege2021(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
+        # parse ground truth file
+        if "maths" in self.seq_name:
+            difficulty = self.seq_name.split("_")[1]
+            gt_file = f"gt_state_{difficulty}.csv"
+        else:
+            name = self.seq_name.replace("_", "-")
+            gt_file = f"gt-nc-{name}.csv"
+
         return {
             "cloister": [
                 "2021-12-02-10-15-59_0-cloister.bag",
@@ -136,10 +147,9 @@ class NewerCollege2021(Dataset):
             "stairs": [
                 "2021-07-01-10-40-50_0-stairs.bag",
             ],
-        }[self.seq_name] + ["ground_truth.csv"]
+        }[self.seq_name] + [gt_file]
 
     def download(self):
-        # TODO:
         bag_ids = {
             "quad_easy": ["1hF2h83E1THbFAvs7wpR6ORmrscIHxKMo"],
             "quad_medium": ["11bZfJce1MCM4G9YUTCyUifM715N7FSbO"],
@@ -186,9 +196,6 @@ class NewerCollege2021(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        # TODO: Make this download to matching name as online
-        gdown.download(
-            id=gt_ids, output=str(self.folder / "ground_truth.csv"), resume=True
-        )
+        gdown.download(id=gt_ids, output=f"{self.folder}{os.sep}", resume=True)
         for bid in bag_ids:
-            gdown.download(id=bid, output=str(self.folder) + "/", resume=True)
+            gdown.download(id=bid, output=f"{self.folder}{os.sep}", resume=True)

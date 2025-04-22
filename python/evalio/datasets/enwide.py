@@ -151,20 +151,7 @@ class EnWide(Dataset):
         }[self.seq_name]
 
     def download(self):
-        bag_date = {
-            "field_d": "2023-08-09-19-25-45",
-            "field_s": "2023-08-09-19-05-05",
-            "intersection_d": "2023-08-09-17-58-11",
-            "intersection_s": "2023-08-09-16-19-09",
-            "katzensee_d": "2023-08-21-10-29-20",
-            "katzensee_s": "2023-08-21-10-20-22",
-            "runway_d": "2023-08-09-18-52-05",
-            "runway_s": "2023-08-09-18-44-24",
-            "tunnel_d": "2023-08-08-17-50-31",
-            "tunnel_s": "2023-08-08-17-12-37",
-        }[self.seq_name]
-        bag_file = f"{bag_date}-{self.seq_name}.bag"
-        gt_file = f"gt-{self.seq_name}.csv"
+        bag_file, gt_file = self.files()
 
         url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{self.seq_name}/"
 

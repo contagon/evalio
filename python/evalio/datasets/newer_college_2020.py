@@ -10,6 +10,7 @@ from evalio.datasets.loaders import (
 from evalio.types import Trajectory, SO3
 import numpy as np
 from enum import auto
+import os
 
 from .base import (
     SE3,
@@ -44,16 +45,16 @@ class NewerCollege2020(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        # For some reason bag #7 is different
+        # For some reason bag parkland mound is different
         if self.seq_name == "parkland_mound":
             return load_pose_csv(
-                self.folder / "ground_truth.csv",
+                self.folder / "registered_poses.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
         return load_pose_csv(
-            self.folder / "ground_truth.csv",
+            self.folder / "registered_poses.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -141,7 +142,7 @@ class NewerCollege2020(Dataset):
                 "rooster_2020-07-10-09-34-11_1.bag",
                 "rooster_2020-07-10-09-36-58_2.bag",
             ],
-        }[self.seq_name] + ["ground_truth.csv"]
+        }[self.seq_name] + ["registered_poses.csv"]
 
     def download(self):
         folder_id = {
@@ -163,7 +164,7 @@ class NewerCollege2020(Dataset):
         import gdown  # type: ignore
 
         print(f"Downloading to {self.folder}...")
+
         self.folder.mkdir(parents=True, exist_ok=True)
-        # TODO: Make this download to an identical name as it is online
-        gdown.download(id=gt_url, output=self.folder, resume=True)
+        gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)

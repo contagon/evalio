@@ -19,6 +19,8 @@ from .base import (
     DatasetIterator,
 )
 
+import os
+
 """
 Note, we skip over a number of trajectories due to missing ground truth data.
 https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/edit?tab=t.0
@@ -60,7 +62,7 @@ class OxfordSpires(Dataset):
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
         traj = load_pose_csv(
-            self.folder / "gt-tum.csv",
+            self.folder / "gt-tum.txt",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -143,66 +145,66 @@ class OxfordSpires(Dataset):
             "christ_church_02": [
                 "1710754066_2024-03-18-09-27-47_0",
                 "1710754066_2024-03-18-09-36-49_1",
-                "gt-tum.csv",
+                "gt-tum.txt",
             ],
             "blenheim_palace_01": [
                 "1710406700_2024-03-14-08-58-21_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "christ_church_05": [
                 "1710926317_2024-03-20-09-18-38_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "keble_college_03": [
                 "1710256011_2024-03-12-15-06-52_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "christ_church_01": [
                 "1710752531_2024-03-18-09-02-12_0",
                 "1710752531_2024-03-18-09-11-55_1",
-                "gt-tum.csv",
+                "gt-tum.txt",
             ],
             "bodleian_library_02": [
                 "1716183690_2024-05-20-06-41-31_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "blenheim_palace_02": [
                 "1710407340_2024-03-14-09-09-01_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "keble_college_04": [
                 "1710256650_2024-03-12-15-17-31_0",
                 "1710256650_2024-03-12-15-26-05_1",
-                "gt-tum.csv",
+                "gt-tum.txt",
             ],
             "observatory_quarter_01": [
                 "1710338090_2024-03-13-13-54-51_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "christ_church_03": [
                 "1710755015_2024-03-18-09-43-36_0_blurred_filtered.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "blenheim_palace_05": [
                 "1710410169_2024-03-14-09-56-09_0_blurred_filtered.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "observatory_quarter_02": [
                 "1710338490_2024-03-13-14-01-30_blurred_filtered.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
             "keble_college_02": [
                 "1710255615_2024-03-12-15-00-16_0_blurred_filtered_compressed.db3",
-                "gt-tum.csv",
+                "gt-tum.txt",
                 "metadata.yaml",
             ],
         }[self.seq_name]
@@ -247,5 +249,5 @@ class OxfordSpires(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        gdown.download(id=gt_url, output=str(self.folder / "gt-tum.csv"), resume=True)
+        gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)

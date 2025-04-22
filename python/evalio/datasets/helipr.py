@@ -15,6 +15,7 @@ from .base import (
 from evalio.types import SE3, SO3, Stamp
 from evalio.datasets.loaders import RawDataIter, load_pose_csv
 
+import os
 
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.
@@ -165,7 +166,7 @@ class HeLiPR(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        folder_trail = f"{self.folder}/"
+        folder_trail = f"{self.folder}{os.sep}"
         gdown.download(id=id_gt, output=folder_trail, resume=True)
         gdown.download(id=id_imu, output=folder_trail, resume=True)
 
