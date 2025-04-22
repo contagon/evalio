@@ -51,9 +51,8 @@ public:
   }
 };
 
-inline void make_pipeline(py::module &m, const char *name = "_pipeline",
-                          bool local = true) {
-  py::class_<evalio::Pipeline, PyPipeline>(m, name, py::module_local(local))
+inline void makeBasePipeline(py::module &m, const char *name = "_pipeline") {
+  py::class_<evalio::Pipeline, PyPipeline>(m, name)
       .def(py::init<>())
       .def_static("name", &evalio::Pipeline::name)
       .def_static("url", &evalio::Pipeline::url)
@@ -67,6 +66,20 @@ inline void make_pipeline(py::module &m, const char *name = "_pipeline",
       .def("set_imu_params", &evalio::Pipeline::set_imu_params, "params"_a)
       .def("set_lidar_params", &evalio::Pipeline::set_lidar_params, "params"_a)
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a);
+}
+
+inline void setup(py::module &m) {
+  // NOTE: typeid are not guaranteed to be unique across building from different
+  // compilers
+  // https://github.com/pybind/pybind11/issues/877#issuecomment-304464896
+  // Ideally, if built using the same compiler as evalio (unlikely), this should
+  // work import the original wrapper for Pipeline
+  py::module evalio = py::module::import("evalio");
+  // Otherwise, build a new pipeline base class
+  // This should be fine, as pipelines are all exclusively used in python
+  if (py::detail::get_type_info(typeid(evalio::Pipeline)) == nullptr) {
+    evalio::makeBasePipeline(m);
+  };
 }
 
 } // namespace evalio
