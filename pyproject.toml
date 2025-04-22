@@ -47,8 +47,7 @@ sdist.include = ["cpp/bindings/pipelines-src/*"]
 EVALIO_BUILD_PYTHON = true
 CMAKE_BUILD_TYPE = "Release"
 VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
-VCPKG_INSTALL_OPTIONS = "--debug"
-
+# VCPKG_INSTALL_OPTIONS = "--debug"
 
 [tool.cibuildwheel]
 build = ["cp*-manylinux_x86_64", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
