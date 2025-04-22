@@ -51,8 +51,9 @@ public:
   }
 };
 
-inline void make_pipeline(py::module &m, const char *name = "_pipeline") {
-  py::class_<evalio::Pipeline, PyPipeline>(m, name)
+inline void make_pipeline(py::module &m, const char *name = "_pipeline",
+                          bool local = true) {
+  py::class_<evalio::Pipeline, PyPipeline>(m, name, py::module_local(local))
       .def(py::init<>())
       .def_static("name", &evalio::Pipeline::name)
       .def_static("url", &evalio::Pipeline::url)
