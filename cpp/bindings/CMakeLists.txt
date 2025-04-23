@@ -51,24 +51,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nanobind)
 
+# Add the Python module
 nanobind_add_module(_cpp STABLE_ABI NB_STATIC main.cpp)
 target_link_libraries(_cpp PRIVATE ${LIBS})
 target_compile_definitions(_cpp PRIVATE ${DEF})
 install(TARGETS _cpp DESTINATION evalio)
 
+# handle stubs
+function(module_subs MOD FILE)
+    nanobind_add_stub(
+        ${MOD}_stubs
+        INSTALL_TIME
+        MODULE evalio.${MOD}
+        OUTPUT _cpp/${FILE}
+        PYTHON_PATH "."
+    )
+    install(FILES ${CMAKE_INSTALL_PREFIX}/_cpp/${FILE} DESTINATION evalio/_cpp)
+endfunction()
+
+module_subs(_cpp           __init__.pyi)
+module_subs(_cpp.pipelines pipelines.pyi)
+module_subs(_cpp.types     types.pyi)
+
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)
-
-# Build stubs
-# TODO: Something about this breaks python 3.12 and 3.13 builds
-# add_custom_command(
-#     TARGET _cpp
-#     POST_BUILD
-#     COMMAND
-#         "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o
-#         "${CMAKE_CURRENT_BINARY_DIR}" --numpy-array-wrap-with-annotated
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     COMMENT "Generating pybind11 stubs"
-#     VERBATIM
-# )
-# install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_cpp DESTINATION evalio)

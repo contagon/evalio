@@ -252,7 +252,6 @@ dependencies = [
     { name = "numpy" },
     { name = "pyyaml" },
     { name = "rapidfuzz" },
-    { name = "rerun-sdk" },
     { name = "rosbags" },
     { name = "tqdm" },
     { name = "typer" },
@@ -268,6 +267,7 @@ dev = [
     { name = "bump-my-version" },
     { name = "cmake" },
     { name = "compdb" },
+    { name = "nanobind" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "scipy" },
@@ -284,7 +284,6 @@ requires-dist = [
     { name = "numpy" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidfuzz", specifier = ">=3.12.2" },
-    { name = "rerun-sdk", specifier = ">=0.22.1" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
     { name = "rosbags", specifier = ">=0.10" },
     { name = "tqdm", specifier = ">=4.66" },
@@ -296,6 +295,7 @@ dev = [
     { name = "bump-my-version", specifier = ">=1.1.1" },
     { name = "cmake", specifier = ">=3.30.3" },
     { name = "compdb", specifier = ">=0.2.0" },
+    { name = "nanobind", specifier = ">=2.7.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "ruff", specifier = ">=0.6.8" },
     { name = "scipy", specifier = ">=1.15.2" },
@@ -429,6 +429,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
+]
+
+[[package]]
+name = "nanobind"
+version = "2.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/7d/f77f2bc2e2a210502a164556f8a742cd0f72f39061b97cb9d73bbd3ff0ab/nanobind-2.7.0.tar.gz", hash = "sha256:f9f1b160580c50dcf37b6495a0fd5ec61dc0d95dae5f8004f87dd9ad7eb46b34", size = 976093 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/14/989883082b395146120d34ca7e484a2b24cb73b0e428576a3a4249bd4082/nanobind-2.7.0-py3-none-any.whl", hash = "sha256:73b12d0e751d140d6c1bf4b215e18818a8debfdb374f08dc3776ad208d808e74", size = 241690 },
 ]
 
 [[package]]
