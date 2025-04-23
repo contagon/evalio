@@ -1,17 +1,18 @@
 #pragma once
 #include <cmath>
 #include <cstddef>
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/eigen/dense.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
 #include <fstream>
 
 #include "evalio/types.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace evalio {
 
@@ -363,8 +364,8 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
 }
 
 // ---------------------- Create python bindings ---------------------- //
-inline void makeConversions(py::module &m) {
-  py::enum_<DataType>(m, "DataType")
+inline void makeConversions(nb::module_ &m) {
+  nb::enum_<DataType>(m, "DataType")
       .value("UINT8", DataType::UINT8)
       .value("INT8", DataType::INT8)
       .value("UINT16", DataType::UINT16)
@@ -374,29 +375,31 @@ inline void makeConversions(py::module &m) {
       .value("FLOAT32", DataType::FLOAT32)
       .value("FLOAT64", DataType::FLOAT64);
 
-  py::class_<Field>(m, "Field")
-      .def(py::init<std::string, DataType, uint32_t>(), py::kw_only(), "name"_a,
+  nb::class_<Field>(m, "Field")
+      .def(nb::init<std::string, DataType, uint32_t>(), nb::kw_only(), "name"_a,
            "datatype"_a, "offset"_a)
-      .def_readwrite("name", &Field::name)
-      .def_readwrite("datatype", &Field::datatype)
-      .def_readwrite("offset", &Field::offset);
+      .def_rw("name", &Field::name)
+      .def_rw("datatype", &Field::datatype)
+      .def_rw("offset", &Field::offset);
 
-  py::class_<PointCloudMetadata>(m, "PointCloudMetadata")
-      .def(py::init<evalio::Stamp, int, int, int, int, int, int>(),
-           py::kw_only(), "stamp"_a, "width"_a, "height"_a, "point_step"_a,
+  nb::class_<PointCloudMetadata>(m, "PointCloudMetadata")
+      .def(nb::init<evalio::Stamp, int, int, int, int, int, int>(),
+           nb::kw_only(), "stamp"_a, "width"_a, "height"_a, "point_step"_a,
            "row_step"_a, "is_bigendian"_a, "is_dense"_a)
-      .def_readwrite("stamp", &PointCloudMetadata::stamp)
-      .def_readwrite("width", &PointCloudMetadata::width)
-      .def_readwrite("height", &PointCloudMetadata::height)
-      .def_readwrite("point_step", &PointCloudMetadata::point_step)
-      .def_readwrite("row_step", &PointCloudMetadata::row_step)
-      .def_readwrite("is_bigendian", &PointCloudMetadata::is_bigendian)
-      .def_readwrite("is_dense", &PointCloudMetadata::is_dense);
+      .def_rw("stamp", &PointCloudMetadata::stamp)
+      .def_rw("width", &PointCloudMetadata::width)
+      .def_rw("height", &PointCloudMetadata::height)
+      .def_rw("point_step", &PointCloudMetadata::point_step)
+      .def_rw("row_step", &PointCloudMetadata::row_step)
+      .def_rw("is_bigendian", &PointCloudMetadata::is_bigendian)
+      .def_rw("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("pc2_to_evalio", [](const PointCloudMetadata &msg,
-                            const std::vector<Field> &fields, char *c) {
-    return pc2_to_evalio(msg, fields, reinterpret_cast<uint8_t *>(c));
-  });
+  m.def("pc2_to_evalio",
+        [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
+           const char *c) -> evalio::LidarMeasurement {
+          return pc2_to_evalio(msg, fields,
+                               reinterpret_cast<const uint8_t *>(c));
+        });
 
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);

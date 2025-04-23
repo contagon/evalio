@@ -35,16 +35,23 @@ endif()
 message("###############################################################")
 
 # ------------------------- Make Python Bindings ------------------------- #
-set(PYBIND11_FINDPYTHON ON)
-FetchContent_Declare(
-    pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG v2.13.6
-    FIND_PACKAGE_ARGS # uses find_package first, git if it fails
+find_package(
+    Python
+    3.11
+    REQUIRED
+    COMPONENTS Interpreter Development.Module
+    OPTIONAL_COMPONENTS Development.SABIModule
 )
-FetchContent_MakeAvailable(pybind11)
 
-pybind11_add_module(_cpp main.cpp)
+FetchContent_Declare(
+    nanobind
+    GIT_REPOSITORY https://github.com/wjakob/nanobind
+    GIT_TAG v2.7.0
+    # FIND_PACKAGE_ARGS # uses find_package first, git if it fails
+)
+FetchContent_MakeAvailable(nanobind)
+
+nanobind_add_module(_cpp STABLE_ABI NB_STATIC main.cpp)
 target_link_libraries(_cpp PRIVATE ${LIBS})
 target_compile_definitions(_cpp PRIVATE ${DEF})
 install(TARGETS _cpp DESTINATION evalio)

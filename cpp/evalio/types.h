@@ -31,7 +31,6 @@ struct Duration {
 
   bool operator>(const Duration &other) const { return nsec > other.nsec; }
 
-  // Check equality using nsec to avoid floating point error
   bool operator==(const Duration &other) const { return nsec == other.nsec; }
 
   bool operator!=(const Duration &other) const { return !(*this == other); }
