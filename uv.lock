@@ -244,7 +244,7 @@ wheels = [
 
 [[package]]
 name = "evalio"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "argcomplete" },
@@ -252,6 +252,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pyyaml" },
     { name = "rapidfuzz" },
+    { name = "rerun-sdk" },
     { name = "rosbags" },
     { name = "tqdm" },
     { name = "typer" },
@@ -284,6 +285,7 @@ requires-dist = [
     { name = "numpy" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidfuzz", specifier = ">=3.12.2" },
+    { name = "rerun-sdk", specifier = ">=0.22.1" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
     { name = "rosbags", specifier = ">=0.10" },
     { name = "tqdm", specifier = ">=4.66" },

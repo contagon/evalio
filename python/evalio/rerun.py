@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from evalio.types import LidarParams, Trajectory, Stamp
 from evalio.datasets import Dataset
+from evalio.pipelines import Pipeline
 from evalio.utils import print_warning
 import numpy as np
 
@@ -23,9 +24,15 @@ try:
             overrides: OverrideType = {"imu/lidar": [rrb.components.Visible(False)]}
             self.blueprint: rr.BlueprintLike
 
-            if self.level == 1:
-                self.blueprint = rrb.Spatial3DView(overrides=overrides)
-            elif self.level >= 2:
+            # 3D view only
+            print("Rerun visualization enabled")
+            if self.level < 4:
+                self.blueprint = rrb.Blueprint(
+                    rrb.Spatial3DView(overrides=overrides),
+                    collapse_panels=True,
+                )
+            # include intensity image as well
+            else:
                 self.blueprint = rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
@@ -62,9 +69,15 @@ try:
 
             rr.log("gt", convert(self.gt), static=True)
             rr.log("gt", rr.Points3D.from_fields(colors=[0, 0, 255]))
-            rr.log("imu/lidar", convert(dataset.imu_T_lidar()), static=True)
+            rr.log("origin/imu/lidar", convert(dataset.imu_T_lidar()), static=True)
 
-        def log(self, data: LidarMeasurement, features: Sequence[Point], pose: SE3):
+        def log(
+            self,
+            data: LidarMeasurement,
+            features: Sequence[Point],
+            pose: SE3,
+            pipe: Pipeline,
+        ):
             if self.level == 0:
                 return
 
@@ -81,29 +94,34 @@ try:
                     imu_o_T_imu_0 = pose
                     gt_o_T_imu_0 = self.gt.poses[0]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
+                    rr.log("origin", convert(self.gt_o_T_imu_o), static=True)
 
             # If level is 1, just include the pose
             if self.level >= 1:
                 rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
-                if self.gt_o_T_imu_o is not None:
-                    rr.log("imu", convert(self.gt_o_T_imu_o * pose))
+                rr.log("origin/imu", convert(pose))
 
             # If level is 2 or greater, include the features from the scan
             if self.level >= 2:
                 if len(features) > 0:
-                    rr.log("imu/lidar/features", convert(list(features)))
+                    rr.log("origin/imu/lidar/features", convert(list(features)))
+
+            # If level is 3 or greater, include the current map
+            if self.level >= 3:
+                rr.log("origin/map", convert(pipe.map()))
 
             # If level is 3 or greater, include the image and original point cloud
-            if self.level >= 3:
+            if self.level >= 4:
                 intensity = np.array([d.intensity for d in data.points])
                 # row major order
                 image = intensity.reshape(
                     (self.lidar_params.num_rows, self.lidar_params.num_columns)
                 )
                 rr.log("image", rr.Image(image))
-                rr.log("imu/lidar/scan", convert(data))
+                rr.log("origin/imu/lidar/scan", convert(data))
 
     # ------------------------- For converting to rerun types ------------------------- #
+    # point clouds
     @overload
     def convert(
         obj: LidarMeasurement, color: Optional[str | list[int]] = None
@@ -115,11 +133,13 @@ try:
     @overload
     def convert(obj: np.ndarray, color: Optional[np.ndarray] = None) -> rr.Points3D: ...
 
+    # trajectories
     @overload
     def convert(obj: list[SE3], color: Optional[list[int]] = None) -> rr.Points3D: ...
     @overload
     def convert(obj: Trajectory, color: Optional[list[int]] = None) -> rr.Points3D: ...
 
+    # poses
     @overload
     def convert(obj: SE3) -> rr.Transform3D: ...
 

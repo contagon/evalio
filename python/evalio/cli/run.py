@@ -149,7 +149,7 @@ def run(
                         vis.new_recording(dataset)
                         first_scan_done = True
 
-                    vis.log(data, features, pose)
+                    vis.log(data, features, pose, pipe)
 
                     loop.update()
                     if loop.n >= length:
