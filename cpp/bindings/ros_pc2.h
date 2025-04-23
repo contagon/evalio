@@ -396,9 +396,9 @@ inline void makeConversions(nb::module_ &m) {
 
   m.def("pc2_to_evalio",
         [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
-           const char *c) -> evalio::LidarMeasurement {
+           nb::bytes c) -> evalio::LidarMeasurement {
           return pc2_to_evalio(msg, fields,
-                               reinterpret_cast<const uint8_t *>(c));
+                               reinterpret_cast<const uint8_t *>(c.c_str()));
         });
 
   m.def("fill_col_row_major", &fill_col_row_major);
