@@ -4,7 +4,7 @@ from evalio.utils import print_warning
 from tqdm import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
-from evalio.rerun import RerunVis
+from evalio.rerun import RerunVis, VisArgs
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
 from .writer import TrajectoryWriter, save_config, save_gt
@@ -13,6 +13,7 @@ from .stats import eval
 from rich import print
 from typing import Optional, Annotated
 import typer
+
 
 app = typer.Typer()
 
@@ -52,22 +53,35 @@ def run_from_cli(
         ),
     ] = None,
     visualize: Annotated[
-        int,
+        bool,
         typer.Option(
             "-v",
             "--visualize",
-            count=True,
-            help="Visualize results. Repeat up to 3 times for more detail",
+            help="Visualize the results via rerun",
             show_default=False,
         ),
-    ] = 0,
+    ] = False,
+    show: Annotated[
+        Optional[VisArgs],
+        typer.Option(
+            "-s",
+            "--show",
+            help="Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.",
+            show_default=False,
+            parser=VisArgs.parse,
+        ),
+    ] = None,
 ):
     if (in_pipelines or in_datasets or length) and config:
         raise typer.BadParameter(
             "Cannot specify both config and manual options", param_hint="run"
         )
 
-    vis = RerunVis(visualize)
+    if show is None:
+        vis_args = VisArgs(show=visualize)
+    else:
+        vis_args = show
+    vis = RerunVis(vis_args)
 
     if config is not None:
         pipelines, datasets, out = parse_config(Path(config))

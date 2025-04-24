@@ -7,8 +7,39 @@ from evalio.pipelines import Pipeline
 from evalio.utils import print_warning
 import numpy as np
 
+from dataclasses import dataclass
+
+import typer
 
 from evalio.types import SE3, LidarMeasurement, Point
+
+
+@dataclass
+class VisArgs:
+    show: bool
+    map: bool = False
+    image: bool = False
+    scan: bool = False
+    features: bool = False
+
+    @staticmethod
+    def parse(opts: str) -> "VisArgs":
+        out = VisArgs(show=True)
+        for o in opts:
+            match o:
+                case "m":
+                    out.map = True
+                case "i":
+                    out.image = True
+                case "s":
+                    out.scan = True
+                case "f":
+                    out.features = True
+                case _:
+                    raise typer.BadParameter(f"Unknown visualization option {o}")
+
+        return out
+
 
 try:
     import rerun as rr
@@ -19,32 +50,24 @@ try:
     # TODO: Handle multiple trajectories runs in single recording
     # TODO: Add previous part of trajectory as points
     class RerunVis:  # type: ignore
-        def __init__(self, level: int):
-            self.level = level
-            overrides: OverrideType = {"imu/lidar": [rrb.components.Visible(False)]}
+        def __init__(self, args: VisArgs):
+            self.args = args
             self.blueprint: rr.BlueprintLike
 
-            # 3D view only
-            print("Rerun visualization enabled")
-            if self.level < 4:
-                self.blueprint = rrb.Blueprint(
-                    rrb.Spatial3DView(overrides=overrides),
-                    collapse_panels=True,
-                )
             # include intensity image as well
-            else:
+            if args.image:
                 self.blueprint = rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
                         # TODO: Error as well?
                         rrb.Spatial3DView(  # 3d view
-                            overrides=overrides,
                             background=rrb.BackgroundKind.GradientBright,
                         ),
                         row_shares=[1, 3],
                     ),
-                    collapse_panels=True,
                 )
+            else:
+                self.blueprint = rrb.Blueprint(rrb.Spatial3DView())
 
             # To be set during new_recording
             self.lidar_params: Optional[LidarParams] = None
@@ -54,7 +77,7 @@ try:
             self.gt_o_T_imu_o: Optional[SE3] = None
 
         def new_recording(self, dataset: Dataset):
-            if self.level == 0:
+            if not self.args.show:
                 return
 
             rr.new_recording(
@@ -78,7 +101,7 @@ try:
             pose: SE3,
             pipe: Pipeline,
         ):
-            if self.level == 0:
+            if not self.args.show:
                 return
 
             if self.lidar_params is None or self.gt is None:
@@ -96,29 +119,31 @@ try:
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
                     rr.log("origin", convert(self.gt_o_T_imu_o), static=True)
 
-            # If level is 1, just include the pose
-            if self.level >= 1:
-                rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
-                rr.log("origin/imu", convert(pose))
+            # Always include the pose
+            rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
+            rr.log("origin/imu", convert(pose))
 
-            # If level is 2 or greater, include the features from the scan
-            if self.level >= 2:
+            # Features from the scan
+            if self.args.features:
                 if len(features) > 0:
                     rr.log("origin/imu/lidar/features", convert(list(features)))
 
-            # If level is 3 or greater, include the current map
-            if self.level >= 3:
+            # Include the current map
+            if self.args.map:
                 rr.log("origin/map", convert(pipe.map()))
 
-            # If level is 3 or greater, include the image and original point cloud
-            if self.level >= 4:
+            # Include the original point cloud
+            if self.args.scan:
+                rr.log("origin/imu/lidar/scan", convert(data))
+
+            # Include the intensity image
+            if self.args.image:
                 intensity = np.array([d.intensity for d in data.points])
                 # row major order
                 image = intensity.reshape(
                     (self.lidar_params.num_rows, self.lidar_params.num_columns)
                 )
                 rr.log("image", rr.Image(image))
-                rr.log("origin/imu/lidar/scan", convert(data))
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -201,12 +226,18 @@ try:
 except Exception as _:
 
     class RerunVis:
-        def __init__(self, level: int) -> None:
-            if level != 0:
+        def __init__(self, args: VisArgs) -> None:
+            if args.show:
                 print_warning("Rerun not found, visualization disabled")
 
         def new_recording(self, dataset: Dataset):
             pass
 
-        def log(self, data: LidarMeasurement, features: Sequence[Point], pose: SE3):
+        def log(
+            self,
+            data: LidarMeasurement,
+            features: Sequence[Point],
+            pose: SE3,
+            pipe: Pipeline,
+        ):
             pass
