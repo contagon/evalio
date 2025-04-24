@@ -5,7 +5,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3
 import numpy as np
@@ -56,7 +55,7 @@ class NewerCollege2021(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         gt_file = self.files()[-1]
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

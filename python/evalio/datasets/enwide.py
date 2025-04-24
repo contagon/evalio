@@ -10,7 +10,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SE3, SO3
 import numpy as np
@@ -68,7 +67,7 @@ class EnWide(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / f"gt-{self.seq_name}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

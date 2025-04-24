@@ -190,6 +190,8 @@ inline void makeTypes(nb::module_ &m) {
       .def("toMat", &SO3::toMat)
       .def("rotate", &SO3::rotate)
       .def(nb::self * nb::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &SO3::toString)
       .def("__copy__", [](const SO3 &self) { return SO3(self); })
       .def(
@@ -205,6 +207,8 @@ inline void makeTypes(nb::module_ &m) {
       .def("toMat", &SE3::toMat)
       .def("inverse", &SE3::inverse)
       .def(nb::self * nb::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &SE3::toString)
       .def("__copy__", [](const SE3 &self) { return SE3(self); })
       .def(

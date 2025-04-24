@@ -13,7 +13,7 @@ from .base import (
     DatasetIterator,
 )
 from evalio.types import SE3, SO3, Stamp
-from evalio.datasets.loaders import RawDataIter, load_pose_csv
+from evalio.datasets.loaders import RawDataIter
 
 import os
 
@@ -66,7 +66,7 @@ class HeLiPR(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / "Ouster_gt.txt",
             ["nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
