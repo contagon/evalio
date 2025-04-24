@@ -1,4 +1,5 @@
 from copy import deepcopy
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Optional, Sequence
 
@@ -29,7 +30,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     Operates in place.
 
     Does this by finding the higher frame rate trajectory and subsampling it to the closest poses of the other one.
-    Additionally it checks the beginning and end of the trajectories to make sure they are aligned.
+    Additionally it checks the beginning of the trajectories to make sure they start at about the same stamp.
 
     Args:
         traj1 (Trajectory): One trajectory
@@ -108,6 +109,12 @@ def align_poses(traj: Trajectory, gt: Trajectory):
 
 
 # ------------------------- Methods for computing metrics ------------------------- #
+class MetricKind(StrEnum):
+    mean = auto()
+    median = auto()
+    sse = auto()
+
+
 @dataclass(kw_only=True)
 class Metric:
     trans: float
@@ -119,6 +126,15 @@ class Error:
     # Shape: (n,)
     trans: np.ndarray
     rot: np.ndarray
+
+    def summarize(self, metric: MetricKind) -> Metric:
+        match metric:
+            case MetricKind.mean:
+                return self.mean()
+            case MetricKind.median:
+                return self.median()
+            case MetricKind.sse:
+                return self.sse()
 
     def mean(self) -> Metric:
         return Metric(rot=self.rot.mean(), trans=self.trans.mean())
@@ -213,7 +229,13 @@ def dict_diff(dicts: Sequence[dict]) -> list[str]:
     return diff
 
 
-def eval_dataset(dir: Path, visualize: bool, sort: Optional[str], window_size: int = 1):
+def eval_dataset(
+    dir: Path,
+    visualize: bool,
+    sort: Optional[str],
+    window_size: int,
+    metric: MetricKind,
+):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
@@ -254,6 +276,7 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str], window_size: i
         )
 
     # Group into pipelines so we can compare keys
+    # (other pipelines will have different keys)
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
     grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
     for traj in trajs:
@@ -272,8 +295,8 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str], window_size: i
         # Iterate over each
         for traj in trajs:
             exp = ExperimentResults(gt_og, traj)
-            ate = exp.ate().sse()
-            rte = exp.rte(window_size).sse()
+            ate = exp.ate().summarize(metric)
+            rte = exp.rte(window_size).summarize(metric)
             r = {
                 "name": traj.metadata["name"],
                 "ATEt": ate.trans,
@@ -302,8 +325,8 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str], window_size: i
         min_width=len(str(dir)) + 5,
     )
 
-    for key in results[0].keys():
-        table.add_column(key, justify="center")
+    for key, val in results[0].items():
+        table.add_column(key, justify="right" if isinstance(val, float) else "center")
 
     for result in results:
         row = [
@@ -332,6 +355,21 @@ def eval(
         Optional[str],
         typer.Option("-s", "--sort", help="Sort results by either [atet|ater]"),
     ] = None,
+    window: Annotated[
+        int,
+        typer.Option(
+            "-w", "--window", help="Window size for RTE. Defaults to 100 time-steps."
+        ),
+    ] = 100,
+    metric: Annotated[
+        MetricKind,
+        typer.Option(
+            "--metric",
+            "-m",
+            help="Metric to use for ATE/RTE computation. Defaults to sse.",
+            case_sensitive=False,
+        ),
+    ] = MetricKind.sse,
 ):
     """
     Evaluate the results of experiments.
@@ -347,4 +385,4 @@ def eval(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort)
+        eval_dataset(d, visualize, sort, window, metric)
