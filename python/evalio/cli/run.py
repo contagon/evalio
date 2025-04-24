@@ -134,6 +134,12 @@ def run(
 
     for dbuilder in datasets:
         save_gt(output, dbuilder)
+        vis.new_recording(dbuilder.build())
+
+        # Found how much we'll be iterating
+        length = len(dbuilder.build().data_iter())
+        if dbuilder.length is not None and dbuilder.length < length:
+            length = dbuilder.length
 
         for pbuilder in pipelines:
             print(f"Running {pbuilder} on {dbuilder}")
@@ -141,27 +147,17 @@ def run(
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
-
-            # Initialize params
-            first_scan_done = False
-            data_iter = dataset.data_iter()
-            length = len(data_iter)
-            if dbuilder.length is not None and dbuilder.length < length:
-                length = dbuilder.length
-            loop = tqdm(total=length)
+            vis.new_pipe(pbuilder.name)
 
             # Run the pipeline
-            for data in data_iter:
+            loop = tqdm(total=length)
+            for data in dbuilder.build():
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
                     features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
-
-                    if not first_scan_done:
-                        vis.new_recording(dataset)
-                        first_scan_done = True
 
                     vis.log(data, features, pose, pipe)
 

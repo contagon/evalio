@@ -47,8 +47,6 @@ try:
 
     OverrideType = dict[rr.datatypes.EntityPath | str, list[rr.ComponentBatchLike]]
 
-    # TODO: Handle multiple trajectories runs in single recording
-    # TODO: Add previous part of trajectory as points
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs):
             self.args = args
@@ -59,10 +57,7 @@ try:
                 self.blueprint = rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
-                        # TODO: Error as well?
-                        rrb.Spatial3DView(  # 3d view
-                            background=rrb.BackgroundKind.GradientBright,
-                        ),
+                        rrb.Spatial3DView(),
                         row_shares=[1, 3],
                     ),
                 )
@@ -75,6 +70,9 @@ try:
 
             # To be found during log
             self.gt_o_T_imu_o: Optional[SE3] = None
+            self.trajectory: Optional[Trajectory] = None
+            self.imu_T_lidar: Optional[SE3] = None
+            self.pn: Optional[str] = None
 
         def new_recording(self, dataset: Dataset):
             if not self.args.show:
@@ -89,10 +87,24 @@ try:
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.gt_o_T_imu_o = None
+            self.trajectory = Trajectory(stamps=[], poses=[])
+            self.imu_T_lidar = dataset.imu_T_lidar()
 
             rr.log("gt", convert(self.gt), static=True)
-            rr.log("gt", rr.Points3D.from_fields(colors=[0, 0, 255]))
-            rr.log("origin/imu/lidar", convert(dataset.imu_T_lidar()), static=True)
+            rr.log("gt", rr.Points3D.from_fields(colors=[0, 0, 255]), static=True)
+
+        def new_pipe(self, pipe_name: str):
+            if not self.args.show:
+                return
+
+            if self.imu_T_lidar is None:
+                raise ValueError(
+                    "You needed to initialize the recording before adding a pipeline!"
+                )
+
+            self.pn = pipe_name
+            self.gt_o_T_imu_o = None
+            rr.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
         def log(
             self,
@@ -104,10 +116,12 @@ try:
             if not self.args.show:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None or self.gt is None or self.trajectory is None:
                 raise ValueError(
                     "You needed to initialize the recording before stepping!"
                 )
+            if self.pn is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
             if self.gt_o_T_imu_o is None:
@@ -117,24 +131,26 @@ try:
                     imu_o_T_imu_0 = pose
                     gt_o_T_imu_0 = self.gt.poses[0]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
-                    rr.log("origin", convert(self.gt_o_T_imu_o), static=True)
+                    rr.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
             # Always include the pose
             rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
-            rr.log("origin/imu", convert(pose))
+            rr.log(f"{self.pn}/imu", convert(pose))
+            self.trajectory.append(data.stamp, pose)
+            rr.log(f"{self.pn}/trajectory", convert(self.trajectory))
 
             # Features from the scan
             if self.args.features:
                 if len(features) > 0:
-                    rr.log("origin/imu/lidar/features", convert(list(features)))
+                    rr.log(f"{self.pn}/imu/lidar/features", convert(list(features)))
 
             # Include the current map
             if self.args.map:
-                rr.log("origin/map", convert(pipe.map()))
+                rr.log(f"{self.pn}/map", convert(pipe.map()))
 
             # Include the original point cloud
             if self.args.scan:
-                rr.log("origin/imu/lidar/scan", convert(data))
+                rr.log(f"{self.pn}/imu/lidar/scan", convert(data))
 
             # Include the intensity image
             if self.args.image:
@@ -240,4 +256,7 @@ except Exception as _:
             pose: SE3,
             pipe: Pipeline,
         ):
+            pass
+
+        def new_pipe(self, pipe_name: str):
             pass

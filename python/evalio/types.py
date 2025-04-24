@@ -39,6 +39,10 @@ class Trajectory:
     def __iter__(self):
         return iter(zip(self.stamps, self.poses))
 
+    def append(self, stamp: Stamp, pose: SE3):
+        self.stamps.append(stamp)
+        self.poses.append(pose)
+
     def transform_in_place(self, T: SE3):
         for i in range(len(self.poses)):
             self.poses[i] = self.poses[i] * T
