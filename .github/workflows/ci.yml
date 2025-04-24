@@ -30,6 +30,10 @@ jobs:
   # run tests on both mac and ubuntu, across all python versions
   test:
     runs-on: ${{ matrix.os }}
+    # We turn off stub generations, as there is some strange bug on github actions
+    # where an editable install with stubs obscures the _cpp.so module and it can't be imported
+    env:
+      SKBUILD_CMAKE_DEFINE: EVALIO_PYTHON_STUBS=OFF
     strategy:
       fail-fast: false
       matrix:

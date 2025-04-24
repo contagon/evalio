@@ -59,6 +59,7 @@ install(TARGETS _cpp DESTINATION evalio)
 
 # handle stubs
 function(module_subs MOD FILE)
+    message(STATUS "Adding ${MOD} stubs")
     nanobind_add_stub(
         ${MOD}_stubs
         INSTALL_TIME
@@ -68,9 +69,14 @@ function(module_subs MOD FILE)
     )
 endfunction()
 
-module_subs(_cpp           __init__.pyi)
-module_subs(_cpp.pipelines pipelines.pyi)
-module_subs(_cpp.types     types.pyi)
+# option for github actions
+# see ci.yml
+option(EVALIO_PYTHON_STUBS "Build Python bindings with stubs" ON)
+if(EVALIO_PYTHON_STUBS)
+    module_subs(_cpp           __init__.pyi)
+    module_subs(_cpp.pipelines pipelines.pyi)
+    module_subs(_cpp.types     types.pyi)
+endif()
 
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)

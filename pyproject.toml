@@ -45,7 +45,6 @@ sdist.include = ["cpp/bindings/pipelines-src/*"]
 
 [tool.scikit-build.cmake.define]
 EVALIO_BUILD_PYTHON = true
-CMAKE_BUILD_TYPE = "Release"
 VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 # VCPKG_INSTALL_OPTIONS = "--debug"
 
