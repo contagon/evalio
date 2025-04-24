@@ -35,33 +35,49 @@ endif()
 message("###############################################################")
 
 # ------------------------- Make Python Bindings ------------------------- #
-set(PYBIND11_FINDPYTHON ON)
-FetchContent_Declare(
-    pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG v2.13.6
-    FIND_PACKAGE_ARGS # uses find_package first, git if it fails
+find_package(
+    Python
+    3.11
+    REQUIRED
+    COMPONENTS Interpreter Development.Module
+    OPTIONAL_COMPONENTS Development.SABIModule
 )
-FetchContent_MakeAvailable(pybind11)
 
-pybind11_add_module(_cpp main.cpp)
+FetchContent_Declare(
+    nanobind
+    GIT_REPOSITORY https://github.com/wjakob/nanobind
+    GIT_TAG v2.7.0
+    FIND_PACKAGE_ARGS
+        CONFIG # uses find_package first, git if it fails
+)
+FetchContent_MakeAvailable(nanobind)
+
+# Add the Python module
+nanobind_add_module(_cpp STABLE_ABI NB_STATIC main.cpp)
 target_link_libraries(_cpp PRIVATE ${LIBS})
 target_compile_definitions(_cpp PRIVATE ${DEF})
 install(TARGETS _cpp DESTINATION evalio)
 
+# handle stubs
+function(module_subs MOD FILE)
+    message(STATUS "Adding ${MOD} stubs")
+    nanobind_add_stub(
+        ${MOD}_stubs
+        INSTALL_TIME
+        MODULE evalio.${MOD}
+        OUTPUT evalio/_cpp/${FILE} # install directly to final location
+        PYTHON_PATH "."
+    )
+endfunction()
+
+# option for github actions
+# see ci.yml
+option(EVALIO_PYTHON_STUBS "Build Python bindings with stubs" ON)
+if(EVALIO_PYTHON_STUBS)
+    module_subs(_cpp           __init__.pyi)
+    module_subs(_cpp.pipelines pipelines.pyi)
+    module_subs(_cpp.types     types.pyi)
+endif()
+
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)
-
-# Build stubs
-# TODO: Something about this breaks python 3.12 and 3.13 builds
-# add_custom_command(
-#     TARGET _cpp
-#     POST_BUILD
-#     COMMAND
-#         "${Python_EXECUTABLE}" -m pybind11_stubgen _cpp -o
-#         "${CMAKE_CURRENT_BINARY_DIR}" --numpy-array-wrap-with-annotated
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     COMMENT "Generating pybind11 stubs"
-#     VERBATIM
-# )
-# install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_cpp DESTINATION evalio)

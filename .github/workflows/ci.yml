@@ -30,7 +30,12 @@ jobs:
   # run tests on both mac and ubuntu, across all python versions
   test:
     runs-on: ${{ matrix.os }}
+    # We turn off stub generations, as there is some strange bug on github actions
+    # where an editable install with stubs obscures the _cpp.so module and it can't be imported
+    env:
+      SKBUILD_CMAKE_DEFINE: EVALIO_PYTHON_STUBS=OFF
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -48,7 +53,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Install the project
-        run: uv sync --dev
+        run: uv sync --dev --verbose
       - name: Run tests
         run: uv run pytest -v
 
@@ -62,12 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
-      # If things fail, this allows us to ssh in to fix things
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: runner.debug == '1'
-      #   with:
-      #     detached: true
 
       # Let vcpkg store caches in github actions
       - name: Export GitHub Actions cache environment variables
