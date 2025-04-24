@@ -1,10 +1,10 @@
-from evalio.cli.ls import ls
+from evalio.cli.ls import ls, Kind
 from evalio.cli.parser import DatasetBuilder
 
 
 def test_ls_pipelines():
-    ls("datasets")
-    ls("pipelines")
+    ls(Kind.datasets)
+    ls(Kind.pipelines)
 
 
 def test_dataset_build():

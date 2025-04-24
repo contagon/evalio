@@ -1,3 +1,4 @@
+from copy import deepcopy
 from evalio.types import Stamp
 from evalio.types import SE3, Trajectory
 from evalio.cli.stats import align_stamps, align_poses
@@ -18,7 +19,11 @@ def test_already_aligned():
         poses=[ID, ID, ID],
     )
 
-    assert align_stamps(traj, traj) == (traj, traj)
+    traj1_out = deepcopy(traj)
+    traj2_out = deepcopy(traj)
+    align_stamps(traj1_out, traj2_out)
+
+    assert (traj1_out, traj2_out) == (traj, traj)
 
 
 def test_subsample_first():
@@ -34,7 +39,8 @@ def test_subsample_first():
         poses=[ID for _ in range(0, 10, 2)],
     )
 
-    traj1_out, traj2_out = align_stamps(traj1, traj2)
+    traj1_out, traj2_out = deepcopy(traj1), deepcopy(traj2)
+    align_stamps(traj1_out, traj2_out)
 
     if traj1_out != traj2:
         raise ValueError(
@@ -61,7 +67,8 @@ def test_overstep():
         poses=[ID for _ in r],
     )
 
-    traj1_out, traj2_out = align_stamps(traj1, traj2)
+    traj1_out, traj2_out = deepcopy(traj1), deepcopy(traj2)
+    align_stamps(traj1_out, traj2_out)
 
     if traj1_out != traj1:
         raise ValueError(
