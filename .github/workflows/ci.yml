@@ -31,6 +31,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -54,7 +55,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Install the project
-        run: uv sync --dev
+        run: uv sync --dev --verbose
       - name: Run tests
         run: uv run pytest -v
 
