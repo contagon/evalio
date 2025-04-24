@@ -65,20 +65,4 @@ inline void makeBasePipeline(nb::module_ &m) {
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a);
 }
 
-// inline void setup(nb::module_ &m) {
-//   // NOTE: typeid are not guaranteed to be unique across building from
-//   different
-//   // compilers
-//   // https://github.com/pybind/pybind11/issues/877#issuecomment-304464896
-//   // Ideally, if built using the same compiler as evalio (unlikely), this
-//   should
-//   // work import the original wrapper for Pipeline
-//   nb::module evalio = nb::module::import("evalio");
-//   // Otherwise, build a new pipeline base class
-//   // This should be fine, as pipelines are all exclusively used in python
-//   if (nb::detail::get_type_info(typeid(evalio::Pipeline)) == nullptr) {
-//     evalio::makeBasePipeline(m);
-//   };
-// }
-
 } // namespace evalio

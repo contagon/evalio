@@ -1,9 +1,9 @@
 #include <nanobind/nanobind.h>
 
+#include "bindings/pipeline.h"
 #include "bindings/pipelines/bindings.h"
 #include "bindings/ros_pc2.h"
 #include "bindings/types.h"
-#include "evalio/bindings.h"
 
 namespace nb = nanobind;
 
