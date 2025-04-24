@@ -8,7 +8,10 @@
 namespace nb = nanobind;
 
 NB_MODULE(_cpp, m) {
-  m.def("abi_tag", []() { return nb::detail::abi_tag(); });
+  m.def(
+      "abi_tag", []() { return nb::detail::abi_tag(); },
+      "Get the ABI tag of the current module. Useful for debugging when adding "
+      "external pipelines.");
 
   auto m_types = m.def_submodule(
       "types",
