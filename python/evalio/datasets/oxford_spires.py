@@ -5,7 +5,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3, Duration
 import numpy as np
@@ -61,7 +60,7 @@ class OxfordSpires(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
-        traj = load_pose_csv(
+        traj = Trajectory.load_csv(
             self.folder / "gt-tum.txt",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

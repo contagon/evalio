@@ -5,7 +5,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3
 import numpy as np
@@ -47,13 +46,13 @@ class NewerCollege2020(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # For some reason bag parkland mound is different
         if self.seq_name == "parkland_mound":
-            return load_pose_csv(
+            return Trajectory.load_csv(
                 self.folder / "registered_poses.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / "registered_poses.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

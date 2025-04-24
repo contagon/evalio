@@ -7,7 +7,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio._cpp._helpers import fill_col_split_row_velodyne  # type: ignore
 from evalio.types import Trajectory
@@ -53,7 +52,7 @@ class BotanicGarden(Dataset):
         else:
             filename = f"{self.seq_name[1:]}_GT_output.txt"
 
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / filename,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

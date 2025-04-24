@@ -7,7 +7,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory
 import numpy as np
@@ -74,7 +73,7 @@ class MultiCampus(Dataset):
             raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / "pose_inW.csv",
             ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,

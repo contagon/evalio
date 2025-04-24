@@ -31,7 +31,6 @@ struct Duration {
 
   bool operator>(const Duration &other) const { return nsec > other.nsec; }
 
-  // Check equality using nsec to avoid floating point error
   bool operator==(const Duration &other) const { return nsec == other.nsec; }
 
   bool operator!=(const Duration &other) const { return !(*this == other); }
@@ -306,6 +305,12 @@ struct SO3 {
     return "x: " + std::to_string(qx) + ", y: " + std::to_string(qy) +
            ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw);
   }
+
+  bool operator==(const SO3 &other) const {
+    return qx == other.qx && qy == other.qy && qz == other.qz && qw == other.qw;
+  }
+
+  bool operator!=(const SO3 &other) const { return !(*this == other); }
 };
 
 struct SE3 {
@@ -344,6 +349,12 @@ struct SE3 {
         << "t: [" << trans.transpose() << "])";
     return oss.str();
   }
+
+  bool operator==(const SE3 &other) const {
+    return rot == other.rot && trans == other.trans;
+  };
+
+  bool operator!=(const SE3 &other) const { return !(*this == other); }
 };
 
 } // namespace evalio

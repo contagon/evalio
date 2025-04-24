@@ -1,14 +1,18 @@
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/nanobind.h>
 
+#include "bindings/pipeline.h"
 #include "bindings/pipelines/bindings.h"
 #include "bindings/ros_pc2.h"
 #include "bindings/types.h"
-#include "evalio/bindings.h"
 
-PYBIND11_MODULE(_cpp, m) {
+namespace nb = nanobind;
+
+NB_MODULE(_cpp, m) {
+  m.def(
+      "abi_tag", []() { return nb::detail::abi_tag(); },
+      "Get the ABI tag of the current module. Useful for debugging when adding "
+      "external pipelines.");
+
   auto m_types = m.def_submodule(
       "types",
       "Common types used for conversion between datasets and pipelines.");

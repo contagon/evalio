@@ -1,10 +1,10 @@
 pybuild:
     touch pyproject.toml
     uv --verbose sync --all-extras
-    uv run pybind11-stubgen --numpy-array-wrap-with-annotated evalio._cpp -o python --ignore-all-errors
+    cp -r .venv/lib/python3.12/site-packages/evalio/_cpp python/evalio
 
 stubs:
-    uv run pybind11-stubgen --numpy-array-wrap-with-annotated evalio._cpp -o python --ignore-all-errors
+    cp -r .venv/lib/python3.12/site-packages/evalio/_cpp python/evalio
 
 bump-minor:
     uv run bump-my-version bump minor

@@ -10,7 +10,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3
 import numpy as np
@@ -68,7 +67,7 @@ class Hilti2022(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # TODO: Update the path to the ground truth file
         _, gt = self.files()
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

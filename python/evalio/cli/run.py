@@ -158,4 +158,4 @@ def run(
 
             writer.close()
 
-    eval([str(output)], False, "atet")
+    eval([str(output)], False, "RTEt")

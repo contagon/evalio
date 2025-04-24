@@ -1,4 +1,5 @@
 from copy import deepcopy
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Optional, Sequence
 
@@ -8,54 +9,36 @@ from rich.table import Table
 from rich.console import Console
 from rich import box
 
-from evalio.types import Stamp, Trajectory
-from evalio.datasets.loaders import load_pose_csv
+from evalio.types import Stamp, Trajectory, SE3
 
 import typer
 
-import yaml
+from typing import cast
 
 
 app = typer.Typer()
 
 
-@dataclass(kw_only=True)
-class Ate:
-    trans: float
-    rot: float
-
-
-def load_trajectory(path: Path) -> "Trajectory":
-    """Load a saved experiment trajectory from file.
-
-    Args:
-        path (Path): Location of trajectory results.
-
-    Returns:
-        Trajectory: Loaded trajectory with metadata, stamps, and poses.
-    """
-    with open(path) as file:
-        metadata_filter = filter(lambda row: row[0] == "#", file)
-        metadata_list = [row[1:].strip() for row in metadata_filter]
-        # remove the header row
-        metadata_list.pop(-1)
-        metadata_str = "\n".join(metadata_list)
-        metadata = yaml.safe_load(metadata_str)
-
-    trajectory = load_pose_csv(
-        path,
-        fieldnames=["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
-    )
-    trajectory.metadata = metadata
-
-    return trajectory
-
-
+# ------------------------- Functions to align trajectories ------------------------- #
 def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
     return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
 
 
-def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Trajectory]:
+def align_stamps(traj1: Trajectory, traj2: Trajectory):
+    """Select the closest poses in traj1 and traj2.
+
+    Operates in place.
+
+    Does this by finding the higher frame rate trajectory and subsampling it to the closest poses of the other one.
+    Additionally it checks the beginning of the trajectories to make sure they start at about the same stamp.
+
+    Args:
+        traj1 (Trajectory): One trajectory
+        traj2 (Trajectory): Other trajectory
+
+    Returns:
+        tuple[Trajectory, Trajectory]: Sub-sampled trajectories
+    """
     # Check if we need to skip poses in traj1
     first_pose_idx = 0
     while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
@@ -103,16 +86,22 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory) -> tuple[Trajectory, Traj
             traj2.poses = traj2.poses[: i + 1]
             break
 
-    traj1 = Trajectory(metadata=traj1.metadata, stamps=traj1_stamps, poses=traj1_poses)
+    traj1.stamps = traj1_stamps
+    traj1.poses = traj1_poses
 
     if swapped:
         traj1, traj2 = traj2, traj1
 
-    return traj1, traj2
-
 
 def align_poses(traj: Trajectory, gt: Trajectory):
-    """Transforms the first to have to same origin as the second"""
+    """Transforms the first to have to same origin as the second.
+
+    Operates in place and assumes the trajectories already have their stamps aligned.
+
+    Args:
+        traj (Trajectory): Trajectory to be aligned
+        gt (Trajectory): _description_
+    """
     imu_o_T_imu_0 = traj.poses[0]
     gt_o_T_imu_0 = gt.poses[0]
     gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
@@ -120,28 +109,113 @@ def align_poses(traj: Trajectory, gt: Trajectory):
     traj.poses = [gt_o_T_imu_o * pose for pose in traj.poses]
 
 
-def compute_ate(traj: Trajectory, gt_poses: Trajectory) -> Ate:
-    """
-    Computes the Absolute Trajectory Error
-    """
-    assert len(gt_poses) == len(traj)
+# ------------------------- Methods for computing metrics ------------------------- #
+class MetricKind(StrEnum):
+    mean = auto()
+    median = auto()
+    sse = auto()
 
-    error_t = 0.0
-    error_r = 0.0
-    for gt, pose in zip(gt_poses.poses, traj.poses):
-        error_t += float(np.linalg.norm(gt.trans - pose.trans))
-        error_r += float(np.linalg.norm((gt.rot * pose.rot.inverse()).log()))
 
-    error_t /= len(gt_poses)
-    error_r /= len(gt_poses)
+@dataclass(kw_only=True)
+class Metric:
+    trans: float
+    rot: float
 
-    return Ate(rot=error_r, trans=error_t)
+
+@dataclass(kw_only=True)
+class Error:
+    # Shape: (n,)
+    trans: np.ndarray
+    rot: np.ndarray
+
+    def summarize(self, metric: MetricKind) -> Metric:
+        match metric:
+            case MetricKind.mean:
+                return self.mean()
+            case MetricKind.median:
+                return self.median()
+            case MetricKind.sse:
+                return self.sse()
+
+    def mean(self) -> Metric:
+        return Metric(rot=self.rot.mean(), trans=self.trans.mean())
+
+    def sse(self) -> Metric:
+        length = len(self.rot)
+        return Metric(
+            rot=float(np.sqrt(self.rot @ self.rot / length)),
+            trans=float(np.sqrt(self.trans @ self.trans / length)),
+        )
+
+    def median(self) -> Metric:
+        return Metric(
+            rot=cast(float, np.median(self.rot)),
+            trans=cast(float, np.median(self.trans)),
+        )
+
+
+class ExperimentResults:
+    metadata: dict
+    stamps: list[Stamp]
+    poses: list[SE3]
+    gts: list[SE3]
+
+    def __init__(self, gt_og: Trajectory, traj: Trajectory):
+        self.metadata = traj.metadata
+
+        gt = deepcopy(gt_og)
+        align_stamps(traj, gt)
+        align_poses(traj, gt)
+
+        self.stamps = traj.stamps
+        self.poses = traj.poses
+        self.gts = gt.poses
+
+    def __len__(self) -> int:
+        return len(self.stamps)
+
+    @staticmethod
+    def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
+        assert len(gts) == len(poses)
+
+        error_t = np.zeros(len(gts))
+        error_r = np.zeros(len(gts))
+        for i, (gt, pose) in enumerate(zip(gts, poses)):
+            delta = gt.inverse() * pose
+            error_t[i] = np.sqrt(delta.trans @ delta.trans)  # type: ignore
+            r_diff = delta.rot.log()
+            error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi  # type: ignore
+
+        return Error(rot=error_r, trans=error_t)
+
+    def ate(self) -> Error:
+        return self._compute_metric(self.gts, self.poses)
+
+    def rte(self, window: int = 100) -> Error:
+        if window <= 0:
+            raise ValueError("Window size must be positive")
+
+        window_deltas_poses = []
+        window_deltas_gts = []
+        for i in range(len(self.gts) - window):
+            window_deltas_poses.append(self.poses[i].inverse() * self.poses[i + window])
+            window_deltas_gts.append(self.gts[i].inverse() * self.gts[i + window])
+
+        return self._compute_metric(window_deltas_gts, window_deltas_poses)
 
 
 def dict_diff(dicts: Sequence[dict]) -> list[str]:
+    """Compute which values are different between a list of dictionaries.
+
+    Assumes each dictionary has the same keys.
+
+    Args:
+        dicts (Sequence[dict]): List of dictionaries to compare.
+
+    Returns:
+        list[str]: Keys that don't have identical values between all dictionaries.
     """
-    Assumes each dictionary has the same keys
-    """
+
     # quick sanity check
     size = len(dicts[0])
     for d in dicts:
@@ -156,11 +230,17 @@ def dict_diff(dicts: Sequence[dict]) -> list[str]:
     return diff
 
 
-def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
+def eval_dataset(
+    dir: Path,
+    visualize: bool,
+    sort: Optional[str],
+    window_size: int,
+    metric: MetricKind,
+):
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
-        traj = load_trajectory(file_path)
+        traj = Trajectory.load_experiment(file_path)
         trajectories.append(traj)
 
     gt_list: list[Trajectory] = []
@@ -196,7 +276,8 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
             static=True,
         )
 
-    # Group into pipelines
+    # Group into pipelines so we can compare keys
+    # (other pipelines will have different keys)
     pipelines = set(traj.metadata["pipeline"] for traj in trajs)
     grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
     for traj in trajs:
@@ -204,7 +285,7 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
 
     # Find all keys that were different
     keys_to_print = ["pipeline"]
-    for pipeline, trajs in grouped_trajs.items():
+    for _, trajs in grouped_trajs.items():
         keys = dict_diff([traj.metadata for traj in trajs])
         if len(keys) > 0:
             keys.remove("name")
@@ -214,16 +295,19 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
-            traj, gt = align_stamps(traj, deepcopy(gt_og))
-            align_poses(traj, gt)
-            ate = compute_ate(traj, gt)
-            results.append(
-                [
-                    ate.trans,
-                    ate.rot,
-                    *[traj.metadata.get(k, "--") for k in keys_to_print],
-                ]
-            )
+            exp = ExperimentResults(gt_og, traj)
+            ate = exp.ate().summarize(metric)
+            rte = exp.rte(window_size).summarize(metric)
+            r = {
+                "name": traj.metadata["name"],
+                "ATEt": ate.trans,
+                "ATEr": ate.rot,
+                "RTEt": rte.trans,
+                "RTEr": rte.rot,
+                "length": len(exp),
+            }
+            r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
+            results.append(r)
 
             if rr is not None and convert is not None and visualize:
                 rr.log(
@@ -232,12 +316,8 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
                     static=True,
                 )
 
-        if sort is None:
-            pass
-        elif sort.lower() == "atet":
-            results = sorted(results, key=lambda x: x[0])
-        elif sort.lower() == "ater":
-            results = sorted(results, key=lambda x: x[1])
+    if sort is not None:
+        results = sorted(results, key=lambda x: x[sort])
 
     table = Table(
         title=str(dir),
@@ -245,14 +325,14 @@ def eval_dataset(dir: Path, visualize: bool, sort: Optional[str]):
         box=box.ROUNDED,
         min_width=len(str(dir)) + 5,
     )
-    table.add_column("ATEt", justify="right")
-    table.add_column("ATEr", justify="right")
-    for key in keys_to_print:
-        table.add_column(key.title(), justify="center")
+
+    for key, val in results[0].items():
+        table.add_column(key, justify="right" if isinstance(val, float) else "center")
 
     for result in results:
         row = [
-            f"{item:.3f}" if isinstance(item, float) else str(item) for item in result
+            f"{item:.3f}" if isinstance(item, float) else str(item)
+            for item in result.values()
         ]
         table.add_row(*row)
 
@@ -276,6 +356,21 @@ def eval(
         Optional[str],
         typer.Option("-s", "--sort", help="Sort results by either [atet|ater]"),
     ] = None,
+    window: Annotated[
+        int,
+        typer.Option(
+            "-w", "--window", help="Window size for RTE. Defaults to 100 time-steps."
+        ),
+    ] = 100,
+    metric: Annotated[
+        MetricKind,
+        typer.Option(
+            "--metric",
+            "-m",
+            help="Metric to use for ATE/RTE computation. Defaults to sse.",
+            case_sensitive=False,
+        ),
+    ] = MetricKind.sse,
 ):
     """
     Evaluate the results of experiments.
@@ -291,4 +386,4 @@ def eval(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort)
+        eval_dataset(d, visualize, sort, window, metric)

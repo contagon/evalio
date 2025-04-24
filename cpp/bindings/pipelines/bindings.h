@@ -1,14 +1,11 @@
 #pragma once
 
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/nanobind.h>
 
 #include "evalio/pipeline.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 #ifdef EVALIO_KISS_ICP
 #include "bindings/pipelines/kiss_icp.h"
@@ -19,11 +16,11 @@ using namespace pybind11::literals;
 #endif
 
 namespace evalio {
-inline void makePipelines(py::module &m) {
+inline void makePipelines(nb::module_ &m) {
   // List all the pipelines here
 #ifdef EVALIO_KISS_ICP
-  py::class_<KissICP, evalio::Pipeline>(m, "KissICP")
-      .def(py::init<>())
+  nb::class_<KissICP, evalio::Pipeline>(m, "KissICP")
+      .def(nb::init<>())
       .def_static("name", &KissICP::name)
       .def_static("url", &KissICP::url)
       .def_static("default_params", &KissICP::default_params);
@@ -31,8 +28,8 @@ inline void makePipelines(py::module &m) {
 #endif
 
 #ifdef EVALIO_LIO_SAM
-  py::class_<LioSam, evalio::Pipeline>(m, "LioSAM")
-      .def(py::init<>())
+  nb::class_<LioSam, evalio::Pipeline>(m, "LioSAM")
+      .def(nb::init<>())
       .def_static("name", &LioSam::name)
       .def_static("url", &LioSam::url)
       .def_static("default_params", &LioSam::default_params);
