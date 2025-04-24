@@ -63,10 +63,9 @@ function(module_subs MOD FILE)
         ${MOD}_stubs
         INSTALL_TIME
         MODULE evalio.${MOD}
-        OUTPUT _cpp/${FILE}
+        OUTPUT evalio/_cpp/${FILE} # install directly to final location
         PYTHON_PATH "."
     )
-    install(FILES ${CMAKE_INSTALL_PREFIX}/_cpp/${FILE} DESTINATION evalio/_cpp)
 endfunction()
 
 module_subs(_cpp           __init__.pyi)
