@@ -86,7 +86,8 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
             traj2.poses = traj2.poses[: i + 1]
             break
 
-    traj1 = Trajectory(metadata=traj1.metadata, stamps=traj1_stamps, poses=traj1_poses)
+    traj1.stamps = traj1_stamps
+    traj1.poses = traj1_poses
 
     if swapped:
         traj1, traj2 = traj2, traj1
