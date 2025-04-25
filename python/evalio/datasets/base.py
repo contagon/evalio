@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Optional, Union
 from itertools import islice
 
 import os
@@ -143,6 +143,12 @@ class Dataset(StrEnum):
     def folder(self) -> Path:
         global _DATA_DIR
         return _DATA_DIR / self.full_name
+
+    def size_on_disk(self) -> Optional[float]:
+        if not self.is_downloaded():
+            return None
+        else:
+            return sum(f.stat().st_size for f in self.folder.glob("**/*")) / 1e9
 
 
 # For converting dataset names to snake case

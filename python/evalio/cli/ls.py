@@ -62,7 +62,13 @@ def ls(
         # That should be about it, making the rest should be automatic
 
         # Gather all info
-        all_info = {"Name": [], "Sequences": [], "Down": [], "More Info": []}
+        all_info = {
+            "Name": [],
+            "Sequences": [],
+            "Down": [],
+            "Size": [],
+            "More Info": [],
+        }
         for d in to_include:
             all_info["Name"].append(d.dataset_name())
             all_info["More Info"].append(d.url())
@@ -74,6 +80,16 @@ def ls(
                     ["[green]✔[/green]" if d else "[red]-[/red]" for d in downloaded]
                 )
                 all_info["Down"].append(downloaded)
+                size = [d(s).size_on_disk() for s in d.sequences()]
+                size = "\n".join(
+                    [
+                        f"{s:.0f}G".rjust(4)
+                        if s is not None
+                        else "[bright_black]-[/bright_black]"
+                        for s in size
+                    ]
+                )
+                all_info["Size"].append(size)
 
         if len(all_info["Name"]) == 0:
             print("No datasets found")
@@ -92,6 +108,7 @@ def ls(
         if not quiet:
             table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
             table.add_column("Down", justify="center", **col_opts)  # type: ignore
+            table.add_column("Size", justify="center", **col_opts)  # type: ignore
         table.add_column("More Info", justify="center", **col_opts)  # type: ignore
 
         for i in range(len(all_info["Name"])):
