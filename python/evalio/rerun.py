@@ -86,8 +86,6 @@ try:
             rr.connect_tcp("0.0.0.0:9876", default_blueprint=self.blueprint)
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
-            self.gt_o_T_imu_o = None
-            self.trajectory = Trajectory(stamps=[], poses=[])
             self.imu_T_lidar = dataset.imu_T_lidar()
 
             rr.log("gt", convert(self.gt), static=True)
@@ -104,6 +102,7 @@ try:
 
             self.pn = pipe_name
             self.gt_o_T_imu_o = None
+            self.trajectory = Trajectory(stamps=[], poses=[])
             rr.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
         def log(
