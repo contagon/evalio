@@ -13,7 +13,7 @@ from evalio.datasets.loaders import (
 )
 from evalio.types import Trajectory, SE3, SO3
 import numpy as np
-from tqdm import tqdm
+from tqdm.rich import tqdm
 
 from .base import (
     Dataset,
