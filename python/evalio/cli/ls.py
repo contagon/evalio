@@ -61,26 +61,44 @@ def ls(
         # 3. Add the column to the table
         # That should be about it, making the rest should be automatic
 
+        # TODO: Could also add environment and vehicle as well
+
         # Gather all info
         all_info = {
             "Name": [],
             "Sequences": [],
             "Down": [],
             "Size": [],
+            "IMU": [],
+            "LiDAR": [],
             "More Info": [],
         }
         for d in to_include:
             all_info["Name"].append(d.dataset_name())
             all_info["More Info"].append(d.url())
 
-            if not quiet:
+            imu = [d(s).imu_params() for s in d.sequences()]
+            imu = [f"{s.brand} {s.model}" for s in imu]
+            lidar = [d(s).lidar_params() for s in d.sequences()]
+            lidar = [f"{s.brand} {s.model}" for s in lidar]
+            size = [d(s).size_on_disk() for s in d.sequences()]
+
+            if quiet:
+                all_info["IMU"].append(" / ".join(set(imu)))
+                all_info["LiDAR"].append(" / ".join(set(lidar)))
+                all_info["Size"].append(
+                    f"{sum([s for s in size if s is not None]):.0f}G".rjust(4)
+                )
+            else:
+                # sequences
                 all_info["Sequences"].append("\n".join(d.sequences()))
+                # downloaded
                 downloaded = [d(s).is_downloaded() for s in d.sequences()]
                 downloaded = "\n".join(
                     ["[green]✔[/green]" if d else "[red]-[/red]" for d in downloaded]
                 )
                 all_info["Down"].append(downloaded)
-                size = [d(s).size_on_disk() for s in d.sequences()]
+                # size
                 size = "\n".join(
                     [
                         f"{s:.0f}G".rjust(4)
@@ -90,6 +108,9 @@ def ls(
                     ]
                 )
                 all_info["Size"].append(size)
+                # models
+                all_info["IMU"].append("\n".join(imu))
+                all_info["LiDAR"].append("\n".join(lidar))
 
         if len(all_info["Name"]) == 0:
             print("No datasets found")
@@ -108,7 +129,9 @@ def ls(
         if not quiet:
             table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
             table.add_column("Down", justify="center", **col_opts)  # type: ignore
-            table.add_column("Size", justify="center", **col_opts)  # type: ignore
+        table.add_column("Size", justify="center", **col_opts)  # type: ignore
+        table.add_column("IMU", justify="center", **col_opts)  # type: ignore
+        table.add_column("LiDAR", justify="center", **col_opts)  # type: ignore
         table.add_column("More Info", justify="center", **col_opts)  # type: ignore
 
         for i in range(len(all_info["Name"])):

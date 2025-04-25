@@ -125,14 +125,17 @@ inline void makeTypes(nb::module_ &m) {
            });
 
   nb::class_<LidarParams>(m, "LidarParams")
-      .def(nb::init<int, int, double, double, double>(), nb::kw_only(),
-           "num_rows"_a, "num_columns"_a, "min_range"_a, "max_range"_a,
-           "rate"_a = 10.0)
+      .def(nb::init<int, int, double, double, double, std::string,
+                    std::string>(),
+           nb::kw_only(), "num_rows"_a, "num_columns"_a, "min_range"_a,
+           "max_range"_a, "rate"_a = 10.0, "brand"_a = "-", "model"_a = "-")
       .def_ro("num_rows", &LidarParams::num_rows)
       .def_ro("num_columns", &LidarParams::num_columns)
       .def_ro("min_range", &LidarParams::min_range)
       .def_ro("max_range", &LidarParams::max_range)
       .def_ro("rate", &LidarParams::rate)
+      .def_ro("brand", &LidarParams::brand)
+      .def_ro("model", &LidarParams::model)
       .def("delta_time", &LidarParams::delta_time)
       .def("__repr__", &LidarParams::toString);
 
@@ -160,19 +163,22 @@ inline void makeTypes(nb::module_ &m) {
 
   nb::class_<ImuParams>(m, "ImuParams")
       .def(nb::init<double, double, double, double, double, double,
-                    Eigen::Vector3d>(),
+                    Eigen::Vector3d, std::string, std::string>(),
            nb::kw_only(), "gyro"_a = 1e-5, "accel"_a = 1e-5,
            "gyro_bias"_a = 1e-6, "accel_bias"_a = 1e-6, "bias_init"_a = 1e-7,
-           "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81))
+           "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81),
+           "brand"_a = "-", "model"_a = "-")
       .def_static("up", &ImuParams::up)
       .def_static("down", &ImuParams::down)
-      .def_rw("gyro", &ImuParams::gyro)
-      .def_rw("accel", &ImuParams::accel)
-      .def_rw("gyro_bias", &ImuParams::gyro_bias)
-      .def_rw("accel_bias", &ImuParams::accel_bias)
-      .def_rw("bias_init", &ImuParams::bias_init)
-      .def_rw("integration", &ImuParams::integration)
-      .def_rw("gravity", &ImuParams::gravity)
+      .def_ro("gyro", &ImuParams::gyro)
+      .def_ro("accel", &ImuParams::accel)
+      .def_ro("gyro_bias", &ImuParams::gyro_bias)
+      .def_ro("accel_bias", &ImuParams::accel_bias)
+      .def_ro("bias_init", &ImuParams::bias_init)
+      .def_ro("integration", &ImuParams::integration)
+      .def_ro("gravity", &ImuParams::gravity)
+      .def_ro("brand", &ImuParams::brand)
+      .def_ro("model", &ImuParams::model)
       .def("__repr__", &ImuParams::toString);
 
   nb::class_<SO3>(m, "SO3")

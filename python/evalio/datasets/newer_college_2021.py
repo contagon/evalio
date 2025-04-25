@@ -88,6 +88,8 @@ class NewerCollege2021(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="TDK",
+            model="ICM-20948",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -96,6 +98,8 @@ class NewerCollege2021(Dataset):
             num_columns=1024,
             min_range=0.1,
             max_range=50.0,
+            brand="Ouster",
+            model="OS1-128",
         )
 
     # ------------------------- For downloading ------------------------- #
