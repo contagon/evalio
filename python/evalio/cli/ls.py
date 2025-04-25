@@ -12,6 +12,15 @@ from rich import box
 app = typer.Typer()
 
 
+def unique[T](lst: list[T]):
+    """Get unique elements from a list while preserving order
+
+    Returns:
+        _type_: Unique list
+    """
+    return list(dict.fromkeys(lst))
+
+
 class Kind(StrEnum):
     datasets = auto()
     pipelines = auto()
@@ -37,6 +46,14 @@ def ls(
             "--quiet",
             "-q",
             help="Output less verbose information",
+        ),
+    ] = False,
+    links: Annotated[
+        bool,
+        typer.Option(
+            "--links",
+            "-l",
+            help="Output full links to datasets. For terminals that don't support hyperlinks (OSC 8).",
         ),
     ] = False,
 ):
@@ -67,25 +84,34 @@ def ls(
         all_info = {
             "Name": [],
             "Sequences": [],
-            "Down": [],
+            "DL": [],
             "Size": [],
+            "Env": [],
+            "Vehicle": [],
             "IMU": [],
             "LiDAR": [],
-            "More Info": [],
+            "Info": [],
         }
         for d in to_include:
             all_info["Name"].append(d.dataset_name())
-            all_info["More Info"].append(d.url())
+            links_str = d.url()
+            if not links:
+                links_str = f"[link={links_str}]link[/link]"
+            all_info["Info"].append(links_str)
 
+            size = [d(s).size_on_disk() for s in d.sequences()]
+            env = [d(s).environment() for s in d.sequences()]
+            vehicle = [d(s).vehicle() for s in d.sequences()]
             imu = [d(s).imu_params() for s in d.sequences()]
             imu = [f"{s.brand} {s.model}" for s in imu]
             lidar = [d(s).lidar_params() for s in d.sequences()]
             lidar = [f"{s.brand} {s.model}" for s in lidar]
-            size = [d(s).size_on_disk() for s in d.sequences()]
 
             if quiet:
-                all_info["IMU"].append(" / ".join(set(imu)))
-                all_info["LiDAR"].append(" / ".join(set(lidar)))
+                all_info["Env"].append(" / ".join(unique(env)))
+                all_info["Vehicle"].append(" / ".join(unique(vehicle)))
+                all_info["IMU"].append(" / ".join(unique(imu)))
+                all_info["LiDAR"].append(" / ".join(unique(lidar)))
                 all_info["Size"].append(
                     f"{sum([s for s in size if s is not None]):.0f}G".rjust(4)
                 )
@@ -97,7 +123,7 @@ def ls(
                 downloaded = "\n".join(
                     ["[green]✔[/green]" if d else "[red]-[/red]" for d in downloaded]
                 )
-                all_info["Down"].append(downloaded)
+                all_info["DL"].append(downloaded)
                 # size
                 size = "\n".join(
                     [
@@ -108,7 +134,9 @@ def ls(
                     ]
                 )
                 all_info["Size"].append(size)
-                # models
+                # misc info
+                all_info["Env"].append("\n".join(env))
+                all_info["Vehicle"].append("\n".join(vehicle))
                 all_info["IMU"].append("\n".join(imu))
                 all_info["LiDAR"].append("\n".join(lidar))
 
@@ -128,11 +156,13 @@ def ls(
         table.add_column("Name", justify="center", **col_opts)  # type: ignore
         if not quiet:
             table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
-            table.add_column("Down", justify="center", **col_opts)  # type: ignore
+            table.add_column("DL", justify="center", **col_opts)  # type: ignore
         table.add_column("Size", justify="center", **col_opts)  # type: ignore
+        table.add_column("Env", justify="center", **col_opts)  # type: ignore
+        table.add_column("Vehicle", justify="center", **col_opts)  # type: ignore
         table.add_column("IMU", justify="center", **col_opts)  # type: ignore
         table.add_column("LiDAR", justify="center", **col_opts)  # type: ignore
-        table.add_column("More Info", justify="center", **col_opts)  # type: ignore
+        table.add_column("Info", justify="center", **col_opts)  # type: ignore
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
@@ -163,12 +193,15 @@ def ls(
             "Name": [],
             "Params": [],
             "Default": [],
-            "More Info": [],
+            "Info": [],
             "Version": [],
         }
         for p in to_include:
             all_info["Name"].append(p.name())
-            all_info["More Info"].append(p.url())
+            links_str = p.url()
+            if not links:
+                links_str = f"[link={links_str}]link[/link]"
+            all_info["Info"].append(links_str)
             all_info["Version"].append(p.version())
 
             if not quiet:
@@ -196,7 +229,7 @@ def ls(
         if not quiet:
             table.add_column("Params", justify="right", **col_opts)  # type: ignore
             table.add_column("Default", justify="left", **col_opts)  # type: ignore
-        table.add_column("More Info", justify="center", **col_opts)  # type: ignore
+        table.add_column("Info", justify="center", **col_opts)  # type: ignore
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore

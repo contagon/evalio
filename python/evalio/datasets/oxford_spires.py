@@ -98,10 +98,6 @@ class OxfordSpires(Dataset):
         )
         return SE3(r, t)
 
-    @staticmethod
-    def url() -> str:
-        return "https://dynamic.robots.ox.ac.uk/datasets/oxford-spires/"
-
     def imu_T_lidar(self) -> SE3:
         return self.cam_T_imu().inverse() * self.cam_T_lidar()
 
@@ -128,6 +124,8 @@ class OxfordSpires(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="Bosch",
+            model="BMI085",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -136,7 +134,23 @@ class OxfordSpires(Dataset):
             num_columns=1200,
             min_range=0.1,
             max_range=60.0,
+            brand="Hesai",
+            model="QT-64",
         )
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://dynamic.robots.ox.ac.uk/datasets/oxford-spires/"
+
+    def environment(self) -> str:
+        if "observatory" in self.seq_name or "bodleian" in self.seq_name:
+            return "Oxford Campus"
+        else:
+            return "Indoor & Oxford Campus"
+
+    def vehicle(self) -> str:
+        return "Backpack"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:

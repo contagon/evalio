@@ -61,10 +61,6 @@ class NewerCollege2021(Dataset):
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
-
     def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
@@ -101,6 +97,17 @@ class NewerCollege2021(Dataset):
             brand="Ouster",
             model="OS1-128",
         )
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
+
+    def environment(self) -> str:
+        return "Oxford Campus"
+
+    def vehicle(self) -> str:
+        return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:

@@ -73,14 +73,6 @@ class HeLiPR(Dataset):
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://sites.google.com/view/heliprdataset/"
-
-    @classmethod
-    def dataset_name(cls) -> str:
-        return "helipr"
-
     def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3.fromMat(
@@ -110,6 +102,8 @@ class HeLiPR(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="Xsens",
+            model="MTi-300",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -119,7 +113,24 @@ class HeLiPR(Dataset):
             num_columns=1025,
             min_range=1.0,
             max_range=200.0,
+            brand="Ouster",
+            model="OS2-128",
         )
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://sites.google.com/view/heliprdataset/"
+
+    @classmethod
+    def dataset_name(cls) -> str:
+        return "helipr"
+
+    def environment(self) -> str:
+        return "Urban Driving"
+
+    def vehicle(self) -> str:
+        return "Car"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:

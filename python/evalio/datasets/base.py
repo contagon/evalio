@@ -41,9 +41,6 @@ class Dataset(StrEnum):
     def ground_truth_raw(self) -> Trajectory: ...
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str: ...
-
     def imu_T_lidar(self) -> SE3: ...
 
     def imu_T_gt(self) -> SE3: ...
@@ -53,6 +50,17 @@ class Dataset(StrEnum):
     def lidar_params(self) -> LidarParams: ...
 
     def files(self) -> list[str]: ...
+
+    # ------------------------- Optional dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "-"
+
+    def environment(self) -> str:
+        return "-"
+
+    def vehicle(self) -> str:
+        return "-"
 
     # ------------------------- Optional overrides ------------------------- #
     # Optional method

@@ -74,10 +74,6 @@ class EnWide(Dataset):
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://projects.asl.ethz.ch/datasets/enwide"
-
     def imu_T_lidar(self) -> SE3:
         scale = 100
         imu_T_sensor = SE3(
@@ -108,6 +104,8 @@ class EnWide(Dataset):
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, 9.81]),
+            brand="TDK",
+            model="IAM-20680HT",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -116,11 +114,29 @@ class EnWide(Dataset):
             num_columns=1024,
             min_range=0.0,
             max_range=100.0,
+            brand="Ouster",
+            model="OS0-128",
         )
 
+    # ------------------------- dataset info ------------------------- #
     @classmethod
     def dataset_name(cls) -> str:
         return "enwide"
+
+    @staticmethod
+    def url() -> str:
+        return "https://projects.asl.ethz.ch/datasets/enwide"
+
+    def environment(self) -> str:
+        if "tunnel" in self.seq_name:
+            return "Tunnel"
+        elif "runway" in self.seq_name or "intersection" in self.seq_name:
+            return "Planar Road"
+        else:
+            return "Field"
+
+    def vehicle(self) -> str:
+        return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
