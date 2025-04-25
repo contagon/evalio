@@ -1,7 +1,6 @@
 from .parser import DatasetBuilder, PipelineBuilder
-from typing import Optional
+from typing import Optional, TypeVar, Annotated
 import typer
-from typing_extensions import Annotated
 from enum import StrEnum, auto
 from rapidfuzz.process import extract_iter
 
@@ -11,8 +10,10 @@ from rich import box
 
 app = typer.Typer()
 
+T = TypeVar("T")
 
-def unique[T](lst: list[T]):
+
+def unique(lst: list[T]):
     """Get unique elements from a list while preserving order
 
     Returns:

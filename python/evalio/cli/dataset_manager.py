@@ -1,6 +1,6 @@
 from .parser import DatasetBuilder
 import typer
-from typing_extensions import Annotated
+from typing import Annotated
 from .completions import DatasetArg
 
 
