@@ -119,10 +119,17 @@ def ls(
         # That should be about it, making the rest should be automatic
 
         # Gather all info
-        all_info = {"Name": [], "Params": [], "Default": [], "More Info": []}
+        all_info = {
+            "Name": [],
+            "Params": [],
+            "Default": [],
+            "More Info": [],
+            "Version": [],
+        }
         for p in to_include:
             all_info["Name"].append(p.name())
             all_info["More Info"].append(p.url())
+            all_info["Version"].append(p.version())
 
             if not quiet:
                 params = p.default_params()
@@ -145,6 +152,7 @@ def ls(
         col_opts = {"vertical": "middle"}
 
         table.add_column("Name", justify="center", **col_opts)  # type: ignore
+        table.add_column("Version", justify="center", **col_opts)  # type: ignore
         if not quiet:
             table.add_column("Params", justify="right", **col_opts)  # type: ignore
             table.add_column("Default", justify="left", **col_opts)  # type: ignore
