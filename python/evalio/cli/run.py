@@ -134,7 +134,7 @@ def run(
 
     for dbuilder in datasets:
         save_gt(output, dbuilder)
-        vis.new_recording(dbuilder.build())
+        vis.new_recording(dbuilder.build(), pipelines)
 
         # Found how much we'll be iterating
         length = len(dbuilder.build().data_iter())

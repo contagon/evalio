@@ -1,6 +1,7 @@
 from typing import Any, Optional, Sequence, overload
 from uuid import uuid4
 
+from evalio.cli.parser import PipelineBuilder
 from evalio.types import LidarParams, Trajectory, Stamp
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
@@ -50,19 +51,6 @@ try:
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs):
             self.args = args
-            self.blueprint: rr.BlueprintLike
-
-            # include intensity image as well
-            if args.image:
-                self.blueprint = rrb.Blueprint(
-                    rrb.Vertical(
-                        rrb.Spatial2DView(),  # image
-                        rrb.Spatial3DView(),
-                        row_shares=[1, 3],
-                    ),
-                )
-            else:
-                self.blueprint = rrb.Blueprint(rrb.Spatial3DView())
 
             # To be set during new_recording
             self.lidar_params: Optional[LidarParams] = None
@@ -74,7 +62,29 @@ try:
             self.imu_T_lidar: Optional[SE3] = None
             self.pn: Optional[str] = None
 
-        def new_recording(self, dataset: Dataset):
+        def _blueprint(self, pipelines: list[PipelineBuilder]) -> rr.BlueprintLike:
+            # Eventually we'll be able to glob these, but for now, just take in the names beforehand
+            # https://github.com/rerun-io/rerun/issues/6673
+            # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
+            overrides: OverrideType = {
+                f"{p.name}/imu": [
+                    rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)
+                ]
+                for p in pipelines
+            }
+
+            if self.args.image:
+                return rrb.Blueprint(
+                    rrb.Vertical(
+                        rrb.Spatial2DView(),  # image
+                        rrb.Spatial3DView(overrides=overrides),
+                        row_shares=[1, 3],
+                    ),
+                )
+            else:
+                return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
+
+        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
             if not self.args.show:
                 return
 
@@ -83,7 +93,7 @@ try:
                 make_default=True,
                 recording_id=uuid4(),
             )
-            rr.connect_tcp("0.0.0.0:9876", default_blueprint=self.blueprint)
+            rr.connect_tcp(default_blueprint=self._blueprint(pipelines))
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
@@ -238,14 +248,14 @@ try:
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")
 
-except Exception as _:
+except Exception:
 
     class RerunVis:
         def __init__(self, args: VisArgs) -> None:
             if args.show:
                 print_warning("Rerun not found, visualization disabled")
 
-        def new_recording(self, dataset: Dataset):
+        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
             pass
 
         def log(
