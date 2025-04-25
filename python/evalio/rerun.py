@@ -115,11 +115,11 @@ try:
             if not self.args.show:
                 return
 
-            if self.lidar_params is None or self.gt is None or self.trajectory is None:
+            if self.lidar_params is None or self.gt is None:
                 raise ValueError(
                     "You needed to initialize the recording before stepping!"
                 )
-            if self.pn is None:
+            if self.pn is None or self.trajectory is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
