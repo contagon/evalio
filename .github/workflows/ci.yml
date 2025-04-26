@@ -61,7 +61,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      VCPKG_DEFAULT_BINARY_CACHE: ".vcpkg_cache"
+      VCPKG_DEFAULT_BINARY_CACHE: "./.vcpkg_cache"
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +74,7 @@ jobs:
       - name: Restore vcpkg cache
         uses: actions/cache/restore@v4
         with:
-          path: .vcpkg_cache
+          path: ./.vcpkg_cache
           key: vcpkg-${{ runner.os }}
 
       # Do all the building
@@ -94,7 +94,7 @@ jobs:
       - name: Save vcpkg cache
         uses: actions/cache/save@v4
         with:
-          path: .vcpkg_cache
+          path: ./.vcpkg_cache
           key: vcpkg-${{ runner.os }}
 
       # save artifacts for testing
