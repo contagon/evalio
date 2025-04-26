@@ -61,7 +61,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      VCPKG_DEFAULT_BINARY_CACHE: "./.vcpkg_cache"
+      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}/.vcpkg_cache"
     strategy:
       fail-fast: false
       matrix:
@@ -74,11 +74,10 @@ jobs:
       - name: Restore vcpkg cache
         uses: actions/cache/restore@v4
         with:
-          path: ./.vcpkg_cache
+          path: ${{ github.workspace }}/.vcpkg_cache
           key: vcpkg-${{ runner.os }}
-
       - name: Ensure vcpkg cache directory exists
-        run: mkdir -p .vcpkg_cache
+        run: mkdir -p ${{ github.workspace }}/.vcpkg_cache
 
       # Do all the building
       - run: ./cpp/setup_pipelines.sh
@@ -97,7 +96,7 @@ jobs:
       - name: Save vcpkg cache
         uses: actions/cache/save@v4
         with:
-          path: ./.vcpkg_cache
+          path: ${{ github.workspace }}/.vcpkg_cache
           key: vcpkg-${{ runner.os }}
 
       # save artifacts for testing
