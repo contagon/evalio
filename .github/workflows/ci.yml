@@ -74,10 +74,10 @@ jobs:
       - name: Restore vcpkg cache
         uses: actions/cache/restore@v4
         with:
-          path: "${{ github.workspace }}/.vcpkg_cache"
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
           key: vcpkg-${{ matrix.os }}
       - name: Ensure vcpkg cache directory exists
-        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+        run: mkdir -p "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
 
       # Do all the building
       - run: ./cpp/setup_pipelines.sh
@@ -89,14 +89,14 @@ jobs:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
           # TODO: I'd like to not hardcode this, but not sure how to make it evaluate down here
-          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ github.workspace }}/.vcpkg_cache"
+          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
 
       # cache vcpkg
       - name: Save vcpkg cache
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: $VCPKG_DEFAULT_BINARY_CACHE
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
           key: vcpkg-${{ matrix.os }}
 
       # save artifacts for testing
