@@ -74,7 +74,7 @@ jobs:
       - name: Restore vcpkg cache
         uses: actions/cache/restore@v4
         with:
-          path: $VCPKG_DEFAULT_BINARY_CACHE
+          path: "${{ github.workspace }}/.vcpkg_cache"
           key: vcpkg-${{ matrix.os }}
       - name: Ensure vcpkg cache directory exists
         run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
@@ -88,7 +88,8 @@ jobs:
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
-          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${VCPKG_DEFAULT_BINARY_CACHE}"
+          # TODO: I'd like to not hardcode this, but not sure how to make it evaluate down here
+          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ github.workspace }}/.vcpkg_cache"
 
       # cache vcpkg
       - name: Save vcpkg cache
