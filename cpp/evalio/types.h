@@ -187,6 +187,8 @@ struct LidarParams {
   double max_range;
   // in Hz
   double rate = 10.0;
+  std::string brand = "-";
+  std::string model = "-";
 
   std::string toString() const {
     return "LidarParams(rows: " + std::to_string(num_rows) +
@@ -229,6 +231,8 @@ struct ImuParams {
   double bias_init = 1e-7;
   double integration = 1e-7;
   Eigen::Vector3d gravity;
+  std::string brand = "-";
+  std::string model = "-";
 
   static ImuParams up() {
     ImuParams imu_params;

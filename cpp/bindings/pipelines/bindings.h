@@ -22,8 +22,9 @@ inline void makePipelines(nb::module_ &m) {
   nb::class_<KissICP, evalio::Pipeline>(m, "KissICP")
       .def(nb::init<>())
       .def_static("name", &KissICP::name)
+      .def_static("default_params", &KissICP::default_params)
       .def_static("url", &KissICP::url)
-      .def_static("default_params", &KissICP::default_params);
+      .def_static("version", &KissICP::version);
 
 #endif
 
@@ -31,8 +32,9 @@ inline void makePipelines(nb::module_ &m) {
   nb::class_<LioSam, evalio::Pipeline>(m, "LioSAM")
       .def(nb::init<>())
       .def_static("name", &LioSam::name)
+      .def_static("default_params", &LioSam::default_params)
       .def_static("url", &LioSam::url)
-      .def_static("default_params", &LioSam::default_params);
+      .def_static("version", &LioSam::version);
 #endif
 }
 } // namespace evalio

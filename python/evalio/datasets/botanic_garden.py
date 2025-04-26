@@ -59,10 +59,6 @@ class BotanicGarden(Dataset):
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://github.com/robot-pesg/BotanicGarden"
-
     def imu_T_lidar(self) -> SE3:
         # https://github.com/robot-pesg/BotanicGarden/blob/main/calib/extrinsics/calib_chain.yaml
         return SE3.fromMat(
@@ -107,6 +103,8 @@ class BotanicGarden(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="Xsens",
+            model="MTi-680G",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -115,6 +113,8 @@ class BotanicGarden(Dataset):
             num_columns=1825,
             min_range=0.1,
             max_range=100.0,
+            brand="Velodyne",
+            model="VLP-16",
         )
 
     def files(self) -> list[str]:
@@ -123,3 +123,14 @@ class BotanicGarden(Dataset):
             out[1] = f"{self.seq_name[1:]}_gt_output.txt"
 
         return out
+
+    # ------------------------- misc info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://github.com/robot-pesg/BotanicGarden"
+
+    def environment(self) -> str:
+        return "Botanic Garden"
+
+    def vehicle(self) -> str:
+        return "ATV"

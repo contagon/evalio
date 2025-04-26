@@ -1,7 +1,7 @@
 from pathlib import Path
 from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.utils import print_warning
-from tqdm import tqdm
+from tqdm.rich import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
 from evalio.rerun import RerunVis, VisArgs
