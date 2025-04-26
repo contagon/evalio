@@ -72,6 +72,7 @@ jobs:
 
       # Let vcpkg store caches in github actions
       - name: Restore vcpkg cache
+        id: cache
         uses: actions/cache/restore@v4
         with:
           path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
@@ -88,8 +89,16 @@ jobs:
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
-          # TODO: I'd like to not hardcode this, but not sure how to make it evaluate down here
           CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
+
+      # Delete the old cache on hit to emulate a cache update. See
+      # https://github.com/actions/cache/issues/342.
+      - name: Delete old cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.cache.outputs.cache-hit 
+        # Using `--repo` makes it so that this step doesn't require checking out the repo first.
+        run: gh cache delete --repo ${{ github.repository }} ${{ steps.cache.outputs.cache-primary-key }}
 
       # cache vcpkg
       - name: Save vcpkg cache
