@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.vcpkg_cache
-          key: vcpkg-${{ runner.os }}
+          key: vcpkg-${{ matrix.os }}
       - name: Ensure vcpkg cache directory exists
         run: mkdir -p ${{ github.workspace }}/.vcpkg_cache
 
@@ -89,15 +89,17 @@ jobs:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
           # TODO: See if I can remove these
-          CIBW_ENVIRONMENT: VCPKG_DEFAULT_BINARY_CACHE="$VCPKG_DEFAULT_BINARY_CACHE" 
-          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_DEFAULT_BINARY_CACHE
+          # CIBW_ENVIRONMENT: VCPKG_DEFAULT_BINARY_CACHE="$VCPKG_DEFAULT_BINARY_CACHE" 
+          # CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_DEFAULT_BINARY_CACHE
+          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host/$VCPKG_DEFAULT_BINARY_CACHE"
 
       # cache vcpkg
       - name: Save vcpkg cache
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/.vcpkg_cache
-          key: vcpkg-${{ runner.os }}
+          key: vcpkg-${{ matrix.os }}
 
       # save artifacts for testing
       - uses: actions/upload-artifact@v4
