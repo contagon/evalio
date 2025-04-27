@@ -31,10 +31,12 @@ class TrajectoryWriter:
         path /= f"{pipeline.name}.csv"
 
         # write metadata to the header
+        # TODO: Could probably automate this using pyserde somehow
         self.path = path
         self.file = open(path, "w")
         self.file.write(f"# name: {pipeline.name}\n")
         self.file.write(f"# pipeline: {pipeline.pipeline.name()}\n")
+        self.file.write(f"# version: {pipeline.pipeline.version()}\n")
         for key, value in pipeline.params.items():
             self.file.write(f"# {key}: {value}\n")
         self.file.write("#\n")

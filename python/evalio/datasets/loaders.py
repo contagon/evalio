@@ -24,84 +24,11 @@ from rosbags.highlevel import AnyReader
 import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from evalio.types import Trajectory, SE3, SO3
 from evalio.utils import print_warning
-import csv
 
 from rich.table import Table
 from rich.console import Console
 from rich import box
-
-
-# ------------------------- Simple csv loaders ------------------------- #
-def load_pose_csv(
-    path: Path, fieldnames: list[str], delimiter=",", skip_lines: int = 0
-) -> Trajectory:
-    """Flexible loader for stamped poses stored in csv files.
-
-    Will automatically skip any lines that start with a #. Is most useful for loading ground truth data.
-
-    ``` py
-    from evalio.datasets.loaders import load_pose_csv
-
-    fieldnames = ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
-    trajectory = load_pose_csv(path, fieldnames)
-    ```
-
-    Args:
-        path (Path): Location of file.
-        fieldnames (list[str]): List of field names to use, in their expected order. See above for an example.
-        delimiter (str, optional): Delimiter between elements. Defaults to ",".
-        skip_lines (int, optional): Number of lines to skip, useful for skipping headers. Defaults to 0.
-
-    Returns:
-        Trajectory: Stored dataset
-    """
-
-    poses = []
-    stamps = []
-
-    with open(path) as f:
-        csvfile = list(filter(lambda row: row[0] != "#", f))
-        csvfile = csvfile[skip_lines:]
-        reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
-        for line in reader:
-            r = SO3(
-                qw=float(line["qw"]),
-                qx=float(line["qx"]),
-                qy=float(line["qy"]),
-                qz=float(line["qz"]),
-            )
-            t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
-            pose = SE3(r, t)
-
-            if "t" in fieldnames:
-                line["sec"] = line["t"]
-
-            if "nsec" not in fieldnames:
-                s, ns = line["sec"].split(".")  # parse separately to get exact stamp
-                ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
-                stamp = Stamp(sec=int(s), nsec=int(ns))
-            elif "sec" not in fieldnames:
-                stamp = Stamp.from_nsec(int(line["nsec"]))
-            else:
-                stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
-            poses.append(pose)
-            stamps.append(stamp)
-
-    return Trajectory(metadata={}, stamps=stamps, poses=poses)
-
-
-def load_tum(path: Path) -> Trajectory:
-    """Load a TUM dataset pose file. Simple wrapper around [load_pose_csv][evalio.datasets.loaders.load_pose_csv].
-
-    Args:
-        path (Path): Location of file.
-
-    Returns:
-        Trajectory: Stored trajectory
-    """
-    return load_pose_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
 
 # ------------------------- Iterator over a rosbag ------------------------- #

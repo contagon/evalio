@@ -7,10 +7,11 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory
 import numpy as np
+
+import os
 
 from .base import (
     SE3,
@@ -72,17 +73,13 @@ class MultiCampus(Dataset):
             raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / "pose_inW.csv",
             ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://mcdviral.github.io/"
-
     def imu_T_lidar(self) -> SE3:
         # The NTU sequences use the ATV platform
         # Taken from calib file at: https://mcdviral.github.io/Download.html#calibration
@@ -150,6 +147,11 @@ class MultiCampus(Dataset):
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
         # The KTH and TUHH sequences use the hand-held platform and VectorNav vn200 IMU
         # Both the vn100 and vn200 have the same IMU specifications
+        if "ntu" in self.seq_name:
+            model = "VN-100"
+        else:
+            model = "VN-200"
+
         return ImuParams(
             gyro=0.000061087,  # VectorNav Datasheet
             accel=0.00137,  # VectorNav Datasheet
@@ -158,6 +160,8 @@ class MultiCampus(Dataset):
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
+            brand="VectorNav",
+            model=model,
         )
         # Note- Current estimates for imu bias should be pessimistic estimates
 
@@ -169,6 +173,8 @@ class MultiCampus(Dataset):
                 num_columns=1024,
                 min_range=0.1,
                 max_range=120.0,
+                brand="Ouster",
+                model="OS1-128",
             )
         # The KTH and TUHH sequences use the hand-held platform and an Ouster OS1 - 64
         elif "kth" in self.seq_name or "tuhh" in self.seq_name:
@@ -177,13 +183,49 @@ class MultiCampus(Dataset):
                 num_columns=1024,
                 min_range=0.1,
                 max_range=120.0,
+                brand="Ouster",
+                model="OS1-64",
             )
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq_name}")
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://mcdviral.github.io/"
+
+    def environment(self) -> str:
+        if "ntu" in self.seq_name:
+            return "NTU Campus"
+        elif "kth" in self.seq_name:
+            return "KTH Campus"
+        elif "tuhh" in self.seq_name:
+            return "TUHH Campus"
+        else:
+            raise ValueError(f"Unknown sequence: {self.seq_name}")
+
+    def vehicle(self) -> str:
+        if "ntu" in self.seq_name:
+            return "ATV"
+        elif "kth" in self.seq_name or "tuhh" in self.seq_name:
+            return "Handheld"
         else:
             raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
-        return ["ouster.bag", "pose_inW.csv", "vectornav.bag"]
+        if "ntu" in self.seq_name:
+            beams = 128
+            imu = "vn100"
+        else:
+            beams = 64
+            imu = "vn200"
+
+        return [
+            f"{self.seq_name}_{imu}.bag",
+            f"{self.seq_name}_os1_{beams}.bag",
+            "pose_inW.csv",
+        ]
 
     def download(self):
         ouster_url = {
@@ -253,11 +295,7 @@ class MultiCampus(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        # TODO: Make these download without changing the filename
-        gdown.download(id=gt_url, output=str(self.folder / "pose_inW.csv"), resume=True)
-        gdown.download(
-            id=ouster_url, output=str(self.folder / "ouster.bag"), resume=True
-        )
-        gdown.download(
-            id=imu_url, output=str(self.folder / "vectornav.bag"), resume=True
-        )
+        folder = f"{self.folder}{os.sep}"
+        gdown.download(id=gt_url, output=folder, resume=True)
+        gdown.download(id=ouster_url, output=folder, resume=True)
+        gdown.download(id=imu_url, output=folder, resume=True)

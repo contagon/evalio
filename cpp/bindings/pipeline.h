@@ -1,62 +1,60 @@
 #pragma once
 
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/eigen/dense.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/map.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/variant.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/trampoline.h>
 
 #include "evalio/pipeline.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace evalio {
 
 class PyPipeline : public evalio::Pipeline {
 public:
-  using evalio::Pipeline::Pipeline;
+  NB_TRAMPOLINE(Pipeline, 9);
 
   // Getters
-  const evalio::SE3 pose() override {
-    PYBIND11_OVERRIDE_PURE(const evalio::SE3, evalio::Pipeline, pose);
-  }
-  const std::vector<evalio::Point> map() override {
-    PYBIND11_OVERRIDE_PURE(const std::vector<evalio::Point>, evalio::Pipeline,
-                           map);
-  }
+  const evalio::SE3 pose() override { NB_OVERRIDE_PURE(pose); }
+  const std::vector<evalio::Point> map() override { NB_OVERRIDE_PURE(map); }
 
   // Setters
   void set_imu_params(evalio::ImuParams params) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_imu_params, params);
+    NB_OVERRIDE_PURE(set_imu_params, params);
   }
   void set_lidar_params(evalio::LidarParams params) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_lidar_params, params);
+    NB_OVERRIDE_PURE(set_lidar_params, params);
   }
   void set_imu_T_lidar(evalio::SE3 T) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_imu_T_lidar, T);
+    NB_OVERRIDE_PURE(set_imu_T_lidar, T);
   }
   void set_params(std::map<std::string, Param> params) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, set_params, params);
+    NB_OVERRIDE_PURE(set_params, params);
   }
 
   // Doers
-  void initialize() override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, initialize);
-  }
+  void initialize() override { NB_OVERRIDE_PURE(initialize); }
   void add_imu(evalio::ImuMeasurement mm) override {
-    PYBIND11_OVERRIDE_PURE(void, evalio::Pipeline, add_imu, mm);
+    NB_OVERRIDE_PURE(add_imu, mm);
   }
   std::vector<Point> add_lidar(evalio::LidarMeasurement mm) override {
-    PYBIND11_OVERRIDE_PURE(std::vector<Point>, evalio::Pipeline, add_lidar, mm);
+    NB_OVERRIDE_PURE(add_lidar, mm);
   }
 };
 
-inline void makeBasePipeline(py::module &m) {
-  py::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
-      .def(py::init<>())
+inline void makeBasePipeline(nb::module_ &m) {
+  nb::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
+      .def(nb::init<>())
       .def_static("name", &evalio::Pipeline::name)
-      .def_static("url", &evalio::Pipeline::url)
       .def_static("default_params", &evalio::Pipeline::default_params)
+      .def_static("url", &evalio::Pipeline::url)
+      .def_static("version", &evalio::Pipeline::version)
       .def("pose", &evalio::Pipeline::pose)
       .def("map", &evalio::Pipeline::map)
       .def("initialize", &evalio::Pipeline::initialize)

@@ -1,58 +1,54 @@
 #pragma once
 #include <cstdint>
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/eigen/dense.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/tuple.h>
+#include <nanobind/stl/vector.h>
 
 #include "evalio/types.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace evalio {
 
-inline void makeTypes(py::module &m) {
-  py::class_<Duration>(m, "Duration")
-      .def(py::init<double>(), py::kw_only(), "sec"_a)
+// TODO: Check if copy/deepcopy works or not
+
+inline void makeTypes(nb::module_ &m) {
+  nb::class_<Duration>(m, "Duration")
       .def_static("from_sec", &Duration::from_sec, "sec"_a,
                   "Create a Duration from seconds")
       .def_static("from_nsec", &Duration::from_nsec, "nsec"_a,
                   "Create a Duration from nanoseconds")
       .def("to_sec", &Duration::to_sec, "Convert to seconds")
       .def("to_nsec", &Duration::to_nsec, "Convert to nanoseconds")
-      .def_readonly("nsec", &Duration::nsec,
-                    "Underlying nanoseconds representation")
-      .def(py::self < py::self, "Compare two Durations by length")
-      .def(py::self > py::self, "Compare two Durations by length")
-      .def(py::self == py::self, "Check for equality")
-      .def(py::self != py::self, "Check for equality")
-      .def(py::self - py::self, "Computer the difference between two Durations")
-      .def(py::self + py::self, "Add two Durations")
+      .def_ro("nsec", &Duration::nsec, "Underlying nanoseconds representation")
+      .def(nb::self < nb::self)
+      .def(nb::self > nb::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
+      .def(nb::self - nb::self)
+      .def(nb::self + nb::self)
       .def("__repr__", &Duration::toString)
       .def("__copy__", [](const Duration &self) { return Duration(self); })
       .def(
           "__deepcopy__",
-          [](const Duration &self, py::dict) { return Duration(self); },
+          [](const Duration &self, nb::dict) { return Duration(self); },
           "memo"_a)
-      .def(py::pickle(
-          [](const Duration &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.nsec);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 1)
-              throw std::runtime_error("Invalid state when unpickling Stamp!");
-            /* Create a new C++ instance */
-            Duration p{.nsec = t[0].cast<int64_t>()};
-            return p;
-          }))
+      .def("__getstate__",
+           [](const Duration &p) { return nb::make_tuple(p.nsec); })
+      .def("__setstate__",
+           [](Duration &p, std::tuple<int64_t> t) {
+             new (&p) Duration{.nsec = std::get<0>(t)};
+           })
       .doc() =
       "Duration class for representing a positive or negative delta time, uses "
       "int64 as the underlying data storage for nanoseconds.";
 
-  py::class_<Stamp>(m, "Stamp")
-      .def(py::init<uint32_t, uint32_t>(), py::kw_only(), "sec"_a, "nsec"_a,
+  nb::class_<Stamp>(m, "Stamp")
+      .def(nb::init<uint32_t, uint32_t>(), nb::kw_only(), "sec"_a, "nsec"_a,
            "Create a Stamp from seconds and nanoseconds")
       .def_static("from_sec", &Stamp::from_sec, "sec"_a,
                   "Create a Stamp from seconds")
@@ -60,164 +56,154 @@ inline void makeTypes(py::module &m) {
                   "Create a Stamp from nanoseconds")
       .def("to_sec", &Stamp::to_sec, "Convert to seconds")
       .def("to_nsec", &Stamp::to_nsec, "Convert to nanoseconds")
-      .def_readonly("sec", &Stamp::sec, "Underlying seconds storage")
-      .def_readonly("nsec", &Stamp::nsec, "Underlying nanoseconds storage")
-      .def(py::self < py::self,
+      .def_ro("sec", &Stamp::sec, "Underlying seconds storage")
+      .def_ro("nsec", &Stamp::nsec, "Underlying nanoseconds storage")
+      .def(nb::self < nb::self,
            "Compare two Stamps to see which happened first")
-      .def(py::self > py::self,
+      .def(nb::self > nb::self,
            "Compare two Stamps to see which happened first")
-      .def(py::self == py::self, "Check for equality")
-      .def(py::self != py::self, "Check for equality")
-      .def(py::self - py::self,
+      .def(nb::self == nb::self, "Check for equality")
+      .def(nb::self != nb::self, "Check for equality")
+      .def(nb::self - nb::self,
            "Compute the difference between two Stamps, returning a duration")
-      .def(py::self + Duration(), "Add a Duration to a Stamp")
-      .def(py::self - Duration(), "Subtract a Duration from a Stamp")
+      .def(nb::self + Duration(), "Add a Duration to a Stamp")
+      .def(nb::self - Duration(), "Subtract a Duration from a Stamp")
       .def("__repr__", &Stamp::toString)
       .def("__copy__", [](const Stamp &self) { return Stamp(self); })
       .def(
           "__deepcopy__",
-          [](const Stamp &self, py::dict) { return Stamp(self); }, "memo"_a)
-      .def(py::pickle(
-          [](const Stamp &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.sec, p.nsec);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 2)
-              throw std::runtime_error("Invalid state when unpickling Stamp!");
-            /* Create a new C++ instance */
-            Stamp p{.sec = t[0].cast<uint32_t>(),
-                    .nsec = t[1].cast<uint32_t>()};
-            return p;
-          }))
+          [](const Stamp &self, nb::dict) { return Stamp(self); }, "memo"_a)
+      .def("__getstate__",
+           [](const Stamp &p) { return nb::make_tuple(p.sec, p.nsec); })
+      .def("__setstate__",
+           [](Stamp &p, std::tuple<uint32_t, uint32_t> t) {
+             new (&p) Stamp{.sec = std::get<0>(t), .nsec = std::get<1>(t)};
+           })
       .doc() =
       "Stamp class for representing an absolute point in time, uses uint32 as "
       "the underlying data storage for seconds and nanoseconds.";
-
-  // Lidar
-  py::class_<Point>(m, "Point")
-      .def(py::init<double, double, double, double, Duration, uint32_t, uint8_t,
-                    uint16_t>(),
-           py::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
-           "t"_a = Duration::from_sec(0.0), "range"_a = 0, "row"_a = 0,
-           "col"_a = 0)
-      .def_readwrite("x", &Point::x)
-      .def_readwrite("y", &Point::y)
-      .def_readwrite("z", &Point::z)
-      .def_readwrite("intensity", &Point::intensity)
-      .def_readwrite("range", &Point::range)
-      .def_readwrite("t", &Point::t)
-      .def_readwrite("row", &Point::row)
-      .def_readwrite("col", &Point::col)
-      .def(py::self == py::self)
-      .def(py::self != py::self)
-      .def("__repr__", &Point::toString)
-      .def(py::pickle(
-          [](const Point &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.x, p.y, p.z, p.intensity, p.t, p.range,
-                                  p.row, p.col);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 8)
-              throw std::runtime_error("Invalid state when unpickling Point!");
-            /* Create a new C++ instance */
-            return Point{.x = t[0].cast<double>(),
-                         .y = t[1].cast<double>(),
-                         .z = t[2].cast<double>(),
-                         .intensity = t[3].cast<double>(),
-                         .t = t[4].cast<Duration>(),
-                         .range = t[5].cast<uint32_t>(),
-                         .row = t[6].cast<uint8_t>(),
-                         .col = t[7].cast<uint16_t>()};
-          }));
   ;
 
-  py::class_<LidarMeasurement>(m, "LidarMeasurement")
-      .def(py::init<Stamp>(), "stamp"_a)
-      .def(py::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
-      .def_readwrite("stamp", &LidarMeasurement::stamp)
-      .def_readwrite("points", &LidarMeasurement::points)
+  // Lidar
+  nb::class_<Point>(m, "Point")
+      .def(nb::init<double, double, double, double, Duration, uint32_t, uint8_t,
+                    uint16_t>(),
+           nb::kw_only(), "x"_a = 0, "y"_a = 0, "z"_a = 0, "intensity"_a = 0,
+           "t"_a = Duration::from_sec(0.0), "range"_a = 0, "row"_a = 0,
+           "col"_a = 0)
+      .def_rw("x", &Point::x)
+      .def_rw("y", &Point::y)
+      .def_rw("z", &Point::z)
+      .def_rw("intensity", &Point::intensity)
+      .def_rw("range", &Point::range)
+      .def_rw("t", &Point::t)
+      .def_rw("row", &Point::row)
+      .def_rw("col", &Point::col)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
+      .def("__repr__", &Point::toString)
+      .def("__getstate__",
+           [](const Point &p) {
+             return std::make_tuple(p.x, p.y, p.z, p.intensity, p.t, p.range,
+                                    p.row, p.col);
+           })
+      .def("__setstate__",
+           [](Point &p, std::tuple<double, double, double, double, Duration,
+                                   uint32_t, uint8_t, uint16_t>
+                            t) {
+             new (&p) Point{.x = std::get<0>(t),
+                            .y = std::get<1>(t),
+                            .z = std::get<2>(t),
+                            .intensity = std::get<3>(t),
+                            .t = std::get<4>(t),
+                            .range = std::get<5>(t),
+                            .row = std::get<6>(t),
+                            .col = std::get<7>(t)};
+           });
+
+  nb::class_<LidarMeasurement>(m, "LidarMeasurement")
+      .def(nb::init<Stamp>(), "stamp"_a)
+      .def(nb::init<Stamp, std::vector<Point>>(), "stamp"_a, "points"_a)
+      .def_rw("stamp", &LidarMeasurement::stamp)
+      .def_rw("points", &LidarMeasurement::points)
       .def("to_vec_positions", &LidarMeasurement::to_vec_positions)
       .def("to_vec_stamps", &LidarMeasurement::to_vec_stamps)
-      .def(py::self == py::self)
-      .def(py::self != py::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &LidarMeasurement::toString)
-      .def(py::pickle(
-          [](const LidarMeasurement &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.stamp, p.points);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 2)
-              throw std::runtime_error(
-                  "Invalid state when unpickling LidarMeasurement!");
-            /* Create a new C++ instance */
-            return LidarMeasurement(t[0].cast<Stamp>(),
-                                    t[1].cast<std::vector<Point>>());
-          }));
+      .def("__getstate__",
+           [](const LidarMeasurement &p) {
+             return std::make_tuple(p.stamp, p.points);
+           })
+      .def("__setstate__",
+           [](LidarMeasurement &p, std::tuple<Stamp, std::vector<Point>> t) {
+             new (&p) LidarMeasurement(std::get<0>(t), std::get<1>(t));
+           });
 
-  py::class_<LidarParams>(m, "LidarParams")
-      .def(py::init<int, int, double, double, double>(), py::kw_only(),
-           "num_rows"_a, "num_columns"_a, "min_range"_a, "max_range"_a,
-           "rate"_a = 10.0)
-      .def_readonly("num_rows", &LidarParams::num_rows)
-      .def_readonly("num_columns", &LidarParams::num_columns)
-      .def_readonly("min_range", &LidarParams::min_range)
-      .def_readonly("max_range", &LidarParams::max_range)
-      .def_readonly("rate", &LidarParams::rate)
+  nb::class_<LidarParams>(m, "LidarParams")
+      .def(nb::init<int, int, double, double, double, std::string,
+                    std::string>(),
+           nb::kw_only(), "num_rows"_a, "num_columns"_a, "min_range"_a,
+           "max_range"_a, "rate"_a = 10.0, "brand"_a = "-", "model"_a = "-")
+      .def_ro("num_rows", &LidarParams::num_rows)
+      .def_ro("num_columns", &LidarParams::num_columns)
+      .def_ro("min_range", &LidarParams::min_range)
+      .def_ro("max_range", &LidarParams::max_range)
+      .def_ro("rate", &LidarParams::rate)
+      .def_ro("brand", &LidarParams::brand)
+      .def_ro("model", &LidarParams::model)
       .def("delta_time", &LidarParams::delta_time)
       .def("__repr__", &LidarParams::toString);
 
   // Imu
-  py::class_<ImuMeasurement>(m, "ImuMeasurement")
-      .def(py::init<Stamp, Eigen::Vector3d, Eigen::Vector3d>(), "stamp"_a,
+  nb::class_<ImuMeasurement>(m, "ImuMeasurement")
+      .def(nb::init<Stamp, Eigen::Vector3d, Eigen::Vector3d>(), "stamp"_a,
            "gyro"_a, "accel"_a)
-      .def_readonly("stamp", &ImuMeasurement::stamp)
-      .def_readonly("gyro", &ImuMeasurement::gyro)
-      .def_readonly("accel", &ImuMeasurement::accel)
-      .def(py::self == py::self)
-      .def(py::self != py::self)
+      .def_ro("stamp", &ImuMeasurement::stamp)
+      .def_ro("gyro", &ImuMeasurement::gyro)
+      .def_ro("accel", &ImuMeasurement::accel)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &ImuMeasurement::toString)
-      .def(py::pickle(
-          [](const ImuMeasurement &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.stamp, p.gyro, p.accel);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 3)
-              throw std::runtime_error(
-                  "Invalid state when unpickling ImuMeasurement!");
-            /* Create a new C++ instance */
-            return ImuMeasurement{.stamp = t[0].cast<Stamp>(),
-                                  .gyro = t[1].cast<Eigen::Vector3d>(),
-                                  .accel = t[2].cast<Eigen::Vector3d>()};
-          }));
+      .def("__getstate__",
+           [](const ImuMeasurement &p) {
+             return std::make_tuple(p.stamp, p.gyro, p.accel);
+           })
+      .def("__setstate__",
+           [](ImuMeasurement &p,
+              std::tuple<Stamp, Eigen::Vector3d, Eigen::Vector3d> t) {
+             new (&p) ImuMeasurement{.stamp = std::get<0>(t),
+                                     .gyro = std::get<1>(t),
+                                     .accel = std::get<2>(t)};
+           });
 
-  py::class_<ImuParams>(m, "ImuParams")
-      .def(py::init<double, double, double, double, double, double,
-                    Eigen::Vector3d>(),
-           py::kw_only(), "gyro"_a = 1e-5, "accel"_a = 1e-5,
+  nb::class_<ImuParams>(m, "ImuParams")
+      .def(nb::init<double, double, double, double, double, double,
+                    Eigen::Vector3d, std::string, std::string>(),
+           nb::kw_only(), "gyro"_a = 1e-5, "accel"_a = 1e-5,
            "gyro_bias"_a = 1e-6, "accel_bias"_a = 1e-6, "bias_init"_a = 1e-7,
-           "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81))
+           "integration"_a = 1e-7, "gravity"_a = Eigen::Vector3d(0, 0, 9.81),
+           "brand"_a = "-", "model"_a = "-")
       .def_static("up", &ImuParams::up)
       .def_static("down", &ImuParams::down)
-      .def_readwrite("gyro", &ImuParams::gyro)
-      .def_readwrite("accel", &ImuParams::accel)
-      .def_readwrite("gyro_bias", &ImuParams::gyro_bias)
-      .def_readwrite("accel_bias", &ImuParams::accel_bias)
-      .def_readwrite("bias_init", &ImuParams::bias_init)
-      .def_readwrite("integration", &ImuParams::integration)
-      .def_readwrite("gravity", &ImuParams::gravity)
+      .def_ro("gyro", &ImuParams::gyro)
+      .def_ro("accel", &ImuParams::accel)
+      .def_ro("gyro_bias", &ImuParams::gyro_bias)
+      .def_ro("accel_bias", &ImuParams::accel_bias)
+      .def_ro("bias_init", &ImuParams::bias_init)
+      .def_ro("integration", &ImuParams::integration)
+      .def_ro("gravity", &ImuParams::gravity)
+      .def_ro("brand", &ImuParams::brand)
+      .def_ro("model", &ImuParams::model)
       .def("__repr__", &ImuParams::toString);
 
-  py::class_<SO3>(m, "SO3")
-      .def(py::init<double, double, double, double>(), py::kw_only(), "qx"_a,
+  nb::class_<SO3>(m, "SO3")
+      .def(nb::init<double, double, double, double>(), nb::kw_only(), "qx"_a,
            "qy"_a, "qz"_a, "qw"_a)
-      .def_readonly("qx", &SO3::qx)
-      .def_readonly("qy", &SO3::qy)
-      .def_readonly("qz", &SO3::qz)
-      .def_readonly("qw", &SO3::qw)
+      .def_ro("qx", &SO3::qx)
+      .def_ro("qy", &SO3::qy)
+      .def_ro("qz", &SO3::qz)
+      .def_ro("qw", &SO3::qw)
       .def_static("identity", &SO3::identity)
       .def_static("fromMat", &SO3::fromMat)
       .def_static("exp", &SO3::exp)
@@ -225,48 +211,47 @@ inline void makeTypes(py::module &m) {
       .def("log", &SO3::log)
       .def("toMat", &SO3::toMat)
       .def("rotate", &SO3::rotate)
-      .def(py::self * py::self)
+      .def(nb::self * nb::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &SO3::toString)
       .def("__copy__", [](const SO3 &self) { return SO3(self); })
       .def(
-          "__deepcopy__", [](const SO3 &self, py::dict) { return SO3(self); },
+          "__deepcopy__", [](const SO3 &self, nb::dict) { return SO3(self); },
           "memo"_a);
 
-  py::class_<SE3>(m, "SE3")
-      .def(py::init<SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
+  nb::class_<SE3>(m, "SE3")
+      .def(nb::init<SO3, Eigen::Vector3d>(), "rot"_a, "trans"_a)
       .def_static("identity", &SE3::identity)
       .def_static("fromMat", &SE3::fromMat)
-      .def_readonly("rot", &SE3::rot)
-      .def_readonly("trans", &SE3::trans)
+      .def_ro("rot", &SE3::rot)
+      .def_ro("trans", &SE3::trans)
       .def("toMat", &SE3::toMat)
       .def("inverse", &SE3::inverse)
-      .def(py::self * py::self)
+      .def(nb::self * nb::self)
+      .def(nb::self == nb::self)
+      .def(nb::self != nb::self)
       .def("__repr__", &SE3::toString)
       .def("__copy__", [](const SE3 &self) { return SE3(self); })
       .def(
-          "__deepcopy__", [](const SE3 &self, py::dict) { return SE3(self); },
+          "__deepcopy__", [](const SE3 &self, nb::dict) { return SE3(self); },
           "memo"_a)
-      .def(py::pickle(
-          [](const SE3 &p) { // __getstate__
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.rot.qx, p.rot.qy, p.rot.qz, p.rot.qw,
-                                  p.trans[0], p.trans[1], p.trans[2]);
-          },
-          [](py::tuple t) { // __setstate__
-            if (t.size() != 7)
-              throw std::runtime_error("Invalid state when unpickling SE3!");
-            /* Create a new C++ instance */
-            double qx = t[0].cast<double>();
-            double qy = t[1].cast<double>();
-            double qz = t[2].cast<double>();
-            double qw = t[3].cast<double>();
-            double x = t[4].cast<double>();
-            double y = t[5].cast<double>();
-            double z = t[6].cast<double>();
-            SE3 p(SO3{.qx = qx, .qy = qy, .qz = qz, .qw = qw},
-                  Eigen::Vector3d(x, y, z));
-            return p;
-          }));
+      .def("__getstate__",
+           [](const SE3 &p) {
+             return nb::make_tuple(p.rot.qx, p.rot.qy, p.rot.qz, p.rot.qw,
+                                   p.trans[0], p.trans[1], p.trans[2]);
+           })
+      .def("__setstate__",
+           [](SE3 &p,
+              std::tuple<double, double, double, double, double, double, double>
+                  t) {
+             new (&p) SE3(SO3{.qx = std::get<0>(t),
+                              .qy = std::get<1>(t),
+                              .qz = std::get<2>(t),
+                              .qw = std::get<3>(t)},
+                          Eigen::Vector3d{std::get<4>(t), std::get<5>(t),
+                                          std::get<6>(t)});
+           });
 }
 
 } // namespace evalio

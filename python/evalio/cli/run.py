@@ -1,10 +1,10 @@
 from pathlib import Path
 from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.utils import print_warning
-from tqdm import tqdm
+from tqdm.rich import tqdm
 
 from evalio.types import ImuMeasurement, LidarMeasurement
-from evalio.rerun import RerunVis
+from evalio.rerun import RerunVis, VisArgs
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
 from .writer import TrajectoryWriter, save_config, save_gt
@@ -13,6 +13,7 @@ from .stats import eval
 from rich import print
 from typing import Optional, Annotated
 import typer
+
 
 app = typer.Typer()
 
@@ -52,22 +53,35 @@ def run_from_cli(
         ),
     ] = None,
     visualize: Annotated[
-        int,
+        bool,
         typer.Option(
             "-v",
             "--visualize",
-            count=True,
-            help="Visualize results. Repeat up to 3 times for more detail",
+            help="Visualize the results via rerun",
             show_default=False,
         ),
-    ] = 0,
+    ] = False,
+    show: Annotated[
+        Optional[VisArgs],
+        typer.Option(
+            "-s",
+            "--show",
+            help="Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.",
+            show_default=False,
+            parser=VisArgs.parse,
+        ),
+    ] = None,
 ):
     if (in_pipelines or in_datasets or length) and config:
         raise typer.BadParameter(
             "Cannot specify both config and manual options", param_hint="run"
         )
 
-    vis = RerunVis(visualize)
+    if show is None:
+        vis_args = VisArgs(show=visualize)
+    else:
+        vis_args = show
+    vis = RerunVis(vis_args)
 
     if config is not None:
         pipelines, datasets, out = parse_config(Path(config))
@@ -120,6 +134,12 @@ def run(
 
     for dbuilder in datasets:
         save_gt(output, dbuilder)
+        vis.new_recording(dbuilder.build(), pipelines)
+
+        # Found how much we'll be iterating
+        length = len(dbuilder.build().data_iter())
+        if dbuilder.length is not None and dbuilder.length < length:
+            length = dbuilder.length
 
         for pbuilder in pipelines:
             print(f"Running {pbuilder} on {dbuilder}")
@@ -127,17 +147,11 @@ def run(
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
-
-            # Initialize params
-            first_scan_done = False
-            data_iter = dataset.data_iter()
-            length = len(data_iter)
-            if dbuilder.length is not None and dbuilder.length < length:
-                length = dbuilder.length
-            loop = tqdm(total=length)
+            vis.new_pipe(pbuilder.name)
 
             # Run the pipeline
-            for data in data_iter:
+            loop = tqdm(total=length)
+            for data in dbuilder.build():
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
                 elif isinstance(data, LidarMeasurement):
@@ -145,11 +159,7 @@ def run(
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
 
-                    if not first_scan_done:
-                        vis.new_recording(dataset)
-                        first_scan_done = True
-
-                    vis.log(data, features, pose)
+                    vis.log(data, features, pose, pipe)
 
                     loop.update()
                     if loop.n >= length:
@@ -158,4 +168,4 @@ def run(
 
             writer.close()
 
-    eval([str(output)], False, "atet")
+    eval([str(output)], False, "RTEt")

@@ -10,11 +10,10 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3
 import numpy as np
-from tqdm import tqdm
+from tqdm.rich import tqdm
 
 from .base import (
     SE3,
@@ -69,17 +68,13 @@ class Hilti2022(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # TODO: Update the path to the ground truth file
         _, gt = self.files()
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://hilti-challenge.com/dataset-2022.html"
-
     def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3(qx=0.7071068, qy=-0.7071068, qz=0.0, qw=0.0),
@@ -101,6 +96,8 @@ class Hilti2022(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="Bosch",
+            model="BMI085",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -110,7 +107,20 @@ class Hilti2022(Dataset):
             # Increase this a smidge to remove vehicle from scan
             min_range=0.5,
             max_range=120.0,
+            brand="Hesai",
+            model="PandarXT-32",
         )
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://hilti-challenge.com/dataset-2022.html"
+
+    def environment(self) -> str:
+        return "Indoor"
+
+    def vehicle(self) -> str:
+        return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:

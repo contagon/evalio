@@ -5,7 +5,6 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SO3
 import numpy as np
@@ -17,6 +16,8 @@ from .base import (
     LidarParams,
     DatasetIterator,
 )
+
+import os
 
 """
 As a reference, we use the built in Ouster IMU instead of the alphasense one
@@ -53,16 +54,13 @@ class NewerCollege2021(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
-            self.folder / "ground_truth.csv",
+        gt_file = self.files()[-1]
+        return Trajectory.load_csv(
+            self.folder / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
-
     def imu_T_lidar(self) -> SE3:
         return SE3(
             SO3(qx=0.0032925, qy=-0.004627, qz=-0.0024302, qw=0.99998),
@@ -86,6 +84,8 @@ class NewerCollege2021(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            brand="TDK",
+            model="ICM-20948",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -94,10 +94,31 @@ class NewerCollege2021(Dataset):
             num_columns=1024,
             min_range=0.1,
             max_range=50.0,
+            brand="Ouster",
+            model="OS1-128",
         )
+
+    # ------------------------- dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        return "https://ori-drs.github.io/newer-college-dataset/multi-cam/"
+
+    def environment(self) -> str:
+        return "Oxford Campus"
+
+    def vehicle(self) -> str:
+        return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
+        # parse ground truth file
+        if "maths" in self.seq_name:
+            difficulty = self.seq_name.split("_")[1]
+            gt_file = f"gt_state_{difficulty}.csv"
+        else:
+            name = self.seq_name.replace("_", "-")
+            gt_file = f"gt-nc-{name}.csv"
+
         return {
             "cloister": [
                 "2021-12-02-10-15-59_0-cloister.bag",
@@ -136,10 +157,9 @@ class NewerCollege2021(Dataset):
             "stairs": [
                 "2021-07-01-10-40-50_0-stairs.bag",
             ],
-        }[self.seq_name] + ["ground_truth.csv"]
+        }[self.seq_name] + [gt_file]
 
     def download(self):
-        # TODO:
         bag_ids = {
             "quad_easy": ["1hF2h83E1THbFAvs7wpR6ORmrscIHxKMo"],
             "quad_medium": ["11bZfJce1MCM4G9YUTCyUifM715N7FSbO"],
@@ -186,9 +206,6 @@ class NewerCollege2021(Dataset):
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)
-        # TODO: Make this download to matching name as online
-        gdown.download(
-            id=gt_ids, output=str(self.folder / "ground_truth.csv"), resume=True
-        )
+        gdown.download(id=gt_ids, output=f"{self.folder}{os.sep}", resume=True)
         for bid in bag_ids:
-            gdown.download(id=bid, output=str(self.folder) + "/", resume=True)
+            gdown.download(id=bid, output=f"{self.folder}{os.sep}", resume=True)

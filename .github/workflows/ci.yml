@@ -30,7 +30,12 @@ jobs:
   # run tests on both mac and ubuntu, across all python versions
   test:
     runs-on: ${{ matrix.os }}
+    # We turn off stub generations, as there is some strange bug on github actions
+    # where an editable install with stubs obscures the _cpp.so module and it can't be imported
+    env:
+      SKBUILD_CMAKE_DEFINE: EVALIO_PYTHON_STUBS=OFF
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -48,13 +53,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Install the project
-        run: uv sync --dev
+        run: uv sync --dev --verbose
       - name: Run tests
         run: uv run pytest -v
 
   # make sure everything still builds, but only one python per system
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}/.vcpkg_cache"
     strategy:
       fail-fast: false
       matrix:
@@ -62,20 +69,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
-      # If things fail, this allows us to ssh in to fix things
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: runner.debug == '1'
-      #   with:
-      #     detached: true
 
       # Let vcpkg store caches in github actions
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
+      - name: Restore vcpkg cache
+        id: cache
+        uses: actions/cache/restore@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
+          key: vcpkg-${{ matrix.os }}
+      - name: Ensure vcpkg cache directory exists
+        run: mkdir -p "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
 
       # Do all the building
       - run: ./cpp/setup_pipelines.sh
@@ -86,12 +89,24 @@ jobs:
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
-          CIBW_ENVIRONMENT: >
-            VCPKG_BINARY_SOURCES="clear;x-gha,readwrite" 
-            ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" 
-            ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN"
-            MACOSX_DEPLOYMENT_TARGET="11"
-          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
+          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
+
+      # Delete the old cache on hit to emulate a cache update. See
+      # https://github.com/actions/cache/issues/342.
+      - name: Delete old cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.cache.outputs.cache-hit 
+        # Using `--repo` makes it so that this step doesn't require checking out the repo first.
+        run: gh cache delete --repo ${{ github.repository }} ${{ steps.cache.outputs.cache-primary-key }}
+
+      # cache vcpkg
+      - name: Save vcpkg cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
+          key: vcpkg-${{ matrix.os }}
 
       # save artifacts for testing
       - uses: actions/upload-artifact@v4

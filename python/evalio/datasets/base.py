@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Optional, Union
 from itertools import islice
 
 import os
@@ -93,15 +93,6 @@ class Dataset(StrEnum):
         ...
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        """Webpage with the dataset information.
-
-        Returns:
-            str: URL of the dataset webpage.
-        """
-        ...
-
     def imu_T_lidar(self) -> SE3:
         """Returns the transformation from IMU to Lidar frame.
 
@@ -143,6 +134,22 @@ class Dataset(StrEnum):
             list[str]: _description_
         """
         ...
+
+    # ------------------------- Optional dataset info ------------------------- #
+    @staticmethod
+    def url() -> str:
+        """Webpage with the dataset information.
+
+        Returns:
+            str: URL of the dataset webpage.
+        """
+        return "-"
+
+    def environment(self) -> str:
+        return "-"
+
+    def vehicle(self) -> str:
+        return "-"
 
     # ------------------------- Optional overrides ------------------------- #
     # Optional method
@@ -323,6 +330,12 @@ class Dataset(StrEnum):
         """
         global _DATA_DIR
         return _DATA_DIR / self.full_name
+
+    def size_on_disk(self) -> Optional[float]:
+        if not self.is_downloaded():
+            return None
+        else:
+            return sum(f.stat().st_size for f in self.folder.glob("**/*")) / 1e9
 
 
 # For converting dataset names to snake case

@@ -74,7 +74,6 @@ def global_options(
     pass
 
 
-# eval "$(evalio2 --show-completion)"
 __all__ = [
     "app",
 ]

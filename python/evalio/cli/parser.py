@@ -112,6 +112,10 @@ class DatasetBuilder:
         return self.dataset
 
 
+PIPELINE_NAME = Pipeline.__name__
+PIPELINE_METHODS = [m for m in dir(Pipeline) if not m.startswith("_")]
+
+
 @dataclass
 class PipelineBuilder:
     name: str
@@ -132,12 +136,29 @@ class PipelineBuilder:
         self.params = all_params
 
     @staticmethod
+    def _is_pipeline(obj) -> bool:
+        # First check the normal way to short circuit
+        if issubclass(obj, Pipeline):
+            return True
+
+        # If Pipeline isn't a parent
+        if not any(parent.__name__ == PIPELINE_NAME for parent in obj.__mro__):
+            return False
+
+        # If it's missing methods
+        for method in PIPELINE_METHODS:
+            if not hasattr(obj, method):
+                return False
+
+        return True
+
+    @staticmethod
     def _search_module(module) -> dict[str, type[Pipeline]]:
         return dict(
             (cls.name(), cls)
             for cls in module.__dict__.values()
             if isclass(cls)
-            and issubclass(cls, Pipeline)
+            and PipelineBuilder._is_pipeline(cls)
             and cls.__name__ != evalio.pipelines.Pipeline.__name__
         )
 

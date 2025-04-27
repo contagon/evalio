@@ -10,11 +10,10 @@ from evalio.datasets.loaders import (
     LidarPointStamp,
     LidarStamp,
     RosbagIter,
-    load_pose_csv,
 )
 from evalio.types import Trajectory, SE3, SO3
 import numpy as np
-from tqdm import tqdm
+from tqdm.rich import tqdm
 
 from .base import (
     Dataset,
@@ -68,17 +67,13 @@ class EnWide(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return load_pose_csv(
+        return Trajectory.load_csv(
             self.folder / f"gt-{self.seq_name}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
 
     # ------------------------- For loading params ------------------------- #
-    @staticmethod
-    def url() -> str:
-        return "https://projects.asl.ethz.ch/datasets/enwide"
-
     def imu_T_lidar(self) -> SE3:
         scale = 100
         imu_T_sensor = SE3(
@@ -109,6 +104,8 @@ class EnWide(Dataset):
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, 9.81]),
+            brand="TDK",
+            model="IAM-20680HT",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -117,11 +114,29 @@ class EnWide(Dataset):
             num_columns=1024,
             min_range=0.0,
             max_range=100.0,
+            brand="Ouster",
+            model="OS0-128",
         )
 
+    # ------------------------- dataset info ------------------------- #
     @classmethod
     def dataset_name(cls) -> str:
         return "enwide"
+
+    @staticmethod
+    def url() -> str:
+        return "https://projects.asl.ethz.ch/datasets/enwide"
+
+    def environment(self) -> str:
+        if "tunnel" in self.seq_name:
+            return "Tunnel"
+        elif "runway" in self.seq_name or "intersection" in self.seq_name:
+            return "Planar Road"
+        else:
+            return "Field"
+
+    def vehicle(self) -> str:
+        return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> list[str]:
@@ -151,20 +166,7 @@ class EnWide(Dataset):
         }[self.seq_name]
 
     def download(self):
-        bag_date = {
-            "field_d": "2023-08-09-19-25-45",
-            "field_s": "2023-08-09-19-05-05",
-            "intersection_d": "2023-08-09-17-58-11",
-            "intersection_s": "2023-08-09-16-19-09",
-            "katzensee_d": "2023-08-21-10-29-20",
-            "katzensee_s": "2023-08-21-10-20-22",
-            "runway_d": "2023-08-09-18-52-05",
-            "runway_s": "2023-08-09-18-44-24",
-            "tunnel_d": "2023-08-08-17-50-31",
-            "tunnel_s": "2023-08-08-17-12-37",
-        }[self.seq_name]
-        bag_file = f"{bag_date}-{self.seq_name}.bag"
-        gt_file = f"gt-{self.seq_name}.csv"
+        bag_file, gt_file = self.files()
 
         url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{self.seq_name}/"
 
