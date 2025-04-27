@@ -59,10 +59,10 @@ class Trajectory:
         Will automatically skip any lines that start with a #. Is most useful for loading ground truth data.
 
         ``` py
-        from evalio.datasets.loaders import load_pose_csv
+        from evalio.types import Trajectory
 
         fieldnames = ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
-        trajectory = load_pose_csv(path, fieldnames)
+        trajectory = Trajectory.load_csv(path, fieldnames)
         ```
 
         Args:
@@ -112,7 +112,7 @@ class Trajectory:
 
     @staticmethod
     def load_tum(path: Path) -> "Trajectory":
-        """Load a TUM dataset pose file. Simple wrapper around [load_pose_csv][evalio.datasets.loaders.load_pose_csv].
+        """Load a TUM dataset pose file. Simple wrapper around [load_csv][evalio.types.Trajectory].
 
         Args:
             path (Path): Location of file.

@@ -22,6 +22,8 @@ from .base import (
     DatasetIterator,
 )
 
+from typing import Sequence, cast
+
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
 def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
@@ -139,7 +141,7 @@ class EnWide(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "intersection_s": [
                 "2023-08-09-16-19-09-intersection_s.bag",
@@ -166,7 +168,7 @@ class EnWide(Dataset):
         }[self.seq_name]
 
     def download(self):
-        bag_file, gt_file = self.files()
+        bag_file, gt_file = cast(list[str], self.files())
 
         url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{self.seq_name}/"
 

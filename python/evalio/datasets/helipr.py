@@ -17,6 +17,9 @@ from evalio.datasets.loaders import RawDataIter
 
 import os
 
+from pathlib import Path
+from typing import Sequence
+
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.
 """
@@ -133,7 +136,7 @@ class HeLiPR(Dataset):
         return "Car"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return ["Ouster", "Ouster_gt.txt", "xsens_imu.csv"]
 
     def download(self):

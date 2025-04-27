@@ -34,8 +34,8 @@ theme:
         name: Switch to system preference
 
 watch:
-  - python/evalio
-  - cpp/evalio
+  - python/
+  - cpp/
 
 nav:
   - Installation: install.md
@@ -46,10 +46,11 @@ nav:
   - Included:
     - Datasets: included/datasets.md
     - Pipelines: included/pipelines.md
-  - Reference:
-    - types: ref/types.md
-    - datasets: ref/datasets.md
-    - pipelines: ref/pipelines.md
+  - API Reference:
+    - evalio.types: ref/types.md
+    - evalio.datasets: ref/datasets.md
+    - evalio.pipelines: ref/pipelines.md
+    - evalio.rerun: ref/rerun.md
 
 plugins:
   # Add top level search

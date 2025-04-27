@@ -23,6 +23,8 @@ from .base import (
     DatasetIterator,
 )
 
+from typing import Sequence, cast
+
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
 def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
@@ -123,7 +125,7 @@ class Hilti2022(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         filename = {
             "construction_upper_level_1": "exp04_construction_upper_level",
             "construction_upper_level_2": "exp05_construction_upper_level_2",
@@ -143,7 +145,7 @@ class Hilti2022(Dataset):
         return [bag_file, gt_file]
 
     def download(self):
-        bag_file, gt_file = self.files()
+        bag_file, gt_file = cast(list[str], self.files())
 
         url = "https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/"
 

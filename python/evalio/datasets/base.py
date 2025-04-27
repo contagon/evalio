@@ -15,6 +15,7 @@ from evalio.types import (
 )
 
 from evalio.utils import print_warning
+from typing import Sequence
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
@@ -125,7 +126,7 @@ class Dataset(StrEnum):
         """
         ...
 
-    def files(self) -> list[str | Path]:
+    def files(self) -> Sequence[str | Path]:
         """Return list of files required to run this dataset.
 
         If a returned type is a Path, it will be checked as is. If it is a string, it will be prepended with [folder][evalio.datasets.Dataset.folder].
@@ -146,9 +147,19 @@ class Dataset(StrEnum):
         return "-"
 
     def environment(self) -> str:
+        """Environment where the dataset was collected.
+
+        Returns:
+            str: Environment where the dataset was collected.
+        """
         return "-"
 
     def vehicle(self) -> str:
+        """Vehicle used to collect the dataset.
+
+        Returns:
+            str: Vehicle used to collect the dataset.
+        """
         return "-"
 
     # ------------------------- Optional overrides ------------------------- #

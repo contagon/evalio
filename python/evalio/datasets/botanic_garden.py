@@ -20,6 +20,9 @@ from .base import (
     DatasetIterator,
 )
 
+from pathlib import Path
+from typing import Sequence
+
 
 class BotanicGarden(Dataset):
     b1005_00 = auto()
@@ -117,7 +120,7 @@ class BotanicGarden(Dataset):
             model="VLP-16",
         )
 
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         out = [f"{self.seq_name[1:]}.bag", f"{self.seq_name[1:]}_GT_output.txt"]
         if self.seq_name == "b1008_03":
             out[1] = f"{self.seq_name[1:]}_gt_output.txt"

@@ -19,6 +19,9 @@ from .base import (
     DatasetIterator,
 )
 
+from pathlib import Path
+from typing import Sequence
+
 
 class NewerCollege2020(Dataset):
     short_experiment = auto()
@@ -107,7 +110,7 @@ class NewerCollege2020(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "dynamic_spinning": [
                 "rooster_2020-07-10-09-23-18_0.bag",

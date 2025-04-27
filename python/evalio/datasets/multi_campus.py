@@ -21,6 +21,9 @@ from .base import (
     DatasetIterator,
 )
 
+from pathlib import Path
+from typing import Sequence
+
 
 class MultiCampus(Dataset):
     ntu_day_01 = auto()
@@ -213,7 +216,7 @@ class MultiCampus(Dataset):
             raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         if "ntu" in self.seq_name:
             beams = 128
             imu = "vn100"

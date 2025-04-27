@@ -19,6 +19,9 @@ from .base import (
 
 import os
 
+from pathlib import Path
+from typing import Sequence
+
 """
 As a reference, we use the built in Ouster IMU instead of the alphasense one
 Extrinsics are more likely to be accurate
@@ -110,7 +113,7 @@ class NewerCollege2021(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         # parse ground truth file
         if "maths" in self.seq_name:
             difficulty = self.seq_name.split("_")[1]

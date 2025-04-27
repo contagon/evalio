@@ -19,6 +19,8 @@ from .base import (
 )
 
 import os
+from pathlib import Path
+from typing import Sequence
 
 """
 Note, we skip over a number of trajectories due to missing ground truth data.
@@ -153,7 +155,7 @@ class OxfordSpires(Dataset):
         return "Backpack"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "christ_church_02": [
                 "1710754066_2024-03-18-09-27-47_0",
