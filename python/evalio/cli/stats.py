@@ -160,7 +160,9 @@ class ExperimentResults:
     poses: list[SE3]
     gts: list[SE3]
 
-    def __init__(self, gt_og: Trajectory, traj: Trajectory):
+    def __init__(
+        self, gt_og: Trajectory, traj: Trajectory, length: Optional[int] = None
+    ):
         self.metadata = traj.metadata
 
         gt = deepcopy(gt_og)
@@ -170,6 +172,11 @@ class ExperimentResults:
         self.stamps = traj.stamps
         self.poses = traj.poses
         self.gts = gt.poses
+
+        if length is not None and length < len(self.stamps):
+            self.stamps = self.stamps[:length]
+            self.poses = self.poses[:length]
+            self.gts = self.gts[:length]
 
     def __len__(self) -> int:
         return len(self.stamps)
@@ -236,6 +243,7 @@ def eval_dataset(
     sort: Optional[str],
     window_size: int,
     metric: MetricKind,
+    length: Optional[int],
 ):
     # Load all trajectories
     trajectories = []
@@ -295,7 +303,7 @@ def eval_dataset(
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
-            exp = ExperimentResults(gt_og, traj)
+            exp = ExperimentResults(gt_og, traj, length)
             ate = exp.ate().summarize(metric)
             rte = exp.rte(window_size).summarize(metric)
             r = {
@@ -368,9 +376,14 @@ def eval(
             "--metric",
             "-m",
             help="Metric to use for ATE/RTE computation. Defaults to sse.",
-            case_sensitive=False,
         ),
     ] = MetricKind.sse,
+    length: Annotated[
+        Optional[int],
+        typer.Option(
+            "-l", "--length", help="Specify subset of trajectory to evaluate."
+        ),
+    ] = None,
 ):
     """
     Evaluate the results of experiments.
@@ -386,4 +399,4 @@ def eval(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort, window, metric)
+        eval_dataset(d, visualize, sort, window, metric, length)
