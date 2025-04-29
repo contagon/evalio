@@ -29,6 +29,7 @@ class DatasetIterator(Iterable[Measurement]):
     This class is the main interface used to iterate over the dataset's measurements.
     It provides an interface for iterating over IMU and Lidar measurements, as well as all measurements interleaved.
     This allows for standardizing access to loading data, while allowing for loading parameters in [Dataset][evalio.datasets.Dataset] without having to load the data.
+    Generally, will be created by the [Dataset.data_iter][evalio.datasets.Dataset.data_iter] method.
     """
 
     def imu_iter(self) -> Iterator[ImuMeasurement]:

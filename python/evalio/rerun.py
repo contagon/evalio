@@ -261,6 +261,19 @@ try:
     def convert(
         obj: object, color: Optional[Any] = None
     ) -> rr.Transform3D | rr.Points3D:
+        """Convert a variety of objects to rerun types.
+
+        Args:
+            obj (object): Object to convert. Can be a LidarMeasurement, list of Points, numpy array, SE3, or Trajectory.
+            color (Optional[Any], optional): Optional color to set. See overloads for additional literal options. Defaults to None.
+
+        Raises:
+            ValueError: If the color pass is invalid.
+            ValueError: If the object is not an implemented type for conversion.
+
+        Returns:
+            rr.Transform3D | rr.Points3D: Rerun type.
+        """
         # Handle point clouds
         if isinstance(obj, LidarMeasurement):
             color_parsed = None

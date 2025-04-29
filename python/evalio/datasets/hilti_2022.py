@@ -43,6 +43,8 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 class Hilti2022(Dataset):
+    """_summary_"""
+
     construction_upper_level_1 = auto()
     construction_upper_level_2 = auto()
     construction_upper_level_3 = auto()
@@ -52,7 +54,6 @@ class Hilti2022(Dataset):
 
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
-        """Returns an iterator over the data."""
         bag, _ = self.files()
         return RosbagIter(
             self.folder / bag,

@@ -8,10 +8,13 @@ def clean_cell(cell: str) -> str:
     """Clean a cell by removing unwanted characters."""
     # Remove line breaks
     cell = cell.replace("\n", "<br>")
+    # Non line breaking space
+    cell = cell.replace(" ", "&nbsp;")
+    # Non line breaking hyphen
+    cell = cell.replace("-", "&#8209;")
     # Convert to links
     if cell.startswith("http"):
-        shorter = cell.split("//", maxsplit=1)[-1]
-        cell = f"[{shorter}]({cell})"
+        cell = f"[link]({cell})"
 
     return cell.strip()
 
@@ -69,9 +72,9 @@ with mkdocs_gen_files.open("included/datasets.md", "w") as f:
     f.write(DATASETS)
     f.write("\n")
 
-    table = ls(Kind.datasets, show=False)
+    table = ls(Kind.datasets, show=False, show_hyperlinks=True)
     if table is not None:
-        f.write(rich_table_to_markdown(table, skip_columns=["Down"]))
+        f.write(rich_table_to_markdown(table, skip_columns=["DL", "Size"]))
 
 
 PIPELINES = """---
@@ -85,6 +88,6 @@ with mkdocs_gen_files.open("included/pipelines.md", "w") as f:
     f.write(PIPELINES)
     f.write("\n")
 
-    table = ls(Kind.pipelines, show=False)
+    table = ls(Kind.pipelines, show=False, show_hyperlinks=True)
     if table is not None:
         f.write(rich_table_to_markdown(table))
