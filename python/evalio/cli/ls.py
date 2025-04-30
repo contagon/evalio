@@ -53,7 +53,7 @@ def ls(
         bool,
         typer.Option(
             "--show-hyperlinks",
-            help="Output full links to datasets. For terminals that don't support hyperlinks (OSC 8).",
+            help="Output full links. For terminals that don't support hyperlinks (OSC 8).",
         ),
     ] = False,
     show: Annotated[

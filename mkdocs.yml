@@ -38,6 +38,7 @@ watch:
   - cpp/
 
 nav:
+  - evalio: index.md
   - Installation: install.md
   - Quickstart: quickstart.md
   - Examples:
@@ -46,7 +47,8 @@ nav:
   - Included:
     - Datasets: included/datasets.md
     - Pipelines: included/pipelines.md
-  - API Reference:
+  - Reference:
+    - cli: ref/cli.md
     - evalio.types: ref/types.md
     - evalio.datasets: ref/datasets.md
     - evalio.pipelines: ref/pipelines.md
@@ -61,6 +63,7 @@ plugins:
   gen-files:
     scripts:
       - docs/included.py
+      - docs/ref/cli.py
 
   # Autogenerate docs from docstrings
   mkdocstrings:
@@ -85,6 +88,8 @@ plugins:
 
 markdown_extensions:
   - tables
+
+  - mkdocs-typer
 
   # syntax highlighting
   # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
