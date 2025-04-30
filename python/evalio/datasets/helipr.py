@@ -26,6 +26,11 @@ Note, we do everything based off of the Ouster Lidar, mounted at the top of the 
 
 
 class HeLiPR(Dataset):
+    """Self-driving car dataset taken in urban environments. Ground truth is generated using filtering of an RTK-GNSS system.
+
+    The vehicle had multiple lidar sensors mounted; we utilize the high resolution Ouster at the top of the vehicle.
+    """
+
     # Had to remove a couple of them due to not having imu data
     # kaist_04 = auto()
     kaist_05 = auto()

@@ -23,12 +23,17 @@ from pathlib import Path
 from typing import Sequence
 
 """
-Note, we skip over a number of trajectories due to missing ground truth data.
-https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/edit?tab=t.0
 """
 
 
 class OxfordSpires(Dataset):
+    """Dataset taken both indoors and outdoors on the Oxford campus.
+
+    Note, we skip over a number of trajectories due to [missing ground truth data](https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/edit?tab=t.0).
+
+    Additionally, some of the ground truth has poses within a few milliseconds of each other - we skip over any ground truth values within 10 milliseconds of each other.
+    """
+
     blenheim_palace_01 = auto()
     blenheim_palace_02 = auto()
     blenheim_palace_05 = auto()

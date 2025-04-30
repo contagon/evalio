@@ -25,6 +25,13 @@ from typing import Sequence
 
 
 class BotanicGarden(Dataset):
+    """Dataset taken from a botanical garden, specifically for testing unstructured environments. Ground truth is gathered using a survey grade lidar.
+
+    Note, there is no automatic downloader for this dataset due to being uploaded on onedrive. Data can be downloaded manually and placed in the correct folder in `EVALIO_DATA`.
+
+    Additionally, we only include the public datasets here; more are potentially available upon request.
+    """
+
     b1005_00 = auto()
     b1005_01 = auto()
     b1005_07 = auto()

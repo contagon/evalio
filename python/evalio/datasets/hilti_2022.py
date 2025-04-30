@@ -43,7 +43,7 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 class Hilti2022(Dataset):
-    """_summary_"""
+    """Sequences with ground truth taken from the Hilti 2022 SLAM Challenge, mostly taken from indoors."""
 
     construction_upper_level_1 = auto()
     construction_upper_level_2 = auto()
@@ -69,7 +69,6 @@ class Hilti2022(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        # TODO: Update the path to the ground truth file
         _, gt = self.files()
         return Trajectory.load_csv(
             self.folder / gt,

@@ -22,15 +22,15 @@ import os
 from pathlib import Path
 from typing import Sequence
 
-"""
-As a reference, we use the built in Ouster IMU instead of the alphasense one
-Extrinsics are more likely to be accurate
-Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster one (ICM-20948)
-
-"""
-
 
 class NewerCollege2021(Dataset):
+    """Dataset outdoors on oxford campus with a handheld device consisting of an alphasense core and a Ouster lidar.
+    Ground truth is captured ICP matching against a laser scanner map.
+
+    Note there are two IMUs present; we utilize the Ouster IMU (ICM-20948)) instead of the alphasense one (Bosch BMI085).
+    We expect the Ouster IMU to have more accurate extrinsics and the specs between the two IMUs are fairly similar.
+    """
+
     quad_easy = auto()
     quad_medium = auto()
     quad_hard = auto()

@@ -24,6 +24,13 @@ from typing import Sequence
 
 
 class NewerCollege2020(Dataset):
+    """Dataset taken from outdoor Oxford Campus. Ground truth is generated using ICP matching against a laser scanner.
+
+    Note, there have been some reports that the laser scanner and data were collected months apart, which may have caused some inaccuracies in the ground truth data.
+
+    There are two IMUs on the handheld device, but the realsense IMU is not time-synced with the lidar data. Therefore, we utilize the Ouster IMU data instead.
+    """
+
     short_experiment = auto()
     long_experiment = auto()
     quad_with_dynamics = auto()

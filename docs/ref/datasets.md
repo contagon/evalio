@@ -6,7 +6,10 @@ For more information about the datasets included in evalio, see the [included pi
         members:
             - Dataset
             - DatasetIterator
-            - loaders
+            - RosbagIter
+            - RawDataIter
+            - get_data_dir
+            - set_data_dir
 
 ::: evalio.datasets
     options:
@@ -16,4 +19,7 @@ For more information about the datasets included in evalio, see the [included pi
         filters:
             - "!Dataset"
             - "!DatasetIterator"
-            - "!loaders.*"
+            - "!RosbagIter"
+            - "!RawDataIter"
+            - "!get_data_dir"
+            - "!set_data_dir"

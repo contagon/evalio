@@ -26,6 +26,11 @@ from typing import Sequence
 
 
 class MultiCampus(Dataset):
+    """Data taken from a variety of campus (KTH, NTU, TUHH) in Asia and Europe at different seasons, at day and night, and with an ATV and handheld platform.
+
+    Ground truth was measured using a continuous optimization of lidar scans matched against a laser scanner map.
+    """
+
     ntu_day_01 = auto()
     ntu_day_02 = auto()
     ntu_day_10 = auto()

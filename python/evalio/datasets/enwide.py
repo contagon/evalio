@@ -42,6 +42,11 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 class EnWide(Dataset):
+    """Dataset taken in purposely degenerate locations such as a field, intersections, tunnels, and runways. All data comes directly from the Ouster unit.
+
+    Note, this dataset does not have ground truth orientation, only ground truth positional values taken from a Leica MS60 Prism.
+    """
+
     field_d = auto()
     field_s = auto()
     intersection_d = auto()
