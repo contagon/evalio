@@ -144,3 +144,14 @@ class BotanicGarden(Dataset):
 
     def vehicle(self) -> str:
         return "ATV"
+
+    def __len__(self) -> int:
+        return {
+            "b1005_00": 5790,
+            "b1005_01": 4746,
+            "b1005_07": 5474,
+            "b1006_01": 7445,
+            "b1008_03": 6320,
+            "b1018_00": 1466,
+            "b1018_13": 2071,
+        }[self.seq_name]

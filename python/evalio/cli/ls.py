@@ -1,3 +1,4 @@
+from evalio.datasets.base import Dataset
 from .parser import DatasetBuilder, PipelineBuilder
 from typing import Optional, TypeVar, Annotated
 import typer
@@ -20,6 +21,27 @@ def unique(lst: list[T]):
         _type_: Unique list
     """
     return list(dict.fromkeys(lst))
+
+
+def extract_len(d: Dataset) -> str:
+    """Get the length of a dataset in a human readable format
+
+    Args:
+        t (Dataset): Dataset to get length of
+
+    Returns:
+        str: Length of dataset
+    """
+    try:
+        le = len(d) / d.lidar_params().rate
+        if le > 3600:
+            return f"{le / 3600:.2f}hr ".rjust(8)
+        elif le > 60:
+            return f"{le / 60:.2f}min".rjust(8)
+        else:
+            return f"{le:.2f}sec".rjust(8)
+    except Exception:
+        return "[bright_black]-[/bright_black]"
 
 
 class Kind(StrEnum):
@@ -92,6 +114,7 @@ def ls(
             "Sequences": [],
             "DL": [],
             "Size": [],
+            "Len": [],
             "Env": [],
             "Vehicle": [],
             "IMU": [],
@@ -140,6 +163,10 @@ def ls(
                     ]
                 )
                 all_info["Size"].append(size)
+                # length
+                all_info["Len"].append(
+                    "\n".join([extract_len(d(s)) for s in d.sequences()])
+                )
                 # misc info
                 all_info["Env"].append("\n".join(env))
                 all_info["Vehicle"].append("\n".join(vehicle))
@@ -162,8 +189,10 @@ def ls(
         table.add_column("Name", justify="center", **col_opts)  # type: ignore
         if not quiet:
             table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
-            table.add_column("DL", justify="center", **col_opts)  # type: ignore
+            table.add_column("DL", justify="right", **col_opts)  # type: ignore
         table.add_column("Size", justify="center", **col_opts)  # type: ignore
+        if not quiet:
+            table.add_column("Len", justify="center", **col_opts)  # type: ignore
         table.add_column("Env", justify="center", **col_opts)  # type: ignore
         table.add_column("Vehicle", justify="center", **col_opts)  # type: ignore
         table.add_column("IMU", justify="center", **col_opts)  # type: ignore

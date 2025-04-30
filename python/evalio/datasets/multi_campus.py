@@ -307,3 +307,25 @@ class MultiCampus(Dataset):
         gdown.download(id=gt_url, output=folder, resume=True)
         gdown.download(id=ouster_url, output=folder, resume=True)
         gdown.download(id=imu_url, output=folder, resume=True)
+
+    def __len__(self) -> int:
+        return {
+            "ntu_day_01": 6024,
+            "ntu_day_02": 2288,
+            "ntu_day_10": 3248,
+            "ntu_night_04": 2966,
+            "ntu_night_08": 4668,
+            "ntu_night_13": 2338,
+            "kth_day_06": 8911,
+            "kth_day_09": 7670,
+            "kth_day_10": 6155,
+            "kth_night_01": 9690,
+            "kth_night_04": 7465,
+            "kth_night_05": 6653,
+            "tuhh_day_02": 5004,
+            "tuhh_day_03": 8395,
+            "tuhh_day_04": 1879,
+            "tuhh_night_07": 4446,
+            "tuhh_night_08": 7091,
+            "tuhh_night_09": 1849,
+        }[self.seq_name]

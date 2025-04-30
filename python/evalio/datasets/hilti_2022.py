@@ -157,3 +157,13 @@ class Hilti2022(Dataset):
         if not (self.folder / bag_file).exists():
             print(f"Downloading {bag_file}")
             _urlretrieve(url + bag_file, self.folder / bag_file)
+
+    def __len__(self) -> int:
+        return {
+            "construction_upper_level_1": 1258,
+            "construction_upper_level_2": 1248,
+            "construction_upper_level_3": 1508,
+            "basement_2": 740,
+            "attic_to_upper_gallery_2": 2003,
+            "corridor_lower_gallery_2": 1094,
+        }[self.seq_name]

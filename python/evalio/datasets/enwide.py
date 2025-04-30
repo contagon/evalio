@@ -183,3 +183,17 @@ class EnWide(Dataset):
             _urlretrieve(url + gt_file, self.folder / gt_file)
         if not (self.folder / bag_file).exists():
             _urlretrieve(url + bag_file, self.folder / bag_file)
+
+    def __len__(self) -> int:
+        return {
+            "field_d": 1477,
+            "field_s": 1671,
+            "intersection_d": 1828,
+            "intersection_s": 1997,
+            "katzensee_d": 858,
+            "katzensee_s": 1620,
+            "runway_d": 1902,
+            "runway_s": 2238,
+            "tunnel_d": 1189,
+            "tunnel_s": 2380,
+        }[self.seq_name]

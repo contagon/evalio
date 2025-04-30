@@ -308,10 +308,10 @@ def eval_dataset(
             rte = exp.rte(window_size).summarize(metric)
             r = {
                 "name": traj.metadata["name"],
-                "ATEt": ate.trans,
-                "ATEr": ate.rot,
                 "RTEt": rte.trans,
                 "RTEr": rte.rot,
+                "ATEt": ate.trans,
+                "ATEr": ate.rot,
                 "length": len(exp),
             }
             r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
@@ -390,6 +390,10 @@ def eval(
     """
 
     directories_path = [Path(d) for d in directories]
+
+    c = Console()
+    c.print(f"Evaluating RTE over a window of size {window}, using metric {metric}.")
+    c.print()
 
     # Collect all bottom level directories
     bottom_level_dirs = []

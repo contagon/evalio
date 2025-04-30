@@ -212,3 +212,16 @@ class NewerCollege2021(Dataset):
         gdown.download(id=gt_ids, output=f"{self.folder}{os.sep}", resume=True)
         for bid in bag_ids:
             gdown.download(id=bid, output=f"{self.folder}{os.sep}", resume=True)
+
+    def __len__(self) -> int:
+        return {
+            "quad_easy": 1991,
+            "quad_medium": 1910,
+            "quad_hard": 1880,
+            "stairs": 1190,
+            "cloister": 2788,
+            "park": 15722,
+            "maths_easy": 2160,
+            "maths_medium": 1770,
+            "maths_hard": 2440,
+        }[self.seq_name]

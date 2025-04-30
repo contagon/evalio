@@ -271,3 +271,23 @@ class OxfordSpires(Dataset):
         self.folder.mkdir(parents=True, exist_ok=True)
         gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
+
+    def __len__(self) -> int:
+        # TODO: Missing some of the sequences here, need to figure out multi-folder mcap files
+        lengths = {
+            "blenheim_palace_01": 4052,
+            "blenheim_palace_02": 3674,
+            "blenheim_palace_05": 3401,
+            "bodleian_library_02": 5007,
+            "christ_church_03": 3123,
+            "christ_church_05": 8007,
+            "keble_college_02": 3007,
+            "keble_college_03": 2867,
+            "observatory_quarter_01": 2894,
+            "observatory_quarter_02": 2755,
+        }
+
+        if self.seq_name in lengths:
+            return lengths[self.seq_name]
+        else:
+            return super().__len__()

@@ -188,3 +188,11 @@ class NewerCollege2020(Dataset):
         self.folder.mkdir(parents=True, exist_ok=True)
         gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
+
+    def __len__(self) -> int:
+        # TODO: Missing some values here
+        lengths = {"short_experiment": 15302, "long_experiment": 26560}
+        if self.seq_name in lengths:
+            return lengths[self.seq_name]
+        else:
+            return super().__len__()

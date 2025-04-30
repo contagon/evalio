@@ -129,6 +129,15 @@ def run(
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
+    lengths = [d.length if d.length is not None else len(d.build()) for d in datasets]
+    dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))  # type: ignore
+    dtime *= len(pipelines)
+    if dtime > 3600:
+        print(f"Estimated time (if real-time): {dtime / 3600:.2f} hours")
+    elif dtime > 60:
+        print(f"Estimated time (if real-time): {dtime / 60:.2f} minutes")
+    else:
+        print(f"Estimated time (if real-time): {dtime:.2f} seconds")
     print(f"Output will be saved to {output}\n")
     save_config(pipelines, datasets, output)
 

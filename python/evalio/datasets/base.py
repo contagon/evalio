@@ -242,9 +242,12 @@ class Dataset(StrEnum):
     def __len__(self) -> int:
         """Return the number of lidar scans.
 
+        If implementing a new dataset, it's recommended you override this method, as alternatively files have to be loaded to get this information.
+
         Returns:
             int: Number of lidar scans.
         """
+        self._fail_not_downloaded()
         return self.data_iter().__len__()
 
     def __iter__(self) -> Iterator[Measurement]:  # type: ignore
@@ -344,6 +347,12 @@ class Dataset(StrEnum):
         return _DATA_DIR / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
+        """Shows the size of the dataset on disk, in GB.
+
+        Returns:
+            Optional[float]: Size of the dataset on disk, in GB. None if the dataset is not downloaded.
+        """
+
         if not self.is_downloaded():
             return None
         else:

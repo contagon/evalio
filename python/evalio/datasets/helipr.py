@@ -198,3 +198,13 @@ class HeLiPR(Dataset):
                 tar.extractall(path=self.folder)
             print("Removing tar file...")
             tar_file.unlink()
+
+    def __len__(self) -> int:
+        return {
+            "kaist_05": 12477,
+            "kaist_06": 12152,
+            "dcc_05": 10810,
+            "dcc_06": 10742,
+            "riverside_05": 8551,
+            "riverside_06": 11948,
+        }[self.seq_name]
