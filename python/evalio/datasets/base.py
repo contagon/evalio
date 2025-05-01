@@ -163,8 +163,14 @@ class Dataset(StrEnum):
         """
         return "-"
 
-    # ------------------------- Optional overrides ------------------------- #
-    # Optional method
+    def quick_len(self) -> Optional[int]:
+        """Hardcoded number of lidar scans in the dataset, rather than computing by loading all the data (slow).
+
+        Returns:
+            Optional[int]: Number of lidar scans in the dataset. None if not available.
+        """
+        return None
+
     def download(self) -> None:
         """Method to download the dataset.
 
@@ -242,11 +248,14 @@ class Dataset(StrEnum):
     def __len__(self) -> int:
         """Return the number of lidar scans.
 
-        If implementing a new dataset, it's recommended you override this method, as alternatively files have to be loaded to get this information.
+        If quick_len is available, it will be used. Otherwise, it will load the entire dataset to get the length.
 
         Returns:
             int: Number of lidar scans.
         """
+        if (length := self.quick_len()) is not None:
+            return length
+
         self._fail_not_downloaded()
         return self.data_iter().__len__()
 

@@ -20,7 +20,7 @@ from .base import (
 import os
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 
 class NewerCollege2021(Dataset):
@@ -213,7 +213,7 @@ class NewerCollege2021(Dataset):
         for bid in bag_ids:
             gdown.download(id=bid, output=f"{self.folder}{os.sep}", resume=True)
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "quad_easy": 1991,
             "quad_medium": 1910,

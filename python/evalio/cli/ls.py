@@ -27,21 +27,16 @@ def extract_len(d: Dataset) -> str:
     """Get the length of a dataset in a human readable format
 
     Args:
-        t (Dataset): Dataset to get length of
+        d (Dataset): Dataset to get length of
 
     Returns:
         str: Length of dataset
     """
-    try:
-        le = len(d) / d.lidar_params().rate
-        if le > 3600:
-            return f"{le / 3600:.2f}hr ".rjust(8)
-        elif le > 60:
-            return f"{le / 60:.2f}min".rjust(8)
-        else:
-            return f"{le:.2f}sec".rjust(8)
-    except Exception:
+    length = d.quick_len()
+    if length is None:
         return "[bright_black]-[/bright_black]"
+    else:
+        return f"{length / d.lidar_params().rate / 60:.1f}min".rjust(7)
 
 
 class Kind(StrEnum):
@@ -105,8 +100,6 @@ def ls(
         # 2. Gather the info for that column in the for loop
         # 3. Add the column to the table
         # That should be about it, making the rest should be automatic
-
-        # TODO: Could also add environment and vehicle as well
 
         # Gather all info
         all_info = {

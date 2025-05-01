@@ -18,7 +18,7 @@ from evalio.datasets.loaders import RawDataIter
 import os
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.
@@ -199,7 +199,7 @@ class HeLiPR(Dataset):
             print("Removing tar file...")
             tar_file.unlink()
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "kaist_05": 12477,
             "kaist_06": 12152,

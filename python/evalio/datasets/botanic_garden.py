@@ -21,7 +21,7 @@ from .base import (
 )
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 
 class BotanicGarden(Dataset):
@@ -145,7 +145,7 @@ class BotanicGarden(Dataset):
     def vehicle(self) -> str:
         return "ATV"
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "b1005_00": 5790,
             "b1005_01": 4746,

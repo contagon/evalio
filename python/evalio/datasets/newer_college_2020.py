@@ -20,7 +20,7 @@ from .base import (
 )
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 
 class NewerCollege2020(Dataset):
@@ -189,10 +189,9 @@ class NewerCollege2020(Dataset):
         gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         # TODO: Missing some values here
-        lengths = {"short_experiment": 15302, "long_experiment": 26560}
-        if self.seq_name in lengths:
-            return lengths[self.seq_name]
-        else:
-            return super().__len__()
+        return {
+            "short_experiment": 15302,
+            "long_experiment": 26560,
+        }.get(self.seq_name)

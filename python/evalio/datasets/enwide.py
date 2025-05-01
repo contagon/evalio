@@ -22,7 +22,7 @@ from .base import (
     DatasetIterator,
 )
 
-from typing import Sequence, cast
+from typing import Sequence, cast, Optional
 
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
@@ -184,7 +184,7 @@ class EnWide(Dataset):
         if not (self.folder / bag_file).exists():
             _urlretrieve(url + bag_file, self.folder / bag_file)
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "field_d": 1477,
             "field_s": 1671,

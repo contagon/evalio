@@ -22,7 +22,7 @@ from .base import (
 )
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 
 class MultiCampus(Dataset):
@@ -308,7 +308,7 @@ class MultiCampus(Dataset):
         gdown.download(id=ouster_url, output=folder, resume=True)
         gdown.download(id=imu_url, output=folder, resume=True)
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "ntu_day_01": 6024,
             "ntu_day_02": 2288,

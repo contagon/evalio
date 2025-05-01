@@ -23,7 +23,7 @@ from .base import (
     DatasetIterator,
 )
 
-from typing import Sequence, cast
+from typing import Sequence, cast, Optional
 
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
@@ -158,7 +158,7 @@ class Hilti2022(Dataset):
             print(f"Downloading {bag_file}")
             _urlretrieve(url + bag_file, self.folder / bag_file)
 
-    def __len__(self) -> int:
+    def quick_len(self) -> Optional[int]:
         return {
             "construction_upper_level_1": 1258,
             "construction_upper_level_2": 1248,
