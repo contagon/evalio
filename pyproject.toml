@@ -14,7 +14,7 @@ dependencies = [
     "rapidfuzz>=3.12.2",
     "rosbags>=0.10",
     "tqdm>=4.66",
-    "typer>=0.15.2",
+    "typer>=0.15.3",
 ]
 keywords = [
     "lidar",

@@ -89,8 +89,6 @@ plugins:
 markdown_extensions:
   - tables
 
-  - mkdocs-typer
-
   # syntax highlighting
   # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
   - pymdownx.highlight:

@@ -21,7 +21,7 @@ app = typer.Typer()
 @app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
 def run_from_cli(
     config: Annotated[
-        Optional[str],
+        Optional[Path],
         typer.Option(
             "-c",
             "--config",
@@ -33,7 +33,7 @@ def run_from_cli(
     in_datasets: DatasetOpt = None,
     in_pipelines: PipelineOpt = None,
     in_out: Annotated[
-        Optional[str],
+        Optional[Path],
         typer.Option(
             "-o",
             "--output",
@@ -84,7 +84,7 @@ def run_from_cli(
     vis = RerunVis(vis_args)
 
     if config is not None:
-        pipelines, datasets, out = parse_config(Path(config))
+        pipelines, datasets, out = parse_config(config)
         if out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
@@ -111,7 +111,7 @@ def run_from_cli(
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
         else:
-            out = Path(in_out)
+            out = in_out
 
         run(pipelines, datasets, out, vis)
 
