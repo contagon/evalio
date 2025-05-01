@@ -310,7 +310,7 @@ requires-dist = [
     { name = "numpy" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidfuzz", specifier = ">=3.12.2" },
-    { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.18.2" },
+    { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.23" },
     { name = "rosbags", specifier = ">=0.10" },
     { name = "tqdm", specifier = ">=4.66" },
     { name = "typer", specifier = ">=0.15.2" },

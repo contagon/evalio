@@ -46,7 +46,7 @@ try:
     import rerun as rr
     import rerun.blueprint as rrb
 
-    OverrideType = dict[rr.datatypes.EntityPath | str, list[rr.ComponentBatchLike]]
+    OverrideType = dict[rr.datatypes.EntityPathLike, list[rr.AsComponents]]
 
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs):
@@ -93,7 +93,7 @@ try:
                 make_default=True,
                 recording_id=uuid4(),
             )
-            rr.connect_tcp(default_blueprint=self._blueprint(pipelines))
+            rr.connect_grpc(default_blueprint=self._blueprint(pipelines))
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()

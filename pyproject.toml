@@ -27,7 +27,7 @@ keywords = [
 license = { file = "LICENSE.txt" }
 
 [project.optional-dependencies]
-vis = ["rerun-sdk>=0.18.2"]
+vis = ["rerun-sdk>=0.23"]
 
 [build-system]
 requires = ["scikit-build-core>=0.8", "nanobind>=2.7.0", "numpy"]
