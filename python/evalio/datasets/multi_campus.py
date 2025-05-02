@@ -81,7 +81,7 @@ class MultiCampus(Dataset):
             raise ValueError(f"Unknown sequence: {self.seq_name}")
 
     def ground_truth_raw(self) -> Trajectory:
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / "pose_inW.csv",
             ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,

@@ -62,7 +62,7 @@ class BotanicGarden(Dataset):
         else:
             filename = f"{self.seq_name[1:]}_GT_output.txt"
 
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / filename,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

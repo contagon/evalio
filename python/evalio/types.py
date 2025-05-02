@@ -47,8 +47,23 @@ class Trajectory:
         for i in range(len(self.poses)):
             self.poses[i] = self.poses[i] * T
 
+    def align(self, other: "Trajectory"):
+        """Align the trajectory in place to another trajectory.
+
+        This results in the current trajectory having an identical first pose to the other trajectory.
+
+        Args:
+            other (Trajectory): The trajectory to align to.
+        """
+        this = self.poses[0]
+        oth = other.poses[0]
+        delta = oth * this.inverse()
+
+        for i in range(len(self.poses)):
+            self.poses[i] = delta * self.poses[i]
+
     @staticmethod
-    def load_csv(
+    def from_csv(
         path: Path,
         fieldnames: list[str],
         delimiter=",",
@@ -62,7 +77,7 @@ class Trajectory:
         from evalio.types import Trajectory
 
         fieldnames = ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
-        trajectory = Trajectory.load_csv(path, fieldnames)
+        trajectory = Trajectory.from_csv(path, fieldnames)
         ```
 
         Args:
@@ -111,8 +126,8 @@ class Trajectory:
         return Trajectory(stamps=stamps, poses=poses)
 
     @staticmethod
-    def load_tum(path: Path) -> "Trajectory":
-        """Load a TUM dataset pose file. Simple wrapper around [load_csv][evalio.types.Trajectory].
+    def from_tum(path: Path) -> "Trajectory":
+        """Load a TUM dataset pose file. Simple wrapper around [from_csv][evalio.types.Trajectory].
 
         Args:
             path (Path): Location of file.
@@ -120,11 +135,13 @@ class Trajectory:
         Returns:
             Trajectory: Stored trajectory
         """
-        return Trajectory.load_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
+        return Trajectory.from_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
     @staticmethod
-    def load_experiment(path: Path) -> "Trajectory":
+    def from_experiment(path: Path) -> "Trajectory":
         """Load a saved experiment trajectory from file.
+
+        Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
 
         Args:
             path (Path): Location of trajectory results.
@@ -140,7 +157,7 @@ class Trajectory:
             metadata_str = "\n".join(metadata_list)
             metadata = yaml.safe_load(metadata_str)
 
-        trajectory = Trajectory.load_csv(
+        trajectory = Trajectory.from_csv(
             path,
             fieldnames=["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

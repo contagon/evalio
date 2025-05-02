@@ -70,7 +70,7 @@ class Hilti2022(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         _, gt = self.files()
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

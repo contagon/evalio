@@ -1,5 +1,3 @@
-# Configuration for mkdocs
-
 site_name: evalio
 site_url: http://contagon.github.io/evalio
 repo_url: https://github.com/contagon/evalio
@@ -10,7 +8,9 @@ theme:
   features:
     - navigation.instant # Instant loading of pages
     - navigation.sections # split nav bar into sections
-    - navigation.path # show breadcrumbs in the nav bar
+    - navigation.top # button to go to top of the page
+    # - navigation.indexes 
+    # - navigation.tabs
     - content.code.copy # add code copy button
   icon:
     logo: material/circle-double
@@ -38,12 +38,16 @@ watch:
   - cpp/
 
 nav:
-  - evalio: index.md
-  - Installation: install.md
-  - Quickstart: quickstart.md
-  - Examples:
-    - Python: python.md
-    - C++: cpp.md
+  - evalio:
+    - index.md
+    - Quickstart: quickstart.md
+    - Installation: install.md
+  - Usage:
+    - Odometry: usage/odometry.md
+    - Data Loading: usage/data_loading.md
+    - Evaluation: usage/evaluation.md
+    - Custom Dataset: usage/dataset.md
+    - Custom Pipeline: usage/pipeline.md
   - Included:
     - Datasets: included/datasets.md
     - Pipelines: included/pipelines.md
@@ -87,7 +91,13 @@ plugins:
           docstring_style: google
 
 markdown_extensions:
+  # misc
   - tables
+  - admonition
+
+  # math
+  - pymdownx.arithmatex:
+      generic: true
 
   # syntax highlighting
   # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
@@ -98,11 +108,16 @@ markdown_extensions:
   - pymdownx.inlinehilite:
   - pymdownx.superfences:
   - pymdownx.details:
-#   - admonition:
 #   - attr_list:
 
 extra_javascript:
   # auto sorting tables
   # https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
-  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
   - javascripts/tablesort.js
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css

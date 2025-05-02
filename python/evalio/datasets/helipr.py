@@ -74,7 +74,7 @@ class HeLiPR(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / "Ouster_gt.txt",
             ["nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

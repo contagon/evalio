@@ -88,7 +88,6 @@ def run_from_cli(
         if out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
-        run(pipelines, datasets, out, vis)
 
     else:
         if in_pipelines is None:
@@ -113,7 +112,13 @@ def run_from_cli(
         else:
             out = in_out
 
-        run(pipelines, datasets, out, vis)
+    if out.suffix == ".csv" and (len(pipelines) > 1 or len(datasets) > 1):
+        raise typer.BadParameter(
+            "Output must be a directory when running multiple experiments",
+            param_hint="run",
+        )
+
+    run(pipelines, datasets, out, vis)
 
 
 def plural(num: int, word: str) -> str:

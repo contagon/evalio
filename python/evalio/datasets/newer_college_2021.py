@@ -58,7 +58,7 @@ class NewerCollege2021(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         gt_file = self.files()[-1]
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

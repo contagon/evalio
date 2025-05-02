@@ -74,7 +74,7 @@ class EnWide(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / f"gt-{self.seq_name}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",

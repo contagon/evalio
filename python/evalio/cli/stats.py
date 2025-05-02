@@ -248,7 +248,7 @@ def eval_dataset(
     # Load all trajectories
     trajectories = []
     for file_path in dir.glob("*.csv"):
-        traj = Trajectory.load_experiment(file_path)
+        traj = Trajectory.from_experiment(file_path)
         trajectories.append(traj)
 
     gt_list: list[Trajectory] = []
@@ -277,7 +277,7 @@ def eval_dataset(
             str(dir),
             spawn=False,
         )
-        rr.connect_tcp("0.0.0.0:9876")
+        rr.connect_grpc()
         rr.log(
             "gt",
             convert(gt_og, color=[0, 0, 255]),

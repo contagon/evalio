@@ -94,7 +94,7 @@ def test_load_groundtruth(style: StampStyle, tmp_path: Path):
     with open(gt_file, "w") as f:
         f.write("\n".join(gt_str))
 
-    gt_returned = Trajectory.load_csv(
+    gt_returned = Trajectory.from_csv(
         gt_file, fieldnames=style.attributes() + ["x", "y", "z", "qx", "qy", "qz", "qw"]
     )
 

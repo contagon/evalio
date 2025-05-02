@@ -56,13 +56,13 @@ class NewerCollege2020(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # For some reason bag parkland mound is different
         if self.seq_name == "parkland_mound":
-            return Trajectory.load_csv(
+            return Trajectory.from_csv(
                 self.folder / "registered_poses.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / "registered_poses.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

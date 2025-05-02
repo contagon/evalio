@@ -64,7 +64,7 @@ class OxfordSpires(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
-        traj = Trajectory.load_csv(
+        traj = Trajectory.from_csv(
             self.folder / "gt-tum.txt",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
