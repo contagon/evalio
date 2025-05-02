@@ -39,15 +39,16 @@ watch:
 
 nav:
   - evalio:
-    - index.md
+    - About: index.md
     - Quickstart: quickstart.md
     - Installation: install.md
-  - Usage:
-    - Odometry: usage/odometry.md
-    - Data Loading: usage/data_loading.md
-    - Evaluation: usage/evaluation.md
-    - Custom Dataset: usage/dataset.md
-    - Custom Pipeline: usage/pipeline.md
+    - Usage: usage.md
+  - Examples:
+    - Odometry: examples/odometry.md
+    - Data Loading: examples/data_loading.md
+    - Evaluation: examples/evaluation.md
+    - Custom Dataset: examples/dataset.md
+    - Custom Pipeline: examples/pipeline.md
   - Included:
     - Datasets: included/datasets.md
     - Pipelines: included/pipelines.md
@@ -121,3 +122,4 @@ extra_javascript:
 
 extra_css:
   - https://unpkg.com/katex@0/dist/katex.min.css
+  - css/tweaks.css

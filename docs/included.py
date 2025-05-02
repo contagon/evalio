@@ -6,6 +6,8 @@ from typing import Optional, cast
 
 def clean_cell(cell: str) -> str:
     """Clean a cell by removing unwanted characters."""
+    # Remove rich text formatting
+    cell = cell.replace("[bright_black]", "").replace("[/bright_black]", "")
     # Remove line breaks
     cell = cell.replace("\n", "<br>")
     # Non line breaking space
