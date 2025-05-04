@@ -41,8 +41,7 @@ nav:
   - evalio:
     - About: index.md
     - Quickstart: quickstart.md
-    - Installation: install.md
-    - Usage: usage.md
+    - Source Build: install.md
   - Examples:
     - Odometry: examples/odometry.md
     - Data Loading: examples/data_loading.md

@@ -1,7 +1,6 @@
 from copy import deepcopy
 from evalio.types import Stamp
 from evalio.types import SE3, Trajectory
-from evalio.cli.stats import align_stamps, align_poses
 from utils import rand_se3, isclose_se3
 import numpy as np
 
@@ -21,7 +20,7 @@ def test_already_aligned():
 
     traj1_out = deepcopy(traj)
     traj2_out = deepcopy(traj)
-    align_stamps(traj1_out, traj2_out)
+    Trajectory._align_stamps(traj1_out, traj2_out)
 
     assert (traj1_out, traj2_out) == (traj, traj)
 
@@ -40,7 +39,7 @@ def test_subsample_first():
     )
 
     traj1_out, traj2_out = deepcopy(traj1), deepcopy(traj2)
-    align_stamps(traj1_out, traj2_out)
+    Trajectory._align_stamps(traj1_out, traj2_out)
 
     if traj1_out != traj2:
         raise ValueError(
@@ -68,7 +67,7 @@ def test_overstep():
     )
 
     traj1_out, traj2_out = deepcopy(traj1), deepcopy(traj2)
-    align_stamps(traj1_out, traj2_out)
+    Trajectory._align_stamps(traj1_out, traj2_out)
 
     if traj1_out != traj1:
         raise ValueError(
@@ -97,7 +96,7 @@ def test_align_poses():
         poses=[offset * pose for pose in gt.poses],
     )
 
-    align_poses(traj2, gt)
+    Trajectory._align_poses(traj2, gt)
 
     for a, b in zip(traj2.poses, gt.poses):
         assert isclose_se3(a, b), f"{a} != {b}"

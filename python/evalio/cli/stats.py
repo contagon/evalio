@@ -19,96 +19,6 @@ from typing import cast
 app = typer.Typer()
 
 
-# ------------------------- Functions to align trajectories ------------------------- #
-def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
-    return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
-
-
-def align_stamps(traj1: Trajectory, traj2: Trajectory):
-    """Select the closest poses in traj1 and traj2.
-
-    Operates in place.
-
-    Does this by finding the higher frame rate trajectory and subsampling it to the closest poses of the other one.
-    Additionally it checks the beginning of the trajectories to make sure they start at about the same stamp.
-
-    Args:
-        traj1 (Trajectory): One trajectory
-        traj2 (Trajectory): Other trajectory
-
-    Returns:
-        tuple[Trajectory, Trajectory]: Sub-sampled trajectories
-    """
-    # Check if we need to skip poses in traj1
-    first_pose_idx = 0
-    while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
-        first_pose_idx += 1
-    if _check_overstep(traj1.stamps, traj2.stamps[0], first_pose_idx):
-        first_pose_idx -= 1
-    traj1.stamps = traj1.stamps[first_pose_idx:]
-    traj1.poses = traj1.poses[first_pose_idx:]
-
-    # Check if we need to skip poses in traj2
-    first_pose_idx = 0
-    while traj2.stamps[first_pose_idx] < traj1.stamps[0]:
-        first_pose_idx += 1
-    if _check_overstep(traj2.stamps, traj1.stamps[0], first_pose_idx):
-        first_pose_idx -= 1
-    traj2.stamps = traj2.stamps[first_pose_idx:]
-    traj2.poses = traj2.poses[first_pose_idx:]
-
-    # Find the one that is at a higher frame rate
-    # Leaves us with traj1 being the one with the higher frame rate
-    swapped = False
-    traj_1_dt = (traj1.stamps[-1] - traj1.stamps[0]).to_sec() / len(traj1.stamps)
-    traj_2_dt = (traj2.stamps[-1] - traj2.stamps[0]).to_sec() / len(traj2.stamps)
-    if traj_1_dt > traj_2_dt:
-        traj1, traj2 = traj2, traj1
-        swapped = True
-
-    # Align the two trajectories by subsampling keeping traj1 stamps
-    traj1_idx = 0
-    traj1_stamps = []
-    traj1_poses = []
-    for i, stamp in enumerate(traj2.stamps):
-        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
-            traj1_idx += 1
-
-        # go back one if we overshot
-        if _check_overstep(traj1.stamps, stamp, traj1_idx):
-            traj1_idx -= 1
-
-        traj1_stamps.append(traj1.stamps[traj1_idx])
-        traj1_poses.append(traj1.poses[traj1_idx])
-
-        if traj1_idx >= len(traj1) - 1:
-            traj2.stamps = traj2.stamps[: i + 1]
-            traj2.poses = traj2.poses[: i + 1]
-            break
-
-    traj1.stamps = traj1_stamps
-    traj1.poses = traj1_poses
-
-    if swapped:
-        traj1, traj2 = traj2, traj1
-
-
-def align_poses(traj: Trajectory, gt: Trajectory):
-    """Transforms the first to have to same origin as the second.
-
-    Operates in place and assumes the trajectories already have their stamps aligned.
-
-    Args:
-        traj (Trajectory): Trajectory to be aligned
-        gt (Trajectory): _description_
-    """
-    imu_o_T_imu_0 = traj.poses[0]
-    gt_o_T_imu_0 = gt.poses[0]
-    gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
-
-    traj.poses = [gt_o_T_imu_o * pose for pose in traj.poses]
-
-
 # ------------------------- Methods for computing metrics ------------------------- #
 class MetricKind(StrEnum):
     mean = auto()
@@ -166,8 +76,7 @@ class ExperimentResults:
         self.metadata = traj.metadata
 
         gt = deepcopy(gt_og)
-        align_stamps(traj, gt)
-        align_poses(traj, gt)
+        Trajectory.align(traj, gt, in_place=True)
 
         self.stamps = traj.stamps
         self.poses = traj.poses
