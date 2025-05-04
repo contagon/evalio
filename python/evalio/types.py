@@ -15,14 +15,90 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import yaml
 
-from typing import Optional
+from typing import Optional, cast
 import csv
 
 import numpy as np
 
+from enum import StrEnum, auto
+
 
 def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
     return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
+
+
+class MetricKind(StrEnum):
+    """Simple enum to define the metric to use for summarizing the error. Used in [Error](evalio.types.Error.summarize)."""
+
+    mean = auto()
+    """Mean"""
+    median = auto()
+    """Median"""
+    sse = auto()
+    """Sqrt of Sum of squared errors"""
+
+
+@dataclass(kw_only=True)
+class Metric:
+    """Simple dataclass to hold the resulting metrics. Likely output from [Error](evalio.types.Error)."""
+
+    trans: float
+    """translation error in meters"""
+    rot: float
+    """rotation error in degrees"""
+
+
+@dataclass(kw_only=True)
+class Error:
+    """
+    Dataclass to hold the error between two trajectories.
+    Generally output from computing [ate][evalio.types.Trajectory.ate] or [rte][evalio.types.Trajectory.rte].
+
+    Contains a (n,) arrays of translation and rotation errors.
+    """
+
+    # Shape: (n,)
+    trans: np.ndarray
+    """translation error, shape (n,), in meters"""
+    rot: np.ndarray
+    """rotation error, shape (n,), in degrees"""
+
+    def summarize(self, metric: MetricKind) -> Metric:
+        """How to summarize the vector of errors.
+
+        Args:
+            metric (MetricKind): The metric to use for summarizing the error,
+                either mean, median, or sse.
+
+        Returns:
+            Metric: The summarized error
+        """
+        match metric:
+            case MetricKind.mean:
+                return self.mean()
+            case MetricKind.median:
+                return self.median()
+            case MetricKind.sse:
+                return self.sse()
+
+    def mean(self) -> Metric:
+        """Compute the mean of the errors."""
+        return Metric(rot=self.rot.mean(), trans=self.trans.mean())
+
+    def sse(self) -> Metric:
+        """Compute the sqrt of sum of squared errors."""
+        length = len(self.rot)
+        return Metric(
+            rot=float(np.sqrt(self.rot @ self.rot / length)),
+            trans=float(np.sqrt(self.trans @ self.trans / length)),
+        )
+
+    def median(self) -> Metric:
+        """Compute the median of the errors."""
+        return Metric(
+            rot=cast(float, np.median(self.rot)),
+            trans=cast(float, np.median(self.trans)),
+        )
 
 
 @dataclass(kw_only=True)
@@ -262,6 +338,96 @@ class Trajectory:
 
         if swapped:
             traj1, traj2 = traj2, traj1
+
+    @staticmethod
+    def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
+        """Iterate and compute the SE(3) delta between two lists of poses.
+
+        Args:
+            gts (list[SE3]): One of the lists of poses
+            poses (list[SE3]): The other list of poses
+
+        Returns:
+            Error: The computed error
+        """
+        assert len(gts) == len(poses)
+
+        error_t = np.zeros(len(gts))
+        error_r = np.zeros(len(gts))
+        for i, (gt, pose) in enumerate(zip(gts, poses)):
+            delta = gt.inverse() * pose
+            error_t[i] = np.sqrt(delta.trans @ delta.trans)  # type: ignore
+            r_diff = delta.rot.log()
+            error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi  # type: ignore
+
+        return Error(rot=error_r, trans=error_t)
+
+    @staticmethod
+    def _check_aligned(traj: "Trajectory", gt: "Trajectory") -> bool:
+        """Check if the two trajectories are aligned.
+
+        Args:
+            traj (Trajectory): One of the trajectories
+            gt (Trajectory): The other trajectory
+
+        Returns:
+            bool: True if the two trajectories are aligned, False otherwise
+        """
+        # Check if the two trajectories are aligned
+        delta = gt.poses[0].inverse() * traj.poses[0]
+        t = cast(np.ndarray, delta.trans)
+        r = cast(np.ndarray, delta.rot.log())
+        return len(traj.stamps) == len(gt.stamps) and (t @ t < 1e-6) and (r @ r < 1e-6)  # type: ignore
+
+    @staticmethod
+    def ate(traj: "Trajectory", gt: "Trajectory") -> Error:
+        """Compute the Absolute Trajectory Error (ATE) between two trajectories.
+
+        Will check if the two trajectories are aligned and if not, will align them.
+        Will not modify the original trajectories.
+
+        Args:
+            traj (Trajectory): One of the trajectories
+            gt (Trajectory): The other trajectory
+
+        Returns:
+            Error: The computed error
+        """
+        if not Trajectory._check_aligned(traj, gt):
+            traj, gt = Trajectory.align(traj, gt)
+
+        # Compute the ATE
+        return Trajectory._compute_metric(gt.poses, traj.poses)
+
+    @staticmethod
+    def rte(traj: "Trajectory", gt: "Trajectory", window: int = 100) -> Error:
+        """Compute the Relative Trajectory Error (RTE) between two trajectories.
+
+        Will check if the two trajectories are aligned and if not, will align them.
+        Will not modify the original trajectories.
+
+        Args:
+            traj (Trajectory): One of the trajectories
+            gt (Trajectory): The other trajectory
+            window (int, optional): Window size for the RTE. Defaults to 100.
+
+        Returns:
+            Error: The computed error
+        """
+        if not Trajectory._check_aligned(traj, gt):
+            traj, gt = Trajectory.align(traj, gt)
+
+        if window <= 0:
+            raise ValueError("Window size must be positive")
+
+        window_deltas_poses = []
+        window_deltas_gts = []
+        for i in range(len(gt) - window):
+            window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[i + window])
+            window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[i + window])
+
+        # Compute the RTE
+        return Trajectory._compute_metric(window_deltas_gts, window_deltas_poses)
 
 
 __all__ = [

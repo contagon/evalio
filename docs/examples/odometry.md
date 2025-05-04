@@ -47,9 +47,10 @@ traj = Trajectory.from_experiment("odometry.csv")
 gt = NewerCollege2020.short_experiment.ground_truth()
 
 # Align the odometry to the ground truth
-traj.align(gt)
+traj_aligned, gt_aligned = Trajectory.align(traj, gt)
 
-# 
+# Compute metrics as desired (will align if not already aligned)
+error =  Trajectory.ate(traj, gt).mean()
 ```
 
 <!-- TODO: Make stats reference public so it can be used here -->

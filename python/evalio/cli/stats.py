@@ -1,123 +1,16 @@
-from copy import deepcopy
-from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Optional, Sequence
 
-import numpy as np
-from dataclasses import dataclass
 from rich.table import Table
 from rich.console import Console
 from rich import box
 
-from evalio.types import Stamp, Trajectory, SE3
+from evalio.types import Trajectory, MetricKind
 
 import typer
 
-from typing import cast
-
 
 app = typer.Typer()
-
-
-# ------------------------- Methods for computing metrics ------------------------- #
-class MetricKind(StrEnum):
-    mean = auto()
-    median = auto()
-    sse = auto()
-
-
-@dataclass(kw_only=True)
-class Metric:
-    trans: float
-    rot: float
-
-
-@dataclass(kw_only=True)
-class Error:
-    # Shape: (n,)
-    trans: np.ndarray
-    rot: np.ndarray
-
-    def summarize(self, metric: MetricKind) -> Metric:
-        match metric:
-            case MetricKind.mean:
-                return self.mean()
-            case MetricKind.median:
-                return self.median()
-            case MetricKind.sse:
-                return self.sse()
-
-    def mean(self) -> Metric:
-        return Metric(rot=self.rot.mean(), trans=self.trans.mean())
-
-    def sse(self) -> Metric:
-        length = len(self.rot)
-        return Metric(
-            rot=float(np.sqrt(self.rot @ self.rot / length)),
-            trans=float(np.sqrt(self.trans @ self.trans / length)),
-        )
-
-    def median(self) -> Metric:
-        return Metric(
-            rot=cast(float, np.median(self.rot)),
-            trans=cast(float, np.median(self.trans)),
-        )
-
-
-class ExperimentResults:
-    metadata: dict
-    stamps: list[Stamp]
-    poses: list[SE3]
-    gts: list[SE3]
-
-    def __init__(
-        self, gt_og: Trajectory, traj: Trajectory, length: Optional[int] = None
-    ):
-        self.metadata = traj.metadata
-
-        gt = deepcopy(gt_og)
-        Trajectory.align(traj, gt, in_place=True)
-
-        self.stamps = traj.stamps
-        self.poses = traj.poses
-        self.gts = gt.poses
-
-        if length is not None and length < len(self.stamps):
-            self.stamps = self.stamps[:length]
-            self.poses = self.poses[:length]
-            self.gts = self.gts[:length]
-
-    def __len__(self) -> int:
-        return len(self.stamps)
-
-    @staticmethod
-    def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
-        assert len(gts) == len(poses)
-
-        error_t = np.zeros(len(gts))
-        error_r = np.zeros(len(gts))
-        for i, (gt, pose) in enumerate(zip(gts, poses)):
-            delta = gt.inverse() * pose
-            error_t[i] = np.sqrt(delta.trans @ delta.trans)  # type: ignore
-            r_diff = delta.rot.log()
-            error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi  # type: ignore
-
-        return Error(rot=error_r, trans=error_t)
-
-    def ate(self) -> Error:
-        return self._compute_metric(self.gts, self.poses)
-
-    def rte(self, window: int = 100) -> Error:
-        if window <= 0:
-            raise ValueError("Window size must be positive")
-
-        window_deltas_poses = []
-        window_deltas_gts = []
-        for i in range(len(self.gts) - window):
-            window_deltas_poses.append(self.poses[i].inverse() * self.poses[i + window])
-            window_deltas_gts.append(self.gts[i].inverse() * self.gts[i + window])
-
-        return self._compute_metric(window_deltas_gts, window_deltas_poses)
 
 
 def dict_diff(dicts: Sequence[dict]) -> list[str]:
@@ -212,16 +105,18 @@ def eval_dataset(
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
-            exp = ExperimentResults(gt_og, traj, length)
-            ate = exp.ate().summarize(metric)
-            rte = exp.rte(window_size).summarize(metric)
+            traj_aligned, gt_aligned = Trajectory.align(traj, gt_og)
+            ate = Trajectory.ate(traj_aligned, gt_aligned).summarize(metric)
+            rte = Trajectory.rte(traj_aligned, gt_aligned, window_size).summarize(
+                metric
+            )
             r = {
                 "name": traj.metadata["name"],
                 "RTEt": rte.trans,
                 "RTEr": rte.rot,
                 "ATEt": ate.trans,
                 "ATEr": ate.rot,
-                "length": len(exp),
+                "length": len(traj_aligned),
             }
             r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
             results.append(r)
