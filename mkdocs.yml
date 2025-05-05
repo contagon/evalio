@@ -53,9 +53,10 @@ nav:
     - Pipelines: included/pipelines.md
   - Reference:
     - cli: ref/cli.md
-    - evalio.types: ref/types.md
     - evalio.datasets: ref/datasets.md
     - evalio.pipelines: ref/pipelines.md
+    - evalio.stats: ref/stats.md
+    - evalio.types: ref/types.md
     - evalio.rerun: ref/rerun.md
 
 plugins:
