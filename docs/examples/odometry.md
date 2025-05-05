@@ -42,15 +42,14 @@ This file can then by loaded and aligned to the ground truth as needed using the
 ```python
 from evalio.types import Trajectory
 from evalio.datasets import NewerCollege2020
+from evalio import stats
 
 traj = Trajectory.from_experiment("odometry.csv")
 gt = NewerCollege2020.short_experiment.ground_truth()
 
 # Align the odometry to the ground truth
-traj_aligned, gt_aligned = Trajectory.align(traj, gt)
+traj_aligned, gt_aligned = stats.align(traj, gt)
 
 # Compute metrics as desired (will align if not already aligned)
-error =  Trajectory.ate(traj, gt).mean()
+error =  stats.rte(traj, gt).mean()
 ```
-
-<!-- TODO: Make stats reference public so it can be used here -->
