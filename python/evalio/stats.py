@@ -15,7 +15,7 @@ def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
 
 
 class MetricKind(StrEnum):
-    """Simple enum to define the metric to use for summarizing the error. Used in [Error](evalio.stats.Error.summarize)."""
+    """Simple enum to define the metric to use for summarizing the error. Used in [Error][evalio.stats.Error.summarize]."""
 
     mean = auto()
     """Mean"""
@@ -27,7 +27,7 @@ class MetricKind(StrEnum):
 
 @dataclass(kw_only=True)
 class Metric:
-    """Simple dataclass to hold the resulting metrics. Likely output from [Error](evalio.stats.Error)."""
+    """Simple dataclass to hold the resulting metrics. Likely output from [Error][evalio.stats.Error]."""
 
     trans: float
     """translation error in meters"""
@@ -138,9 +138,6 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     Args:
         traj1 (Trajectory): One trajectory
         traj2 (Trajectory): Other trajectory
-
-    Returns:
-        tuple[Trajectory, Trajectory]: Sub-sampled trajectories
     """
     # Check if we need to skip poses in traj1
     first_pose_idx = 0

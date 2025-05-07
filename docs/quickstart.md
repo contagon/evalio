@@ -61,7 +61,7 @@ plt.scatter(x, y, c=z, s=1)
 plt.axis('equal')
 plt.show()
 ```
-evalio also comes with a built wrapper for converting to [rerun](rerun.io) types,
+evalio also comes with a built wrapper for converting to [rerun](https://rerun.io) types,
 ```python
 import rerun as rr
 from evalio.rerun import convert
@@ -77,7 +77,7 @@ for scan in Hilti2022.basement_2.lidar():
     
     To run the rerun visualization, rerun must be installed. This can be done by installing `rerun-sdk` or `evalio[vis]` from PyPi.
 
-We recommend checking out the [API reference](evalio.datasets.Dataset) for more information on how to interact with datasets, and the [example](usage/dataset.md) for an example of how to create your own dataset.
+We recommend checking out the [API reference][evalio.datasets.Dataset] for more information on how to interact with datasets, and the [example](examples/dataset.md) for an example of how to create your own dataset.
 
 ## Pipelines
 
