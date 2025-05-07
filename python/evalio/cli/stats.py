@@ -5,7 +5,8 @@ from rich.table import Table
 from rich.console import Console
 from rich import box
 
-from evalio.types import Trajectory, MetricKind
+from evalio.types import Trajectory
+from evalio import stats
 
 import typer
 
@@ -44,7 +45,7 @@ def eval_dataset(
     visualize: bool,
     sort: Optional[str],
     window_size: int,
-    metric: MetricKind,
+    metric: stats.MetricKind,
     length: Optional[int],
 ):
     # Load all trajectories
@@ -105,11 +106,9 @@ def eval_dataset(
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
-            traj_aligned, gt_aligned = Trajectory.align(traj, gt_og)
-            ate = Trajectory.ate(traj_aligned, gt_aligned).summarize(metric)
-            rte = Trajectory.rte(traj_aligned, gt_aligned, window_size).summarize(
-                metric
-            )
+            traj_aligned, gt_aligned = stats.align(traj, gt_og)
+            ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
+            rte = stats.rte(traj_aligned, gt_aligned, window_size).summarize(metric)
             r = {
                 "name": traj.metadata["name"],
                 "RTEt": rte.trans,
@@ -175,13 +174,13 @@ def eval(
         ),
     ] = 100,
     metric: Annotated[
-        MetricKind,
+        stats.MetricKind,
         typer.Option(
             "--metric",
             "-m",
             help="Metric to use for ATE/RTE computation. Defaults to sse.",
         ),
-    ] = MetricKind.sse,
+    ] = stats.MetricKind.sse,
     length: Annotated[
         Optional[int],
         typer.Option(
