@@ -12,6 +12,7 @@ theme:
     # - navigation.indexes 
     # - navigation.tabs
     - content.code.copy # add code copy button
+    - content.tabs.link # make tabs sync
   icon:
     logo: material/circle-double
     favicon: material/circle-double # TODO: Not sure if this works
@@ -109,7 +110,8 @@ markdown_extensions:
   - pymdownx.inlinehilite:
   - pymdownx.superfences:
   - pymdownx.details:
-#   - attr_list:
+  - pymdownx.tabbed:
+      alternate_style: true
 
 extra_javascript:
   # auto sorting tables
