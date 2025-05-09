@@ -3,6 +3,10 @@ site_url: http://contagon.github.io/evalio
 repo_url: https://github.com/contagon/evalio
 repo_name: contagon/evalio
 
+extra:
+  version:
+    provider: mike
+
 theme:
   name: material
   features:

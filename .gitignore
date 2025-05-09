@@ -7,6 +7,7 @@ wheelhouse
 .vcpkg_installed
 .vcpkg
 .vcpkg_cache
+site
 
 # other caches
 .mypy_cache
