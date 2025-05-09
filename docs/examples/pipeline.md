@@ -145,4 +145,4 @@ We recommend then setting everything up to be built with [`scikit-build-core`](h
     m.def("abi_tag", []() { return nb::detail::abi_tag(); });
     ```
 
-That's all there is to it! Pipelines should be fairly easy to implement and are usually just a simple wrapper around your existing code to provide a common interface. If implementing in C++, nano
+That's all there is to it! Pipelines should be fairly easy to implement and are usually just a simple wrapper around your existing code to provide a common interface. Once your pipeline is open-source/published/etc, feel free to make a PR to add it to evalio. This both improves the visibility of your work and of evalio.

@@ -77,7 +77,7 @@ inline void makeBasePipeline(nb::module_ &m) {
       .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a,
            "Set the transformation from IMU to LiDAR frame.")
       .doc() = "Base class for all pipelines. This class defines the interface "
-               "for interacting with piplines, and is intended to be "
+               "for interacting with pipelines, and is intended to be "
                "subclassed by specific implementations.";
 }
 

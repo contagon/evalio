@@ -82,4 +82,4 @@ The next three are again self-explanatory, all of which provide information for 
 
 `quick_len` returns a hardcoded number of scans in a dataset, used for `evalio ls` and for computing time estimates in `evalio run`. If not set, evalio will load the data to compute the length.
 
-That's all there is to it! Datasets are fairly simple - mostly just parameter setting and easy-to-use iterator wrappers.
+That's all there is to it! Datasets are fairly simple - mostly just parameter setting and easy-to-use iterator wrappers. If you have an dataset implementation of an open-source dataset, feel free to make a PR to add it to evalio so others can use it as well.
