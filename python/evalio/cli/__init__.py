@@ -32,12 +32,12 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-def data_callback(value: Optional[str]):
+def data_callback(value: Optional[Path]):
     """
     Set the data directory.
     """
     if value:
-        set_data_dir(Path(value))
+        set_data_dir(value)
 
 
 @app.callback()
@@ -46,7 +46,7 @@ def global_options(
     # Once this fix is released (hasn't been as of 0.15.2), we can change it to a Path
     # https://github.com/fastapi/typer/pull/1138
     data_dir: Annotated[
-        Optional[str],
+        Optional[Path],
         typer.Option(
             "-D",
             "--data-dir",

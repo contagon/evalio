@@ -13,6 +13,12 @@ def save_config(
     datasets: Sequence[DatasetBuilder],
     output: Path,
 ):
+    # If it's just a file, don't save the entire config file
+    if output.suffix == ".csv":
+        return
+
+    print(f"Saving config to {output}")
+
     output.mkdir(parents=True, exist_ok=True)
     path = output / "config.yaml"
 
@@ -26,9 +32,10 @@ def save_config(
 
 class TrajectoryWriter:
     def __init__(self, path: Path, pipeline: PipelineBuilder, dataset: DatasetBuilder):
-        path = path / dataset.dataset.full_name
-        path.mkdir(parents=True, exist_ok=True)
-        path /= f"{pipeline.name}.csv"
+        if path.suffix != ".csv":
+            path = path / dataset.dataset.full_name
+            path.mkdir(parents=True, exist_ok=True)
+            path /= f"{pipeline.name}.csv"
 
         # write metadata to the header
         # TODO: Could probably automate this using pyserde somehow
@@ -74,6 +81,9 @@ class TrajectoryWriter:
 
 
 def save_gt(output: Path, dataset: DatasetBuilder):
+    if output.suffix == ".csv":
+        return
+
     gt = dataset.build().ground_truth()
     path = output / dataset.dataset.full_name
     path.mkdir(parents=True, exist_ok=True)

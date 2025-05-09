@@ -19,14 +19,18 @@ from .base import (
 )
 
 import os
-
-"""
-Note, we skip over a number of trajectories due to missing ground truth data.
-https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/edit?tab=t.0
-"""
+from pathlib import Path
+from typing import Sequence, Optional
 
 
 class OxfordSpires(Dataset):
+    """Dataset taken both indoors and outdoors on the Oxford campus.
+
+    Note, we skip over a number of trajectories due to [missing ground truth data](https://docs.google.com/document/d/1RS9QSOP4rC7BWoCD6EYUCm9uV_oMkfa3b61krn9OLG8/edit?tab=t.0).
+
+    Additionally, some of the ground truth has poses within a few milliseconds of each other - we skip over any ground truth values within 10 milliseconds of each other.
+    """
+
     blenheim_palace_01 = auto()
     blenheim_palace_02 = auto()
     blenheim_palace_05 = auto()
@@ -60,7 +64,7 @@ class OxfordSpires(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
-        traj = Trajectory.load_csv(
+        traj = Trajectory.from_csv(
             self.folder / "gt-tum.txt",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
@@ -153,7 +157,7 @@ class OxfordSpires(Dataset):
         return "Backpack"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "christ_church_02": [
                 "1710754066_2024-03-18-09-27-47_0",
@@ -264,3 +268,18 @@ class OxfordSpires(Dataset):
         self.folder.mkdir(parents=True, exist_ok=True)
         gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
+
+    def quick_len(self) -> Optional[int]:
+        # TODO: Missing some of the sequences here, need to figure out multi-folder mcap files
+        return {
+            "blenheim_palace_01": 4052,
+            "blenheim_palace_02": 3674,
+            "blenheim_palace_05": 3401,
+            "bodleian_library_02": 5007,
+            "christ_church_03": 3123,
+            "christ_church_05": 8007,
+            "keble_college_02": 3007,
+            "keble_college_03": 2867,
+            "observatory_quarter_01": 2894,
+            "observatory_quarter_02": 2755,
+        }.get(self.seq_name)

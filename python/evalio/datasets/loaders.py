@@ -33,6 +33,7 @@ from rich import box
 
 # ------------------------- Iterator over a rosbag ------------------------- #
 # Various properties that a pointcloud may have - we iterate over them
+# TODO: Nest these into LidarFormatParams or something
 class LidarStamp(StrEnum):
     Start = auto()
     End = auto()
@@ -65,6 +66,12 @@ class LidarFormatParams:
 
 
 class RosbagIter(DatasetIterator):
+    """An iterator for loading from rosbag files.
+
+    This is a wrapper around the rosbags library, with some niceties for converting ros PointCloud2 messages to a standardized format.
+    Has identical methods to [DatasetIterator][evalio.datasets.DatasetIterator].
+    """
+
     def __init__(
         self,
         path: Path,
@@ -77,6 +84,20 @@ class RosbagIter(DatasetIterator):
         lidar_format: Optional[LidarFormatParams] = None,
         custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
     ):
+        """
+        Args:
+            path (Path): Location of rosbag file(s). If a directory is passed, all .bag files in the directory will be loaded.
+            lidar_topic (str): Name of lidar topic.
+            imu_topic (str): Name of imu topic.
+            lidar_params (LidarParams): Lidar parameters, can be gotten from [lidar_params][evalio.datasets.Dataset.lidar_params].
+            is_mcap (bool, optional): If an mcap file, will not try to glob over all rosbags. Defaults to False.
+            lidar_format (Optional[LidarFormatParams], optional): Various parameters for how lidar data is stored. If not specified, most will try to be inferred. We strongly recommend setting this to ensure data is standardized properly. Defaults to None.
+            custom_col_func (Optional[Callable[[LidarMeasurement], None]], optional): Function to put the point cloud in row major format. Will generally not be needed, except for strange default orderings. Defaults to None.
+
+        Raises:
+            FileNotFoundError: If the path is a directory and no .bag files are found.
+            ValueError: If the lidar or imu topic is not found in the bag file.
+        """
         self.lidar_topic = lidar_topic
         self.imu_topic = imu_topic
         self.lidar_params = lidar_params
@@ -263,6 +284,12 @@ class RosbagIter(DatasetIterator):
 
 # ------------------------- Flexible Iterator for Anything ------------------------- #
 class RawDataIter(DatasetIterator):
+    """An iterator for loading from python iterables.
+
+    Interleaves imu and lidar iterables. Allows for arbitrary data to be loaded and presented in a consistent manner for the base [Dataset][evalio.datasets.Dataset] class.
+    Has identical methods to [DatasetIterator][evalio.datasets.DatasetIterator].
+    """
+
     T = TypeVar("T", ImuMeasurement, LidarMeasurement)
 
     def __init__(
@@ -271,6 +298,28 @@ class RawDataIter(DatasetIterator):
         iter_imu: Iterator[ImuMeasurement],
         num_lidar: int,
     ):
+        """
+        Args:
+            iter_lidar (Iterator[LidarMeasurement]): An iterator over LidarMeasurement
+            iter_imu (Iterator[ImuMeasurement]): An iterator over ImuMeasurement
+            num_lidar (int): The number of lidar measurements
+
+        ``` py
+        from evalio.datasets.loaders import RawDataIter
+        from evalio.types import ImuMeasurement, LidarMeasurement, Stamp
+        import numpy as np
+
+        # Create some fake data
+        imu_iter = (
+            ImuMeasurement(Stamp.from_sec(i), np.zeros(3), np.zeros(3))
+            for i in range(10)
+        )
+        lidar_iter = (LidarMeasurement(Stamp.from_sec(i + 0.1)) for i in range(10))
+
+        # Create the iterator
+        rawdata = RawDataIter(imu_iter, lidar_iter, 10)
+        ```
+        """
         self.iter_lidar = iter_lidar
         self.iter_imu = iter_imu
         self.num_lidar = num_lidar
