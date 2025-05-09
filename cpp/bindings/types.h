@@ -156,7 +156,7 @@ inline void makeTypes(nb::module_ &m) {
       .doc() = "LidarMeasurement is a structure for storing a point cloud "
                "measurement, with a timestamp and a vector of points. Note, "
                "the stamp always represents the _start_ of the scan. "
-               "Addtionally, the points are always in row major format.";
+               "Additionally, the points are always in row major format.";
 
   nb::class_<LidarParams>(m, "LidarParams")
       .def(nb::init<int, int, double, double, double, std::string,
