@@ -1,4 +1,4 @@
-For more information about the datasets included in evalio, see the [included pipelines](../included/datasets.md) section.
+For more information about the datasets included in evalio, see the [included datasets](../included/datasets.md) section.
 
 ::: evalio.datasets
     options:
