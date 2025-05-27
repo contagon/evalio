@@ -5,11 +5,11 @@ uv add evalio      # uv
 pip install evalio # pip
 ```
 
-evalio can be used both as a python library and as a CLI for both datasets and pipelines.
+evalio can be used both as a python library and as a [CLI](../ref/cli) for both datasets and pipelines.
 
 ## Datasets
 
-Once evalio is installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
+Once evalio is installed, datasets can be listed and downloaded via the [CLI](../ref/cli) interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
 ```bash
 evalio ls datasets
 evalio download hilti_2022/basement_2
@@ -77,6 +77,8 @@ for scan in Hilti2022.basement_2.lidar():
     
     To run the rerun visualization, rerun must be installed. This can be done by installing `rerun-sdk` or `evalio[vis]` from PyPi.
 
+    Once installed, rerun must be spawned from the CLI simply by running `rerun` in a terminal. This will start the rerun viewer, which can then be used to visualize the data logged by evalio.
+
 We recommend checking out the [API reference][evalio.datasets.Dataset] for more information on how to interact with datasets, and the [example](examples/dataset.md) for an example of how to create your own dataset.
 
 ## Pipelines
@@ -124,6 +126,17 @@ This can then be run via
 ```bash
 evalio run -c config.yml
 ```
-That's about the gist of it! Try playing around the CLI interface to see what else is possible, such as a number of visualization options using rerun. Feel free to open an issue if you have any questions, suggestions, or problems. 
 
-Additionally, we recommend checking out the examples for specific use cases for evalio.
+Additionally, the run command supports visualization via rerun as well. `-v` will do a simple visualization of the ground truth trajectory and odometry, while `-s` can be used to enable additional visualizations,
+```bash
+evalio run -o results -d hilti_2022/basement_2 -p kiss -s msif
+```
+where m -> map, s -> scan, i -> intensity image, and f -> extracted features can all be selectively visualized in rerun. 
+
+!!! note
+
+    As mentioned above, rerun must be installed and launched to visualize the results.
+
+That's about the gist of it! Try playing around the [CLI](../ref/cli) interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems. 
+
+Additionally, we recommend checking out the examples section for specific use cases for evalio.
