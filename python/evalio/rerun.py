@@ -1,4 +1,4 @@
-from typing import Any, Optional, Sequence, overload
+from typing import Any, Literal, Optional, Sequence, overload
 from uuid import uuid4
 
 from evalio.cli.parser import PipelineBuilder
@@ -46,7 +46,7 @@ try:
     import rerun as rr
     import rerun.blueprint as rrb
 
-    OverrideType = dict[rr.datatypes.EntityPath | str, list[rr.ComponentBatchLike]]
+    OverrideType = dict[rr.datatypes.EntityPathLike, list[rr.AsComponents]]
 
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs):
@@ -93,7 +93,7 @@ try:
                 make_default=True,
                 recording_id=uuid4(),
             )
-            rr.connect_tcp(default_blueprint=self._blueprint(pipelines))
+            rr.connect_grpc(default_blueprint=self._blueprint(pipelines))
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
@@ -174,28 +174,106 @@ try:
     # point clouds
     @overload
     def convert(
-        obj: LidarMeasurement, color: Optional[str | list[int]] = None
-    ) -> rr.Points3D: ...
+        obj: LidarMeasurement,
+        color: Optional[Literal["z", "intensity"] | list[int]] = None,
+    ) -> rr.Points3D:
+        """Convert a LidarMeasurement to a rerun Points3D.
+
+        Args:
+            obj (LidarMeasurement): LidarMeasurement to convert.
+            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+
+        Returns:
+            rr.Points3D: LidarMeasurement converted to rerun Points3D.
+        """
+
+        ...
+
     @overload
     def convert(
-        obj: list[Point], color: Optional[str | list[int]] = None
-    ) -> rr.Points3D: ...
+        obj: list[Point],
+        color: Optional[Literal["z", "intensity"] | list[int]] = None,
+    ) -> rr.Points3D:
+        """Convert a list of Points to a rerun Points3D.
+
+        Args:
+            obj (list[Points]): Points to convert.
+            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+
+        Returns:
+            rr.Points3D: Points converted to rerun Points3D.
+        """
+        ...
+
     @overload
-    def convert(obj: np.ndarray, color: Optional[np.ndarray] = None) -> rr.Points3D: ...
+    def convert(obj: np.ndarray, color: Optional[np.ndarray] = None) -> rr.Points3D:
+        """Convert an (n, 3) numpy array to a rerun Points3D.
+
+        Args:
+            obj (np.ndarray): LidarMeasurement to convert.
+            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+
+        Returns:
+            rr.Points3D: numpy array converted to rerun Points3D.
+        """
+        ...
 
     # trajectories
     @overload
-    def convert(obj: list[SE3], color: Optional[list[int]] = None) -> rr.Points3D: ...
+    def convert(obj: list[SE3], color: Optional[list[int]] = None) -> rr.Points3D:
+        """Convert a list of SE3 poses to a rerun Points3D.
+
+        Args:
+            obj (list[SE3]): List of SE3 poses to convert.
+            color (Optional[list[int]], optional): Optional color for points, as a list of colors, e.g. `[255, 0, 0]` for red. Defaults to None.
+
+        Returns:
+            rr.Points3D: List of SE3 poses converted to rerun Points3D.
+        """
+        ...
+
     @overload
-    def convert(obj: Trajectory, color: Optional[list[int]] = None) -> rr.Points3D: ...
+    def convert(obj: Trajectory, color: Optional[list[int]] = None) -> rr.Points3D:
+        """Convert a Trajectory a rerun Points3D.
+
+        Args:
+            obj (Trajectory): Trajectory to convert.
+            color (Optional[list[int]], optional): Optional color for points, as a list of colors, e.g. `[255, 0, 0]` for red. Defaults to None.
+
+        Returns:
+            rr.Points3D: Trajectory converted to rerun Points3D.
+        """
+        ...
 
     # poses
     @overload
-    def convert(obj: SE3) -> rr.Transform3D: ...
+    def convert(obj: SE3) -> rr.Transform3D:
+        """Convert a SE3 pose to a rerun Transform3D.
+
+        Args:
+            obj (SE3): SE3 pose to convert.
+
+        Returns:
+            rr.Transform3D: SE3 pose converted to rerun Transform3D.
+        """
+        ...
 
     def convert(
         obj: object, color: Optional[Any] = None
     ) -> rr.Transform3D | rr.Points3D:
+        """Convert a variety of objects to rerun types.
+
+        Args:
+            obj (object): Object to convert. Can be a LidarMeasurement, list of Points, numpy array, SE3, or Trajectory.
+            color (Optional[Any], optional): Optional color to set. See overloads for additional literal options. Defaults to None.
+
+        Raises:
+            ValueError: If the color pass is invalid.
+            ValueError: If the object is not an implemented type for conversion.
+
+        Returns:
+            rr.Transform3D | rr.Points3D: Rerun type.
+        """
         # Handle point clouds
         if isinstance(obj, LidarMeasurement):
             color_parsed = None

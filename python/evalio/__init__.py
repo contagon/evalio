@@ -1,4 +1,4 @@
-from . import _cpp, datasets, pipelines, types, utils
+from . import _cpp, datasets, pipelines, types, utils, stats
 from ._cpp import abi_tag as _abi_tag
 
 import warnings
@@ -26,6 +26,7 @@ __all__ = [
     "datasets",
     "_cpp",
     "pipelines",
+    "stats",
     "types",
     "utils",
     "__version__",

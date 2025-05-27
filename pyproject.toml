@@ -14,7 +14,7 @@ dependencies = [
     "rapidfuzz>=3.12.2",
     "rosbags>=0.10",
     "tqdm>=4.66",
-    "typer>=0.15.2",
+    "typer>=0.15.3",
 ]
 keywords = [
     "lidar",
@@ -27,7 +27,7 @@ keywords = [
 license = { file = "LICENSE.txt" }
 
 [project.optional-dependencies]
-vis = ["rerun-sdk>=0.18.2"]
+vis = ["rerun-sdk>=0.23"]
 
 [build-system]
 requires = ["scikit-build-core>=0.8", "nanobind>=2.7.0", "numpy"]
@@ -66,7 +66,7 @@ MACOSX_DEPLOYMENT_TARGET = "11"
 # local development
 [tool.uv]
 dev-dependencies = [
-    "cmake>=3.30.3",
+    "cmake<4.0.0",
     "compdb>=0.2.0",
     "ruff>=0.6.8",
     "types-pyyaml>=6.0.12.20240917",
@@ -76,11 +76,21 @@ dev-dependencies = [
     "scipy>=1.15.2",
     "scipy-stubs>=1.15.2.1",
     "bump-my-version>=1.1.1",
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]>=0.29.1",
+    "mkdocs-material>=9.6.11",
+    "mkdocs-gen-files>=0.5.0",
     "nanobind>=2.7.0",
+    "mike>=2.1.3",
 ]
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
+
+[tool.ruff.format]
+# https://docs.astral.sh/ruff/configuration/
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,131 @@
+site_name: evalio
+site_url: http://contagon.github.io/evalio
+repo_url: https://github.com/contagon/evalio
+repo_name: contagon/evalio
+
+extra:
+  version:
+    provider: mike
+
+theme:
+  name: material
+  features:
+    - navigation.instant # Instant loading of pages
+    - navigation.sections # split nav bar into sections
+    - navigation.top # button to go to top of the page
+    # - navigation.indexes 
+    # - navigation.tabs
+    - content.code.copy # add code copy button
+    - content.tabs.link # make tabs sync
+  icon:
+    logo: material/circle-double
+    favicon: material/circle-double # TODO: Not sure if this works
+  palette:         
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: black
+      toggle:
+          icon: material/brightness-7
+          name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: black
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+watch:
+  - python/
+  - cpp/
+
+nav:
+  - evalio:
+    - About: index.md
+    - Quickstart: quickstart.md
+    - Source Build: install.md
+  - Examples:
+    - Odometry: examples/odometry.md
+    - Data Loading: examples/data_loading.md
+    - Evaluation: examples/evaluation.md
+    - Custom Dataset: examples/dataset.md
+    - Custom Pipeline: examples/pipeline.md
+  - Included:
+    - Datasets: included/datasets.md
+    - Pipelines: included/pipelines.md
+  - Reference:
+    - cli: ref/cli.md
+    - evalio.datasets: ref/datasets.md
+    - evalio.pipelines: ref/pipelines.md
+    - evalio.stats: ref/stats.md
+    - evalio.types: ref/types.md
+    - evalio.rerun: ref/rerun.md
+
+plugins:
+  # Add top level search
+  search:
+    lang: en
+
+  # autogenerate evalio ls pages
+  gen-files:
+    scripts:
+      - docs/included.py
+      - docs/ref/cli.py
+
+  # Autogenerate docs from docstrings
+  mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        options:
+          # TODO: May want to remove this once all docs are added
+          # show_if_no_docstring: true # show everything
+          show_source: false # don't show source code
+          separate_signature: true # show the signature in a separate section
+          show_signature_annotations: true # include types
+          signature_crossrefs: true # show cross-references in the signature
+          unwrap_annotated: true # remove Annotated[] from the signature
+          show_symbol_type_toc: true # include printed symbol inline with meth/class/etc
+          show_symbol_type_heading: true # include printed symbol in toc with meth/class/etc
+
+          docstring_section_style: list # show parameters/args in a list
+          # show_labels: false
+          # show_category_heading: true
+          docstring_style: google
+
+markdown_extensions:
+  # misc
+  - tables
+  - admonition
+
+  # math
+  - pymdownx.arithmatex:
+      generic: true
+
+  # syntax highlighting
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite:
+  - pymdownx.superfences:
+  - pymdownx.details:
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_javascript:
+  # auto sorting tables
+  # https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
+  - javascripts/tablesort.js
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
+  - css/tweaks.css

@@ -17,12 +17,20 @@ from evalio.datasets.loaders import RawDataIter
 
 import os
 
+from pathlib import Path
+from typing import Sequence, Optional
+
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.
 """
 
 
 class HeLiPR(Dataset):
+    """Self-driving car dataset taken in urban environments. Ground truth is generated using filtering of an RTK-GNSS system.
+
+    The vehicle had multiple lidar sensors mounted; we utilize the high resolution Ouster at the top of the vehicle.
+    """
+
     # Had to remove a couple of them due to not having imu data
     # kaist_04 = auto()
     kaist_05 = auto()
@@ -66,7 +74,7 @@ class HeLiPR(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / "Ouster_gt.txt",
             ["nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
@@ -133,7 +141,7 @@ class HeLiPR(Dataset):
         return "Car"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return ["Ouster", "Ouster_gt.txt", "xsens_imu.csv"]
 
     def download(self):
@@ -190,3 +198,13 @@ class HeLiPR(Dataset):
                 tar.extractall(path=self.folder)
             print("Removing tar file...")
             tar_file.unlink()
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "kaist_05": 12477,
+            "kaist_06": 12152,
+            "dcc_05": 10810,
+            "dcc_06": 10742,
+            "riverside_05": 8551,
+            "riverside_06": 11948,
+        }[self.seq_name]

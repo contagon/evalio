@@ -8,12 +8,11 @@ from .newer_college_2021 import NewerCollege2021
 from .multi_campus import MultiCampus
 from .oxford_spires import OxfordSpires
 
-from . import loaders
+from .loaders import RawDataIter, RosbagIter
 
 __all__ = [
     "get_data_dir",
     "set_data_dir",
-    "loaders",
     "Dataset",
     "DatasetIterator",
     "BotanicGarden",
@@ -24,4 +23,6 @@ __all__ = [
     "NewerCollege2021",
     "MultiCampus",
     "OxfordSpires",
+    "RawDataIter",
+    "RosbagIter",
 ]

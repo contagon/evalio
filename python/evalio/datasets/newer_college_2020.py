@@ -19,8 +19,18 @@ from .base import (
     DatasetIterator,
 )
 
+from pathlib import Path
+from typing import Sequence, Optional
+
 
 class NewerCollege2020(Dataset):
+    """Dataset taken from outdoor Oxford Campus. Ground truth is generated using ICP matching against a laser scanner.
+
+    Note, there have been some reports that the laser scanner and data were collected months apart, which may have caused some inaccuracies in the ground truth data.
+
+    There are two IMUs on the handheld device, but the realsense IMU is not time-synced with the lidar data. Therefore, we utilize the Ouster IMU data instead.
+    """
+
     short_experiment = auto()
     long_experiment = auto()
     quad_with_dynamics = auto()
@@ -46,13 +56,13 @@ class NewerCollege2020(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         # For some reason bag parkland mound is different
         if self.seq_name == "parkland_mound":
-            return Trajectory.load_csv(
+            return Trajectory.from_csv(
                 self.folder / "registered_poses.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / "registered_poses.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
@@ -107,7 +117,7 @@ class NewerCollege2020(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "dynamic_spinning": [
                 "rooster_2020-07-10-09-23-18_0.bag",
@@ -178,3 +188,10 @@ class NewerCollege2020(Dataset):
         self.folder.mkdir(parents=True, exist_ok=True)
         gdown.download(id=gt_url, output=f"{self.folder}{os.sep}", resume=True)
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
+
+    def quick_len(self) -> Optional[int]:
+        # TODO: Missing some values here
+        return {
+            "short_experiment": 15302,
+            "long_experiment": 26560,
+        }.get(self.seq_name)

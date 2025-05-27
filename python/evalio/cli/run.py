@@ -21,7 +21,7 @@ app = typer.Typer()
 @app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
 def run_from_cli(
     config: Annotated[
-        Optional[str],
+        Optional[Path],
         typer.Option(
             "-c",
             "--config",
@@ -33,7 +33,7 @@ def run_from_cli(
     in_datasets: DatasetOpt = None,
     in_pipelines: PipelineOpt = None,
     in_out: Annotated[
-        Optional[str],
+        Optional[Path],
         typer.Option(
             "-o",
             "--output",
@@ -84,11 +84,10 @@ def run_from_cli(
     vis = RerunVis(vis_args)
 
     if config is not None:
-        pipelines, datasets, out = parse_config(Path(config))
+        pipelines, datasets, out = parse_config(config)
         if out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
-        run(pipelines, datasets, out, vis)
 
     else:
         if in_pipelines is None:
@@ -111,9 +110,15 @@ def run_from_cli(
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             out = Path("./evalio_results")
         else:
-            out = Path(in_out)
+            out = in_out
 
-        run(pipelines, datasets, out, vis)
+    if out.suffix == ".csv" and (len(pipelines) > 1 or len(datasets) > 1):
+        raise typer.BadParameter(
+            "Output must be a directory when running multiple experiments",
+            param_hint="run",
+        )
+
+    run(pipelines, datasets, out, vis)
 
 
 def plural(num: int, word: str) -> str:
@@ -129,6 +134,15 @@ def run(
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
+    lengths = [d.length if d.length is not None else len(d.build()) for d in datasets]
+    dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))  # type: ignore
+    dtime *= len(pipelines)
+    if dtime > 3600:
+        print(f"Estimated time (if real-time): {dtime / 3600:.2f} hours")
+    elif dtime > 60:
+        print(f"Estimated time (if real-time): {dtime / 60:.2f} minutes")
+    else:
+        print(f"Estimated time (if real-time): {dtime:.2f} seconds")
     print(f"Output will be saved to {output}\n")
     save_config(pipelines, datasets, output)
 

@@ -50,20 +50,35 @@ public:
 
 inline void makeBasePipeline(nb::module_ &m) {
   nb::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
-      .def(nb::init<>())
-      .def_static("name", &evalio::Pipeline::name)
-      .def_static("default_params", &evalio::Pipeline::default_params)
-      .def_static("url", &evalio::Pipeline::url)
-      .def_static("version", &evalio::Pipeline::version)
-      .def("pose", &evalio::Pipeline::pose)
-      .def("map", &evalio::Pipeline::map)
-      .def("initialize", &evalio::Pipeline::initialize)
-      .def("add_imu", &evalio::Pipeline::add_imu, "mm"_a)
-      .def("add_lidar", &evalio::Pipeline::add_lidar, "mm"_a)
-      .def("set_params", &evalio::Pipeline::set_params, "params"_a)
-      .def("set_imu_params", &evalio::Pipeline::set_imu_params, "params"_a)
-      .def("set_lidar_params", &evalio::Pipeline::set_lidar_params, "params"_a)
-      .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a);
+      .def(nb::init<>(), "Construct a new pipeline.")
+      .def_static("name", &evalio::Pipeline::name, "Name of the pipeline.")
+      .def_static("default_params", &evalio::Pipeline::default_params,
+                  "Default parameters for the pipeline.")
+      .def_static("url", &evalio::Pipeline::url,
+                  "URL for more information about the pipeline.")
+      .def_static("version", &evalio::Pipeline::version,
+                  "Version of the pipeline.")
+      .def("pose", &evalio::Pipeline::pose, "Most recent pose estimate.")
+      .def("map", &evalio::Pipeline::map, "Map of the environment.")
+      .def("initialize", &evalio::Pipeline::initialize,
+           "Initialize the pipeline. Must be called after constructing the "
+           "object and before setting parameters.")
+      .def("add_imu", &evalio::Pipeline::add_imu, "mm"_a,
+           "Register an IMU measurement.")
+      .def("add_lidar", &evalio::Pipeline::add_lidar, "mm"_a,
+           "Register a LiDAR measurement.")
+      .def("set_params", &evalio::Pipeline::set_params, "params"_a,
+           "Set parameters for the pipeline. This will override any default "
+           "parameters.")
+      .def("set_imu_params", &evalio::Pipeline::set_imu_params, "params"_a,
+           "Set IMU parameters for the pipeline.")
+      .def("set_lidar_params", &evalio::Pipeline::set_lidar_params, "params"_a,
+           "Set LiDAR parameters for the pipeline.")
+      .def("set_imu_T_lidar", &evalio::Pipeline::set_imu_T_lidar, "T"_a,
+           "Set the transformation from IMU to LiDAR frame.")
+      .doc() = "Base class for all pipelines. This class defines the interface "
+               "for interacting with pipelines, and is intended to be "
+               "subclassed by specific implementations.";
 }
 
 } // namespace evalio

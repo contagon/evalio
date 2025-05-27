@@ -20,8 +20,18 @@ from .base import (
     DatasetIterator,
 )
 
+from pathlib import Path
+from typing import Sequence, Optional
+
 
 class BotanicGarden(Dataset):
+    """Dataset taken from a botanical garden, specifically for testing unstructured environments. Ground truth is gathered using a survey grade lidar.
+
+    Note, there is no automatic downloader for this dataset due to being uploaded on onedrive. Data can be downloaded manually and placed in the correct folder in `EVALIO_DATA`.
+
+    Additionally, we only include the public datasets here; more are potentially available upon request.
+    """
+
     b1005_00 = auto()
     b1005_01 = auto()
     b1005_07 = auto()
@@ -52,7 +62,7 @@ class BotanicGarden(Dataset):
         else:
             filename = f"{self.seq_name[1:]}_GT_output.txt"
 
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / filename,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
@@ -117,7 +127,7 @@ class BotanicGarden(Dataset):
             model="VLP-16",
         )
 
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         out = [f"{self.seq_name[1:]}.bag", f"{self.seq_name[1:]}_GT_output.txt"]
         if self.seq_name == "b1008_03":
             out[1] = f"{self.seq_name[1:]}_gt_output.txt"
@@ -134,3 +144,14 @@ class BotanicGarden(Dataset):
 
     def vehicle(self) -> str:
         return "ATV"
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "b1005_00": 5790,
+            "b1005_01": 4746,
+            "b1005_07": 5474,
+            "b1006_01": 7445,
+            "b1008_03": 6320,
+            "b1018_00": 1466,
+            "b1018_13": 2071,
+        }[self.seq_name]

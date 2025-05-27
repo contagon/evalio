@@ -23,8 +23,11 @@ import numpy as np
 @dataclass(kw_only=True)
 class Trajectory:
     stamps: list[Stamp]
+    """List of timestamps for each pose."""
     poses: list[SE3]
+    """List of poses, in the same order as the timestamps."""
     metadata: dict = field(default_factory=dict)
+    """Metadata associated with the trajectory, such as the dataset name or other information."""
 
     def __post_init__(self):
         if len(self.stamps) != len(self.poses):
@@ -48,12 +51,32 @@ class Trajectory:
             self.poses[i] = self.poses[i] * T
 
     @staticmethod
-    def load_csv(
+    def from_csv(
         path: Path,
         fieldnames: list[str],
         delimiter=",",
         skip_lines: Optional[int] = None,
     ) -> "Trajectory":
+        """Flexible loader for stamped poses stored in csv files.
+
+        Will automatically skip any lines that start with a #. Is most useful for loading ground truth data.
+
+        ``` py
+        from evalio.types import Trajectory
+
+        fieldnames = ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+        trajectory = Trajectory.from_csv(path, fieldnames)
+        ```
+
+        Args:
+            path (Path): Location of file.
+            fieldnames (list[str]): List of field names to use, in their expected order. See above for an example.
+            delimiter (str, optional): Delimiter between elements. Defaults to ",".
+            skip_lines (int, optional): Number of lines to skip, useful for skipping headers. Defaults to 0.
+
+        Returns:
+            Trajectory: Stored dataset
+        """
         poses = []
         stamps = []
 
@@ -91,12 +114,22 @@ class Trajectory:
         return Trajectory(stamps=stamps, poses=poses)
 
     @staticmethod
-    def load_tum(path: Path) -> "Trajectory":
-        return Trajectory.load_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
+    def from_tum(path: Path) -> "Trajectory":
+        """Load a TUM dataset pose file. Simple wrapper around [from_csv][evalio.types.Trajectory].
+
+        Args:
+            path (Path): Location of file.
+
+        Returns:
+            Trajectory: Stored trajectory
+        """
+        return Trajectory.from_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
     @staticmethod
-    def load_experiment(path: Path) -> "Trajectory":
+    def from_experiment(path: Path) -> "Trajectory":
         """Load a saved experiment trajectory from file.
+
+        Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
 
         Args:
             path (Path): Location of trajectory results.
@@ -112,7 +145,7 @@ class Trajectory:
             metadata_str = "\n".join(metadata_list)
             metadata = yaml.safe_load(metadata_str)
 
-        trajectory = Trajectory.load_csv(
+        trajectory = Trajectory.from_csv(
             path,
             fieldnames=["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )

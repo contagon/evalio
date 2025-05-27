@@ -23,6 +23,8 @@ from .base import (
     DatasetIterator,
 )
 
+from typing import Sequence, cast, Optional
+
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
 def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
@@ -41,6 +43,8 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 class Hilti2022(Dataset):
+    """Sequences with ground truth taken from the Hilti 2022 SLAM Challenge, mostly taken from indoors."""
+
     construction_upper_level_1 = auto()
     construction_upper_level_2 = auto()
     construction_upper_level_3 = auto()
@@ -65,9 +69,8 @@ class Hilti2022(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        # TODO: Update the path to the ground truth file
         _, gt = self.files()
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / gt,
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
@@ -122,7 +125,7 @@ class Hilti2022(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         filename = {
             "construction_upper_level_1": "exp04_construction_upper_level",
             "construction_upper_level_2": "exp05_construction_upper_level_2",
@@ -142,7 +145,7 @@ class Hilti2022(Dataset):
         return [bag_file, gt_file]
 
     def download(self):
-        bag_file, gt_file = self.files()
+        bag_file, gt_file = cast(list[str], self.files())
 
         url = "https://tp-public-facing.s3.eu-north-1.amazonaws.com/Challenges/2022/"
 
@@ -154,3 +157,13 @@ class Hilti2022(Dataset):
         if not (self.folder / bag_file).exists():
             print(f"Downloading {bag_file}")
             _urlretrieve(url + bag_file, self.folder / bag_file)
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "construction_upper_level_1": 1258,
+            "construction_upper_level_2": 1248,
+            "construction_upper_level_3": 1508,
+            "basement_2": 740,
+            "attic_to_upper_gallery_2": 2003,
+            "corridor_lower_gallery_2": 1094,
+        }[self.seq_name]

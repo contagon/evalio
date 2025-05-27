@@ -19,15 +19,18 @@ from .base import (
 
 import os
 
-"""
-As a reference, we use the built in Ouster IMU instead of the alphasense one
-Extrinsics are more likely to be accurate
-Also, the alphasense IMU (Bosch BMI085) has fairly similar specs to the Ouster one (ICM-20948)
-
-"""
+from pathlib import Path
+from typing import Sequence, Optional
 
 
 class NewerCollege2021(Dataset):
+    """Dataset outdoors on oxford campus with a handheld device consisting of an alphasense core and a Ouster lidar.
+    Ground truth is captured ICP matching against a laser scanner map.
+
+    Note there are two IMUs present; we utilize the Ouster IMU (ICM-20948)) instead of the alphasense one (Bosch BMI085).
+    We expect the Ouster IMU to have more accurate extrinsics and the specs between the two IMUs are fairly similar.
+    """
+
     quad_easy = auto()
     quad_medium = auto()
     quad_hard = auto()
@@ -55,7 +58,7 @@ class NewerCollege2021(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         gt_file = self.files()[-1]
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
@@ -110,7 +113,7 @@ class NewerCollege2021(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         # parse ground truth file
         if "maths" in self.seq_name:
             difficulty = self.seq_name.split("_")[1]
@@ -209,3 +212,16 @@ class NewerCollege2021(Dataset):
         gdown.download(id=gt_ids, output=f"{self.folder}{os.sep}", resume=True)
         for bid in bag_ids:
             gdown.download(id=bid, output=f"{self.folder}{os.sep}", resume=True)
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "quad_easy": 1991,
+            "quad_medium": 1910,
+            "quad_hard": 1880,
+            "stairs": 1190,
+            "cloister": 2788,
+            "park": 15722,
+            "maths_easy": 2160,
+            "maths_medium": 1770,
+            "maths_hard": 2440,
+        }[self.seq_name]

@@ -22,6 +22,8 @@ from .base import (
     DatasetIterator,
 )
 
+from typing import Sequence, cast, Optional
+
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
 def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
@@ -40,6 +42,11 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
 
 
 class EnWide(Dataset):
+    """Dataset taken in purposely degenerate locations such as a field, intersections, tunnels, and runways. All data comes directly from the Ouster unit.
+
+    Note, this dataset does not have ground truth orientation, only ground truth positional values taken from a Leica MS60 Prism.
+    """
+
     field_d = auto()
     field_s = auto()
     intersection_d = auto()
@@ -67,7 +74,7 @@ class EnWide(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        return Trajectory.load_csv(
+        return Trajectory.from_csv(
             self.folder / f"gt-{self.seq_name}.csv",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
@@ -139,7 +146,7 @@ class EnWide(Dataset):
         return "Handheld"
 
     # ------------------------- For downloading ------------------------- #
-    def files(self) -> list[str]:
+    def files(self) -> Sequence[str | Path]:
         return {
             "intersection_s": [
                 "2023-08-09-16-19-09-intersection_s.bag",
@@ -166,7 +173,7 @@ class EnWide(Dataset):
         }[self.seq_name]
 
     def download(self):
-        bag_file, gt_file = self.files()
+        bag_file, gt_file = cast(list[str], self.files())
 
         url = f"http://robotics.ethz.ch/~asl-datasets/2024_ICRA_ENWIDE/{self.seq_name}/"
 
@@ -176,3 +183,17 @@ class EnWide(Dataset):
             _urlretrieve(url + gt_file, self.folder / gt_file)
         if not (self.folder / bag_file).exists():
             _urlretrieve(url + bag_file, self.folder / bag_file)
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "field_d": 1477,
+            "field_s": 1671,
+            "intersection_d": 1828,
+            "intersection_s": 1997,
+            "katzensee_d": 858,
+            "katzensee_s": 1620,
+            "runway_d": 1902,
+            "runway_s": 2238,
+            "tunnel_d": 1189,
+            "tunnel_s": 2380,
+        }[self.seq_name]
