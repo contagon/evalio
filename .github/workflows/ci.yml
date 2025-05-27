@@ -97,10 +97,12 @@ jobs:
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
           # for vcpkg caches
-          CIBW_ENVIRONMENT: >
+          CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET="11"
             VCPKG_FEATURE_FLAGS="binarycaching" 
             VCPKG_BINARY_SOURCES="clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"
           CIBW_ENVIRONMENT_LINUX: >
+            VCPKG_FEATURE_FLAGS="binarycaching" 
             VCPKG_BINARY_SOURCES="clear;files,/host${{ steps.vcpkg-cache.outputs.path }},readwrite"
 
       # save artifacts for testing
