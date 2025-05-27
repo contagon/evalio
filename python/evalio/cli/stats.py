@@ -107,6 +107,11 @@ def eval_dataset(
         # Iterate over each
         for traj in trajs:
             traj_aligned, gt_aligned = stats.align(traj, gt_og)
+            if length is not None and len(traj_aligned) > length:
+                traj_aligned.stamps = traj_aligned.stamps[:length]
+                traj_aligned.poses = traj_aligned.poses[:length]
+                gt_aligned.stamps = gt_aligned.stamps[:length]
+                gt_aligned.poses = gt_aligned.poses[:length]
             ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
             rte = stats.rte(traj_aligned, gt_aligned, window_size).summarize(metric)
             r = {
