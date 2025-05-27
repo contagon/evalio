@@ -74,8 +74,6 @@ jobs:
   # make sure everything still builds, but only one python per system
   build:
     runs-on: ${{ matrix.os }}
-    env:
-      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}/.vcpkg_cache"
     strategy:
       fail-fast: false
       matrix:
