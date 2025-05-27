@@ -42,9 +42,12 @@ imu = Hilti2022.basement_2.get_one_imu(10)
 lidar = Hilti2022.basement_2.get_one_lidar(10)
 ```
 
-Note, there is a cost to these single data point functions; at the moment this will cause a full iteration over the dataset to find the data point. This is a known issue and will be fixed in the future.
+!!! warning
+
+    There is a cost to these single data point functions; at the moment this will cause a full iteration over the dataset to find the data point. This is a known issue and will be fixed in the future.
 
 Each lidar measurement (type [LidarMeasurement][evalio.types.LidarMeasurement]) consists of a stamp and a vector of points (type [Point][evalio.types.Point]). The measurement follows a meticulous order, and always adhered to the following properties,
+
 - The measurement stamp is always at the start of the scan
 - Scans are in row-major order
 - Scans contain all points, i.e. invalid points are NOT dropped. This is important information that is used in some algorithms for feature extractions. For example, a 128x1024 scan will contain 128x1024 points

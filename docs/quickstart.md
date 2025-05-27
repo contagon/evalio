@@ -126,4 +126,4 @@ evalio run -c config.yml
 ```
 That's about the gist of it! Try playing around the CLI interface to see what else is possible, such as a number of visualization options using rerun. Feel free to open an issue if you have any questions, suggestions, or problems. 
 
-Additionally, we recommend checking out the usage section to see some more examples for use cases for evalio.
+Additionally, we recommend checking out the examples for specific use cases for evalio.
