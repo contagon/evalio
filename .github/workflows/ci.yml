@@ -30,7 +30,7 @@ jobs:
   # if it was a push to master, update latest
   docs:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -52,9 +52,14 @@ jobs:
           VCPKG_FEATURE_FLAGS: "binarycaching" # Possibly redundant, but explicitly sets the binary caching feature flag
           VCPKG_BINARY_SOURCES: "clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       # Finally, deploy docs
-      - name: Deploy docs
-        run: uv run mike deploy --push --update-aliases latest
+      # - name: Deploy docs
+      #   run: uv run mike deploy --push --update-aliases latest
 
   # run tests on both mac and ubuntu, across all python versions
   test:
