@@ -962,9 +962,9 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>add<span class="w"> </span>evalio<span class="w">      </span><span class="c1"># uv</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>evalio<span class="w"> </span><span class="c1"># pip</span>
 </span></code></pre></div></p>
-<p>evalio can be used both as a python library and as a CLI for both datasets and pipelines.</p>
+<p>evalio can be used both as a python library and as a <a href="../ref/cli">CLI</a> for both datasets and pipelines.</p>
 <h2 id="datasets">Datasets</h2>
-<p>Once evalio is installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
+<p>Once evalio is installed, datasets can be listed and downloaded via the <a href="../ref/cli">CLI</a> interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>evalio<span class="w"> </span>ls<span class="w"> </span>datasets
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>evalio<span class="w"> </span>download<span class="w"> </span>hilti_2022/basement_2
 </span></code></pre></div>
@@ -1022,6 +1022,7 @@ evalio also comes with a built wrapper for converting to <a href="https://rerun.
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>To run the rerun visualization, rerun must be installed. This can be done by installing <code>rerun-sdk</code> or <code>evalio[vis]</code> from PyPi.</p>
+<p>Once installed, rerun must be spawned from the CLI simply by running <code>rerun</code> in a terminal. This will start the rerun viewer, which can then be used to visualize the data logged by evalio.</p>
 </div>
 <p>We recommend checking out the <a class="autorefs autorefs-internal" title="            Dataset" href="../ref/datasets/#evalio.datasets.Dataset">API reference</a> for more information on how to interact with datasets, and the <a href="../examples/dataset/">example</a> for an example of how to create your own dataset.</p>
 <h2 id="pipelines">Pipelines</h2>
@@ -1061,9 +1062,17 @@ This will run the pipeline on the dataset and save the results to the <code>resu
 </span></code></pre></div>
 This can then be run via
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>evalio<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yml
+</span></code></pre></div></p>
+<p>Additionally, the run command supports visualization via rerun as well. <code>-v</code> will do a simple visualization of the ground truth trajectory and odometry, while <code>-s</code> can be used to enable additional visualizations,
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>evalio<span class="w"> </span>run<span class="w"> </span>-o<span class="w"> </span>results<span class="w"> </span>-d<span class="w"> </span>hilti_2022/basement_2<span class="w"> </span>-p<span class="w"> </span>kiss<span class="w"> </span>-s<span class="w"> </span>msif
 </span></code></pre></div>
-That's about the gist of it! Try playing around the CLI interface to see what else is possible, such as a number of visualization options using rerun. Feel free to open an issue if you have any questions, suggestions, or problems. </p>
-<p>Additionally, we recommend checking out the usage section to see some more examples for use cases for evalio.</p>
+where m -&gt; map, s -&gt; scan, i -&gt; intensity image, and f -&gt; extracted features can all be selectively visualized in rerun. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As mentioned above, rerun must be installed and launched to visualize the results.</p>
+</div>
+<p>That's about the gist of it! Try playing around the <a href="../ref/cli">CLI</a> interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems. </p>
+<p>Additionally, we recommend checking out the examples section for specific use cases for evalio.</p>
 
 
 

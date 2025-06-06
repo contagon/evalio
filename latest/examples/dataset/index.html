@@ -1075,7 +1075,7 @@ The first one provides a base dataset name to be used. By default this is the cl
 <p>The next three are again self-explanatory, all of which provide information for the <code>evalio ls</code> command.</p>
 <p><code>download</code> does exactly what it says - downloads the datasets. See the <a href="https://github.com/contagon/evalio/blob/master/python/evalio/datasets/newer_college_2020.py#L157">newer college 2020</a> for an example downloading from google drive, and <a href="https://github.com/contagon/evalio/blob/master/python/evalio/datasets/hilti_2022.py#L144">hilti 2022</a> for an example downloading directly from a url.</p>
 <p><code>quick_len</code> returns a hardcoded number of scans in a dataset, used for <code>evalio ls</code> and for computing time estimates in <code>evalio run</code>. If not set, evalio will load the data to compute the length.</p>
-<p>That's all there is to it! Datasets are fairly simple - mostly just parameter setting and easy-to-use iterator wrappers.</p>
+<p>That's all there is to it! Datasets are fairly simple - mostly just parameter setting and easy-to-use iterator wrappers. If you have an dataset implementation of an open-source dataset, feel free to make a PR to add it to evalio so others can use it as well.</p>
 
 
 
