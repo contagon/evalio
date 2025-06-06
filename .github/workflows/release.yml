@@ -100,9 +100,13 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_EDITABLE: true
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+        with:
+          fetch-depth: 0
 
       # Setup C++ dependencies
       - run: ./cpp/setup_pipelines.sh
@@ -122,8 +126,14 @@ jobs:
           VCPKG_FEATURE_FLAGS: "binarycaching" # Possibly redundant, but explicitly sets the binary caching feature flag
           VCPKG_BINARY_SOURCES: "clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"
 
+      # Setup git
+      - name: Configure Git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      # Finally deploy docs
       - name: Get version
         run: echo "EVALIO_VERSION=$(python -c 'import evalio; print(evalio.__version__)')" >> $GITHUB_ENV
-
       - name: Deploy docs
         run: mike deploy --push --update-aliases $EVALIO_VERSION stable
