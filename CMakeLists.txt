@@ -7,7 +7,7 @@ endif()
 
 # ------------------------- Basics ------------------------- #
 cmake_minimum_required(VERSION 3.24)
-project(EVALIO VERSION 0.2.0 LANGUAGES CXX)
+project(EVALIO VERSION 0.3.0 LANGUAGES CXX)
 
 # Enforce C++17 for std::variant amongst others
 set(CMAKE_CXX_STANDARD 20)

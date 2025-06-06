@@ -2,7 +2,7 @@
 name = "evalio"
 authors = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
 maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
-version = "0.2.0"
+version = "0.3.0"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -67,7 +67,7 @@ MACOSX_DEPLOYMENT_TARGET = "11"
 [tool.uv]
 dev-dependencies = [
     "cmake<4.0.0",
-    "compdb>=0.2.0",
+    "compdb>=0.3.0",
     "ruff>=0.6.8",
     "types-pyyaml>=6.0.12.20240917",
     "types-tabulate>=0.9.0.20240106",

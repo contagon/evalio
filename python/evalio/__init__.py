@@ -20,7 +20,7 @@ atexit.register(cleanup)
 # Ignore tqdm rich warnings
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     "_abi_tag",
     "datasets",
