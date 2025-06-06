@@ -27,18 +27,21 @@ jobs:
       with:
         clang-format-version: '20'
 
-  # if it was a push to master, update latest
   docs:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
+    env:
+      UV_NO_EDITABLE: true
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+        with:
+          fetch-depth: 0
 
       # Setup C++ dependencies
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
       - uses: TAServers/vcpkg-cache@v3
+        name: Setup vcpkg cache
         id: vcpkg-cache
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -47,22 +50,33 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Install the project
-        run: uv sync --dev --verbose
+        run: uv sync --dev --verbose --no-editable
         env:
           VCPKG_FEATURE_FLAGS: "binarycaching" # Possibly redundant, but explicitly sets the binary caching feature flag
           VCPKG_BINARY_SOURCES: "clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"
 
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     detached: true
+
+      # Setup git
+      - name: Configure Git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
       # Finally, deploy docs
+      # Only update latest if this is a push to master
       - name: Deploy docs
+        if: ${{ github.event_name == 'push' }}
         run: uv run mike deploy --push --update-aliases latest
 
   # run tests on both mac and ubuntu, across all python versions
   test:
     runs-on: ${{ matrix.os }}
-    # We turn off stub generations, as there is some strange bug on github actions
-    # where an editable install with stubs obscures the _cpp.so module and it can't be imported
     env:
-      SKBUILD_CMAKE_DEFINE: EVALIO_PYTHON_STUBS=OFF
+      UV_NO_EDITABLE: true
     strategy:
       fail-fast: false
       matrix:
@@ -103,6 +117,7 @@ jobs:
 
       # Restore vcpkg cache
       - uses: TAServers/vcpkg-cache@v3
+        name: Setup vcpkg cache
         id: vcpkg-cache
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

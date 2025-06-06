@@ -5,11 +5,11 @@ uv add evalio      # uv
 pip install evalio # pip
 ```
 
-evalio can be used both as a python library and as a [CLI](../ref/cli) for both datasets and pipelines.
+evalio can be used both as a python library and as a [CLI](ref/cli.md) for both datasets and pipelines.
 
 ## Datasets
 
-Once evalio is installed, datasets can be listed and downloaded via the [CLI](../ref/cli) interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
+Once evalio is installed, datasets can be listed and downloaded via the [CLI](ref/cli.md) interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
 ```bash
 evalio ls datasets
 evalio download hilti_2022/basement_2
@@ -137,6 +137,6 @@ where m -> map, s -> scan, i -> intensity image, and f -> extracted features can
 
     As mentioned above, rerun must be installed and launched to visualize the results.
 
-That's about the gist of it! Try playing around the [CLI](../ref/cli) interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems. 
+That's about the gist of it! Try playing around the [CLI](ref/cli.md) interface to see what else is possible. Feel free to open an issue if you have any questions, suggestions, or problems. 
 
 Additionally, we recommend checking out the examples section for specific use cases for evalio.
