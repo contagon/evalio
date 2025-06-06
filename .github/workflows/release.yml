@@ -108,6 +108,7 @@ jobs:
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
       - uses: TAServers/vcpkg-cache@v3
+        name: Setup vcpkg cache
         id: vcpkg-cache
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
