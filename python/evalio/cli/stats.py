@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Annotated, Optional, Sequence
 
+from evalio.utils import print_warning
 from rich.table import Table
 from rich.console import Console
 from rich import box
@@ -67,7 +68,7 @@ def eval_dataset(
         try:
             import rerun as rr
         except Exception:
-            print("Rerun not found, visualization disabled")
+            print_warning("Rerun not found, visualization disabled")
             visualize = False
 
     rr = None
@@ -83,7 +84,7 @@ def eval_dataset(
         rr.connect_grpc()
         rr.log(
             "gt",
-            convert(gt_og, color=[0, 0, 255]),
+            convert(gt_og, color=[144, 144, 144]),
             static=True,
         )
 
@@ -128,7 +129,7 @@ def eval_dataset(
             if rr is not None and convert is not None and visualize:
                 rr.log(
                     traj.metadata["name"],
-                    convert(traj),
+                    convert(traj_aligned),
                     static=True,
                 )
 
@@ -152,8 +153,8 @@ def eval_dataset(
         ]
         table.add_row(*row)
 
-    Console().print(table)
     print()
+    Console().print(table)
 
 
 def _contains_dir(directory: Path) -> bool:
@@ -169,15 +170,15 @@ def eval(
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
     ] = False,
     sort: Annotated[
-        Optional[str],
-        typer.Option("-s", "--sort", help="Sort results by either [atet|ater]"),
-    ] = None,
+        str,
+        typer.Option("-s", "--sort", help="Sort results by the name of a column."),
+    ] = "RTEt",
     window: Annotated[
         int,
         typer.Option(
             "-w", "--window", help="Window size for RTE. Defaults to 100 time-steps."
         ),
-    ] = 100,
+    ] = 200,
     metric: Annotated[
         stats.MetricKind,
         typer.Option(
@@ -201,7 +202,6 @@ def eval(
 
     c = Console()
     c.print(f"Evaluating RTE over a window of size {window}, using metric {metric}.")
-    c.print()
 
     # Collect all bottom level directories
     bottom_level_dirs = []

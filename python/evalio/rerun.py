@@ -294,10 +294,10 @@ try:
                 color_parsed = np.asarray(color)
             elif color is not None:
                 raise ValueError(f"Unknown color type {color}")
-            return convert(np.asarray(obj.to_vec_positions()), color_parsed)
+            return convert(np.asarray(obj.to_vec_positions()), color=color_parsed)
 
         elif isinstance(obj, list) and isinstance(obj[0], Point):
-            return convert(LidarMeasurement(Stamp.from_sec(0), obj), color)
+            return convert(LidarMeasurement(Stamp.from_sec(0), obj), color=color)
 
         elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:
             return rr.Points3D(obj, colors=color)
@@ -316,7 +316,7 @@ try:
                 translation=obj.trans,
             )
         elif isinstance(obj, Trajectory):
-            return convert(obj.poses)
+            return convert(obj.poses, color=color)
         elif isinstance(obj, list) and isinstance(obj[0], SE3):
             points = np.zeros((len(obj), 3))
             for i, pose in enumerate(obj):

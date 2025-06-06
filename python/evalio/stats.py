@@ -1,4 +1,6 @@
 from enum import StrEnum, auto
+
+from evalio.utils import print_warning
 from .types import Stamp, Trajectory, SE3
 
 from dataclasses import dataclass
@@ -272,6 +274,10 @@ def rte(traj: Trajectory, gt: Trajectory, window: int = 100) -> Error:
 
     if window <= 0:
         raise ValueError("Window size must be positive")
+
+    if window > len(gt) - 1:
+        print_warning(f"Window size {window} is larger than number of poses {len(gt)}")
+        return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
 
     window_deltas_poses = []
     window_deltas_gts = []
