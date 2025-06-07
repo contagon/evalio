@@ -105,6 +105,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-13, macos-14]
+    env:
+      VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -120,15 +125,7 @@ jobs:
           # for vcpkg caches
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET="11"
-            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
-          CIBW_ENVIRONMENT_LINUX: >
-            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
+          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL
 
       # save artifacts for testing
       - uses: actions/upload-artifact@v4
