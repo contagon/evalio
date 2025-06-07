@@ -37,44 +37,49 @@ class TrajectoryWriter:
             path.mkdir(parents=True, exist_ok=True)
             path /= f"{pipeline.name}.csv"
 
-        # write metadata to the header
-        # TODO: Could probably automate this using pyserde somehow
         self.path = path
-        self.file = open(path, "w")
-        self.file.write(f"# name: {pipeline.name}\n")
-        self.file.write(f"# pipeline: {pipeline.pipeline.name()}\n")
-        self.file.write(f"# version: {pipeline.pipeline.version()}\n")
-        for key, value in pipeline.params.items():
-            self.file.write(f"# {key}: {value}\n")
-        self.file.write("#\n")
-        self.file.write(f"# dataset: {dataset.dataset.dataset_name()}\n")
-        self.file.write(f"# sequence: {dataset.dataset.seq_name}\n")
-        if dataset.length is not None:
-            self.file.write(f"# length: {dataset.length}\n")
-        self.file.write("#\n")
-        self.file.write("# timestamp, x, y, z, qx, qy, qz, qw\n")
 
+        # TODO: Could probably automate this using pyserde somehow
+        params = "\n".join(
+            f"# {key}: {value}" for key, value in pipeline.params.items()
+        )
+        self.metadata = f"""
+# name: {pipeline.name}
+# pipeline: {pipeline.pipeline.name()}
+# version: {pipeline.pipeline.version()}
+{params}
+# dataset: {dataset.dataset.dataset_name()}
+# sequence: {dataset.dataset.seq_name}
+# length: {dataset.length if dataset.length is not None else "unknown"}
+#
+# timestamp, x, y, z, qx, qy, qz, qw
+"""
+
+    def start(self):
+        # write metadata to the header
+        self.file = open(self.path, "w")
+        self.file.write(self.metadata)
         self.writer = csv.writer(self.file)
-
         self.index = 0
-
         atexit.register(self.close)
 
     def write(self, stamp: Stamp, pose: SE3):
         self.writer.writerow(
             [
                 f"{stamp.sec}.{stamp.nsec:09}",
-                pose.trans[0],
-                pose.trans[1],
-                pose.trans[2],
+                pose.trans[0],  # type: ignore
+                pose.trans[1],  # type: ignore
+                pose.trans[2],  # type: ignore
                 pose.rot.qx,
                 pose.rot.qy,
                 pose.rot.qz,
                 pose.rot.qw,
             ]
         )
-        # print(f"Wrote {self.index}")
         self.index += 1
+
+    def finish(self):
+        self.file.write("# done")
 
     def close(self):
         self.file.close()
@@ -99,9 +104,9 @@ def save_gt(output: Path, dataset: DatasetBuilder):
             writer.writerow(
                 [
                     stamp.to_sec(),
-                    pose.trans[0],
-                    pose.trans[1],
-                    pose.trans[2],
+                    pose.trans[0],  # type: ignore
+                    pose.trans[1],  # type: ignore
+                    pose.trans[2],  # type: ignore
                     pose.rot.qx,
                     pose.rot.qy,
                     pose.rot.qz,

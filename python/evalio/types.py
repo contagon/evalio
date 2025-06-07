@@ -140,8 +140,12 @@ class Trajectory:
         with open(path) as file:
             metadata_filter = filter(lambda row: row[0] == "#", file)
             metadata_list = [row[1:].strip() for row in metadata_filter]
+            # remove the last line if it is the done marker
+            if metadata_list[-1] == "done":
+                metadata_list.pop(-1)
             # remove the header row
-            metadata_list.pop(-1)
+            if metadata_list[-1].startswith("timestamp"):
+                metadata_list.pop(-1)
             metadata_str = "\n".join(metadata_list)
             metadata = yaml.safe_load(metadata_str)
 

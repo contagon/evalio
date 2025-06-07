@@ -156,29 +156,57 @@ def run(
             length = dbuilder.length
 
         for pbuilder in pipelines:
-            print(f"Running {pbuilder} on {dbuilder}")
+            # Check if we previously ran this pipeline on this dataset
+            writer = TrajectoryWriter(output, pbuilder, dbuilder)
+            if writer.path.exists():
+                with writer.path.open("r") as f:
+                    if f.readlines()[-1] == "# done":
+                        print(
+                            f"Skipping {pbuilder} on {dbuilder} as it has already been run."
+                        )
+                        continue
+                    else:
+                        print(
+                            f"Running {pbuilder} on {dbuilder}, and overwriting existing results."
+                        )
+            else:
+                print(f"Running {pbuilder} on {dbuilder}")
+
             # Build everything
+            writer.start()
             dataset = dbuilder.build()
             pipe = pbuilder.build(dataset)
-            writer = TrajectoryWriter(output, pbuilder, dbuilder)
             vis.new_pipe(pbuilder.name)
 
             # Run the pipeline
             loop = tqdm(total=length)
-            for data in dbuilder.build():
-                if isinstance(data, ImuMeasurement):
-                    pipe.add_imu(data)
-                elif isinstance(data, LidarMeasurement):
-                    features = pipe.add_lidar(data)
-                    pose = pipe.pose()
-                    writer.write(data.stamp, pose)
+            try:
+                for data in dbuilder.build():
+                    if isinstance(data, ImuMeasurement):
+                        pipe.add_imu(data)
+                    elif isinstance(data, LidarMeasurement):
+                        features = pipe.add_lidar(data)
+                        pose = pipe.pose()
+                        writer.write(data.stamp, pose)
 
-                    vis.log(data, features, pose, pipe)
+                        vis.log(data, features, pose, pipe)
 
-                    loop.update()
-                    if loop.n >= length:
-                        loop.close()
-                        break
+                        loop.update()
+                        if loop.n >= length:
+                            loop.close()
+                            break
+
+                writer.finish()
+
+            except KeyboardInterrupt:
+                loop.close()
+                print("\nInterrupted by user. Stopping...\n")
+                return
+
+            except Exception as e:
+                loop.close()
+                print(f"Error while running {pbuilder} on {dbuilder}: {e}")
+                continue
 
             writer.close()
 
