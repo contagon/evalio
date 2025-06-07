@@ -18,16 +18,6 @@ jobs:
       - uses: actions/checkout@v4
         name: Checkout
 
-      # Let vcpkg store caches in github actions
-      - name: Restore vcpkg cache
-        id: cache
-        uses: actions/cache/restore@v4
-        with:
-          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
-          key: vcpkg-${{ matrix.os }}
-      - name: Ensure vcpkg cache directory exists
-        run: mkdir -p "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
-
       # Do all the building
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
@@ -35,24 +25,17 @@ jobs:
         name: Build wheel
         env:
           # for vcpkg caches
-          CIBW_ENVIRONMENT_LINUX : VCPKG_DEFAULT_BINARY_CACHE="/host${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
-
-      # Delete the old cache on hit to emulate a cache update. See
-      # https://github.com/actions/cache/issues/342.
-      - name: Delete old cache
-        env:
-          GH_TOKEN: ${{ github.token }}
-        if: steps.cache.outputs.cache-hit 
-        # Using `--repo` makes it so that this step doesn't require checking out the repo first.
-        run: gh cache delete --repo ${{ github.repository }} ${{ steps.cache.outputs.cache-primary-key }}
-
-      # cache vcpkg
-      - name: Save vcpkg cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
-          key: vcpkg-${{ matrix.os }}
+          CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET="11"
+            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
+          CIBW_ENVIRONMENT_LINUX: >
+            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
 
       # upload to use in other jobs
       - uses: actions/upload-artifact@v4
@@ -102,6 +85,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UV_NO_EDITABLE: true
+      VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -111,20 +98,12 @@ jobs:
       # Setup C++ dependencies
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
-      - uses: TAServers/vcpkg-cache@v3
-        name: Setup vcpkg cache
-        id: vcpkg-cache
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Setup Python dependencies
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Install the project
         run: uv sync --dev --verbose
-        env:
-          VCPKG_FEATURE_FLAGS: "binarycaching" # Possibly redundant, but explicitly sets the binary caching feature flag
-          VCPKG_BINARY_SOURCES: "clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"
 
       # Setup git
       - name: Configure Git user
@@ -136,4 +115,6 @@ jobs:
       - name: Get version
         run: echo "EVALIO_VERSION=$(python -c 'import evalio; print(evalio.__version__)')" >> $GITHUB_ENV
       - name: Deploy docs
-        run: uv run mike deploy --push --update-aliases $EVALIO_VERSION stable
+        run: |
+          git pull 
+          uv run mike deploy --push --update-aliases $EVALIO_VERSION stable
