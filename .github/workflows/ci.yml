@@ -65,10 +65,8 @@ jobs:
       # Finally, deploy docs
       # Only update latest if this is a push to master
       - name: Deploy docs
-        # if: ${{ github.event_name == 'push' }}
-        run: |
-          git pull
-          uv run mike deploy --push --update-aliases latest
+        if: ${{ github.event_name == 'push' }}
+        run: uv run mike deploy --push --update-aliases latest
 
   # run tests on both mac and ubuntu, across all python versions
   test:
