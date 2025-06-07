@@ -57,7 +57,12 @@ test-command = "evalio ls pipelines && pytest {project}/tests"
 build-verbosity = 1
 
 [tool.cibuildwheel.linux]
-before-all = "yum -y install curl zip unzip tar"
+before-all = """
+    yum -y install curl zip unzip tar
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+"""
 
 # tbb requires at least 10.13, pcl 10.15. We bump to 11 for simplicity.
 [tool.cibuildwheel.macos.environment]
