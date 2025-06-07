@@ -10,7 +10,10 @@ jobs:
   build_wheels:
     runs-on: ${{ matrix.os }}
     env:
-      VCPKG_DEFAULT_BINARY_CACHE: "${{ github.workspace }}/.vcpkg_cache"
+      VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13, macos-14]
@@ -24,18 +27,7 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
-          # for vcpkg caches
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET="11"
-            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
-          CIBW_ENVIRONMENT_LINUX: >
-            VCPKG_BINARY_SOURCES=${{ vars.VCPKG_BINARY_SOURCES }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}
+          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL
 
       # upload to use in other jobs
       - uses: actions/upload-artifact@v4

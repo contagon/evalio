@@ -57,7 +57,7 @@ test-command = "evalio ls pipelines && pytest {project}/tests"
 build-verbosity = 1
 
 [tool.cibuildwheel.linux]
-before-all = "yum -y install curl zip unzip tar"
+before-all = "yum -y install curl zip unzip tar awscli"
 
 # tbb requires at least 10.13, pcl 10.15. We bump to 11 for simplicity.
 [tool.cibuildwheel.macos.environment]

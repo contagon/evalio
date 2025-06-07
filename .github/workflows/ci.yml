@@ -122,9 +122,6 @@ jobs:
         name: Build wheel
         env:
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_x86_64 cp311-macosx_arm64"
-          # for vcpkg caches
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET="11"
           CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL
 
       # save artifacts for testing
