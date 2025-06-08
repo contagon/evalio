@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.utils import print_warning
@@ -7,7 +8,7 @@ from evalio.types import ImuMeasurement, LidarMeasurement
 from evalio.rerun import RerunVis, VisArgs
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
-from .writer import TrajectoryWriter, save_config, save_gt
+from .writer import TrajectoryWriter, save_config, save_gt, ExperimentStatus
 from .stats import eval
 
 from rich import print
@@ -151,63 +152,66 @@ def run(
         vis.new_recording(dbuilder.build(), pipelines)
 
         # Found how much we'll be iterating
-        length = len(dbuilder.build().data_iter())
+        length = len(dbuilder.build())
         if dbuilder.length is not None and dbuilder.length < length:
             length = dbuilder.length
 
         for pbuilder in pipelines:
             # Check if we previously ran this pipeline on this dataset
             writer = TrajectoryWriter(output, pbuilder, dbuilder)
-            if writer.path.exists():
-                with writer.path.open("r") as f:
-                    if f.readlines()[-1] == "# done":
-                        print(
-                            f"Skipping {pbuilder} on {dbuilder} as it has already been run."
-                        )
-                        continue
-                    else:
-                        print(
-                            f"Running {pbuilder} on {dbuilder}, and overwriting existing results."
-                        )
-            else:
-                print(f"Running {pbuilder} on {dbuilder}")
+            match writer.status():
+                case ExperimentStatus.FINISHED:
+                    print(f"Skipping {pbuilder} on {dbuilder}, already finished")
+                    continue
+                case ExperimentStatus.STARTED | ExperimentStatus.FAILED:
+                    print(f"Overwriting {pbuilder} on {dbuilder}")
+                case ExperimentStatus.NOT_STARTED:
+                    print(f"Running {pbuilder} on {dbuilder}")
 
-            # Build everything
-            writer.start()
-            dataset = dbuilder.build()
-            pipe = pbuilder.build(dataset)
-            vis.new_pipe(pbuilder.name)
+            # Run the pipeline in a different process so we can recover from segfaults
+            process = multiprocessing.Process(
+                target=run_single, args=(writer, pbuilder, dbuilder, length, vis)
+            )
+            process.start()
+            process.join()
+            exitcode = process.exitcode
+            process.close()
 
-            # Run the pipeline
-            loop = tqdm(total=length)
-            try:
-                for data in dbuilder.build():
-                    if isinstance(data, ImuMeasurement):
-                        pipe.add_imu(data)
-                    elif isinstance(data, LidarMeasurement):
-                        features = pipe.add_lidar(data)
-                        pose = pipe.pose()
-                        writer.write(data.stamp, pose)
-
-                        vis.log(data, features, pose, pipe)
-
-                        loop.update()
-                        if loop.n >= length:
-                            loop.close()
-                            break
-
+            if exitcode == 0:
                 writer.finish()
-
-            except KeyboardInterrupt:
-                loop.close()
-                print("\nInterrupted by user. Stopping...\n")
-                return
-
-            except Exception as e:
-                loop.close()
-                print(f"Error while running {pbuilder} on {dbuilder}: {e}")
-                continue
-
-            writer.close()
+            else:
+                writer.fail()
 
     eval([str(output)], False, "RTEt")
+
+
+def run_single(
+    writer: TrajectoryWriter,
+    pbuilder: PipelineBuilder,
+    dbuilder: DatasetBuilder,
+    length: int,
+    vis: RerunVis,
+):
+    # Build everything
+    dataset = dbuilder.build()
+    pipe = pbuilder.build(dataset)
+    vis.new_pipe(pbuilder.name)
+    writer.start()
+
+    loop = tqdm(total=length)
+    for data in dbuilder.build():
+        if isinstance(data, ImuMeasurement):
+            pipe.add_imu(data)
+        elif isinstance(data, LidarMeasurement):
+            features = pipe.add_lidar(data)
+            pose = pipe.pose()
+            writer.write(data.stamp, pose)
+
+            vis.log(data, features, pose, pipe)
+
+            loop.update()
+            if loop.n >= length:
+                loop.close()
+                break
+
+    loop.close()

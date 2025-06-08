@@ -1,5 +1,6 @@
 import atexit
 import csv
+from enum import Enum, auto
 from pathlib import Path
 from typing import Sequence
 import yaml
@@ -30,6 +31,13 @@ def save_config(
         yaml.dump(out, f)
 
 
+class ExperimentStatus(Enum):
+    FINISHED = auto()
+    STARTED = auto()
+    FAILED = auto()
+    NOT_STARTED = auto()
+
+
 class TrajectoryWriter:
     def __init__(self, path: Path, pipeline: PipelineBuilder, dataset: DatasetBuilder):
         if path.suffix != ".csv":
@@ -38,6 +46,7 @@ class TrajectoryWriter:
             path /= f"{pipeline.name}.csv"
 
         self.path = path
+        atexit.register(self.close)
 
         # TODO: Could probably automate this using pyserde somehow
         params = "\n".join(
@@ -55,13 +64,30 @@ class TrajectoryWriter:
 # timestamp, x, y, z, qx, qy, qz, qw
 """
 
+    def status(self) -> ExperimentStatus:
+        if not self.path.exists():
+            return ExperimentStatus.NOT_STARTED
+
+        with self.path.open("r") as f:
+            lines = f.readlines()
+            if not lines:
+                return ExperimentStatus.STARTED
+
+            last_line = lines[-1].strip()
+            if last_line == "# done":
+                return ExperimentStatus.FINISHED
+            elif last_line == "# failed":
+                return ExperimentStatus.FAILED
+            else:
+                return ExperimentStatus.STARTED
+
     def start(self):
         # write metadata to the header
+        print("Starting???")
         self.file = open(self.path, "w")
         self.file.write(self.metadata)
         self.writer = csv.writer(self.file)
         self.index = 0
-        atexit.register(self.close)
 
     def write(self, stamp: Stamp, pose: SE3):
         self.writer.writerow(
@@ -79,10 +105,16 @@ class TrajectoryWriter:
         self.index += 1
 
     def finish(self):
-        self.file.write("# done")
+        with open(self.path, "a") as f:
+            f.write("# done")
+
+    def fail(self):
+        with open(self.path, "a") as f:
+            f.write("# failed")
 
     def close(self):
-        self.file.close()
+        if hasattr(self, "file"):
+            self.file.close()
 
 
 def save_gt(output: Path, dataset: DatasetBuilder):
