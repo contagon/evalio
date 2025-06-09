@@ -9,6 +9,7 @@ from rich import box
 from evalio.types import Trajectory
 from evalio import stats
 
+import numpy as np
 import typer
 
 
@@ -45,6 +46,7 @@ def eval_dataset(
     dir: Path,
     visualize: bool,
     sort: Optional[str],
+    reverse: bool,
     window_size: int,
     metric: stats.MetricKind,
     length: Optional[int],
@@ -133,8 +135,15 @@ def eval_dataset(
                     static=True,
                 )
 
-    if sort is not None:
-        results = sorted(results, key=lambda x: x[sort])
+    def key_func(x):
+        val = x[sort]
+        # sort floats separately to make sure NaNs are at the end
+        if isinstance(val, float):
+            return np.inf if np.isnan(val) else val
+        else:
+            return val
+
+    results = sorted(results, key=key_func, reverse=reverse)
 
     table = Table(
         title=str(dir),
@@ -169,10 +178,18 @@ def eval(
     visualize: Annotated[
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
     ] = False,
+    # Sorting options
     sort: Annotated[
         str,
         typer.Option("-s", "--sort", help="Sort results by the name of a column."),
     ] = "RTEt",
+    reverse: Annotated[
+        bool,
+        typer.Option(
+            "--reverse", "-r", help="Reverse the sorting order. Defaults to False."
+        ),
+    ] = False,
+    # metric options
     window: Annotated[
         int,
         typer.Option(
@@ -211,4 +228,4 @@ def eval(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort, window, metric, length)
+        eval_dataset(d, visualize, sort, reverse, window, metric, length)
