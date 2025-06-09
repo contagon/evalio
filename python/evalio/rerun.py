@@ -88,18 +88,19 @@ try:
             if not self.args.show:
                 return
 
-            rr.new_recording(
-                str(dataset),
-                make_default=True,
-                recording_id=uuid4(),
-            )
-            rr.connect_grpc(default_blueprint=self._blueprint(pipelines))
+            self.recording_params = {
+                "application_id": str(dataset),
+                "recording_id": uuid4(),
+                "make_default": True,
+            }
+            self.rec = rr.new_recording(**self.recording_params)
+            self.rec.connect_grpc(default_blueprint=self._blueprint(pipelines))
+
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
 
-            rr.log("gt", convert(self.gt), static=True)
-            rr.log("gt", rr.Points3D.from_fields(colors=[0, 0, 255]), static=True)
+            self.rec.log("gt", convert(self.gt, color=[144, 144, 144]), static=True)
 
         def new_pipe(self, pipe_name: str):
             if not self.args.show:
@@ -110,10 +111,14 @@ try:
                     "You needed to initialize the recording before adding a pipeline!"
                 )
 
+            # First reconnect to make sure we're connected (happens b/c of multithread passing)
+            self.rec = rr.new_recording(**self.recording_params)
+            self.rec.connect_grpc()
+
             self.pn = pipe_name
             self.gt_o_T_imu_o = None
             self.trajectory = Trajectory(stamps=[], poses=[])
-            rr.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
+            self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
         def log(
             self,
@@ -140,26 +145,28 @@ try:
                     imu_o_T_imu_0 = pose
                     gt_o_T_imu_0 = self.gt.poses[0]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
-                    rr.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
+                    self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
             # Always include the pose
-            rr.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
-            rr.log(f"{self.pn}/imu", convert(pose))
+            self.rec.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
+            self.rec.log(f"{self.pn}/imu", convert(pose))
             self.trajectory.append(data.stamp, pose)
-            rr.log(f"{self.pn}/trajectory", convert(self.trajectory))
+            self.rec.log(f"{self.pn}/trajectory", convert(self.trajectory))
 
             # Features from the scan
             if self.args.features:
                 if len(features) > 0:
-                    rr.log(f"{self.pn}/imu/lidar/features", convert(list(features)))
+                    self.rec.log(
+                        f"{self.pn}/imu/lidar/features", convert(list(features))
+                    )
 
             # Include the current map
             if self.args.map:
-                rr.log(f"{self.pn}/map", convert(pipe.map()))
+                self.rec.log(f"{self.pn}/map", convert(pipe.map()))
 
             # Include the original point cloud
             if self.args.scan:
-                rr.log(f"{self.pn}/imu/lidar/scan", convert(data))
+                self.rec.log(f"{self.pn}/imu/lidar/scan", convert(data))
 
             # Include the intensity image
             if self.args.image:
@@ -168,7 +175,7 @@ try:
                 image = intensity.reshape(
                     (self.lidar_params.num_rows, self.lidar_params.num_columns)
                 )
-                rr.log("image", rr.Image(image))
+                self.rec.log("image", rr.Image(image))
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds

@@ -163,7 +163,10 @@ def run(
                 case ExperimentStatus.FINISHED:
                     print(f"Skipping {pbuilder} on {dbuilder}, already finished")
                     continue
-                case ExperimentStatus.STARTED | ExperimentStatus.FAILED:
+                case ExperimentStatus.FAILED:
+                    print(f"Skipping {pbuilder} on {dbuilder}, previously failed")
+                    continue
+                case ExperimentStatus.STARTED:
                     print(f"Overwriting {pbuilder} on {dbuilder}")
                 case ExperimentStatus.NOT_STARTED:
                     print(f"Running {pbuilder} on {dbuilder}")
@@ -215,3 +218,4 @@ def run_single(
                 break
 
     loop.close()
+    writer.close()

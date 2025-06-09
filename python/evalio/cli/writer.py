@@ -83,7 +83,6 @@ class TrajectoryWriter:
 
     def start(self):
         # write metadata to the header
-        print("Starting???")
         self.file = open(self.path, "w")
         self.file.write(self.metadata)
         self.writer = csv.writer(self.file)
