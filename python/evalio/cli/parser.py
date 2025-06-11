@@ -251,7 +251,7 @@ def parse_config(
         params = yaml.safe_load(f)
 
     # get output directory
-    out = Path(params["output_dir"])
+    out = Path(params["output_dir"]) if "output_dir" in params else None
 
     # process datasets & make sure they are downloaded by building
     datasets = DatasetBuilder.parse(params.get("datasets", None))
