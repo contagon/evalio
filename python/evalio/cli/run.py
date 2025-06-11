@@ -78,7 +78,7 @@ def run_from_cli(
             "Cannot specify both config and manual options", param_hint="run"
         )
 
-    # Got through visualization options
+    # Go through visualization options
     if show is None:
         vis_args = VisArgs(show=visualize)
     else:
