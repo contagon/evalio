@@ -190,7 +190,7 @@ def run(
             else:
                 writer.fail()
 
-    evaluate([str(output)], False, "RTEt")
+    evaluate([str(output)])
 
 
 def run_single(

@@ -144,7 +144,13 @@ def eval_dataset(
         else:
             return val
 
-    results = [r for r in results if filter_method(r)]
+    try:
+        results = [r for r in results if filter_method(r)]
+    except Exception as e:
+        print_warning(
+            f"Error while running custom filter. Make sure it is valid python: {e}"
+        )
+        return
     results = sorted(results, key=key_func, reverse=reverse)
     if len(results) == 0:
         print_warning(f"No results found in {dir} after filtering.")
@@ -206,7 +212,7 @@ def evaluate(
         typer.Option(
             "--filter",
             "-f",
-            help="Python expressions to filter results. Rows that evaluate to true will be kept. Example: --filter 'r[\"RTEt\"] < 0.5'",
+            help="Python expressions to filter results rows. 'True' rows will be kept. Example: --filter 'RTEt < 0.5'",
             rich_help_panel="Filtering options",
         ),
     ] = None,
@@ -269,7 +275,11 @@ def evaluate(
         filter_method = lambda r: True  # noqa: E731
     else:
         # TODO: Is there a way to lock down eval to not allow arbitrary code execution?
-        filter_method = lambda r: eval(filter_str, {}, {"r": r})  # noqa: E731
+        filter_method = lambda r: eval(  # noqa: E731
+            filter_str,
+            {"__builtins__": None},
+            {"np": np, **r},
+        )
 
     original_filter = filter_method
     if only_complete:
