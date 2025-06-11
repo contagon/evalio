@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated, Optional, Sequence
+from typing import Annotated, Callable, Optional, Sequence
 
 from evalio.utils import print_warning
 from rich.table import Table
@@ -50,6 +50,7 @@ def eval_dataset(
     window_size: int,
     metric: stats.MetricKind,
     length: Optional[int],
+    filter_method: Callable[[dict], bool],
 ):
     # Load all trajectories
     trajectories = []
@@ -143,7 +144,11 @@ def eval_dataset(
         else:
             return val
 
+    results = [r for r in results if filter_method(r)]
     results = sorted(results, key=key_func, reverse=reverse)
+    if len(results) == 0:
+        print_warning(f"No results found in {dir} after filtering.")
+        return
 
     table = Table(
         title=str(dir),
@@ -171,13 +176,19 @@ def _contains_dir(directory: Path) -> bool:
 
 
 @app.command("stats", no_args_is_help=True)
-def eval(
+def evaluate(
     directories: Annotated[
         list[str], typer.Argument(help="Directory of results to evaluate.")
     ],
     visualize: Annotated[
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
     ] = False,
+    length: Annotated[
+        Optional[int],
+        typer.Option(
+            "-l", "--length", help="Specify subset of trajectory to evaluate."
+        ),
+    ] = None,
     # Sorting options
     sort: Annotated[
         str,
@@ -189,11 +200,48 @@ def eval(
             "--reverse", "-r", help="Reverse the sorting order. Defaults to False."
         ),
     ] = False,
+    # filtering options
+    filter_str: Annotated[
+        Optional[str],
+        typer.Option(
+            "--filter",
+            "-f",
+            help="Python expressions to filter results. Rows that evaluate to true will be kept. Example: --filter 'r[\"RTEt\"] < 0.5'",
+            rich_help_panel="Filtering options",
+        ),
+    ] = None,
+    only_complete: Annotated[
+        bool,
+        typer.Option(
+            "--only-complete",
+            help="Only show results for trajectories that completed.",
+            rich_help_panel="Filtering options",
+        ),
+    ] = False,
+    only_incomplete: Annotated[
+        bool,
+        typer.Option(
+            "--only-incomplete",
+            help="Only show results for trajectories that did not finish.",
+            rich_help_panel="Filtering options",
+        ),
+    ] = False,
+    only_failed: Annotated[
+        bool,
+        typer.Option(
+            "--only-failed",
+            help="Only show results for trajectories that failed.",
+            rich_help_panel="Filtering options",
+        ),
+    ] = False,
     # metric options
     window: Annotated[
         int,
         typer.Option(
-            "-w", "--window", help="Window size for RTE. Defaults to 100 time-steps."
+            "-w",
+            "--window",
+            help="Window size for RTE. Defaults to 100 time-steps.",
+            rich_help_panel="Metric options",
         ),
     ] = 200,
     metric: Annotated[
@@ -202,18 +250,34 @@ def eval(
             "--metric",
             "-m",
             help="Metric to use for ATE/RTE computation. Defaults to sse.",
+            rich_help_panel="Metric options",
         ),
     ] = stats.MetricKind.sse,
-    length: Annotated[
-        Optional[int],
-        typer.Option(
-            "-l", "--length", help="Specify subset of trajectory to evaluate."
-        ),
-    ] = None,
 ):
     """
     Evaluate the results of experiments.
     """
+
+    # Parse some of the options
+    if sum([only_complete, only_incomplete, only_failed]) > 1:
+        raise typer.BadParameter(
+            "Cannot only use one of --only-complete, --only-incomplete, or --only-failed."
+        )
+
+    # Parse the filtering options
+    if filter_str is None:
+        filter_method = lambda r: True  # noqa: E731
+    else:
+        # TODO: Is there a way to lock down eval to not allow arbitrary code execution?
+        filter_method = lambda r: eval(filter_str, {}, {"r": r})  # noqa: E731
+
+    original_filter = filter_method
+    if only_complete:
+        filter_method = lambda r: original_filter(r) and r["status"] == "complete"  # noqa: E731
+    elif only_incomplete:
+        filter_method = lambda r: original_filter(r) and r["status"] == "--"  # noqa: E731
+    elif only_failed:
+        filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
 
     directories_path = [Path(d) for d in directories]
 
@@ -228,4 +292,4 @@ def eval(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort, reverse, window, metric, length)
+        eval_dataset(d, visualize, sort, reverse, window, metric, length, filter_method)

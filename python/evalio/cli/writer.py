@@ -74,9 +74,9 @@ class TrajectoryWriter:
                 return ExperimentStatus.STARTED
 
             last_line = lines[-1].strip()
-            if last_line == "# done":
+            if last_line == "# status: complete":
                 return ExperimentStatus.FINISHED
-            elif last_line == "# failed":
+            elif last_line == "# status: fail":
                 return ExperimentStatus.FAILED
             else:
                 return ExperimentStatus.STARTED
@@ -105,11 +105,11 @@ class TrajectoryWriter:
 
     def finish(self):
         with open(self.path, "a") as f:
-            f.write("# done")
+            f.write("# status: complete")
 
     def fail(self):
         with open(self.path, "a") as f:
-            f.write("# failed")
+            f.write("# status: fail")
 
     def close(self):
         if hasattr(self, "file"):

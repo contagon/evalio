@@ -10,7 +10,7 @@ from evalio.rerun import RerunVis, VisArgs
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
 from .writer import TrajectoryWriter, save_config, save_gt, ExperimentStatus
-from .stats import eval
+from .stats import evaluate
 
 from rich import print
 from typing import Optional, Annotated
@@ -190,7 +190,7 @@ def run(
             else:
                 writer.fail()
 
-    eval([str(output)], False, "RTEt")
+    evaluate([str(output)], False, "RTEt")
 
 
 def run_single(
