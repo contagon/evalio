@@ -2,6 +2,7 @@ from pathlib import Path
 from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.utils import print_warning
 from tqdm.rich import tqdm
+import numpy as np
 
 from evalio.types import ImuMeasurement, LidarMeasurement
 from evalio.rerun import RerunVis, VisArgs
@@ -77,17 +78,18 @@ def run_from_cli(
             "Cannot specify both config and manual options", param_hint="run"
         )
 
+    # Got through visualization options
     if show is None:
         vis_args = VisArgs(show=visualize)
     else:
         vis_args = show
     vis = RerunVis(vis_args)
 
+    # Parse the config file if provided
     if config is not None:
         pipelines, datasets, out = parse_config(config)
         if out is None:
-            print_warning("Output directory not set. Defaulting to './evalio_results'")
-            out = Path("./evalio_results")
+            out = Path("./evalio_results") / config.stem
 
     else:
         if in_pipelines is None:
@@ -134,7 +136,10 @@ def run(
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
-    lengths = [d.length if d.length is not None else len(d.build()) for d in datasets]
+    lengths = [
+        min(d.length if d.length is not None else np.inf, len(d.build()))
+        for d in datasets
+    ]
     dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))  # type: ignore
     dtime *= len(pipelines)
     if dtime > 3600:
