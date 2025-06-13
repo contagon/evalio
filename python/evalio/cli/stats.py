@@ -51,6 +51,7 @@ def eval_dataset(
     metric: stats.MetricKind,
     length: Optional[int],
     filter_method: Callable[[dict], bool],
+    hide_name: bool = False,
 ):
     # Load all trajectories
     gt_list: list[Trajectory] = []
@@ -98,16 +99,14 @@ def eval_dataset(
         grouped_trajs[traj.metadata["pipeline"]].append(traj)
 
     # Compare keys in the same pipeline
-    keys_to_print = ["pipeline"]
+    keys_to_print = {"pipeline"}
     for _, trajs in grouped_trajs.items():
         keys = dict_diff([traj.metadata for traj in trajs])
-        if len(keys) > 0:
-            keys.remove("name")
-            keys_to_print += keys
+        keys_to_print.update(keys)
 
     # see if we should include the status
     if len(set(traj.metadata["status"] for traj in all_trajs)) > 1:
-        keys_to_print.append("status")
+        keys_to_print.add("status")
 
     results = []
     for pipeline, trajs in grouped_trajs.items():
@@ -130,6 +129,8 @@ def eval_dataset(
                 "length": len(traj_aligned),
             }
             r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
+            if hide_name:
+                r.pop("name", None)
             results.append(r)
 
             if rr is not None and convert is not None and visualize:
@@ -198,6 +199,12 @@ def evaluate(
             "-l", "--length", help="Specify subset of trajectory to evaluate."
         ),
     ] = None,
+    hide_name: Annotated[
+        bool,
+        typer.Option(
+            "--hide-name", "-n", help="Show the name of the trajectory in the results."
+        ),
+    ] = False,
     # Sorting options
     sort: Annotated[
         str,
@@ -305,4 +312,14 @@ def evaluate(
                 bottom_level_dirs.append(subdir)
 
     for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort, reverse, window, metric, length, filter_method)
+        eval_dataset(
+            d,
+            visualize,
+            sort,
+            reverse,
+            window,
+            metric,
+            length,
+            filter_method,
+            hide_name,
+        )
