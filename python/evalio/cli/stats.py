@@ -53,15 +53,14 @@ def eval_dataset(
     filter_method: Callable[[dict], bool],
 ):
     # Load all trajectories
-    trajectories = []
+    gt_list: list[Trajectory] = []
+    all_trajs: list[Trajectory] = []
     for file_path in dir.glob("*.csv"):
         traj = Trajectory.from_experiment(file_path)
-        trajectories.append(traj)
-
-    gt_list: list[Trajectory] = []
-    trajs: list[Trajectory] = []
-    for t in trajectories:
-        (gt_list if "gt" in t.metadata else trajs).append(t)
+        if "gt" in traj.metadata:
+            gt_list.append(traj)
+        else:
+            all_trajs.append(traj)
 
     assert len(gt_list) == 1, f"Found multiple ground truths in {dir}"
     gt_og = gt_list[0]
@@ -93,18 +92,22 @@ def eval_dataset(
 
     # Group into pipelines so we can compare keys
     # (other pipelines will have different keys)
-    pipelines = set(traj.metadata["pipeline"] for traj in trajs)
+    pipelines = set(traj.metadata["pipeline"] for traj in all_trajs)
     grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
-    for traj in trajs:
+    for traj in all_trajs:
         grouped_trajs[traj.metadata["pipeline"]].append(traj)
 
-    # Find all keys that were different
+    # Compare keys in the same pipeline
     keys_to_print = ["pipeline"]
     for _, trajs in grouped_trajs.items():
         keys = dict_diff([traj.metadata for traj in trajs])
         if len(keys) > 0:
             keys.remove("name")
             keys_to_print += keys
+
+    # see if we should include the status
+    if len(set(traj.metadata["status"] for traj in all_trajs)) > 1:
+        keys_to_print.append("status")
 
     results = []
     for pipeline, trajs in grouped_trajs.items():
@@ -274,7 +277,7 @@ def evaluate(
     if filter_str is None:
         filter_method = lambda r: True  # noqa: E731
     else:
-        # TODO: Is there a way to lock down eval to not allow arbitrary code execution?
+        # TODO: Would be great to find a way around having to use eval here
         filter_method = lambda r: eval(  # noqa: E731
             filter_str,
             {"__builtins__": None},
