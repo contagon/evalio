@@ -213,7 +213,9 @@ try:
         ...
 
     @overload
-    def convert(obj: np.ndarray, color: Optional[np.ndarray] = None) -> rr.Points3D:
+    def convert(
+        obj: np.ndarray, color: Optional[Literal["z"] | np.ndarray] = None
+    ) -> rr.Points3D:
         """Convert an (n, 3) numpy array to a rerun Points3D.
 
         Args:
@@ -307,6 +309,14 @@ try:
             return convert(LidarMeasurement(Stamp.from_sec(0), obj), color=color)
 
         elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:
+            if color == "z":
+                zs = obj[:, 2]
+                min_z, max_z = min(zs), max(zs)
+                color = np.zeros_like(obj)
+                val = (zs - min_z) / (max_z - min_z)
+                color[:, 0] = 1.0 - val
+                color[:, 1] = val
+
             return rr.Points3D(obj, colors=color)
 
         # Handle poses

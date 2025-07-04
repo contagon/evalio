@@ -22,6 +22,7 @@ app = typer.Typer()
 
 @app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
 def run_from_cli(
+    # Config file
     config: Annotated[
         Optional[Path],
         typer.Option(
@@ -32,6 +33,7 @@ def run_from_cli(
             show_default=False,
         ),
     ] = None,
+    # Manual options
     in_datasets: DatasetOpt = None,
     in_pipelines: PipelineOpt = None,
     in_out: Annotated[
@@ -44,6 +46,7 @@ def run_from_cli(
             show_default=False,
         ),
     ] = None,
+    # misc options
     length: Annotated[
         Optional[int],
         typer.Option(
@@ -73,6 +76,14 @@ def run_from_cli(
             parser=VisArgs.parse,
         ),
     ] = None,
+    rerun_failed: Annotated[
+        bool,
+        typer.Option(
+            "--rerun-failed",
+            help="Rerun failed experiments. If not set, will skip previously failed experiments.",
+            show_default=False,
+        ),
+    ] = False,
 ):
     if (in_pipelines or in_datasets or length) and config:
         raise typer.BadParameter(
@@ -121,7 +132,7 @@ def run_from_cli(
             param_hint="run",
         )
 
-    run(pipelines, datasets, out, vis)
+    run(pipelines, datasets, out, vis, rerun_failed)
 
 
 def plural(num: int, word: str) -> str:
@@ -133,6 +144,7 @@ def run(
     datasets: list[DatasetBuilder],
     output: Path,
     vis: RerunVis,
+    rerun_failed: bool,
 ):
     print(
         f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
@@ -169,8 +181,11 @@ def run(
                     print(f"Skipping {pbuilder} on {dbuilder}, already finished")
                     continue
                 case ExperimentStatus.FAILED:
-                    print(f"Skipping {pbuilder} on {dbuilder}, previously failed")
-                    continue
+                    if rerun_failed:
+                        print(f"Rerunning {pbuilder} on {dbuilder}, previously failed")
+                    else:
+                        print(f"Skipping {pbuilder} on {dbuilder}, previously failed")
+                        continue
                 case ExperimentStatus.STARTED:
                     print(f"Overwriting {pbuilder} on {dbuilder}")
                 case ExperimentStatus.NOT_STARTED:

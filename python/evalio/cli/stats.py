@@ -52,7 +52,8 @@ def eval_dataset(
     length: Optional[int],
     filter_method: Callable[[dict], bool],
     hide_name: bool = False,
-):
+    quiet: bool = False,
+) -> Optional[list[dict]]:
     # Load all trajectories
     gt_list: list[Trajectory] = []
     all_trajs: list[Trajectory] = []
@@ -99,14 +100,16 @@ def eval_dataset(
         grouped_trajs[traj.metadata["pipeline"]].append(traj)
 
     # Compare keys in the same pipeline
-    keys_to_print = {"pipeline"}
+    keys_to_print = ["pipeline"]
     for _, trajs in grouped_trajs.items():
         keys = dict_diff([traj.metadata for traj in trajs])
-        keys_to_print.update(keys)
+        if "name" in keys:
+            keys.remove("name")
+        keys_to_print += keys
 
     # see if we should include the status
     if len(set(traj.metadata["status"] for traj in all_trajs)) > 1:
-        keys_to_print.add("status")
+        keys_to_print.append("status")
 
     results = []
     for pipeline, trajs in grouped_trajs.items():
@@ -177,8 +180,15 @@ def eval_dataset(
         ]
         table.add_row(*row)
 
-    print()
-    Console().print(table)
+    if not quiet:
+        print()
+        Console().print(table)
+
+    for r in results:
+        r["dataset"] = gt_og.metadata["dataset"]
+        r["sequence"] = gt_og.metadata["sequence"]
+
+    return results
 
 
 def _contains_dir(directory: Path) -> bool:
@@ -193,27 +203,41 @@ def evaluate(
     visualize: Annotated[
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
     ] = False,
-    length: Annotated[
-        Optional[int],
-        typer.Option(
-            "-l", "--length", help="Specify subset of trajectory to evaluate."
-        ),
-    ] = None,
+    # output options
     hide_name: Annotated[
         bool,
         typer.Option(
-            "--hide-name", "-n", help="Show the name of the trajectory in the results."
+            "--hide-name",
+            "-n",
+            help="Show the name of the trajectory in the results.",
+            rich_help_panel="Output options",
         ),
     ] = False,
-    # Sorting options
+    quiet: Annotated[
+        bool,
+        typer.Option(
+            "--quiet",
+            "-q",
+            help="Don't print results to console.",
+            rich_help_panel="Output options",
+        ),
+    ] = False,
     sort: Annotated[
         str,
-        typer.Option("-s", "--sort", help="Sort results by the name of a column."),
+        typer.Option(
+            "-s",
+            "--sort",
+            help="Sort results by the name of a column.",
+            rich_help_panel="Output options",
+        ),
     ] = "RTEt",
     reverse: Annotated[
         bool,
         typer.Option(
-            "--reverse", "-r", help="Reverse the sorting order. Defaults to False."
+            "--reverse",
+            "-r",
+            help="Reverse the sorting order. Defaults to False.",
+            rich_help_panel="Output options",
         ),
     ] = False,
     # filtering options
@@ -269,7 +293,16 @@ def evaluate(
             rich_help_panel="Metric options",
         ),
     ] = stats.MetricKind.sse,
-):
+    length: Annotated[
+        Optional[int],
+        typer.Option(
+            "-l",
+            "--length",
+            help="Specify subset of trajectory to evaluate.",
+            rich_help_panel="Metric options",
+        ),
+    ] = None,
+) -> list[dict]:
     """
     Evaluate the results of experiments.
     """
@@ -277,7 +310,7 @@ def evaluate(
     # Parse some of the options
     if sum([only_complete, only_incomplete, only_failed]) > 1:
         raise typer.BadParameter(
-            "Cannot only use one of --only-complete, --only-incomplete, or --only-failed."
+            "Can only use one of --only-complete, --only-incomplete, or --only-failed."
         )
 
     # Parse the filtering options
@@ -301,8 +334,11 @@ def evaluate(
 
     directories_path = [Path(d) for d in directories]
 
-    c = Console()
-    c.print(f"Evaluating RTE over a window of size {window}, using metric {metric}.")
+    if not quiet:
+        c = Console()
+        c.print(
+            f"Evaluating RTE over a window of size {window}, using metric {metric}."
+        )
 
     # Collect all bottom level directories
     bottom_level_dirs = []
@@ -311,8 +347,9 @@ def evaluate(
             if not _contains_dir(subdir):
                 bottom_level_dirs.append(subdir)
 
+    results = []
     for d in bottom_level_dirs:
-        eval_dataset(
+        r = eval_dataset(
             d,
             visualize,
             sort,
@@ -322,4 +359,9 @@ def evaluate(
             length,
             filter_method,
             hide_name,
+            quiet,
         )
+        if r is not None:
+            results.extend(r)
+
+    return results
