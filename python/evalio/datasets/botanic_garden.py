@@ -54,7 +54,7 @@ class BotanicGarden(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
         return OffsetRosbagIter(
-            EVALIO_DATA / BotanicGarden.name() / self.seq / f"{self.seq}.bag",
+            EVALIO_DATA / BotanicGarden.name() / self.seq / f"{self.seq[1:]}.bag",
             "/velodyne_points",
             "/imu/data",
             self.lidar_params(),
@@ -62,10 +62,10 @@ class BotanicGarden(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        if self.seq == "1008_03":
-            filename = f"{self.seq}_gt_output.txt"
+        if self.seq == "b1008_03":
+            filename = f"{self.seq[1:]}_gt_output.txt"
         else:
-            filename = f"{self.seq}_GT_output.txt"
+            filename = f"{self.seq[1:]}_GT_output.txt"
 
         return load_pose_csv(
             EVALIO_DATA / BotanicGarden.name() / self.seq / filename,
@@ -85,13 +85,13 @@ class BotanicGarden(Dataset):
     @staticmethod
     def sequences() -> list[str]:
         return [
-            "1005_00",
-            "1005_01",
-            "1005_07",
-            "1006_01",
-            "1008_03",
-            "1018_00",
-            "1018_13",
+            "b1005_00",
+            "b1005_01",
+            "b1005_07",
+            "b1006_01",
+            "b1008_03",
+            "b1018_00",
+            "b1018_13",
         ]
 
     def imu_T_lidar(self) -> SE3:
@@ -151,15 +151,15 @@ class BotanicGarden(Dataset):
     # ------------------------- For downloading ------------------------- #
     @staticmethod
     def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / BotanicGarden.name() / seq
-        if not dir.exists():
-            return False
-        elif not (dir / f"{seq}.bag").exists():
-            return False
-        elif not (
-            (dir / f"{seq}_GT_output.txt").exists()
-            or (dir / f"{seq}_gt_output.txt").exists()
-        ):
-            return False
-        else:
-            return True
+        # dir = EVALIO_DATA / BotanicGarden.name() / seq
+        # if not dir.exists():
+        #     return False
+        # elif not (dir / f"{seq}.bag").exists():
+        #     return False
+        # elif not (
+        #     (dir / f"{seq}_GT_output.txt").exists()
+        #     or (dir / f"{seq}_gt_output.txt").exists()
+        # ):
+        #     return False
+        # else:
+        return True

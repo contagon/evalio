@@ -34,8 +34,15 @@ class NewerCollege2021(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
+        if "maths" in self.seq:
+            difficulty = self.seq.split("_")[1]
+            gt_file = f"gt_state_{difficulty}.csv"
+        else:
+            name = self.seq.replace("_", "-")
+            gt_file = f"gt-nc-{name}.csv"
+
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2021.name() / self.seq / "ground_truth.csv",
+            EVALIO_DATA / NewerCollege2021.name() / self.seq / gt_file,
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -51,15 +58,15 @@ class NewerCollege2021(Dataset):
     @staticmethod
     def sequences() -> list[str]:
         return [
-            "quad-easy",
-            "quad-medium",
-            "quad-hard",
+            "quad_easy",
+            "quad_medium",
+            "quad_hard",
             "stairs",
             "cloister",
             "park",
-            "maths-easy",
-            "maths-medium",
-            "maths-hard",
+            "maths_easy",
+            "maths_medium",
+            "maths_hard",
         ]
 
     def imu_T_lidar(self) -> SE3:
@@ -98,24 +105,30 @@ class NewerCollege2021(Dataset):
     # ------------------------- For downloading ------------------------- #
     @staticmethod
     def check_download(seq: str) -> bool:
-        # TODO:
+        if "maths" in seq:
+            difficulty = seq.split("_")[1]
+            gt_file = f"gt_state_{difficulty}.csv"
+        else:
+            name = seq.replace("_", "-")
+            gt_file = f"gt-nc-{name}.csv"
+
         dir = EVALIO_DATA / NewerCollege2021.name() / seq
         # Check how many bag files it should have
         should_have = {
-            "quad-easy": 1,
-            "quad-medium": 1,
-            "quad-hard": 1,
+            "quad_easy": 1,
+            "quad_medium": 1,
+            "quad_hard": 1,
             "stairs": 1,
             "cloister": 2,
             "park": 8,
-            "maths-easy": 2,
-            "maths-medium": 1,
-            "maths-hard": 2,
+            "maths_easy": 2,
+            "maths_medium": 1,
+            "maths_hard": 2,
         }[seq]
 
         if not dir.exists():
             return False
-        elif not (dir / "ground_truth.csv").exists():
+        elif not (dir / gt_file).exists():
             return False
         elif len(list(dir.glob("*.bag"))) != should_have:
             return False

@@ -31,13 +31,16 @@ class NewerCollege2020(Dataset):
         # For some reason bag #7 is different
         if self.seq == "07_parkland_mound":
             return load_pose_csv(
-                EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+                EVALIO_DATA
+                / NewerCollege2020.name()
+                / self.seq
+                / "registered_poses.csv",
                 ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
                 delimiter=" ",
             )
 
         return load_pose_csv(
-            EVALIO_DATA / NewerCollege2020.name() / self.seq / "ground_truth.csv",
+            EVALIO_DATA / NewerCollege2020.name() / self.seq / "registered_poses.csv",
             ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
 
@@ -53,11 +56,11 @@ class NewerCollege2020(Dataset):
     @staticmethod
     def sequences() -> list[str]:
         return [
-            "01_short_experiment",
-            "02_long_experiment",
-            "05_quad_with_dynamics",
-            "06_dynamic_spinning",
-            "07_parkland_mound",
+            "short_experiment",
+            "long_experiment",
+            "quad_with_dynamics",
+            "dynamic_spinning",
+            "parkland_mound",
         ]
 
     def imu_T_lidar(self) -> SE3:
@@ -99,16 +102,16 @@ class NewerCollege2020(Dataset):
         dir = EVALIO_DATA / NewerCollege2020.name() / seq
         # Check how many bag files it should have
         should_have = {
-            "01_short_experiment": 10,
-            "02_long_experiment": 16,
-            "05_quad_with_dynamics": 3,
-            "06_dynamic_spinning": 1,
-            "07_parkland_mound": 3,
+            "short_experiment": 10,
+            "long_experiment": 16,
+            "quad_with_dynamics": 3,
+            "dynamic_spinning": 1,
+            "parkland_mound": 3,
         }[seq]
 
         if not dir.exists():
             return False
-        elif not (dir / "ground_truth.csv").exists():
+        elif not (dir / "registered_poses.csv").exists():
             return False
         elif len(list(dir.glob("*.bag"))) != should_have:
             return False

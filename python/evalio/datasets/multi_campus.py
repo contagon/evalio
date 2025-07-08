@@ -42,13 +42,13 @@ class OffsetRosbagIter(RosbagIter):
 
 
 @dataclass
-class MultiCampus2024(Dataset):
+class MultiCampus(Dataset):
     # ------------------------- For loading data ------------------------- #
     def __iter__(self):
         # The NTU sequences use the ATV platform and a VectorNav vn100 IMU
         if "ntu" in self.seq:
             return OffsetRosbagIter(
-                EVALIO_DATA / MultiCampus2024.name() / self.seq,
+                EVALIO_DATA / MultiCampus.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn100/imu",
                 self.lidar_params(),
@@ -56,7 +56,7 @@ class MultiCampus2024(Dataset):
         # The KTH and TUHH sequences use the hand-held platform and a VectorNav vn200 IMU
         elif "kth" in self.seq or "tuhh" in self.seq:
             return OffsetRosbagIter(
-                EVALIO_DATA / MultiCampus2024.name() / self.seq,
+                EVALIO_DATA / MultiCampus.name() / self.seq,
                 "/os_cloud_node/points",
                 "/vn200/imu",
                 self.lidar_params(),
@@ -66,7 +66,7 @@ class MultiCampus2024(Dataset):
 
     def ground_truth_raw(self) -> Trajectory:
         return load_pose_csv(
-            EVALIO_DATA / MultiCampus2024.name() / self.seq / "pose_inW.csv",
+            EVALIO_DATA / MultiCampus.name() / self.seq / "pose_inW.csv",
             ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,
         )
@@ -78,7 +78,7 @@ class MultiCampus2024(Dataset):
 
     @staticmethod
     def name() -> str:
-        return "multi_campus_2024"
+        return "multi_campus"
 
     @staticmethod
     def sequences() -> list[str]:
@@ -204,19 +204,20 @@ class MultiCampus2024(Dataset):
     # ------------------------- For downloading ------------------------- #
     @staticmethod
     def check_download(seq: str) -> bool:
-        dir = EVALIO_DATA / MultiCampus2024.name() / seq
-        if not dir.exists():
-            return False
-        elif not (dir / "pose_inW.csv").exists():
-            return False
-        # elif not (dir / "spline.csv").exists():
+        # dir = EVALIO_DATA / MultiCampus.name() / seq
+        # if not dir.exists():
         #     return False
-        elif not (dir / "ouster.bag").exists():
-            return False
-        elif not (dir / "vectornav.bag").exists():
-            return False
-        else:
-            return True
+        # elif not (dir / "pose_inW.csv").exists():
+        #     return False
+        # # elif not (dir / "spline.csv").exists():
+        # #     return False
+        # elif not (dir / "ouster.bag").exists():
+        #     return False
+        # elif not (dir / "vectornav.bag").exists():
+        #     return False
+        # else:
+        #     return True
+        return True
 
     @staticmethod
     def download(seq: str):
@@ -306,7 +307,7 @@ class MultiCampus2024(Dataset):
 
         import gdown  # type: ignore
 
-        folder = EVALIO_DATA / MultiCampus2024.name() / seq
+        folder = EVALIO_DATA / MultiCampus.name() / seq
 
         print(f"Downloading {seq} to {folder}...")
         folder.mkdir(parents=True, exist_ok=True)

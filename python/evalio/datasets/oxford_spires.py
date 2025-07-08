@@ -36,7 +36,7 @@ class OxfordSpires(Dataset):
         # Some of these are within a few milliseconds of each other
         # skip over ones that are too close
         traj = load_pose_csv(
-            EVALIO_DATA / OxfordSpires.name() / self.seq / "gt-tum.csv",
+            EVALIO_DATA / OxfordSpires.name() / self.seq / "gt-tum.txt",
             ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             delimiter=" ",
         )
@@ -142,7 +142,7 @@ class OxfordSpires(Dataset):
 
         if not dir.exists():
             return False
-        elif not (dir / "gt-tum.csv").exists():
+        elif not (dir / "gt-tum.txt").exists():
             return False
         elif not (dir / "metadata.yaml").exists():
             return False
