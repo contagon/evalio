@@ -312,7 +312,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidfuzz", specifier = ">=3.12.2" },
     { name = "rerun-sdk", marker = "extra == 'vis'", specifier = ">=0.23" },
-    { name = "rosbags", specifier = ">=0.10" },
+    { name = "rosbags", specifier = ">=0.10.10" },
     { name = "tqdm", specifier = ">=4.66" },
     { name = "typer", specifier = ">=0.15.3" },
 ]
@@ -1327,7 +1327,7 @@ wheels = [
 
 [[package]]
 name = "rosbags"
-version = "0.10.9"
+version = "0.10.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lz4" },
@@ -1336,9 +1336,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/f9/a5dfa12d759178b291908ea4fa7e25f1ca4889b4b3b30e93dd2fb3905bef/rosbags-0.10.9.tar.gz", hash = "sha256:38fc1999370f6c173765c827b230f7486137fdd43c134b116374ad0fe264a135", size = 227641 }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/c7/32f56fbe61a64d8fde9538c9040e72950f57c2c68fec1903fbbb0aaf3420/rosbags-0.10.10.tar.gz", hash = "sha256:e5e99d2ad5650972c9cf0ab248e676f643859788c5bd273c5b24b35562783c12", size = 237638 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/22/b7644271253fdc8bf86f62ed46db538df644d474c2c0f0eeecb2b47507a7/rosbags-0.10.9-py3-none-any.whl", hash = "sha256:3b0f4e4821af69921aff4217432ffe8670ad245ab60198dbfcc3b578e83990ac", size = 135402 },
+    { url = "https://files.pythonhosted.org/packages/92/29/532e7bc2d96a8e499e875dabed3e4b163b2baf585f64c30fa7806f814107/rosbags-0.10.10-py3-none-any.whl", hash = "sha256:77617e5ec3d451c9e6e14637be8f9a5e19bf114ef1427d247a92123132103b4c", size = 139239 },
 ]
 
 [[package]]

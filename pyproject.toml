@@ -12,7 +12,7 @@ dependencies = [
     "numpy",
     "pyyaml>=6.0",
     "rapidfuzz>=3.12.2",
-    "rosbags>=0.10",
+    "rosbags>=0.10.10",
     "tqdm>=4.66",
     "typer>=0.15.3",
 ]

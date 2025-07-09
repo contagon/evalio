@@ -134,15 +134,22 @@ def filter_ros1(bag: Path, topics: list[str]) -> None:
 def filter_ros2(bag: Path, topics: list[str]) -> None:
     print(bag)
     typestore = get_typestore(Stores.ROS2_FOXY)
-    bag_temp = bag.parent / (bag.name + "_temp")
 
-    if len(list(bag.glob("*.mcap"))) > 0:
+    if len(mcap := list(bag.glob("*.mcap"))) == 1:
         storage = StoragePlugin.MCAP
-    elif len(list(bag.glob("*.db3"))) > 0:
+        storage_file = mcap[0]
+    elif len(sqlite3 := list(bag.glob("*.db3"))) == 1:
         storage = StoragePlugin.SQLITE3
+        storage_file = sqlite3[0]
     else:
         print_warning("No valid storage format found, cannot filter ros2 bag")
         return
+
+    bag_temp = storage_file.parent.parent / storage_file.stem
+
+    assert not bag_temp.exists(), (
+        f"Temporary bag {bag_temp} already exists, please remove it first"
+    )
 
     with Reader2(bag) as reader, Writer2(bag_temp, storage_plugin=storage) as writer:
         # Gather all the connections (messages) that we want to keep
@@ -175,13 +182,9 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
 
     # Replace the original bag with the filtered one
     print("-- Replacing original with temporary...")
-    for f in bag_temp.glob("*"):
-        # replace file with file of same extension
-        to_replace = [p for p in bag.glob("*") if p.suffix == f.suffix]
-        if len(to_replace) != 1:
-            print_warning("Something went wrong, unclear which file to replace")
-            continue
-        f.replace(to_replace[0])
+    (bag_temp / (bag_temp.stem + storage_file.suffix)).replace(storage_file)
+    (bag_temp / "metadata.yaml").replace(bag / "metadata.yaml")
+    bag_temp.rmdir()
 
 
 @app.command(no_args_is_help=True)
