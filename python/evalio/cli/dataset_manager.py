@@ -195,7 +195,7 @@ def filter(
         typer.Option(
             "--force",
             "-f",
-            prompt="Are you sure you want to filter these datasets?",
+            prompt="Are you sure you want to filter these datasets? This is slightly experimental, please make sure the data has a copy somewhere!",
             help="Force deletion without confirmation",
         ),
     ] = False,
@@ -243,6 +243,7 @@ def filter(
 
         if len(bags) == 0:
             print_warning("Something went wrong, no bags found")
+            return
 
         print(f"Found {len(bags)} {'ros2' if is2 else 'ros1'} bags to filter")
 
