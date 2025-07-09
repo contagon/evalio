@@ -24,6 +24,11 @@ cd LIO-SAM
 git stash
 git checkout master
 
+# LOAM
+if [ ! -d "loam" ]; then
+    git clone https://github.com/DanMcGann/loam.git
+fi
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then

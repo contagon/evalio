@@ -15,6 +15,10 @@ using namespace nb::literals;
 #include "bindings/pipelines/lio_sam.h"
 #endif
 
+#ifdef EVALIO_LOAM
+#include "bindings/pipelines/loam.h"
+#endif
+
 namespace evalio {
 inline void makePipelines(nb::module_ &m) {
   // List all the pipelines here
@@ -42,6 +46,16 @@ inline void makePipelines(nb::module_ &m) {
       "Lidar-Inertial Smoothing and Mapping (LioSAM) pipeline. LioSAM is an "
       "extension of LOAM (=> uses planar and edge features) that additionally "
       "utilizes an IMU for initializing ICP steps and for dewarping points";
+#endif
+
+#ifdef EVALIO_LOAM
+  nb::class_<LOAM, evalio::Pipeline>(m, "LOAM")
+      .def(nb::init<>())
+      .def_static("name", &LOAM::name)
+      .def_static("default_params", &LOAM::default_params)
+      .def_static("url", &LOAM::url)
+      .def_static("version", &LOAM::version);
+
 #endif
 }
 } // namespace evalio
