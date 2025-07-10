@@ -161,7 +161,7 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
                 other_topics = True
                 continue
 
-            ext = cast("ConnectionExtRosbag2", conn.ext)
+            ext = cast(ConnectionExtRosbag2, conn.ext)
             conn_write[conn.id] = writer.add_connection(
                 conn.topic,
                 conn.msgtype,
@@ -243,7 +243,7 @@ def filter(
 
         if len(bags) == 0:
             print_warning("Something went wrong, no bags found")
-            return
+            continue
 
         print(f"Found {len(bags)} {'ros2' if is2 else 'ros1'} bags to filter")
 
