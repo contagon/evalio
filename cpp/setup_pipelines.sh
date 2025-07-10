@@ -23,11 +23,17 @@ fi
 cd LIO-SAM
 git stash
 git checkout master
+cd ..
 
 # LOAM
 if [ ! -d "loam" ]; then
     git clone https://github.com/DanMcGann/loam.git
 fi
+cd loam
+git stash
+git switch --detach v1.0.0
+git apply ../../pipelines/loam.patch
+cd ..
 
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
