@@ -56,7 +56,7 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override{};
+  void set_imu_params(evalio::ImuParams params) override {};
   void set_lidar_params(evalio::LidarParams params) override {
     loam_lidar_params_ =
         std::make_unique<loam::LidarParams>(params.num_rows, params.num_columns,
@@ -123,7 +123,7 @@ public:
 
   // Doers
   void initialize() override {}
-  void add_imu(evalio::ImuMeasurement mm) override{};
+  void add_imu(evalio::ImuMeasurement mm) override {};
 
   std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
     // Handle Edge case of the first scan
