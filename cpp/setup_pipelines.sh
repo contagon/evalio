@@ -31,7 +31,7 @@ if [ ! -d "loam" ]; then
 fi
 cd loam
 git stash
-git switch --detach v1.0.0
+git checkout main
 git apply ../../pipelines/loam.patch
 cd ..
 
