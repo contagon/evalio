@@ -98,7 +98,7 @@ public:
   }
 
   // Getters
-  evalio::SE3 const pose() override {
+  const evalio::SE3 pose() override {
     return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
