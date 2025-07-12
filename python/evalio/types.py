@@ -146,9 +146,13 @@ class Trajectory:
                     metadata_list.pop(i)
                     break
             metadata_str = "\n".join(metadata_list)
-            metadata = yaml.safe_load(metadata_str)
-            if "status" not in metadata:
-                metadata["status"] = "--"
+            # Put in some defaults in case they don't have it
+            metadata = {
+                "status": "--",
+                "total_elapsed": "--",
+                "max_step_elapsed": "--",
+            }
+            metadata.update(yaml.safe_load(metadata_str))
 
         trajectory = Trajectory.from_csv(
             path,

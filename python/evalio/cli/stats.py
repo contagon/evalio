@@ -123,6 +123,9 @@ def eval_dataset(
                 gt_aligned.poses = gt_aligned.poses[:length]
             ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
             rte = stats.rte(traj_aligned, gt_aligned, window_size).summarize(metric)
+            hz = traj.metadata["total_elapsed"]
+            if isinstance(hz, float):
+                hz = len(traj) / hz
             r = {
                 "name": traj.metadata["name"],
                 "RTEt": rte.trans,
@@ -130,6 +133,8 @@ def eval_dataset(
                 "ATEt": ate.trans,
                 "ATEr": ate.rot,
                 "length": len(traj_aligned),
+                "Hz": hz,
+                "Max (s)": traj.metadata["max_step_elapsed"],
             }
             r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
             if hide_name:

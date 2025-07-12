@@ -103,6 +103,10 @@ class TrajectoryWriter:
         )
         self.index += 1
 
+    def set_time(self, total: float, max_time: float):
+        self.file.write(f"# total_elapsed: {total:.3f}\n")
+        self.file.write(f"# max_step_elapsed: {max_time:.3f}\n")
+
     def finish(self):
         with open(self.path, "a") as f:
             f.write("# status: complete")

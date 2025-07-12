@@ -16,6 +16,8 @@ from rich import print
 from typing import Optional, Annotated
 import typer
 
+from time import time
+
 
 app = typer.Typer()
 
@@ -205,7 +207,8 @@ def run(
             else:
                 writer.fail()
 
-    evaluate([str(output)])
+    if output.suffix != ".csv":
+        evaluate([str(output)])
 
 
 def run_single(
@@ -221,15 +224,28 @@ def run_single(
     vis.new_pipe(pbuilder.name)
     writer.start()
 
+    time_running = 0.0
+    time_max = 0.0
+    time_total = 0.0
+
     loop = tqdm(total=length)
     for data in dbuilder.build():
         if isinstance(data, ImuMeasurement):
+            start = time()
             pipe.add_imu(data)
+            time_running += time() - start
         elif isinstance(data, LidarMeasurement):
+            start = time()
             features = pipe.add_lidar(data)
             pose = pipe.pose()
-            writer.write(data.stamp, pose)
+            time_running += time() - start
 
+            time_total += time_running
+            if time_running > time_max:
+                time_max = time_running
+            time_running = 0.0
+
+            writer.write(data.stamp, pose)
             vis.log(data, features, pose, pipe)
 
             loop.update()
@@ -238,4 +254,5 @@ def run_single(
                 break
 
     loop.close()
+    writer.set_time(time_total, time_max)
     writer.close()
