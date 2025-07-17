@@ -106,6 +106,10 @@ def eval_dataset(
         if "name" in keys:
             keys.remove("name")
         keys_to_print += keys
+    if "total_elapsed" in keys_to_print:
+        keys_to_print.remove("total_elapsed")
+    if "max_step_elapsed" in keys_to_print:
+        keys_to_print.remove("max_step_elapsed")
 
     # see if we should include the status
     if len(set(traj.metadata["status"] for traj in all_trajs)) > 1:
