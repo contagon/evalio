@@ -38,6 +38,8 @@
     },
     "sophus",
     "tbb",
-    "robin-map"
+    "robin-map",
+    "ceres",
+    "nanoflann"
   ]
 }
