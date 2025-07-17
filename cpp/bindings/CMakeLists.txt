@@ -2,6 +2,10 @@
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pipelines-src")
 
+# Force all targets to be compiled with -fPIC
+# This is required for Python bindings to work properly
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # ------------------------- Helpers ------------------------- #
 # Extract version of a project which was previously included with add_subdirectory().
 # https://stackoverflow.com/a/49551280

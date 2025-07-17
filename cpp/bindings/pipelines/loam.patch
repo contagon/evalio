@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 84fa788..097d8f8 100644
+index edc1edf..7ad1875 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -8,29 +8,12 @@ set(CMAKE_CXX_STANDARD 17)
+@@ -8,34 +8,17 @@ set(CMAKE_CXX_STANDARD 17)
  message(STATUS "================  BUILDING LOAM  ======================")
  
  # Dependencies
@@ -34,3 +34,22 @@ index 84fa788..097d8f8 100644
  
  # Define the library
  file(GLOB loam_srcs "${CMAKE_CURRENT_SOURCE_DIR}/loam/src/*.cpp")
+ file(GLOB loam_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/loam/include/loam/*.h")
+-add_library(loam SHARED ${loam_srcs} ${loam_hdrs})
++add_library(loam STATIC ${loam_srcs} ${loam_hdrs})
+ target_link_libraries(loam PUBLIC Eigen3::Eigen Ceres::ceres nanoflann::nanoflann)
+ target_include_directories(loam PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/loam/include")
+ 
+diff --git a/loam/src/geometry.cpp b/loam/src/geometry.cpp
+index 4f3f870..88e2ced 100644
+--- a/loam/src/geometry.cpp
++++ b/loam/src/geometry.cpp
+@@ -53,7 +53,7 @@ std::pair<Line, double> fitLine(Eigen::MatrixXd points) {
+   Line line(center + 0.1 * line_direction, center - 0.1 * line_direction);
+   // Compute the condition number being careful to avoid a division by zero
+   double condition_number = std::numeric_limits<double>::max();
+-  if (pca.eigenvalues()(2) > 1e-12) pca.eigenvalues()(2) / pca.eigenvalues()(0);
++  // if (pca.eigenvalues()(2) > 1e-12) pca.eigenvalues()(2) / pca.eigenvalues()(0);
+ 
+   return std::make_pair(line, condition_number);
+ }
