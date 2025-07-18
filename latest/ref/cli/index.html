@@ -769,6 +769,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evalio-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      evalio filter
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evalio-ls" class="md-nav__link">
     <span class="md-ellipsis">
       evalio ls
@@ -971,6 +980,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evalio-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      evalio filter
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evalio-ls" class="md-nav__link">
     <span class="md-ellipsis">
       evalio ls
@@ -1030,6 +1048,7 @@
 <ul>
 <li><code>dl</code>: Download datasets</li>
 <li><code>rm</code>: Remove dataset(s)</li>
+<li><code>filter</code>: Filter rosbag dataset(s) to only include...</li>
 <li><code>ls</code>: List dataset and pipeline information</li>
 <li><code>run</code>: Run pipelines on datasets</li>
 <li><code>stats</code>: Evaluate the results of experiments.</li>
@@ -1062,10 +1081,24 @@
 <li><code>-f, --force</code>: Force deletion without confirmation</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
+<h2 id="evalio-filter"><code>evalio filter</code></h2>
+<p>Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.</p>
+<p><strong>Usage</strong>:</p>
+<div class="language-console highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>filter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DATASETS...
+</span></code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>DATASETS...</code>: The dataset(s) to use  [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>-f, --force</code>: Force deletion without confirmation</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
 <h2 id="evalio-ls"><code>evalio ls</code></h2>
 <p>List dataset and pipeline information</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>KIND:<span class="o">{</span>datasets<span class="p">|</span>pipelines<span class="o">}</span>
+<div class="language-console highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>KIND:<span class="o">{</span>datasets<span class="p">|</span>pipelines<span class="o">}</span>
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
@@ -1081,7 +1114,7 @@
 <h2 id="evalio-run"><code>evalio run</code></h2>
 <p>Run pipelines on datasets</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="language-console highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </span></code></pre></div>
 <p><strong>Options</strong>:</p>
 <ul>
@@ -1097,7 +1130,7 @@
 <h2 id="evalio-stats"><code>evalio stats</code></h2>
 <p>Evaluate the results of experiments.</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>stats<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DIRECTORIES...
+<div class="language-console highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>stats<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DIRECTORIES...
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
