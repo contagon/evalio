@@ -11,11 +11,11 @@
 // Helps evalio bindings be found in other modules
 // Licensed via BSD-3-Clause
 #if !defined(PYBIND11_EXPORT)
-#if defined(WIN32) || defined(_WIN32)
-#define PYBIND11_EXPORT __declspec(dllexport)
-#else
-#define PYBIND11_EXPORT __attribute__((visibility("default")))
-#endif
+  #if defined(WIN32) || defined(_WIN32)
+    #define PYBIND11_EXPORT __declspec(dllexport)
+  #else
+    #define PYBIND11_EXPORT __attribute__((visibility("default")))
+  #endif
 #endif
 
 // For converting version definitions to string
@@ -29,12 +29,21 @@ using Param = std::variant<bool, int, double, std::string>;
 
 class PYBIND11_EXPORT Pipeline {
 public:
-  virtual ~Pipeline() {};
+  virtual ~Pipeline() {}
 
   // Info
-  static std::string version() { return "0.0.0"; }
-  static std::string url() { return "url-not-set"; }
-  static std::string name() { throw std::runtime_error("Not implemented"); }
+  static std::string version() {
+    return "0.0.0";
+  }
+
+  static std::string url() {
+    return "url-not-set";
+  }
+
+  static std::string name() {
+    throw std::runtime_error("Not implemented");
+  }
+
   static std::map<std::string, Param> default_params() {
     throw std::runtime_error("Not implemented");
   }
