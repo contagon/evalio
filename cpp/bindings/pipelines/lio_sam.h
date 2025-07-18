@@ -92,13 +92,13 @@ public:
     return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     auto map = lio_sam_->getMap();
     std::vector<evalio::Point> evalio_map(map->size());
     for (std::size_t i = 0; i < map->size(); ++i) {
       to_evalio_point(evalio_map[i], map->at(i));
     }
-    return evalio_map;
+    return {{"point", evalio_map}};
   }
 
   // Setters
@@ -196,7 +196,8 @@ public:
     lio_sam_->addImuMeasurement(imuMsg);
   };
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<evalio::Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
     pcl::PointCloud<lio_sam::PointXYZIRT>::Ptr cloud;
     cloud.reset(new pcl::PointCloud<lio_sam::PointXYZIRT>);
@@ -216,7 +217,7 @@ public:
     for (size_t i = 0; i < used_points->points.size(); ++i) {
       to_evalio_point(result[i], used_points->points[i]);
     }
-    return result;
+    return {{"point", result}};
   }
 
 private:

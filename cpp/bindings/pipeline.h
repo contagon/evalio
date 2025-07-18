@@ -22,7 +22,9 @@ public:
 
   // Getters
   const evalio::SE3 pose() override { NB_OVERRIDE_PURE(pose); }
-  const std::vector<evalio::Point> map() override { NB_OVERRIDE_PURE(map); }
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
+    NB_OVERRIDE_PURE(map);
+  }
 
   // Setters
   void set_imu_params(evalio::ImuParams params) override {
@@ -43,7 +45,8 @@ public:
   void add_imu(evalio::ImuMeasurement mm) override {
     NB_OVERRIDE_PURE(add_imu, mm);
   }
-  std::vector<Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     NB_OVERRIDE_PURE(add_lidar, mm);
   }
 };

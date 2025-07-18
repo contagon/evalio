@@ -12,7 +12,11 @@ from dataclasses import dataclass
 
 import typer
 
+import distinctipy
+
 from evalio.types import SE3, LidarMeasurement, Point
+
+GT_COLOR = (144, 144, 144)  # Color for ground truth in rerun
 
 
 @dataclass
@@ -61,6 +65,8 @@ try:
             self.trajectory: Optional[Trajectory] = None
             self.imu_T_lidar: Optional[SE3] = None
             self.pn: Optional[str] = None
+            self.colors: Optional[list[tuple[float, float, float]]] = None
+            self.used_colors: list[tuple[float, float, float]] = []
 
         def _blueprint(self, pipelines: list[PipelineBuilder]) -> rr.BlueprintLike:
             # Eventually we'll be able to glob these, but for now, just take in the names beforehand
@@ -93,14 +99,15 @@ try:
                 "recording_id": uuid4(),
                 "make_default": True,
             }
-            self.rec = rr.new_recording(**self.recording_params)
-            self.rec.connect_grpc(default_blueprint=self._blueprint(pipelines))
+            self.rec = rr.RecordingStream(**self.recording_params)
+            self.rec.connect_grpc()
+            self.rec.send_blueprint(self._blueprint(pipelines))
 
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
 
-            self.rec.log("gt", convert(self.gt, color=[144, 144, 144]), static=True)
+            self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
         def new_pipe(self, pipe_name: str):
             if not self.args.show:
@@ -112,23 +119,33 @@ try:
                 )
 
             # First reconnect to make sure we're connected (happens b/c of multithread passing)
-            self.rec = rr.new_recording(**self.recording_params)
+            self.rec = rr.RecordingStream(**self.recording_params)
             self.rec.connect_grpc()
 
             self.pn = pipe_name
             self.gt_o_T_imu_o = None
+            self.colors = None
             self.trajectory = Trajectory(stamps=[], poses=[])
             self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
         def log(
             self,
             data: LidarMeasurement,
-            features: Sequence[Point],
+            features: dict[str, list[Point]],
             pose: SE3,
             pipe: Pipeline,
         ):
             if not self.args.show:
                 return
+
+            if self.colors is None:
+                # features/map colors + trajectory + scan
+                self.colors = distinctipy.get_colors(
+                    len(features) + 2,
+                    exclude_colors=self.used_colors,
+                    rng=0,
+                )
+                self.used_colors.extend(self.colors)
 
             if self.lidar_params is None or self.gt is None:
                 raise ValueError(
@@ -148,25 +165,34 @@ try:
                     self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
             # Always include the pose
-            self.rec.set_time_seconds("evalio_time", seconds=data.stamp.to_sec())
+            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
             self.rec.log(f"{self.pn}/imu", convert(pose))
             self.trajectory.append(data.stamp, pose)
-            self.rec.log(f"{self.pn}/trajectory", convert(self.trajectory))
+            self.rec.log(
+                f"{self.pn}/trajectory",
+                convert(self.trajectory, color=self.colors[-1]),
+            )
 
             # Features from the scan
             if self.args.features:
                 if len(features) > 0:
-                    self.rec.log(
-                        f"{self.pn}/imu/lidar/features", convert(list(features))
-                    )
+                    for (k, p), c in zip(features.items(), self.colors):
+                        self.rec.log(
+                            f"{self.pn}/imu/lidar/{k}",
+                            convert(list(p), color=c, radii=0.12),
+                        )
 
             # Include the current map
             if self.args.map:
-                self.rec.log(f"{self.pn}/map", convert(pipe.map()))
+                for (k, p), c in zip(pipe.map().items(), self.colors):
+                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
 
             # Include the original point cloud
             if self.args.scan:
-                self.rec.log(f"{self.pn}/imu/lidar/scan", convert(data))
+                self.rec.log(
+                    f"{self.pn}/imu/lidar/scan",
+                    convert(data, color=self.colors[-2], radii=0.08),
+                )
 
             # Include the intensity image
             if self.args.image:
@@ -182,13 +208,18 @@ try:
     @overload
     def convert(
         obj: LidarMeasurement,
-        color: Optional[Literal["z", "intensity"] | list[int]] = None,
+        color: Optional[
+            Literal["z", "intensity"]
+            | tuple[int, int, int]
+            | tuple[float, float, float]
+        ] = None,
+        radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert a LidarMeasurement to a rerun Points3D.
 
         Args:
             obj (LidarMeasurement): LidarMeasurement to convert.
-            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+            color (Optional[str  |  tuple[int, int, int] | tuple[float, float, float]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
 
         Returns:
             rr.Points3D: LidarMeasurement converted to rerun Points3D.
@@ -199,13 +230,18 @@ try:
     @overload
     def convert(
         obj: list[Point],
-        color: Optional[Literal["z", "intensity"] | list[int]] = None,
+        color: Optional[
+            Literal["z", "intensity"]
+            | tuple[int, int, int]
+            | tuple[float, float, float]
+        ] = None,
+        radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert a list of Points to a rerun Points3D.
 
         Args:
             obj (list[Points]): Points to convert.
-            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+            color (Optional[str  |  tuple[int, int, int] | tuple[float, float, float]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
 
         Returns:
             rr.Points3D: Points converted to rerun Points3D.
@@ -214,13 +250,15 @@ try:
 
     @overload
     def convert(
-        obj: np.ndarray, color: Optional[Literal["z"] | np.ndarray] = None
+        obj: np.ndarray,
+        color: Optional[Literal["z"] | np.ndarray] = None,
+        radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert an (n, 3) numpy array to a rerun Points3D.
 
         Args:
             obj (np.ndarray): LidarMeasurement to convert.
-            color (Optional[str  |  list[int]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
+            color (Optional[str  |  tuple[int, int, int] | tuple[float, float, float]], optional): Optional color for points. Can be a list of colors, e.g. `[255, 0, 0]` for red, or one of `z` or `intensity`. Defaults to None.
 
         Returns:
             rr.Points3D: numpy array converted to rerun Points3D.
@@ -229,12 +267,15 @@ try:
 
     # trajectories
     @overload
-    def convert(obj: list[SE3], color: Optional[list[int]] = None) -> rr.Points3D:
+    def convert(
+        obj: list[SE3],
+        color: Optional[tuple[int, int, int] | tuple[float, float, float]] = None,
+    ) -> rr.Points3D:
         """Convert a list of SE3 poses to a rerun Points3D.
 
         Args:
             obj (list[SE3]): List of SE3 poses to convert.
-            color (Optional[list[int]], optional): Optional color for points, as a list of colors, e.g. `[255, 0, 0]` for red. Defaults to None.
+            color (Optional[tuple[int, int, int] | tuple[float, float, float]], optional): Optional color for points, as a list of colors, e.g. `[255, 0, 0]` for red. Defaults to None.
 
         Returns:
             rr.Points3D: List of SE3 poses converted to rerun Points3D.
@@ -242,7 +283,10 @@ try:
         ...
 
     @overload
-    def convert(obj: Trajectory, color: Optional[list[int]] = None) -> rr.Points3D:
+    def convert(
+        obj: Trajectory,
+        color: Optional[tuple[int, int, int] | tuple[float, float, float]] = None,
+    ) -> rr.Points3D:
         """Convert a Trajectory a rerun Points3D.
 
         Args:
@@ -268,7 +312,9 @@ try:
         ...
 
     def convert(
-        obj: object, color: Optional[Any] = None
+        obj: object,
+        color: Optional[Any] = None,
+        radii: Optional[float] = None,
     ) -> rr.Transform3D | rr.Points3D:
         """Convert a variety of objects to rerun types.
 
@@ -286,7 +332,9 @@ try:
         # Handle point clouds
         if isinstance(obj, LidarMeasurement):
             color_parsed = None
-            if color == "intensity":
+            if isinstance(color, tuple):
+                color_parsed = np.asarray(color)
+            elif color == "intensity":
                 max_intensity = max([p.intensity for p in obj.points])
                 color_parsed = np.zeros((len(obj.points), 3))
                 for i, point in enumerate(obj.points):
@@ -299,17 +347,20 @@ try:
                 for i, point in enumerate(obj.points):
                     val = (point.z - min_z) / (max_z - min_z)
                     color_parsed[i] = [1.0 - val, val, 0]
-            elif isinstance(color, list):
-                color_parsed = np.asarray(color)
             elif color is not None:
                 raise ValueError(f"Unknown color type {color}")
-            return convert(np.asarray(obj.to_vec_positions()), color=color_parsed)
+
+            return convert(
+                np.asarray(obj.to_vec_positions()), color=color_parsed, radii=radii
+            )
 
         elif isinstance(obj, list) and isinstance(obj[0], Point):
-            return convert(LidarMeasurement(Stamp.from_sec(0), obj), color=color)
+            return convert(
+                LidarMeasurement(Stamp.from_sec(0), obj), color=color, radii=radii
+            )
 
         elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:
-            if color == "z":
+            if isinstance(color, str) and color == "z":
                 zs = obj[:, 2]
                 min_z, max_z = min(zs), max(zs)
                 color = np.zeros_like(obj)
@@ -317,7 +368,7 @@ try:
                 color[:, 0] = 1.0 - val
                 color[:, 1] = val
 
-            return rr.Points3D(obj, colors=color)
+            return rr.Points3D(obj, colors=color, radii=radii)
 
         # Handle poses
         elif isinstance(obj, SE3):

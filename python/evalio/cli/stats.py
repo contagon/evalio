@@ -12,6 +12,7 @@ from evalio import stats
 import numpy as np
 import typer
 
+import distinctipy
 
 app = typer.Typer()
 
@@ -77,9 +78,10 @@ def eval_dataset(
 
     rr = None
     convert = None
+    colors = None
     if visualize:
         import rerun as rr
-        from evalio.rerun import convert
+        from evalio.rerun import convert, GT_COLOR
 
         rr.init(
             str(dir),
@@ -88,9 +90,12 @@ def eval_dataset(
         rr.connect_grpc()
         rr.log(
             "gt",
-            convert(gt_og, color=[144, 144, 144]),
+            convert(gt_og, color=GT_COLOR),
             static=True,
         )
+
+        # generate colors for visualization
+        colors = distinctipy.get_colors(len(all_trajs) + 1)
 
     # Group into pipelines so we can compare keys
     # (other pipelines will have different keys)
@@ -116,6 +121,7 @@ def eval_dataset(
         keys_to_print.append("status")
 
     results = []
+    index = 0
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
@@ -145,12 +151,18 @@ def eval_dataset(
                 r.pop("name", None)
             results.append(r)
 
-            if rr is not None and convert is not None and visualize:
+            if (
+                rr is not None
+                and convert is not None
+                and colors is not None
+                and visualize
+            ):
                 rr.log(
                     traj.metadata["name"],
-                    convert(traj_aligned),
+                    convert(traj_aligned, color=colors[index]),
                     static=True,
                 )
+                index += 1
 
     def key_func(x):
         val = x[sort]

@@ -82,7 +82,7 @@ from evalio.rerun import convert
 rr.init("evalio")
 rr.connect_tcp()
 for scan in Hilti2022.basement_2.lidar():
-    rr.set_time_seconds("timeline", seconds=scan.stamp.to_sec())
+    rr.set_time("timeline", timestamp=scan.stamp.to_sec())
     rr.log("lidar", convert(scan, color=[255, 0, 255]))
 ```
 

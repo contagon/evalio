@@ -56,14 +56,14 @@ public:
     return to_evalio_se3(pose);
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
     std::vector<evalio::Point> evalio_map;
     evalio_map.reserve(map.size());
     for (auto point : map) {
       evalio_map.push_back(to_evalio_point(point));
     }
-    return evalio_map;
+    return {{"point", evalio_map}};
   }
 
   // Setters
@@ -125,7 +125,8 @@ public:
 
   void add_imu(evalio::ImuMeasurement mm) override {};
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<evalio::Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
     std::vector<Eigen::Vector3d> points;
     points.reserve(mm.points.size());
@@ -145,7 +146,7 @@ public:
     for (auto point : used_points) {
       result.push_back(to_evalio_point(point));
     }
-    return result;
+    return {{"point", result}};
   }
 
 private:
