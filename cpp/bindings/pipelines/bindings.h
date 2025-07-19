@@ -16,7 +16,7 @@ using namespace nb::literals;
 #endif
 
 #ifdef EVALIO_LOAM
-#include "bindings/pipelines/loam.h"
+  #include "bindings/pipelines/loam.h"
 #endif
 
 namespace evalio {
@@ -50,15 +50,15 @@ inline void makePipelines(nb::module_& m) {
 
 #ifdef EVALIO_LOAM
   nb::class_<LOAM, evalio::Pipeline>(m, "LOAM")
-      .def(nb::init<>())
-      .def_static("name", &LOAM::name)
-      .def_static("default_params", &LOAM::default_params)
-      .def_static("url", &LOAM::url)
-      .def_static("version", &LOAM::version)
-      .doc() =
-      "Lidar Odometry and Mapping (LOAM) pipeline. LOAM is a baseline "
-      "lidar-only odometry method that pioneered feature-based ICP. "
-      "Our implementation permits both scan-to-scan or scan-to-map matching.";
+    .def(nb::init<>())
+    .def_static("name", &LOAM::name)
+    .def_static("default_params", &LOAM::default_params)
+    .def_static("url", &LOAM::url)
+    .def_static("version", &LOAM::version)
+    .doc() =
+    "Lidar Odometry and Mapping (LOAM) pipeline. LOAM is a baseline "
+    "lidar-only odometry method that pioneered feature-based ICP. "
+    "Our implementation permits both scan-to-scan or scan-to-map matching.";
 
 #endif
 }
