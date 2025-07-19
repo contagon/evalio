@@ -58,7 +58,7 @@ public:
     return to_se3(current_estimated_pose) * lidar_T_imu_;
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     return features_to_points(
       transform_features(map_features(), current_estimated_pose)
     );
@@ -142,7 +142,8 @@ public:
 
   void add_imu(evalio::ImuMeasurement mm) override {}
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<evalio::Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     // Handle Edge case of the first scan
     if (past_k_scans_.size() == 0) {
       // Extract Features from the first scan
@@ -234,16 +235,9 @@ private:
 
   /// @brief Helper to aggregate all features (edge + planar) into a single
   /// container
-  std::vector<evalio::Point>
+  std::map<std::string, std::vector<evalio::Point>>
   features_to_points(const loam::LoamFeatures<evalio::Point> features) {
-    std::vector<evalio::Point> points;
-    for (const auto& planar_pt : features.planar_points) {
-      points.push_back(planar_pt);
-    }
-    for (const auto& edge_pt : features.edge_points) {
-      points.push_back(edge_pt);
-    }
-    return points;
+    return {{"planar", features.planar_points}, {"edge", features.edge_points}};
   }
 
   /// @brief Aggregate the history of k most recent scans into a local map in
