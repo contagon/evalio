@@ -8,13 +8,15 @@
 #include "kiss_icp/pipeline/KissICP.hpp"
 
 inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
-  return {.x = point[0],
-          .y = point[1],
-          .z = point[2],
-          .intensity = 0.0,
-          .t = evalio::Duration::from_sec(0),
-          .row = 0,
-          .col = 0};
+  return {
+    .x = point[0],
+    .y = point[1],
+    .z = point[2],
+    .intensity = 0.0,
+    .t = evalio::Duration::from_sec(0),
+    .row = 0,
+    .col = 0
+  };
 }
 
 inline Eigen::Vector3d to_eigen_point(evalio::Point point) {
@@ -25,7 +27,7 @@ inline evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
   const auto t = pose.translation();
   const auto q = pose.unit_quaternion();
   const auto rot =
-      evalio::SO3{.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
+    evalio::SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
   return evalio::SE3(rot, t);
 }
 
@@ -33,20 +35,33 @@ inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
   return Sophus::SE3d(Sophus::SO3d(pose.rot.toEigen()), pose.trans);
 }
 
-class KissICP : public evalio::Pipeline {
+class KissICP: public evalio::Pipeline {
 public:
-  KissICP() : config_() {};
+  KissICP() : config_() {}
 
   // Info
-  static std::string version() { return XSTR(EVALIO_KISS_ICP); }
-  static std::string name() { return "kiss"; }
-  static std::string url() { return "https://github.com/PRBonn/kiss-icp"; }
+  static std::string version() {
+    return XSTR(EVALIO_KISS_ICP);
+  }
+
+  static std::string name() {
+    return "kiss";
+  }
+
+  static std::string url() {
+    return "https://github.com/PRBonn/kiss-icp";
+  }
+
   static std::map<std::string, evalio::Param> default_params() {
     return {
-        {"voxel_size", 1.0},          {"min_motion_th", 0.1},
-        {"initial_threshold", 2.0},   {"convergence_criterion", 0.0001},
-        {"max_num_iterations", 500},  {"max_num_threads", 0},
-        {"max_points_per_voxel", 20}, {"deskew", false},
+      {"voxel_size", 1.0},
+      {"min_motion_th", 0.1},
+      {"initial_threshold", 2.0},
+      {"convergence_criterion", 0.0001},
+      {"max_num_iterations", 500},
+      {"max_num_threads", 0},
+      {"max_points_per_voxel", 20},
+      {"deskew", false},
     };
   }
 
@@ -67,23 +82,26 @@ public:
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {};
+  void set_imu_params(evalio::ImuParams params) override {}
+
   void set_lidar_params(evalio::LidarParams params) override {
     config_.max_range = params.max_range;
     config_.min_range = params.min_range;
-  };
+  }
+
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
-  };
+  }
 
   void set_params(std::map<std::string, evalio::Param> params) override {
-    for (auto &[key, value] : params) {
+    for (auto& [key, value] : params) {
       if (std::holds_alternative<bool>(value)) {
         if (key == "deskew") {
           config_.deskew = std::get<bool>(value);
         } else {
           throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have bool param " + key);
+            "Invalid parameter, KissICP doesn't have bool param " + key
+          );
         }
       } else if (std::holds_alternative<int>(value)) {
         if (key == "max_points_per_voxel") {
@@ -94,7 +112,8 @@ public:
           config_.max_num_threads = std::get<int>(value);
         } else {
           throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have int param " + key);
+            "Invalid parameter, KissICP doesn't have int param " + key
+          );
         }
       } else if (std::holds_alternative<double>(value)) {
         if (key == "voxel_size") {
@@ -107,11 +126,13 @@ public:
           config_.convergence_criterion = std::get<double>(value);
         } else {
           throw std::invalid_argument(
-              "Invalid parameter, KissICP doesn't have double param " + key);
+            "Invalid parameter, KissICP doesn't have double param " + key
+          );
         }
       } else if (std::holds_alternative<std::string>(value)) {
         throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have string param " + key);
+          "Invalid parameter, KissICP doesn't have string param " + key
+        );
       } else {
         throw std::invalid_argument("Invalid parameter type");
       }
@@ -123,7 +144,7 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {};
+  void add_imu(evalio::ImuMeasurement mm) override {}
 
   std::map<std::string, std::vector<evalio::Point>>
   add_lidar(evalio::LidarMeasurement mm) override {
@@ -140,7 +161,7 @@ public:
     }
 
     // Run through pipeline
-    const auto &[_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
+    const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());
     for (auto point : used_points) {

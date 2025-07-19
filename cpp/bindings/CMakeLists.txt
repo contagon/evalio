@@ -2,6 +2,10 @@
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 set(PIPELINES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/pipelines-src")
 
+# Force all targets to be compiled with -fPIC
+# This is required for Python bindings to work properly
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # ------------------------- Helpers ------------------------- #
 # Extract version of a project which was previously included with add_subdirectory().
 # https://stackoverflow.com/a/49551280
@@ -63,6 +67,7 @@ set(RESULTS "") # for printing results
 message("################### Searching for pipelines ###################")
 find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline EVALIO_KISS_ICP)
 find_pipeline(LIO-SAM                lio_sam           EVALIO_LIO_SAM)
+find_pipeline(loam                   loam              EVALIO_LOAM)
 message("###################    Pipeline Results     ###################")
 if(NOT "${RESULTS}" STREQUAL "")
     string(STRIP "${RESULTS}" RESULTS)

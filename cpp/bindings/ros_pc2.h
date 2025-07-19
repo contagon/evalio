@@ -1,12 +1,12 @@
 #pragma once
-#include <cmath>
-#include <cstddef>
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include <cmath>
+#include <cstddef>
 #include <fstream>
 
 #include "evalio/types.h"
@@ -44,101 +44,107 @@ struct PointCloudMetadata {
 };
 
 // ------------------------- Point loading lambdas ------------------------- //
-template <typename T>
-std::function<void(T &, const uint8_t *)> data_getter(DataType datatype,
-                                                      const uint32_t offset) {
+template<typename T>
+std::function<void(T&, const uint8_t*)>
+data_getter(DataType datatype, const uint32_t offset) {
   switch (datatype) {
-  case UINT8: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const uint8_t *>(data + offset));
-    };
-  }
-  case INT8: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const int8_t *>(data + offset));
-    };
-  }
-  case UINT16: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value =
-          static_cast<T>(*reinterpret_cast<const uint16_t *>(data + offset));
-    };
-  }
-  case UINT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value =
-          static_cast<T>(*reinterpret_cast<const uint32_t *>(data + offset));
-    };
-  }
-  case INT16: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const int16_t *>(data + offset));
-    };
-  }
-  case INT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const int32_t *>(data + offset));
-    };
-  }
-  case FLOAT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const float *>(data + offset));
-    };
-  }
-  case FLOAT64: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = static_cast<T>(*reinterpret_cast<const double *>(data + offset));
-    };
-  }
-  default: {
-    throw std::runtime_error("Unsupported datatype");
-  }
+    case UINT8: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value =
+          static_cast<T>(*reinterpret_cast<const uint8_t*>(data + offset));
+      };
+    }
+    case INT8: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = static_cast<T>(*reinterpret_cast<const int8_t*>(data + offset));
+      };
+    }
+    case UINT16: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value =
+          static_cast<T>(*reinterpret_cast<const uint16_t*>(data + offset));
+      };
+    }
+    case UINT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value =
+          static_cast<T>(*reinterpret_cast<const uint32_t*>(data + offset));
+      };
+    }
+    case INT16: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value =
+          static_cast<T>(*reinterpret_cast<const int16_t*>(data + offset));
+      };
+    }
+    case INT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value =
+          static_cast<T>(*reinterpret_cast<const int32_t*>(data + offset));
+      };
+    }
+    case FLOAT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = static_cast<T>(*reinterpret_cast<const float*>(data + offset));
+      };
+    }
+    case FLOAT64: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = static_cast<T>(*reinterpret_cast<const double*>(data + offset));
+      };
+    }
+    default: {
+      throw std::runtime_error("Unsupported datatype");
+    }
   }
 }
 
 // Specialization for Stamp & Duration
-template <typename T>
-std::function<void(T &, const uint8_t *)> time_getter(DataType datatype,
-                                                      const uint32_t offset) {
+template<typename T>
+std::function<void(T&, const uint8_t*)>
+time_getter(DataType datatype, const uint32_t offset) {
   switch (datatype) {
-  case UINT16: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = T::from_nsec(*reinterpret_cast<const uint16_t *>(data + offset));
-    };
-  }
-  case UINT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = T::from_nsec(*reinterpret_cast<const uint32_t *>(data + offset));
-    };
-  }
-  case INT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = T::from_nsec(*reinterpret_cast<const int32_t *>(data + offset));
-    };
-  }
-  case FLOAT32: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = T::from_sec(*reinterpret_cast<const float *>(data + offset));
-    };
-  }
-  case FLOAT64: {
-    return [offset](T &value, const uint8_t *data) noexcept {
-      value = T::from_sec(*reinterpret_cast<const double *>(data + offset));
-    };
-  }
-  default: {
-    throw std::runtime_error("Unsupported datatype for time");
-  }
+    case UINT16: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = T::from_nsec(*reinterpret_cast<const uint16_t*>(data + offset));
+      };
+    }
+    case UINT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = T::from_nsec(*reinterpret_cast<const uint32_t*>(data + offset));
+      };
+    }
+    case INT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = T::from_nsec(*reinterpret_cast<const int32_t*>(data + offset));
+      };
+    }
+    case FLOAT32: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = T::from_sec(*reinterpret_cast<const float*>(data + offset));
+      };
+    }
+    case FLOAT64: {
+      return [offset](T& value, const uint8_t* data) noexcept {
+        value = T::from_sec(*reinterpret_cast<const double*>(data + offset));
+      };
+    }
+    default: {
+      throw std::runtime_error("Unsupported datatype for time");
+    }
   }
 }
 
-template <typename T> std::function<void(T &, const uint8_t *)> blank() {
-  return [](T &, const uint8_t *) noexcept {};
+template<typename T>
+std::function<void(T&, const uint8_t*)> blank() {
+  return [](T&, const uint8_t*) noexcept {};
 }
 
-inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
-                                              const std::vector<Field> &fields,
-                                              const uint8_t *data) {
+inline evalio::LidarMeasurement pc2_to_evalio(
+  const PointCloudMetadata& msg,
+  const std::vector<Field>& fields,
+  const uint8_t* data
+) {
   if (msg.is_bigendian) {
     throw std::runtime_error("Big endian not supported yet");
   }
@@ -155,7 +161,7 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
   std::function func_range = blank<uint32_t>();
   std::function func_row = blank<uint8_t>();
 
-  for (const auto &field : fields) {
+  for (const auto& field : fields) {
     if (field.name == "x") {
       func_x = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "y") {
@@ -164,15 +170,15 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
       func_z = data_getter<double>(field.datatype, field.offset);
     } else if (field.name == "intensity") {
       func_intensity = data_getter<double>(field.datatype, field.offset);
-    } else if (field.name == "t" || field.name == "time" ||
-               field.name == "stamp" || field.name == "time_offset" ||
-               field.name == "timeOffset" || field.name == "timestamp") {
+    } else if (field.name == "t" || field.name == "time"
+               || field.name == "stamp" || field.name == "time_offset"
+               || field.name == "timeOffset" || field.name == "timestamp") {
       func_duration = time_getter<Duration>(field.datatype, field.offset);
       func_stamp = time_getter<Stamp>(field.datatype, field.offset);
     } else if (field.name == "range") {
       func_range = data_getter<uint32_t>(field.datatype, field.offset);
-    } else if (field.name == "row" || field.name == "ring" ||
-               field.name == "channel") {
+    } else if (field.name == "row" || field.name == "ring"
+               || field.name == "channel") {
       func_row = data_getter<uint8_t>(field.datatype, field.offset);
     }
   }
@@ -181,13 +187,13 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
   // relative. We'll handle relative to start/end of scan later
   Duration t;
   func_duration(t, data);
-  std::function<void(Duration &, const uint8_t *)> func_t = func_duration;
+  std::function<void(Duration&, const uint8_t*)> func_t = func_duration;
 
   // Convert from absolute time
   if (t.to_sec() > 100.0) {
     Stamp scan_stamp = mm.stamp;
-    func_t = [func_stamp, scan_stamp](Duration &duration,
-                                      const uint8_t *data) noexcept {
+    func_t = [func_stamp,
+              scan_stamp](Duration& duration, const uint8_t* data) noexcept {
       Stamp absolute_stamp;
       func_stamp(absolute_stamp, data);
       duration = absolute_stamp - scan_stamp;
@@ -197,7 +203,7 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
   }
 
   size_t index = 0;
-  for (evalio::Point &point : mm.points) {
+  for (evalio::Point& point : mm.points) {
     const auto pointStart = data + static_cast<size_t>(index * msg.point_step);
     func_x(point.x, pointStart);
     func_y(point.y, pointStart);
@@ -214,11 +220,15 @@ inline evalio::LidarMeasurement pc2_to_evalio(const PointCloudMetadata &msg,
 
 // -------------------- Helpers to fill out column index -------------------- //
 // Iterates through points to fill in columns
-inline void
-_fill_col(LidarMeasurement &mm,
-          std::function<void(uint16_t &col, const uint16_t &prev_col,
-                             const uint8_t &prev_row, const uint8_t &curr_row)>
-              func_col) {
+inline void _fill_col(
+  LidarMeasurement& mm,
+  std::function<void(
+    uint16_t& col,
+    const uint16_t& prev_col,
+    const uint8_t& prev_row,
+    const uint8_t& curr_row
+  )> func_col
+) {
   // fill out the first one to kickstart
   uint16_t prev_col = 0;
   uint8_t prev_row = mm.points[0].row;
@@ -230,9 +240,13 @@ _fill_col(LidarMeasurement &mm,
 }
 
 // Fills in column index for row major order
-inline void fill_col_row_major(LidarMeasurement &mm) {
-  auto func_col = [](uint16_t &col, const uint16_t &prev_col,
-                     const uint8_t &prev_row, const uint8_t &curr_row) {
+inline void fill_col_row_major(LidarMeasurement& mm) {
+  auto func_col = [](
+                    uint16_t& col,
+                    const uint16_t& prev_col,
+                    const uint8_t& prev_row,
+                    const uint8_t& curr_row
+                  ) {
     if (prev_row != curr_row) {
       col = 0;
     } else {
@@ -244,9 +258,13 @@ inline void fill_col_row_major(LidarMeasurement &mm) {
 }
 
 // Fills in column index for column major order
-inline void fill_col_col_major(LidarMeasurement &mm) {
-  auto func_col = [](uint16_t &col, const uint16_t &prev_col,
-                     const uint8_t &prev_row, const uint8_t &curr_row) {
+inline void fill_col_col_major(LidarMeasurement& mm) {
+  auto func_col = [](
+                    uint16_t& col,
+                    const uint16_t& prev_col,
+                    const uint8_t& prev_row,
+                    const uint8_t& curr_row
+                  ) {
     if (curr_row < prev_row) {
       col = prev_col + 1;
     } else {
@@ -258,7 +276,7 @@ inline void fill_col_col_major(LidarMeasurement &mm) {
 }
 
 // point cloud loader where rows come in in 0, 8, 1, 9, ... order
-inline void fill_col_split_row_velodyne(LidarMeasurement &mm) {
+inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
   auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
     if (row_idx < 8) {
       return row_idx * 2;
@@ -268,8 +286,11 @@ inline void fill_col_split_row_velodyne(LidarMeasurement &mm) {
   };
 
   auto func_col = [&func_row_idx_to_row_seq](
-                      uint16_t &col, const uint16_t &prev_col,
-                      const uint8_t &prev_row, const uint8_t &curr_row) {
+                    uint16_t& col,
+                    const uint16_t& prev_col,
+                    const uint8_t& prev_row,
+                    const uint8_t& curr_row
+                  ) {
     if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
       col = prev_col + 1;
     } else {
@@ -281,8 +302,8 @@ inline void fill_col_split_row_velodyne(LidarMeasurement &mm) {
 }
 
 // ------------------------- Helpers for reordering ------------------------- //
-inline void reorder_points(LidarMeasurement &mm, size_t num_rows,
-                           size_t num_cols) {
+inline void
+reorder_points(LidarMeasurement& mm, size_t num_rows, size_t num_cols) {
   std::vector<Point> points_original = mm.points;
   mm.points = std::vector<Point>(num_rows * num_cols);
 
@@ -299,8 +320,8 @@ inline void reorder_points(LidarMeasurement &mm, size_t num_rows,
 }
 
 // ------------------------- Shift point stamps ------------------------- //
-inline void shift_point_stamps(LidarMeasurement &mm, const Duration &shift) {
-  for (auto &p : mm.points) {
+inline void shift_point_stamps(LidarMeasurement& mm, const Duration& shift) {
+  for (auto& p : mm.points) {
     p.t = p.t + shift;
   }
 }
@@ -311,12 +332,14 @@ inline void shift_point_stamps(LidarMeasurement &mm, const Duration &shift) {
 // major, its nigh impossible to infer where these were along a scan line for
 // now we just tack them on the end Largely borrowed from
 // https://github.com/minwoo0611/HeLiPR-File-Player/blob/501b338c4be1070fc61a438177c3c0e22b628b30/src/ROSThread.cpp#L444-L454
-inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
-                                             Stamp stamp,
-                                             const LidarParams &params) {
+inline LidarMeasurement helipr_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params
+) {
   LidarMeasurement mm(stamp);
   mm.points.resize(params.num_columns * params.num_rows);
-  for (auto &p : mm.points) {
+  for (auto& p : mm.points) {
     p = Point();
   }
 
@@ -364,42 +387,63 @@ inline LidarMeasurement helipr_bin_to_evalio(const std::string &filename,
 }
 
 // ---------------------- Create python bindings ---------------------- //
-inline void makeConversions(nb::module_ &m) {
+inline void makeConversions(nb::module_& m) {
   nb::enum_<DataType>(m, "DataType")
-      .value("UINT8", DataType::UINT8)
-      .value("INT8", DataType::INT8)
-      .value("UINT16", DataType::UINT16)
-      .value("UINT32", DataType::UINT32)
-      .value("INT16", DataType::INT16)
-      .value("INT32", DataType::INT32)
-      .value("FLOAT32", DataType::FLOAT32)
-      .value("FLOAT64", DataType::FLOAT64);
+    .value("UINT8", DataType::UINT8)
+    .value("INT8", DataType::INT8)
+    .value("UINT16", DataType::UINT16)
+    .value("UINT32", DataType::UINT32)
+    .value("INT16", DataType::INT16)
+    .value("INT32", DataType::INT32)
+    .value("FLOAT32", DataType::FLOAT32)
+    .value("FLOAT64", DataType::FLOAT64);
 
   nb::class_<Field>(m, "Field")
-      .def(nb::init<std::string, DataType, uint32_t>(), nb::kw_only(), "name"_a,
-           "datatype"_a, "offset"_a)
-      .def_rw("name", &Field::name)
-      .def_rw("datatype", &Field::datatype)
-      .def_rw("offset", &Field::offset);
+    .def(
+      nb::init<std::string, DataType, uint32_t>(),
+      nb::kw_only(),
+      "name"_a,
+      "datatype"_a,
+      "offset"_a
+    )
+    .def_rw("name", &Field::name)
+    .def_rw("datatype", &Field::datatype)
+    .def_rw("offset", &Field::offset);
 
   nb::class_<PointCloudMetadata>(m, "PointCloudMetadata")
-      .def(nb::init<evalio::Stamp, int, int, int, int, int, int>(),
-           nb::kw_only(), "stamp"_a, "width"_a, "height"_a, "point_step"_a,
-           "row_step"_a, "is_bigendian"_a, "is_dense"_a)
-      .def_rw("stamp", &PointCloudMetadata::stamp)
-      .def_rw("width", &PointCloudMetadata::width)
-      .def_rw("height", &PointCloudMetadata::height)
-      .def_rw("point_step", &PointCloudMetadata::point_step)
-      .def_rw("row_step", &PointCloudMetadata::row_step)
-      .def_rw("is_bigendian", &PointCloudMetadata::is_bigendian)
-      .def_rw("is_dense", &PointCloudMetadata::is_dense);
+    .def(
+      nb::init<evalio::Stamp, int, int, int, int, int, int>(),
+      nb::kw_only(),
+      "stamp"_a,
+      "width"_a,
+      "height"_a,
+      "point_step"_a,
+      "row_step"_a,
+      "is_bigendian"_a,
+      "is_dense"_a
+    )
+    .def_rw("stamp", &PointCloudMetadata::stamp)
+    .def_rw("width", &PointCloudMetadata::width)
+    .def_rw("height", &PointCloudMetadata::height)
+    .def_rw("point_step", &PointCloudMetadata::point_step)
+    .def_rw("row_step", &PointCloudMetadata::row_step)
+    .def_rw("is_bigendian", &PointCloudMetadata::is_bigendian)
+    .def_rw("is_dense", &PointCloudMetadata::is_dense);
 
-  m.def("pc2_to_evalio",
-        [](const PointCloudMetadata &msg, const std::vector<Field> &fields,
-           nb::bytes c) -> evalio::LidarMeasurement {
-          return pc2_to_evalio(msg, fields,
-                               reinterpret_cast<const uint8_t *>(c.c_str()));
-        });
+  m.def(
+    "pc2_to_evalio",
+    [](
+      const PointCloudMetadata& msg,
+      const std::vector<Field>& fields,
+      nb::bytes c
+    ) -> evalio::LidarMeasurement {
+      return pc2_to_evalio(
+        msg,
+        fields,
+        reinterpret_cast<const uint8_t*>(c.c_str())
+      );
+    }
+  );
 
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);
