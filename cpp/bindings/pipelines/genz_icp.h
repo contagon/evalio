@@ -25,22 +25,23 @@ public:
   }
 
   static std::map<std::string, evalio::Param> default_params() {
+    const auto config = genz_icp::pipeline::GenZConfig();
     return {
       // map params
-      {"map_cleanup_radius", 400.0},
-      {"max_points_per_voxel", 1},
+      {"map_cleanup_radius", config.map_cleanup_radius},
+      {"max_points_per_voxel", config.max_points_per_voxel},
       // voxelize params
-      {"voxel_size", 0.25},
-      {"desired_num_voxelized_points", 2000},
+      {"voxel_size", config.voxel_size},
+      {"desired_num_voxelized_points", config.desired_num_voxelized_points},
       // th params
-      {"min_motion_th", 0.1},
-      {"initial_threshold", 2.0},
-      {"planarity_threshold", 0.1},
+      {"min_motion_th", config.min_motion_th},
+      {"initial_threshold", config.initial_threshold},
+      {"planarity_threshold", config.planarity_threshold},
       // motion compensation
-      {"deskew", false},
+      {"deskew", config.deskew},
       // registration params
-      {"max_num_iterations", 150},
-      {"convergence_criterion", 0.0001},
+      {"max_num_iterations", config.max_num_iterations},
+      {"convergence_criterion", config.convergence_criterion},
     };
   }
 
@@ -48,7 +49,7 @@ public:
   const evalio::SE3 pose() override {
     const auto pose =
       !genz_icp_->poses().empty() ? genz_icp_->poses().back() : Sophus::SE3d();
-    return to_evalio_se3(pose);
+    return to_evalio_se3(pose * lidar_T_imu_);
   }
 
   const std::map<std::string, std::vector<evalio::Point>> map() override {
@@ -132,13 +133,25 @@ public:
     }
 
     // Run through pipeline
-    const auto& [_, used_points] = genz_icp_->RegisterFrame(points, timestamps);
-    std::vector<evalio::Point> result;
-    result.reserve(used_points.size());
-    for (auto point : used_points) {
-      result.push_back(to_evalio_point(point));
+    const auto& [planar_points, nonplanar_points] =
+      genz_icp_->RegisterFrame(points, timestamps);
+    const auto lidar_T_world = genz_icp_->poses().back().inverse();
+
+    // Return the used points
+    // These are all in the global frame, so we need to convert them
+    std::vector<evalio::Point> ev_planar_points;
+    ev_planar_points.reserve(planar_points.size());
+    for (auto point : planar_points) {
+      ev_planar_points.push_back(to_evalio_point(lidar_T_world * point));
     }
-    return {{"point", result}};
+
+    std::vector<evalio::Point> ev_nonplanar_points;
+    ev_nonplanar_points.reserve(nonplanar_points.size());
+    for (auto point : nonplanar_points) {
+      ev_nonplanar_points.push_back(to_evalio_point(lidar_T_world * point));
+    }
+
+    return {{"nonplanar", ev_nonplanar_points}, {"planar", ev_planar_points}};
   }
 
 private:

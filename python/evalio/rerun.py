@@ -329,6 +329,10 @@ try:
         Returns:
             rr.Transform3D | rr.Points3D: Rerun type.
         """
+        # If we have an empty list, assume it's a point cloud with no points
+        if isinstance(obj, list) and len(obj) == 0:
+            return rr.Points3D(np.zeros((0, 3)), colors=color, radii=radii)
+
         # Handle point clouds
         if isinstance(obj, LidarMeasurement):
             color_parsed = None
