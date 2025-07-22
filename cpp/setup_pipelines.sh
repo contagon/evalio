@@ -36,13 +36,23 @@ git apply ../../pipelines/loam.patch
 cd ..
 
 # GenZ-ICP
-if [ ! -d "GenZ-ICP" ]; then
+if [ ! -d "genz-icp" ]; then
     git clone https://github.com/cocel-postech/genz-icp.git
 fi
 cd genz-icp
 git stash
 git switch --detach v0.2.0
 git apply ../../pipelines/genz_icp.patch
+cd ..
+
+# MAD-ICP
+if [ ! -d "mad-icp" ]; then
+    git clone git@github.com:rvp-group/mad-icp.git
+fi
+cd mad-icp
+git stash
+git switch --detach v0.0.10
+git apply ../../pipelines/mad_icp.patch
 cd ..
 
 # ------------------------- Dependencies ------------------------- #

@@ -23,6 +23,10 @@ using namespace nb::literals;
   #include "bindings/pipelines/genz_icp.h"
 #endif
 
+#ifdef EVALIO_MAD_ICP
+  #include "bindings/pipelines/mad_icp.h"
+#endif
+
 namespace evalio {
 inline void makePipelines(nb::module_& m) {
   // List all the pipelines here
@@ -77,6 +81,19 @@ inline void makePipelines(nb::module_& m) {
     "additionally estimates normals in the local submap voxel map for "
     "increased robustness. It also includes a novel weighting scheme for"
     " weighting point-to-plane and point-to-point correspondences.";
+#endif
+
+#ifdef EVALIO_MAD_ICP
+  nb::class_<MadICP, evalio::Pipeline>(m, "MadICP")
+    .def(nb::init<>())
+    .def_static("name", &MadICP::name)
+    .def_static("default_params", &MadICP::default_params)
+    .def_static("url", &MadICP::url)
+    .def_static("version", &MadICP::version)
+    .doc() =
+    "MAD-ICP LiDAR-only pipeline is an extension of KissICP that "
+    "utilizes a novel kd-tree representation that implicitly computes "
+    "normals to perform point-to-plane registration.";
 #endif
 }
 } // namespace evalio
