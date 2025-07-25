@@ -16,6 +16,22 @@ import distinctipy
 
 from evalio.types import SE3, LidarMeasurement, Point
 
+
+# These colors are pulled directly from the rerun skybox colors
+# https://github.com/rerun-io/rerun/blob/main/crates/viewer/re_renderer/shader/generic_skybox.wgsl#L19
+# We avoid them to make sure our colors are distinct from viewer colors
+def skybox_dark_rgb(dir: np.ndarray) -> tuple[float, float, float]:
+    rgb = dir * 0.5 + np.full(3, 0.5)
+    rgb = np.full(3, 0.05) + 0.20 * rgb
+    return (float(rgb[0]), float(rgb[1]), float(rgb[2]))
+
+
+def skybox_light_rgb(dir: np.ndarray) -> tuple[float, float, float]:
+    rgb = dir * 0.5 + np.full(3, 0.5)
+    rgb = np.full(3, 0.7) + 0.20 * rgb
+    return (float(rgb[0]), float(rgb[1]), float(rgb[2]))
+
+
 GT_COLOR = (144, 144, 144)  # Color for ground truth in rerun
 
 
@@ -66,7 +82,26 @@ try:
             self.imu_T_lidar: Optional[SE3] = None
             self.pn: Optional[str] = None
             self.colors: Optional[list[tuple[float, float, float]]] = None
-            self.used_colors: list[tuple[float, float, float]] = []
+
+            directions = np.array(
+                [
+                    [1, 0, 0],
+                    [-1, 0, 0],
+                    [0, 1, 0],
+                    [0, -1, 0],
+                    [0, 0, 1],
+                    [0, 0, -1],
+                ]
+            )
+            self.used_colors: list[tuple[float, float, float]] = (
+                [
+                    GT_COLOR,
+                    distinctipy.BLACK,
+                    distinctipy.WHITE,
+                ]
+                + [skybox_dark_rgb(dir) for dir in directions]
+                + [skybox_light_rgb(dir) for dir in directions]
+            )
 
         def _blueprint(self, pipelines: list[PipelineBuilder]) -> rr.BlueprintLike:
             # Eventually we'll be able to glob these, but for now, just take in the names beforehand
