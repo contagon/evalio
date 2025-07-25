@@ -21,7 +21,7 @@ struct MadICPConfig {
   double p_th = 0.8;
   int num_keyframes = 10;
   // TODO: Double check this one to make sure 0=all threads
-  int num_threads = 0;
+  int num_threads = 4;
   // lidar params
   double max_range = 100.0;
   double min_range = 0.0;
