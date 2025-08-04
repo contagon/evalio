@@ -15,6 +15,7 @@ import typer
 import distinctipy
 
 from evalio.types import SE3, LidarMeasurement, Point
+from evalio.stats import _check_overstep
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -195,7 +196,13 @@ try:
                     pass
                 else:
                     imu_o_T_imu_0 = pose
-                    gt_o_T_imu_0 = self.gt.poses[0]
+                    # find the ground truth pose that is temporally closest to the imu pose
+                    gt_index = 0
+                    while self.gt.stamps[gt_index] < data.stamp:
+                        gt_index += 1
+                    if _check_overstep(self.gt.stamps, data.stamp, gt_index):
+                        gt_index -= 1
+                    gt_o_T_imu_0 = self.gt.poses[gt_index]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
                     self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
