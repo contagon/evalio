@@ -25,23 +25,24 @@ public:
   }
 
   static std::map<std::string, evalio::Param> default_params() {
-    const auto config = genz_icp::pipeline::GenZConfig();
+    // Pull from their ROS2 config instead of from the GenZConfig() defaults
+    // https://github.com/cocel-postech/genz-icp/blob/master/ros/launch/odometry.launch.py
     return {
       // map params
-      {"map_cleanup_radius", config.map_cleanup_radius},
-      {"max_points_per_voxel", config.max_points_per_voxel},
+      // Make map_cleanup_radius = max_range
+      {"max_points_per_voxel", 1},
       // voxelize params
-      {"voxel_size", config.voxel_size},
-      {"desired_num_voxelized_points", config.desired_num_voxelized_points},
+      {"voxel_size", 0.3},
+      {"desired_num_voxelized_points", 2000},
       // th params
-      {"min_motion_th", config.min_motion_th},
-      {"initial_threshold", config.initial_threshold},
-      {"planarity_threshold", config.planarity_threshold},
+      {"min_motion_th", 0.1},
+      {"initial_threshold", 2.0},
+      {"planarity_threshold", 0.2},
       // motion compensation
-      {"deskew", config.deskew},
+      {"deskew", false},
       // registration params
-      {"max_num_iterations", config.max_num_iterations},
-      {"convergence_criterion", config.convergence_criterion},
+      {"max_num_iterations", 100},
+      {"convergence_criterion", 0.0001},
     };
   }
 
@@ -66,8 +67,9 @@ public:
   void set_imu_params(evalio::ImuParams params) override {}
 
   void set_lidar_params(evalio::LidarParams params) override {
-    config_.max_range = params.max_range;
     config_.min_range = params.min_range;
+    config_.max_range = params.max_range;
+    config_.map_cleanup_radius = params.max_range;
   }
 
   void set_imu_T_lidar(evalio::SE3 T) override {
@@ -77,9 +79,7 @@ public:
   void set_params(std::map<std::string, evalio::Param> params) override {
     for (auto& [key, value] : params) {
       // map params
-      if (key == "map_cleanup_radius") {
-        config_.map_cleanup_radius = std::get<double>(value);
-      } else if (key == "max_points_per_voxel") {
+      if (key == "max_points_per_voxel") {
         config_.max_points_per_voxel = std::get<int>(value);
       }
       // voxelize params
