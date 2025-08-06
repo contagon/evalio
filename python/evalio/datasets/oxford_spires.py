@@ -52,7 +52,7 @@ class OxfordSpires(Dataset):
             "/hesai/pandar",
             "/alphasense_driver_ros/imu",
             self.lidar_params(),
-            is_mcap=True,
+            is_ros2==True,
             lidar_format=LidarFormatParams(
                 stamp=LidarStamp.Start,
                 point_stamp=LidarPointStamp.Start,
