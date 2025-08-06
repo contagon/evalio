@@ -3,6 +3,7 @@
 #include <Eigen/Geometry>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -19,9 +20,9 @@ struct MadICPConfig {
   double b_ratio = 0.02;
   double rho_ker = 0.1;
   double p_th = 0.8;
-  int num_keyframes = 10;
-  // TODO: Double check this one to make sure 0=all threads
-  int num_threads = 4;
+  int num_keyframes = 8;
+  int num_threads = 0;
+  bool realtime = true;
   // lidar params
   double max_range = 100.0;
   double min_range = 0.0;
@@ -55,7 +56,8 @@ public:
       {"rho_ker", config.rho_ker},
       {"p_th", config.p_th},
       {"num_keyframes", config.num_keyframes},
-      {"num_threads", config.num_threads}
+      {"num_threads", config.num_threads},
+      {"realtime", config.realtime}
     };
   }
 
@@ -100,6 +102,8 @@ public:
         config_.num_keyframes = std::get<int>(value);
       } else if (key == "num_threads") {
         config_.num_threads = std::get<int>(value);
+      } else if (key == "realtime") {
+        config_.realtime = std::get<bool>(value);
       } else {
         throw std::invalid_argument("Unknown parameter: " + key);
       }
@@ -108,6 +112,13 @@ public:
 
   // Doers
   void initialize() override {
+    if (config_.num_threads <= 0) {
+      config_.num_threads = std::min(
+        config_.num_keyframes,
+        static_cast<int>(std::thread::hardware_concurrency())
+      );
+    }
+
     mad_icp_ = std::make_unique<mad::Pipeline>(
       config_.sensor_hz,
       config_.deskew,
@@ -118,7 +129,7 @@ public:
       config_.b_ratio,
       config_.num_keyframes,
       config_.num_threads,
-      false // realtime - if we're lagging behind, it automatically drops frames
+      config_.realtime
     );
   }
 
