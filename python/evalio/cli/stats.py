@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Annotated, Callable, Optional, Sequence
 
+import itertools
+
 from evalio.utils import print_warning
 from rich.table import Table
 from rich.console import Console
@@ -13,6 +15,8 @@ import numpy as np
 import typer
 
 import distinctipy
+
+from joblib import Parallel, delayed
 
 app = typer.Typer()
 
@@ -48,7 +52,8 @@ def eval_dataset(
     visualize: bool,
     sort: Optional[str],
     reverse: bool,
-    window_size: int,
+    window_kind: stats.WindowKind,
+    window_size: Optional[int | float],
     metric: stats.MetricKind,
     length: Optional[int],
     filter_method: Callable[[dict], bool],
@@ -111,16 +116,19 @@ def eval_dataset(
         if "name" in keys:
             keys.remove("name")
         keys_to_print += keys
+    # These will all be pulled manually later
     if "total_elapsed" in keys_to_print:
         keys_to_print.remove("total_elapsed")
     if "max_step_elapsed" in keys_to_print:
         keys_to_print.remove("max_step_elapsed")
+    if "length" in keys_to_print:
+        keys_to_print.remove("length")
 
     # see if we should include the status
     if len(set(traj.metadata["status"] for traj in all_trajs)) > 1:
         keys_to_print.append("status")
 
-    results = []
+    results: list[dict] = []
     index = 0
     for pipeline, trajs in grouped_trajs.items():
         # Iterate over each
@@ -132,7 +140,9 @@ def eval_dataset(
                 gt_aligned.stamps = gt_aligned.stamps[:length]
                 gt_aligned.poses = gt_aligned.poses[:length]
             ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
-            rte = stats.rte(traj_aligned, gt_aligned, window_size).summarize(metric)
+            rte = stats.rte(
+                traj_aligned, gt_aligned, window_kind, window_size
+            ).summarize(metric)
             hz = traj.metadata["total_elapsed"]
             if isinstance(hz, float):
                 hz = len(traj) / hz
@@ -147,8 +157,6 @@ def eval_dataset(
                 "Max (s)": traj.metadata["max_step_elapsed"],
             }
             r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
-            if hide_name:
-                r.pop("name", None)
             results.append(r)
 
             if (
@@ -190,6 +198,10 @@ def eval_dataset(
         box=box.ROUNDED,
         min_width=len(str(dir)) + 5,
     )
+
+    for r in results:
+        if hide_name:
+            r.pop("name", None)
 
     for key, val in results[0].items():
         table.add_column(key, justify="right" if isinstance(val, float) else "center")
@@ -296,15 +308,24 @@ def evaluate(
         ),
     ] = False,
     # metric options
-    window: Annotated[
-        int,
+    window_size: Annotated[
+        Optional[float],
         typer.Option(
             "-w",
-            "--window",
-            help="Window size for RTE. Defaults to 100 time-steps.",
+            "--window-size",
+            help="Window size for RTE. Defaults to 100 time steps for time windows, 10 meters for distance windows.",
             rich_help_panel="Metric options",
         ),
-    ] = 200,
+    ] = None,
+    window_kind: Annotated[
+        stats.WindowKind,
+        typer.Option(
+            "-k",
+            "--window-kind",
+            help="Kind of window to use for RTE. Defaults to time.",
+            rich_help_panel="Metric options",
+        ),
+    ] = stats.WindowKind.time,
     metric: Annotated[
         stats.MetricKind,
         typer.Option(
@@ -356,9 +377,18 @@ def evaluate(
     directories_path = [Path(d) for d in directories]
 
     if not quiet:
+        match window_kind:
+            case stats.WindowKind.distance:
+                if window_size is None:
+                    window_size = 10
+                words = "meters"
+            case stats.WindowKind.time:
+                if window_size is None:
+                    window_size = 100
+                words = "time steps"
         c = Console()
         c.print(
-            f"Evaluating RTE over a window of size {window}, using metric {metric}."
+            f"Evaluating RTE over a window of {window_size} {words}, using metric {metric}."
         )
 
     # Collect all bottom level directories
@@ -368,21 +398,23 @@ def evaluate(
             if not _contains_dir(subdir):
                 bottom_level_dirs.append(subdir)
 
-    results = []
-    for d in bottom_level_dirs:
-        r = eval_dataset(
+    # Compute them all in parallel
+    results = Parallel(n_jobs=-2)(
+        delayed(eval_dataset)(
             d,
             visualize,
             sort,
             reverse,
-            window,
+            window_kind,
+            window_size,
             metric,
             length,
             filter_method,
             hide_name,
             quiet,
         )
-        if r is not None:
-            results.extend(r)
+        for d in bottom_level_dirs
+    )
+    results = [r for r in results if r is not None]
 
-    return results
+    return list(itertools.chain.from_iterable(results))
