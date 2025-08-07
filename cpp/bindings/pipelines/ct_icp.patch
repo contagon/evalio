@@ -1,0 +1,239 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9cbac0e..1d884fc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.14)
+-project(CT_ICP)
++project(CT_ICP VERSION 0.0.1 LANGUAGES CXX)
+ 
+ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+@@ -10,48 +10,22 @@ option(WITH_VIZ3D "Search and install viz3d (disabled by default)" OFF)
+ option(WITH_PYTHON_BINDING "Install Python bindings" OFF)
+ set(LOG_PREFIX " [CT_ICP] -- ")
+ 
+-
+-# --- Defining Install Location
+-if (NOT SUPERBUILD_INSTALL_DIR)
+-    set(SUPERBUILD_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install)
+-    get_filename_component(SUPERBUILD_INSTALL_DIR ${SUPERBUILD_INSTALL_DIR} ABSOLUTE)
+-    message(INFO "${LOG_PREFIX}Variable \"SUPERBUILD_INSTALL_DIR\" not specified. Trying to set it to ${SUPERBUILD_INSTALL_DIR}")
+-endif ()
+-
+-if (NOT SLAMCORE_INSTALL_DIR)
+-    set(SLAMCORE_INSTALL_DIR ${SUPERBUILD_INSTALL_DIR}/SlamCore)
+-    get_filename_component(SLAMCORE_INSTALL_DIR ${SLAMCORE_INSTALL_DIR} ABSOLUTE)
+-    message(INFO "${LOG_PREFIX}Variable \"SLAMCORE_INSTALL_DIR\" not specified. Trying to set it to ${SLAMCORE_INSTALL_DIR}")
+-endif ()
+-
+-if (NOT CT_ICP_INSTALL_DIR)
+-    set(CT_ICP_INSTALL_DIR ${SUPERBUILD_INSTALL_DIR}/CT_ICP)
+-    get_filename_component(CT_ICP_INSTALL_DIR ${CT_ICP_INSTALL_DIR} ABSOLUTE)
+-    message(INFO "${LOG_PREFIX}Variable \"CT_ICP_INSTALL_DIR\" not specified. Trying to set it to ${CT_ICP_INSTALL_DIR}")
+-endif ()
+-
+ # --- Include CMAKE scripts
+ include(cmake/includes.cmake)
+ include(cmake/viz3d_utils.cmake)
+ 
+ # ----------------------------------------------------------------------------------------------------------------------
+-# Define Default variables
+-
+-SLAM_COMPILER_FLAGS()
+-if (UNIX)
+-    if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.1)
+-        message(INFO "${LOG_PREFIX}GCC version detected is ${CMAKE_CXX_COMPILER_VERSION}. Adding the filesystem library with 'stdc++fs' flag.")
+-        link_libraries(stdc++fs)
+-    endif ()
+-endif ()
+-
+-SLAM_DEFAULT_VARIABLES()
+-SLAM_INCLUDE_SUPERBUILD()
+-
+-include(cmake/external.cmake)
+-
+-SLAM_INSTALL_DEFAULT_VARIABLES(TARGET CT_ICP PREFIX CT_ICP)
+-set(CMAKE_INSTALL_PREFIX ${CT_ICP_INSTALL_DIR})
++# Find dependencies
++find_package(Eigen3 REQUIRED)
++find_package(Ceres REQUIRED)
++find_package(tsl-robin-map REQUIRED)
++find_package(nanoflann CONFIG REQUIRED)
++
++# TODO: Verify I'm good without these (and try to remove tinyply)
++# find_package(yaml-cpp REQUIRED)
++# find_package(glog REQUIRED)
++# find_package(tclap REQUIRED)
++find_package(tinyply CONFIG REQUIRED)
+ 
+ # ----------------------------------------------------------------------------------------------------------------------
+ # Check targets
+@@ -61,11 +35,6 @@ if (NOT TARGET OpenMP::OpenMP_CXX)
+     message(INFO "[CT_ICP] Could not find OpenMP")
+ endif ()
+ 
+-# -- Manually append to the RPATH for CT_ICP shared library the rpath to SlamCore
+-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+-set(CMAKE_INSTALL_RPATH "${EXTERNAL_DEPENDENCIES_INSTALL_RPATH}:${CMAKE_INSTALL_RPATH}:${CMAKE_INSTALL_PREFIX}/lib")
+-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+-
+ add_subdirectory(src)
+ target_compile_definitions(CT_ICP PUBLIC CT_ICP_CPP_STANDARD=${CMAKE_CXX_STANDARD})
+ 
+@@ -79,11 +48,11 @@ endif ()
+ # ---------------------
+ # Install Target
+ 
+-SLAM_INSTALL_TARGET(
+-        TARGET SlamCore
+-        CONFIG_TEMPLATE cmake/project_config.cmake.in
+-        INSTALL_DIR ${CT_ICP_INSTALL_DIR}
+-        INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
++# SLAM_INSTALL_TARGET(
++#         TARGET SlamCore
++#         CONFIG_TEMPLATE cmake/project_config.cmake.in
++#         INSTALL_DIR ${CT_ICP_INSTALL_DIR}
++#         INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ 
+ if (WITH_VIZ3D)
+     SLAM_INSTALL_TARGET(
+@@ -93,11 +62,11 @@ if (WITH_VIZ3D)
+             INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ endif ()
+ 
+-SLAM_INSTALL_TARGET(
+-        TARGET CT_ICP
+-        CONFIG_TEMPLATE cmake/project_config.cmake.in
+-        INSTALL_DIR ${CT_ICP_INSTALL_DIR}
+-        INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
++# SLAM_INSTALL_TARGET(
++#         TARGET CT_ICP
++#         CONFIG_TEMPLATE cmake/project_config.cmake.in
++#         INSTALL_DIR ${CT_ICP_INSTALL_DIR}
++#         INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ 
+ if (WITH_VIZ3D)
+     SLAM_INSTALL_TARGET(
+@@ -106,7 +75,4 @@ if (WITH_VIZ3D)
+             INSTALL_DIR ${CT_ICP_INSTALL_DIR}
+             INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ endif ()
+-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CT_ICP_INSTALL_DIR}/lib/cmake)
+-
+-add_subdirectory(test)
+-add_subdirectory(command)
+\ No newline at end of file
++# install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CT_ICP_INSTALL_DIR}/lib/cmake)
+\ No newline at end of file
+diff --git a/cmake/target_utils.cmake b/cmake/target_utils.cmake
+index 8d1c319..7d3d299 100644
+--- a/cmake/target_utils.cmake
++++ b/cmake/target_utils.cmake
+@@ -38,7 +38,7 @@ function(SLAM_ADD_LIBRARY)
+     if (NOT ${SOURCES_VAR})
+         message(FATAL_ERROR " [SlamCore][CMake][target_utils.cmake] No sources given to target ${SLAM_NAME}. (Empty variable ${SOURCES_VAR})")
+     endif ()
+-    add_library(${SLAM_NAME} SHARED ${${SOURCES_VAR}})
++    add_library(${SLAM_NAME} ${${SOURCES_VAR}})
+ endfunction(SLAM_ADD_LIBRARY)
+ 
+ # -- Link the target with viz3d
+diff --git a/include/SlamCore/experimental/neighborhood.h b/include/SlamCore/experimental/neighborhood.h
+index 5118790..3f9d564 100644
+--- a/include/SlamCore/experimental/neighborhood.h
++++ b/include/SlamCore/experimental/neighborhood.h
+@@ -261,7 +261,7 @@ namespace slam {
+     bool TNeighborhood<_SourcePointT, _Conversion, _Alloc>::SearchNearestNeighbors(const Eigen::Vector3d &query,
+                                                                                    result_set_t &result_set) {
+         CHECK(index_) << "The Kdtree is not computed" << std::endl;
+-        return index_->findNeighbors(result_set, &query.x(), nanoflann::SearchParams(10));
++        return index_->findNeighbors(result_set, &query.x(), nanoflann::SearchParameters());
+     }
+ 
+     /* -------------------------------------------------------------------------------------------------------------- */
+diff --git a/include/SlamCore/io.h b/include/SlamCore/io.h
+index fc81c8b..f1a166f 100644
+--- a/include/SlamCore/io.h
++++ b/include/SlamCore/io.h
+@@ -5,7 +5,7 @@
+ #include "SlamCore/pointcloud.h"
+ #include "SlamCore/imu.h"
+ 
+-#include <tinyply/tinyply.h>
++#include <tinyply.h>
+ 
+ namespace slam {
+ 
+diff --git a/src/SlamCore/CMakeLists.txt b/src/SlamCore/CMakeLists.txt
+index 2039f56..147c2b1 100644
+--- a/src/SlamCore/CMakeLists.txt
++++ b/src/SlamCore/CMakeLists.txt
+@@ -44,7 +44,7 @@ target_include_directories(SlamCore PUBLIC
+ 
+ target_link_libraries(SlamCore PUBLIC
+         Eigen3::Eigen glog::glog OpenMP::OpenMP_CXX
+-        yaml-cpp Ceres::ceres tinyply::tinyply nanoflann::nanoflann tsl::robin_map cereal tclap::tclap)
++        yaml-cpp Ceres::ceres tinyply nanoflann::nanoflann tsl::robin_map)
+ 
+ if (WITH_VIZ3D)
+     # Define a SlamCore-viz3d library target which build utility function for the viz3d interface
+diff --git a/src/SlamCore/io.cxx b/src/SlamCore/io.cxx
+index 1c0f33b..c0ffb9c 100644
+--- a/src/SlamCore/io.cxx
++++ b/src/SlamCore/io.cxx
+@@ -1,6 +1,6 @@
+ #include <fstream>
+ #include <iomanip>
+-#include <tinyply/tinyply.h>
++#include <tinyply.h>
+ #include <cctype>
+ 
+ #include "SlamCore/utils.h"
+diff --git a/src/ct_icp/CMakeLists.txt b/src/ct_icp/CMakeLists.txt
+index c756db7..b47fac4 100644
+--- a/src/ct_icp/CMakeLists.txt
++++ b/src/ct_icp/CMakeLists.txt
+@@ -31,7 +31,7 @@ target_include_directories(CT_ICP PUBLIC
+         "$<BUILD_INTERFACE:${CT_ICP_INCLUDE_DIR}>"
+         "$<INSTALL_INTERFACE:include>")
+ target_link_libraries(CT_ICP PUBLIC SlamCore Eigen3::Eigen Ceres::ceres glog::glog
+-        tsl::robin_map yaml-cpp OpenMP::OpenMP_CXX colormap::colormap)
++        tsl::robin_map yaml-cpp OpenMP::OpenMP_CXX)
+ 
+ if (WITH_VIZ3D)
+     # Make a CT_ICP-viz3d library which depends on viz3d
+diff --git a/src/ct_icp/ct_icp.cpp b/src/ct_icp/ct_icp.cpp
+index 7e2e702..263dce0 100644
+--- a/src/ct_icp/ct_icp.cpp
++++ b/src/ct_icp/ct_icp.cpp
+@@ -218,7 +218,7 @@ namespace ct_icp {
+                                        Eigen::Vector3d &begin_t,
+                                        Eigen::Vector3d &end_t) {
+             CHECK(!parameter_block_set_) << "The parameter block was already set";
+-            auto *parameterization = new ceres::EigenQuaternionParameterization();
++            auto *parameterization = new ceres::EigenQuaternionManifold();
+             begin_t_ = &begin_t.x();
+             end_t_ = &end_t.x();
+             begin_quat_ = &begin_quat.x();
+diff --git a/src/ct_icp/odometry.cpp b/src/ct_icp/odometry.cpp
+index c8c37af..f3dadbb 100644
+--- a/src/ct_icp/odometry.cpp
++++ b/src/ct_icp/odometry.cpp
+@@ -257,13 +257,16 @@ namespace ct_icp {
+     Odometry::RegistrationSummary Odometry::RegisterFrame(const std::vector<slam::WPoint3D> &frame,
+                                                           AMotionModel *motion_model) {
+         auto start = now();
++        std::cout << "Converting point cloud" << std::endl;
+         auto pointcloud = slam::PointCloud::WrapVector(const_cast<std::vector<slam::WPoint3D> &>(frame),
+                                                        slam::WPoint3D::DefaultSchema(), "raw_point");
+         const auto view_timestamps = pointcloud.PropertyView<double>("xyzt", "t");
+         auto frame_info = compute_frame_info(view_timestamps, registered_frames_++);
+         InitializeMotion(frame_info, nullptr);
+         auto end_init = now();
++        std::cout << "Starting DoRegister with " << pointcloud.size() << " points" << std::endl;
+         auto summary = DoRegister(pointcloud, frame_info, motion_model);
++        std::cout << "Finished DoRegister with " << pointcloud.size() << " points" << std::endl;
+         auto end = now();
+         summary.logged_values["odometry_total"] = duration_ms(end, start);
+         summary.logged_values["odometry_initialization"] += duration_ms(end_init, start);
