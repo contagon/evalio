@@ -109,16 +109,16 @@ class RosbagIter(DatasetIterator):
             # Provide path is a ros1 .bag file
             self.path = [path]
         else:
-            is_ros2_dir = lambda d: bool(list(d.glob("*.mcap")) + list(d.glob("*.db3")))
+            is_ros2_bag = lambda d: bool(list(d.glob("*.mcap")) + list(d.glob("*.db3")))
             # Path provided is a directory may be ros2 bag/ dir or contain multiple bags
-            bag_file_list = [p for p in path.glob("*.bag") if "orig" not in str(p)]
-            sub_dir_list = [d for d in path.glob("*/") if "orig" not in str(d) and is_ros2_dir(d)]
+            ros1_bag_file_list = [p for p in path.glob("*.bag") if "orig" not in str(p)]
+            ros2_bag_dir_list = [d for d in path.glob("*/") if "orig" not in str(d) and is_ros2_bag(d)]
 
-            if bag_file_list: # path contains ros1 .bag files
-                self.path = bag_file_list 
-            elif sub_dir_list: # path contains ros2 bag/ directories
-                self.path = sub_dir_list
-            elif is_ros2_dir(path): # path is a ros2 bag/ (contains mcap or db3 file)
+            if ros1_bag_file_list: # path contains ros1 .bag files
+                self.path = ros1_bag_file_list 
+            elif ros2_bag_dir_list: # path contains ros2 bag/ directories
+                self.path = ros2_bag_dir_list
+            elif is_ros2_bag(path): # path is a ros2 bag/ (contains mcap or db3 file)
                 self.path = [path]
             else:
                 raise ValueError(
