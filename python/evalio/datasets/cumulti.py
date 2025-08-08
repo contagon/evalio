@@ -208,7 +208,7 @@ class CUMulti(Dataset):
                 print(url)
                 _urlretrieve(url, zip_file)
             else:
-                print(f"Archive already exists. Skipping Download.")
+                print("Archive already exists. Skipping Download.")
 
             # Extract from the zip only what we dont already have
             print("Extracting data...")
@@ -221,7 +221,7 @@ class CUMulti(Dataset):
         if not gt_file.is_file():
             _urlretrieve(gt_url, gt_file)
         else:
-            print(f"Groundtruth already exists. Skipping Download.")
+            print("Groundtruth already exists. Skipping Download.")
 
         # If we have extracted everything we need then remove the zip directory
         if self.is_downloaded():
