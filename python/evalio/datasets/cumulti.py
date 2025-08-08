@@ -86,7 +86,6 @@ class CUMulti(Dataset):
             f"{robot_name}/imu/data",
             self.lidar_params(),
             lidar_format=lidar_format,
-            is_ros2=True,
         )
 
     def ground_truth_raw(self) -> Trajectory:

@@ -78,19 +78,16 @@ class RosbagIter(DatasetIterator):
         lidar_topic: str,
         imu_topic: str,
         lidar_params: LidarParams,
-        # for ros2 files (mcap, db3), we point at the directory, not the file
-        is_ros2: bool = False,
         # Reduce compute by telling the iterator how to format the pointcloud
         lidar_format: Optional[LidarFormatParams] = None,
         custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
     ):
         """
         Args:
-            path (Path): Location of rosbag file(s) or dir(s). If a directory is passed, all .bag files in the directory will be loaded.
+            path (Path): Location of rosbag file(s) or dir(s). If a directory is passed containing multiple bags (ros1 or ros2), all will be loaded.
             lidar_topic (str): Name of lidar topic.
             imu_topic (str): Name of imu topic.
             lidar_params (LidarParams): Lidar parameters, can be gotten from [lidar_params][evalio.datasets.Dataset.lidar_params].
-            is_ros2 (bool, optional): If in ros2 format, we will glob all sub-directories. Defaults to False.
             lidar_format (Optional[LidarFormatParams], optional): Various parameters for how lidar data is stored. If not specified, most will try to be inferred. We strongly recommend setting this to ensure data is standardized properly. Defaults to None.
             custom_col_func (Optional[Callable[[LidarMeasurement], None]], optional): Function to put the point cloud in row major format. Will generally not be needed, except for strange default orderings. Defaults to None.
 
@@ -107,13 +104,27 @@ class RosbagIter(DatasetIterator):
             self.lidar_format = lidar_format
         self.custom_col_func = custom_col_func
 
-        # Glob to get all .bag files in the directory
-        if path.is_dir() and is_ros2 is False:
-            self.path = [p for p in path.glob("*.bag") if "orig" not in str(p)]
-            if not self.path:
-                raise FileNotFoundError(f"No .bag files found in directory {path}")
+        # Find all bags (may be either ros1 .bag files or ros2 bag/ dirs)
+        if path.is_file():
+            # Provide path is a ros1 .bag file
+            self.path = [path]
         else:
-             self.path = [p for p in path.glob("*/")]
+            # Path provided is a directory may be ros2 bag/ dir or contain multiple bags
+            bag_file_list = [p for p in path.glob("*.bag") if "orig" not in str(p)]
+            sub_dir_list = [d for d in path.glob("*/") if "orig" not in str(d)]
+            database_file_list  = list(path.glob("*.mcap")) + list(path.glob("*.db3"))
+
+            if bag_file_list: # path contains ros1 .bag files
+                self.path = bag_file_list 
+            elif sub_dir_list: # path contains ros2 bag/ directories
+                self.path = sub_dir_list
+            elif database_file_list: # path is a ros2 bag/ (contains mcap or db3 file)
+                self.path = [path]
+            else:
+                raise ValueError(
+                    f"Invalid rosbag path: {path}"
+                    "\nExpected path to be one of -- \na) ros1 .bag \nb) ros2 bag/ dir or \nc) directory multiple a or b"
+                )
 
         # Open the bag file
         self.reader = AnyReader(self.path)
