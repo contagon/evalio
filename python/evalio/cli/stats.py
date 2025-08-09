@@ -384,7 +384,7 @@ def evaluate(
                 words = "meters"
             case stats.WindowKind.time:
                 if window_size is None:
-                    window_size = 100
+                    window_size = 200
                 words = "time steps"
         c = Console()
         c.print(

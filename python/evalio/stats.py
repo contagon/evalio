@@ -294,7 +294,7 @@ def rte(
             case WindowKind.distance:
                 window = 10
             case WindowKind.time:
-                window = 100
+                window = 200
 
     if window <= 0:
         raise ValueError("Window size must be positive")
