@@ -115,14 +115,9 @@ function(module_subs MOD FILE)
     )
 endfunction()
 
-# option for github actions
-# see ci.yml
-option(EVALIO_PYTHON_STUBS "Build Python bindings with stubs" ON)
-if(EVALIO_PYTHON_STUBS)
-    module_subs(_cpp           __init__.pyi)
-    module_subs(_cpp.pipelines pipelines.pyi)
-    module_subs(_cpp.types     types.pyi)
-endif()
+module_subs(_cpp           __init__.pyi)
+module_subs(_cpp.pipelines pipelines.pyi)
+module_subs(_cpp.types     types.pyi)
 
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)

@@ -220,9 +220,9 @@ def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
     error_r = np.zeros(len(gts))
     for i, (gt, pose) in enumerate(zip(gts, poses)):
         delta = gt.inverse() * pose
-        error_t[i] = np.sqrt(delta.trans @ delta.trans)  # type: ignore
+        error_t[i] = np.sqrt(delta.trans @ delta.trans)
         r_diff = delta.rot.log()
-        error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi  # type: ignore
+        error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi
 
     return Error(rot=error_r, trans=error_t)
 
@@ -241,9 +241,12 @@ def _check_aligned(traj: Trajectory, gt: Trajectory) -> bool:
     """
     # Check if the two trajectories are aligned
     delta = gt.poses[0].inverse() * traj.poses[0]
-    t = cast(np.ndarray, delta.trans)
-    r = cast(np.ndarray, delta.rot.log())
-    return len(traj.stamps) == len(gt.stamps) and (t @ t < 1e-6) and (r @ r < 1e-6)  # type: ignore
+    r = delta.rot.log()
+    return bool(
+        len(traj.stamps) == len(gt.stamps)
+        and (delta.trans @ delta.trans < 1e-6)
+        and (r @ r < 1e-6)
+    )
 
 
 def ate(traj: Trajectory, gt: Trajectory) -> Error:

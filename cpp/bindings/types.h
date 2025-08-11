@@ -224,6 +224,9 @@ inline void makeTypes(nb::module_& m) {
     .def(
       "to_vec_positions",
       &LidarMeasurement::to_vec_positions,
+      nb::sig(
+        "def to_vec_positions(self) -> list[Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]]"
+      ),
       "Convert the point cloud to a (n,3) numpy array."
     )
     .def(
@@ -315,11 +318,17 @@ inline void makeTypes(nb::module_& m) {
     .def_ro(
       "gyro",
       &ImuMeasurement::gyro,
+      nb::sig(
+        "def gyro(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
       "Gyroscope measurement as a 3D vector."
     )
     .def_ro(
       "accel",
       &ImuMeasurement::accel,
+      nb::sig(
+        "def accel(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
       "Accelerometer measurement as a 3D vector."
     )
     .def(nb::self == nb::self, "Check for equality")
@@ -329,7 +338,10 @@ inline void makeTypes(nb::module_& m) {
       "__getstate__",
       [](const ImuMeasurement& p) {
         return std::make_tuple(p.stamp, p.gyro, p.accel);
-      }
+      },
+      nb::sig(
+        "def __getstate__(self) -> tuple[Stamp, Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')], Annotated[ArrayLike, dict(dtype='float64', shape=(3), order='C')]]: ..."
+      )
     )
     .def(
       "__setstate__",
@@ -411,7 +423,14 @@ inline void makeTypes(nb::module_& m) {
       &ImuParams::integration,
       "Integration standard deviation."
     )
-    .def_ro("gravity", &ImuParams::gravity, "Gravity vector as a 3D vector.")
+    .def_ro(
+      "gravity",
+      &ImuParams::gravity,
+      nb::sig(
+        "def gravity(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
+      "Gravity vector as a 3D vector."
+    )
     .def_ro("brand", &ImuParams::brand, "Brand of the IMU sensor.")
     .def_ro("model", &ImuParams::model, "Model of the IMU sensor.")
     .def("__repr__", &ImuParams::toString)
@@ -439,9 +458,31 @@ inline void makeTypes(nb::module_& m) {
     )
     .def_static("exp", &SO3::exp, "v"_a, "Create a rotation from a 3D vector.")
     .def("inverse", &SO3::inverse, "Compute the inverse of the rotation.")
-    .def("log", &SO3::log, "Compute the logarithm of the rotation.")
-    .def("toMat", &SO3::toMat, "Convert the rotation to a 3x3 matrix.")
-    .def("rotate", &SO3::rotate, "v"_a, "Rotate a 3D vector by the rotation.")
+    .def(
+      "log",
+      &SO3::log,
+      nb::sig(
+        "def log(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
+      "Compute the logarithm of the rotation."
+    )
+    .def(
+      "toMat",
+      &SO3::toMat,
+      nb::sig(
+        "def toMat(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3,3), order='F')]"
+      ),
+      "Convert the rotation to a 3x3 matrix."
+    )
+    .def(
+      "rotate",
+      &SO3::rotate,
+      "v"_a,
+      nb::sig(
+        "def rotate(self, v: Annotated[ArrayLike, dict(dtype='float64', shape=(3), order='C')]) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
+      "Rotate a 3D vector by the rotation."
+    )
     .def(nb::self * nb::self, "Compose two rotations.")
     .def(nb::self == nb::self, "Check for equality")
     .def(nb::self != nb::self, "Check for inequality")
@@ -487,8 +528,22 @@ inline void makeTypes(nb::module_& m) {
       "Create a SE3 from a 4x4 transformation matrix."
     )
     .def_ro("rot", &SE3::rot, "Rotation as a SO3 object.")
-    .def_ro("trans", &SE3::trans, "Translation as a 3D vector.")
-    .def("toMat", &SE3::toMat, "Convert to a 4x4 matrix.")
+    .def_ro(
+      "trans",
+      &SE3::trans,
+      nb::sig(
+        "def trans(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(3), order='C')]"
+      ),
+      "Translation as a 3D vector."
+    )
+    .def(
+      "toMat",
+      &SE3::toMat,
+      nb::sig(
+        "def toMat(self) -> Annotated[numpy.typing.NDArray[numpy.float64], dict(dtype='float64', shape=(4,4), order='F')]"
+      ),
+      "Convert to a 4x4 matrix."
+    )
     .def("inverse", &SE3::inverse, "Compute the inverse.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")
     .def(nb::self == nb::self, "Check for equality")

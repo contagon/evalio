@@ -92,9 +92,9 @@ class TrajectoryWriter:
         self.writer.writerow(
             [
                 f"{stamp.sec}.{stamp.nsec:09}",
-                pose.trans[0],  # type: ignore
-                pose.trans[1],  # type: ignore
-                pose.trans[2],  # type: ignore
+                pose.trans[0],
+                pose.trans[1],
+                pose.trans[2],
                 pose.rot.qx,
                 pose.rot.qy,
                 pose.rot.qz,
@@ -139,9 +139,9 @@ def save_gt(output: Path, dataset: DatasetBuilder):
             writer.writerow(
                 [
                     stamp.to_sec(),
-                    pose.trans[0],  # type: ignore
-                    pose.trans[1],  # type: ignore
-                    pose.trans[2],  # type: ignore
+                    pose.trans[0],
+                    pose.trans[1],
+                    pose.trans[2],
                     pose.rot.qx,
                     pose.rot.qy,
                     pose.rot.qz,
