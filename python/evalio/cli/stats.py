@@ -65,12 +65,15 @@ def eval_dataset(
     all_trajs: list[Trajectory] = []
     for file_path in dir.glob("*.csv"):
         traj = Trajectory.from_experiment(file_path)
+        if traj is None:
+            continue
         if "gt" in traj.metadata:
             gt_list.append(traj)
         else:
             all_trajs.append(traj)
 
-    assert len(gt_list) == 1, f"Found multiple ground truths in {dir}"
+    assert len(gt_list) >= 1, f"Found multiple ground truths in {dir}"
+    assert len(gt_list) == 1, f"Found no gt in {dir}"
     gt_og = gt_list[0]
 
     # Setup visualization

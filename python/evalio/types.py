@@ -126,7 +126,7 @@ class Trajectory:
         return Trajectory.from_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
     @staticmethod
-    def from_experiment(path: Path) -> "Trajectory":
+    def from_experiment(path: Path) -> Optional["Trajectory"]:
         """Load a saved experiment trajectory from file.
 
         Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
@@ -138,21 +138,33 @@ class Trajectory:
             Trajectory: Loaded trajectory with metadata, stamps, and poses.
         """
         with open(path) as file:
-            metadata_filter = filter(lambda row: row[0] == "#", file)
+            metadata_filter = filter(
+                lambda row: row[0] == "#" and not row.startswith("# timestamp,"), file
+            )
             metadata_list = [row[1:].strip() for row in metadata_filter]
-            # remove the header row
-            for i, m in enumerate(metadata_list):
-                if m.startswith("timestamp,"):
-                    metadata_list.pop(i)
-                    break
+            if len(metadata_list) == 0:
+                return None
+
             metadata_str = "\n".join(metadata_list)
+            metadata_yaml = yaml.safe_load(metadata_str)
+            if metadata_yaml is None:
+                return None
+
             # Put in some defaults in case they don't have it
             metadata = {
                 "status": "--",
                 "total_elapsed": "--",
                 "max_step_elapsed": "--",
             }
-            metadata.update(yaml.safe_load(metadata_str))
+            metadata.update(metadata_yaml)
+
+            # Return None if it's missing important info
+            if (
+                "dataset" not in metadata
+                or "sequence" not in metadata
+                or ("gt" not in metadata and "pipeline" not in metadata)
+            ):
+                return None
 
         trajectory = Trajectory.from_csv(
             path,
