@@ -21,6 +21,7 @@ from evalio.types import (
 )
 from evalio.datasets.base import DatasetIterator, Measurement
 from rosbags.highlevel import AnyReader
+from rosbags.typesys import Stores, get_typestore
 import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum, auto
@@ -78,6 +79,7 @@ class RosbagIter(DatasetIterator):
         lidar_topic: str,
         imu_topic: str,
         lidar_params: LidarParams,
+        type_store: Optional[Stores] = None,
         # Reduce compute by telling the iterator how to format the pointcloud
         lidar_format: Optional[LidarFormatParams] = None,
         custom_col_func: Optional[Callable[[LidarMeasurement], None]] = None,
@@ -88,6 +90,7 @@ class RosbagIter(DatasetIterator):
             lidar_topic (str): Name of lidar topic.
             imu_topic (str): Name of imu topic.
             lidar_params (LidarParams): Lidar parameters, can be gotten from [lidar_params][evalio.datasets.Dataset.lidar_params].
+            type_store (Optional[Stores], optional): Additional type store to be loaded into rosbags. Defaults to None.
             lidar_format (Optional[LidarFormatParams], optional): Various parameters for how lidar data is stored. If not specified, most will try to be inferred. We strongly recommend setting this to ensure data is standardized properly. Defaults to None.
             custom_col_func (Optional[Callable[[LidarMeasurement], None]], optional): Function to put the point cloud in row major format. Will generally not be needed, except for strange default orderings. Defaults to None.
 
@@ -133,6 +136,14 @@ class RosbagIter(DatasetIterator):
         # Open the bag file
         self.reader = AnyReader(self.path)
         self.reader.open()
+
+        # force load passed in type store
+        # there is a default_typestore parameter in AnyReader, but it won't be used if one of bags has msgdefs
+        # this works around that, but may be unstable
+        # https://gitlab.com/ternaris/rosbags/-/blob/master/src/rosbags/highlevel/anyreader.py?ref_type=heads#L125-140
+        if type_store is not None:
+            self.reader.typestore.register(get_typestore(type_store).fielddefs)
+
         self.connections_lidar = [
             x for x in self.reader.connections if x.topic == self.lidar_topic
         ]

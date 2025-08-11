@@ -8,6 +8,8 @@ from pathlib import Path
 import numpy as np
 from tqdm.rich import tqdm
 
+from rosbags.typesys import Stores
+
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -87,6 +89,7 @@ class CUMulti(Dataset):
             f"{robot_name}/imu/data",
             self.lidar_params(),
             lidar_format=lidar_format,
+            type_store=Stores.ROS2_FOXY,
         )
 
     def ground_truth_raw(self) -> Trajectory:
