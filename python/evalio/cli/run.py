@@ -155,7 +155,7 @@ def run(
         min(d.length if d.length is not None else np.inf, len(d.build()))
         for d in datasets
     ]
-    dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))  # type: ignore
+    dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))
     dtime *= len(pipelines)
     if dtime > 3600:
         print(f"Estimated time (if real-time): {dtime / 3600:.2f} hours")
