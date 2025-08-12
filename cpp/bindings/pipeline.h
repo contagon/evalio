@@ -42,7 +42,8 @@ public:
     NB_OVERRIDE_PURE(set_imu_T_lidar, T);
   }
 
-  void set_params(std::map<std::string, Param> params) override {
+  std::map<std::string, Param>
+  set_params(std::map<std::string, Param> params) override {
     NB_OVERRIDE_PURE(set_params, params);
   }
 

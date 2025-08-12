@@ -52,18 +52,16 @@ public:
     return "https://github.com/PRBonn/kiss-icp";
   }
 
-  static std::map<std::string, evalio::Param> default_params() {
-    return {
-      {"voxel_size", 1.0},
-      {"min_motion_th", 0.1},
-      {"initial_threshold", 2.0},
-      {"convergence_criterion", 0.0001},
-      {"max_num_iterations", 500},
-      {"max_num_threads", 0},
-      {"max_points_per_voxel", 20},
-      {"deskew", false},
-    };
-  }
+  EVALIO_SETUP_PARAMS(
+    (double, voxel_size, 1.0, config_.voxel_size),
+    (double, min_motion_th, 0.1, config_.min_motion_th),
+    (double, initial_threshold, 2.0, config_.initial_threshold),
+    (double, convergence_criterion, 0.0001, config_.convergence_criterion),
+    (int, max_num_iterations, 500, config_.max_num_iterations),
+    (int, max_num_threads, 0, config_.max_num_threads),
+    (int, max_points_per_voxel, 20, config_.max_points_per_voxel),
+    (bool, deskew, false, config_.deskew)
+  );
 
   // Getters
   const evalio::SE3 pose() override {
@@ -91,52 +89,6 @@ public:
 
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
-  }
-
-  void set_params(std::map<std::string, evalio::Param> params) override {
-    for (auto& [key, value] : params) {
-      if (std::holds_alternative<bool>(value)) {
-        if (key == "deskew") {
-          config_.deskew = std::get<bool>(value);
-        } else {
-          throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have bool param " + key
-          );
-        }
-      } else if (std::holds_alternative<int>(value)) {
-        if (key == "max_points_per_voxel") {
-          config_.max_points_per_voxel = std::get<int>(value);
-        } else if (key == "max_num_iterations") {
-          config_.max_num_iterations = std::get<int>(value);
-        } else if (key == "max_num_threads") {
-          config_.max_num_threads = std::get<int>(value);
-        } else {
-          throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have int param " + key
-          );
-        }
-      } else if (std::holds_alternative<double>(value)) {
-        if (key == "voxel_size") {
-          config_.voxel_size = std::get<double>(value);
-        } else if (key == "min_motion_th") {
-          config_.min_motion_th = std::get<double>(value);
-        } else if (key == "initial_threshold") {
-          config_.initial_threshold = std::get<double>(value);
-        } else if (key == "convergence_criterion") {
-          config_.convergence_criterion = std::get<double>(value);
-        } else {
-          throw std::invalid_argument(
-            "Invalid parameter, KissICP doesn't have double param " + key
-          );
-        }
-      } else if (std::holds_alternative<std::string>(value)) {
-        throw std::invalid_argument(
-          "Invalid parameter, KissICP doesn't have string param " + key
-        );
-      } else {
-        throw std::invalid_argument("Invalid parameter type");
-      }
-    }
   }
 
   // Doers

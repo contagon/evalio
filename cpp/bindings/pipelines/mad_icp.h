@@ -46,20 +46,17 @@ public:
     return "https://github.com/rvp-group/mad-icp";
   }
 
-  static std::map<std::string, evalio::Param> default_params() {
-    auto config = MadICPConfig();
-    return {
-      {"deskew", config.deskew},
-      {"b_max", config.b_max},
-      {"b_min", config.b_min},
-      {"b_ratio", config.b_ratio},
-      {"rho_ker", config.rho_ker},
-      {"p_th", config.p_th},
-      {"num_keyframes", config.num_keyframes},
-      {"num_threads", config.num_threads},
-      {"realtime", config.realtime}
-    };
-  }
+  EVALIO_SETUP_PARAMS(
+    (bool, deskew, false, config_.deskew),
+    (double, b_max, 0.2, config_.b_max),
+    (double, b_min, 0.1, config_.b_min),
+    (double, b_ratio, 0.02, config_.b_ratio),
+    (double, rho_ker, 0.1, config_.rho_ker),
+    (double, p_th, 0.8, config_.p_th),
+    (int, num_keyframes, 8, config_.num_keyframes),
+    (int, num_threads, 0, config_.num_threads),
+    (bool, realtime, true, config_.realtime)
+  );
 
   // Getters
   const evalio::SE3 pose() override {
@@ -82,32 +79,6 @@ public:
 
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = T.inverse();
-  }
-
-  void set_params(std::map<std::string, evalio::Param> params) override {
-    for (const auto& [key, value] : params) {
-      if (key == "deskew") {
-        config_.deskew = std::get<bool>(value);
-      } else if (key == "b_max") {
-        config_.b_max = std::get<double>(value);
-      } else if (key == "b_min") {
-        config_.b_min = std::get<double>(value);
-      } else if (key == "b_ratio") {
-        config_.b_ratio = std::get<double>(value);
-      } else if (key == "rho_ker") {
-        config_.rho_ker = std::get<double>(value);
-      } else if (key == "p_th") {
-        config_.p_th = std::get<double>(value);
-      } else if (key == "num_keyframes") {
-        config_.num_keyframes = std::get<int>(value);
-      } else if (key == "num_threads") {
-        config_.num_threads = std::get<int>(value);
-      } else if (key == "realtime") {
-        config_.realtime = std::get<bool>(value);
-      } else {
-        throw std::invalid_argument("Unknown parameter: " + key);
-      }
-    }
   }
 
   // Doers

@@ -24,27 +24,25 @@ public:
     return "https://github.com/cocel-postech/genz-icp";
   }
 
-  static std::map<std::string, evalio::Param> default_params() {
-    // Pull from their ROS2 config instead of from the GenZConfig() defaults
-    // https://github.com/cocel-postech/genz-icp/blob/master/ros/launch/odometry.launch.py
-    return {
-      // map params
-      // Make map_cleanup_radius = max_range
-      {"max_points_per_voxel", 1},
-      // voxelize params
-      {"voxel_size", 0.3},
-      {"desired_num_voxelized_points", 2000},
-      // th params
-      {"min_motion_th", 0.1},
-      {"initial_threshold", 2.0},
-      {"planarity_threshold", 0.2},
-      // motion compensation
-      {"deskew", false},
-      // registration params
-      {"max_num_iterations", 100},
-      {"convergence_criterion", 0.0001},
-    };
-  }
+  // clang-format off
+  EVALIO_SETUP_PARAMS(
+    // map params
+    // Make map_cleanup_radius = max_range
+    (int, max_points_per_voxel, 1, config_.max_points_per_voxel),
+    // voxelize params
+    (double, voxel_size, 0.3, config_.voxel_size),
+    (int, desired_num_voxelized_points, 2000, config_.desired_num_voxelized_points),
+    // th params
+    (double, min_motion_th, 0.1, config_.min_motion_th),
+    (double, initial_threshold, 2.0, config_.initial_threshold),
+    (double, planarity_threshold, 0.2, config_.planarity_threshold),
+    // motion compensation
+    (bool, deskew, false, config_.deskew),
+    // registration params
+    (int, max_num_iterations, 100, config_.max_num_iterations),
+    (double, convergence_criterion, 0.0001, config_.convergence_criterion)
+  );
+  // clang-format on
 
   // Getters
   const evalio::SE3 pose() override {
@@ -74,41 +72,6 @@ public:
 
   void set_imu_T_lidar(evalio::SE3 T) override {
     lidar_T_imu_ = to_sophus_se3(T).inverse();
-  }
-
-  void set_params(std::map<std::string, evalio::Param> params) override {
-    for (auto& [key, value] : params) {
-      // map params
-      if (key == "max_points_per_voxel") {
-        config_.max_points_per_voxel = std::get<int>(value);
-      }
-      // voxelize params
-      else if (key == "voxel_size") {
-        config_.voxel_size = std::get<double>(value);
-      } else if (key == "desired_num_voxelized_points") {
-        config_.desired_num_voxelized_points = std::get<int>(value);
-      }
-      // th params
-      else if (key == "min_motion_th") {
-        config_.min_motion_th = std::get<double>(value);
-      } else if (key == "initial_threshold") {
-        config_.initial_threshold = std::get<double>(value);
-      } else if (key == "planarity_threshold") {
-        config_.planarity_threshold = std::get<double>(value);
-      }
-      // motion compensation
-      else if (key == "deskew") {
-        config_.deskew = std::get<bool>(value);
-      }
-      // registration params
-      else if (key == "max_num_iterations") {
-        config_.max_num_iterations = std::get<int>(value);
-      } else if (key == "convergence_criterion") {
-        config_.convergence_criterion = std::get<double>(value);
-      } else {
-        throw std::invalid_argument("Unknown parameter: " + key);
-      }
-    }
   }
 
   // Doers

@@ -139,7 +139,8 @@ public:
     lidar_T_imu_ = T.inverse();
   }
 
-  void set_params(std::map<std::string, evalio::Param> params) override {
+  std::map<std::string, evalio::Param>
+  set_params(std::map<std::string, evalio::Param> params) override {
     for (auto& [key, value] : params) {
       // odometry options
       if (key == "init_voxel_size") {
@@ -288,6 +289,8 @@ public:
           std::get<double>(value);
       }
     }
+
+    return {};
   }
 
   // Doers

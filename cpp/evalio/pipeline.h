@@ -4,6 +4,7 @@
 #include <map>
 #include <variant>
 
+#include "evalio/macros.h"
 #include "evalio/types.h"
 
 // Gotten from here, so we don't have to use pybind here directly
@@ -56,7 +57,8 @@ public:
   virtual void set_imu_params(ImuParams params) = 0;
   virtual void set_lidar_params(LidarParams params) = 0;
   virtual void set_imu_T_lidar(SE3 T) = 0;
-  virtual void set_params(std::map<std::string, Param>) = 0;
+  virtual std::map<std::string, Param>
+  set_params(std::map<std::string, Param> params) = 0;
 
   // Doers
   virtual void initialize() = 0;
