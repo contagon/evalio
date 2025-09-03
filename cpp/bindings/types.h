@@ -456,7 +456,13 @@ inline void makeTypes(nb::module_& m) {
       "mat"_a,
       "Create a rotation from a 3x3 rotation matrix."
     )
-    .def_static("exp", &SO3::exp, "v"_a, "Create a rotation from a 3D vector.")
+    .def_static("exp", &SO3::exp, "xi"_a, "Create a rotation from a 3D vector.")
+    .def_static(
+      "hat",
+      &SO3::hat,
+      "v"_a,
+      "Create a skew-symmetric matrix from a 3D vector."
+    )
     .def("inverse", &SO3::inverse, "Compute the inverse of the rotation.")
     .def(
       "log",
@@ -545,6 +551,8 @@ inline void makeTypes(nb::module_& m) {
       "Convert to a 4x4 matrix."
     )
     .def("inverse", &SE3::inverse, "Compute the inverse.")
+    .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
+    .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(
       "transform_in_place",
       nb::overload_cast<Point&>(&SE3::transform_in_place, nb::const_),

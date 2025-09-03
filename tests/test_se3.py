@@ -93,3 +93,10 @@ def test_transform_scan():
     assert math.isclose(p_expected[0], scan.points[0].x)
     assert math.isclose(p_expected[1], scan.points[0].y)
     assert math.isclose(p_expected[2], scan.points[0].z)
+
+
+def test_log_exp():
+    xi = np.array([0.1, 0.2, 0.3, 4.0, 5.0, 6.0])
+    se3 = SE3.exp(xi)
+    xi_log = se3.log()
+    assert np.allclose(xi, xi_log)
