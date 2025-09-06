@@ -183,7 +183,7 @@ class CUMulti(Dataset):
         return [
             self.folder / f"{robot_name}_{loc_name}_imu_gps",  # IMU Bag
             self.folder / f"{robot_name}_{loc_name}_lidar",  # LIDAR Bag
-            # self.folder / f"{loc_name}_{robot_name}_ref.csv",  # Reference Solution
+            self.folder / f"{loc_name}_{robot_name}_ref.csv",  # Reference Solution
         ]
 
     def download(self):
@@ -219,13 +219,13 @@ class CUMulti(Dataset):
             _extract_noreplace(zip_file, self.folder)
 
         # Download the groundtruth
-        # gt_url = f"{globus_url}/{loc_name}/{robot_name}/{loc_name}_{robot_name}/"
-        # gt_file = self.folder / f"{loc_name}_{robot_name}_ref.csv"
-        # print(gt_url)
-        # if not gt_file.is_file():
-        #     _urlretrieve(gt_url, gt_file)
-        # else:
-        #     print("Groundtruth already exists. Skipping Download.")
+        gt_url = f"{globus_url}/{loc_name}/{robot_name}/{loc_name}_{robot_name}/"
+        gt_file = self.folder / f"{loc_name}_{robot_name}_ref.csv"
+        print(gt_url)
+        if not gt_file.is_file():
+            _urlretrieve(gt_url, gt_file)
+        else:
+            print("Groundtruth already exists. Skipping Download.")
 
         # If we have extracted everything we need then remove the zip directory
         if self.is_downloaded():
