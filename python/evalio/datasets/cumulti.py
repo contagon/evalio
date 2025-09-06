@@ -16,7 +16,7 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import SE3, SO3, Trajectory
+from evalio.types import SE3, Trajectory
 
 from .base import Dataset, DatasetIterator, ImuParams, LidarParams
 
@@ -59,8 +59,9 @@ def _extract_noreplace(zip_file: Path, dest_dir: Path):
 
 class CUMulti(Dataset):
     """
-    Dataset collected by a ground robot (AgileX - Hunter) on the University of Colorado Boulder Campus. 
+    Dataset collected by a ground robot (AgileX - Hunter) on the University of Colorado Boulder Campus.
     """
+
     kittredge_loop_robot1 = auto()
     kittredge_loop_robot2 = auto()
     kittredge_loop_robot3 = auto()
@@ -73,7 +74,7 @@ class CUMulti(Dataset):
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
         lidar_format = LidarFormatParams(
-            stamp=LidarStamp.End,
+            stamp=LidarStamp.Start,
             point_stamp=LidarPointStamp.Start,
             major=LidarMajor.Row,
             density=LidarDensity.AllPoints,
@@ -109,21 +110,16 @@ class CUMulti(Dataset):
 
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
-        # Derived from the published `description/single_robot_urdf.xacro`
-        mountplate_T_ouster_riser = SE3(
-            SO3.identity(), np.array([(0.1524 * 0.15), 0.0, (0.02 / 2.0 + 0.015 / 2.0)])
-        )
-        ouster_riser_T_ouster = SE3(
-            SO3.identity(), np.array([0.0, 0.0, (0.02 / 2.0 + 0.04)])
-        )
-        mountplate_T_imu = SE3(
-            SO3(qx=0, qy=0, qz=1, qw=0),
-            np.array([-0.04, 0.01557, (0.015 / 2.0 + 0.01331 / 2.0)]),
-        )
-        return (
-            mountplate_T_imu.inverse()
-            * mountplate_T_ouster_riser
-            * ouster_riser_T_ouster
+        # Supplied by CU-Multi Authors
+        return SE3.fromMat(
+            np.array(
+                [
+                    [-1.0, 0.0, 0.0, -0.058038],
+                    [0.0, -1.0, 0.0, 0.015573],
+                    [0.0, 0.0, 1.0, 0.049603],
+                    [0.0, 0.0, 0.0, 1.000000],
+                ]
+            )
         )
 
     def imu_T_gt(self) -> SE3:
@@ -147,6 +143,7 @@ class CUMulti(Dataset):
     def lidar_params(self) -> LidarParams:
         # Ouster OS 64 Rev 7
         return LidarParams(
+            rate=20,
             num_rows=64,
             num_columns=1024,
             min_range=1.0,
