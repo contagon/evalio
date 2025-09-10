@@ -25,40 +25,40 @@ public:
     return "https://github.com/DanMcGann/loam";
   }
 
-  static std::map<std::string, evalio::Param> default_params() {
-    return {
-      // Local Map
-      {"num_local_map_scans", 3},
-      // Feature Extraction
-      {"neighbor_points", 3},
-      {"number_sectors", 6},
-      {"max_edge_feats_per_sector", 5},
-      {"max_planar_feats_per_sector", 50},
-      {"planar_feat_threshold", 1.0},
-      {"edge_feat_threshold", 100.0},
-      {"occlusion_thresh", 0.5},
-      {"parallel_thresh", 1.0},
-      // Registration
-      {"max_icf_iterations", 20},
-      {"rotation_convergence_thresh", 1e-4},
-      {"position_convergence_thresh", 1e-3},
-      {"num_edge_neighbors", 5},
-      {"max_edge_neighbor_dist", 2.0},
-      {"min_line_fit_points", 3},
-      {"min_line_condition_number", 5.0},
-      {"num_plane_neighbors", 5},
-      {"max_plane_neighbor_dist", 4.0},
-      {"min_plane_fit_points", 4},
-      {"max_avg_point_plane_dist", 0.2},
-    };
-  }
+  // clang-format off
+  EVALIO_SETUP_PARAMS(
+    // Local Map
+    (int, num_local_map_scans, 3, num_local_map_scans_),
+    // Feature Extraction
+    (int, neighbor_points, 3, loam_fe_params_.neighbor_points),
+    (int, number_sectors, 6, loam_fe_params_.number_sectors),
+    (int, max_edge_feats_per_sector, 5, loam_fe_params_.max_edge_feats_per_sector),
+    (int, max_planar_feats_per_sector, 50, loam_fe_params_.max_planar_feats_per_sector),
+    (double, planar_feat_threshold, 1.0, loam_fe_params_.planar_feat_threshold),
+    (double, edge_feat_threshold, 100.0, loam_fe_params_.edge_feat_threshold),
+    (double, occlusion_thresh, 0.5, loam_fe_params_.occlusion_thresh),
+    (double, parallel_thresh, 1.0, loam_fe_params_.parallel_thresh),
+    // Registration
+    (int, max_icf_iterations, 20, loam_registration_params_.max_iterations),
+    (double, rotation_convergence_thresh, 1e-4, loam_registration_params_.rotation_convergence_thresh),
+    (double, position_convergence_thresh, 1e-3, loam_registration_params_.position_convergence_thresh),
+    (int, num_edge_neighbors, 5, loam_registration_params_.num_edge_neighbors),
+    (double, max_edge_neighbor_dist, 2.0, loam_registration_params_.max_edge_neighbor_dist),
+    (int, min_line_fit_points, 3, loam_registration_params_.min_line_fit_points),
+    (double, min_line_condition_number, 5.0, loam_registration_params_.min_line_condition_number),
+    (int, num_plane_neighbors, 5, loam_registration_params_.num_plane_neighbors),
+    (double, max_plane_neighbor_dist, 4.0, loam_registration_params_.max_plane_neighbor_dist),
+    (int, min_plane_fit_points, 4, loam_registration_params_.min_plane_fit_points),
+    (double, max_avg_point_plane_dist, 0.2, loam_registration_params_.max_avg_point_plane_dist)
+  );
+  // clang-format on
 
   // Getters
   const evalio::SE3 pose() override {
     return to_se3(current_estimated_pose) * lidar_T_imu_;
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     return features_to_points(
       transform_features(map_features(), current_estimated_pose)
     );
@@ -80,69 +80,13 @@ public:
     lidar_T_imu_ = T.inverse();
   }
 
-  void set_params(std::map<std::string, evalio::Param> params) override {
-    for (auto& [key, value] : params) {
-      if (std::holds_alternative<int>(value)) {
-        if (key == "num_local_map_scans") {
-          num_local_map_scans_ = std::get<int>(value);
-        } else if (key == "max_edge_feats_per_sector") {
-          loam_fe_params_.max_edge_feats_per_sector = std::get<int>(value);
-        } else if (key == "max_planar_feats_per_sector") {
-          loam_fe_params_.max_planar_feats_per_sector = std::get<int>(value);
-        } else if (key == "neighbor_points") {
-          loam_fe_params_.neighbor_points = std::get<int>(value);
-        } else if (key == "number_sectors") {
-          loam_fe_params_.number_sectors = std::get<int>(value);
-        } else if (key == "max_icf_iterations") {
-          loam_registration_params_.max_iterations = std::get<int>(value);
-        } else if (key == "num_edge_neighbors") {
-          loam_registration_params_.num_edge_neighbors = std::get<int>(value);
-        } else if (key == "min_line_fit_points") {
-          loam_registration_params_.min_line_fit_points = std::get<int>(value);
-        } else if (key == "num_plane_neighbors") {
-          loam_registration_params_.num_plane_neighbors = std::get<int>(value);
-        } else if (key == "min_plane_fit_points") {
-          loam_registration_params_.min_plane_fit_points = std::get<int>(value);
-        }
-
-      } else if (std::holds_alternative<double>(value)) {
-        if (key == "planar_feat_threshold") {
-          loam_fe_params_.planar_feat_threshold = std::get<double>(value);
-        } else if (key == "edge_feat_threshold") {
-          loam_fe_params_.edge_feat_threshold = std::get<double>(value);
-        } else if (key == "occlusion_thresh") {
-          loam_fe_params_.occlusion_thresh = std::get<double>(value);
-        } else if (key == "parallel_thresh") {
-          loam_fe_params_.occlusion_thresh = std::get<double>(value);
-        } else if (key == "rotation_convergence_thresh") {
-          loam_registration_params_.rotation_convergence_thresh =
-            std::get<double>(value);
-        } else if (key == "position_convergence_thresh") {
-          loam_registration_params_.position_convergence_thresh =
-            std::get<double>(value);
-        } else if (key == "max_edge_neighbor_dist") {
-          loam_registration_params_.max_edge_neighbor_dist =
-            std::get<double>(value);
-        } else if (key == "min_line_condition_number") {
-          loam_registration_params_.min_line_condition_number =
-            std::get<double>(value);
-        } else if (key == "max_plane_neighbor_dist") {
-          loam_registration_params_.max_plane_neighbor_dist =
-            std::get<double>(value);
-        } else if (key == "max_avg_point_plane_dist") {
-          loam_registration_params_.max_avg_point_plane_dist =
-            std::get<double>(value);
-        }
-      }
-    }
-  }
-
   // Doers
   void initialize() override {}
 
   void add_imu(evalio::ImuMeasurement mm) override {}
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<evalio::Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     // Handle Edge case of the first scan
     if (past_k_scans_.size() == 0) {
       // Extract Features from the first scan
@@ -234,16 +178,9 @@ private:
 
   /// @brief Helper to aggregate all features (edge + planar) into a single
   /// container
-  std::vector<evalio::Point>
+  std::map<std::string, std::vector<evalio::Point>>
   features_to_points(const loam::LoamFeatures<evalio::Point> features) {
-    std::vector<evalio::Point> points;
-    for (const auto& planar_pt : features.planar_points) {
-      points.push_back(planar_pt);
-    }
-    for (const auto& edge_pt : features.edge_points) {
-      points.push_back(edge_pt);
-    }
-    return points;
+    return {{"planar", features.planar_points}, {"edge", features.edge_points}};
   }
 
   /// @brief Aggregate the history of k most recent scans into a local map in

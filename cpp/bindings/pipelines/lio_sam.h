@@ -64,51 +64,51 @@ public:
     return "https://github.com/contagon/LIO-SAM";
   }
 
-  static std::map<std::string, evalio::Param> default_params() {
-    return {
-      {"downsampleRate", 1},
-      {"edgeThreshold", 1.0},
-      {"surfThreshold", 0.1},
-      {"edgeFeatureMinValidNum", 10},
-      {"surfFeatureMinValidNum", 100},
+  // clang-format off
+  EVALIO_SETUP_PARAMS(
+    (int, downsampleRate, 1, config_.downsampleRate),
+    (double, edgeThreshold, 1.0, config_.edgeThreshold),
+    (double, surfThreshold, 0.1, config_.surfThreshold),
+    (int, edgeFeatureMinValidNum, 10, config_.edgeFeatureMinValidNum),
+    (int, surfFeatureMinValidNum, 100, config_.surfFeatureMinValidNum),
 
-      // voxel filter paprams
-      {"odometrySurfLeafSize", 0.4},
-      {"mappingCornerLeafSize", 0.2},
-      {"mappingSurfLeafSize", 0.4},
+    // voxel filter paprams
+    (double, odometrySurfLeafSize, 0.4, config_.odometrySurfLeafSize),
+    (double, mappingCornerLeafSize, 0.2, config_.mappingCornerLeafSize),
+    (double, mappingSurfLeafSize, 0.4, config_.mappingSurfLeafSize),
 
-      {"z_tolerance", 1000.0},
-      {"rotation_tolerance", 1000.0},
+    (double, z_tolerance, 1000.0, config_.z_tolerance),
+    (double, rotation_tolerance, 1000.0, config_.rotation_tolerance),
 
-      // CPU Params
-      {"numberOfCores", 4},
-      {"mappingProcessInterval", 0.15},
+    // CPU Params
+    (int, numberOfCores, 4, config_.numberOfCores),
+    (double, mappingProcessInterval, 0.15, config_.mappingProcessInterval),
 
-      // Surrounding map
-      {"surroundingkeyframeAddingDistThreshold", 1.0},
-      {"surroundingkeyframeAddingAngleThreshold", 0.2},
-      {"surroundingKeyframeDensity", 2.0},
-      {"surroundingKeyframeSearchRadius", 50.0},
+    // Surrounding map
+    (double, surroundingkeyframeAddingDistThreshold, 1.0, config_.surroundingkeyframeAddingDistThreshold),
+    (double, surroundingkeyframeAddingAngleThreshold, 0.2, config_.surroundingkeyframeAddingAngleThreshold),
+    (double, surroundingKeyframeDensity, 2.0, config_.surroundingKeyframeDensity),
+    (double, surroundingKeyframeSearchRadius, 50.0, config_.surroundingKeyframeSearchRadius),
 
-      // global map visualization radius
-      {"globalMapVisualizationSearchRadius", 1000.0},
-      {"globalMapVisualizationPoseDensity", 10.0},
-      {"globalMapVisualizationLeafSize", 1.0},
-    };
-  }
+    // global map visualization radius
+    (double, globalMapVisualizationSearchRadius, 1000.0, config_.globalMapVisualizationSearchRadius),
+    (double, globalMapVisualizationPoseDensity, 10.0, config_.globalMapVisualizationPoseDensity),
+    (double, globalMapVisualizationLeafSize, 1.0, config_.globalMapVisualizationLeafSize)
+  );
+  // clang-format on
 
   // Getters
   const evalio::SE3 pose() override {
     return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     auto map = lio_sam_->getMap();
     std::vector<evalio::Point> evalio_map(map->size());
     for (std::size_t i = 0; i < map->size(); ++i) {
       to_evalio_point(evalio_map[i], map->at(i));
     }
-    return evalio_map;
+    return {{"point", evalio_map}};
   }
 
   // Setters
@@ -133,74 +133,6 @@ public:
     config_.lidar_R_imu = lidar_T_imu_.rot.toEigen();
   }
 
-  void set_params(std::map<std::string, evalio::Param> params) override {
-    for (auto& [key, value] : params) {
-      if (std::holds_alternative<bool>(value)) {
-        throw std::invalid_argument(
-          "Invalid parameter, KissICP doesn't have bool param " + key
-        );
-      } else if (std::holds_alternative<int>(value)) {
-        if (key == "edgeFeatureMinValidNum") {
-          config_.edgeFeatureMinValidNum = std::get<int>(value);
-        } else if (key == "surfFeatureMinValidNum") {
-          config_.surfFeatureMinValidNum = std::get<int>(value);
-        } else if (key == "numberOfCores") {
-          config_.numberOfCores = std::get<int>(value);
-        } else if (key == "downsampleRate") {
-          config_.downsampleRate = std::get<int>(value);
-        } else {
-          throw std::invalid_argument(
-            "Invalid parameter, LioSAM doesn't have int param " + key
-          );
-        }
-      } else if (std::holds_alternative<double>(value)) {
-        if (key == "edgeThreshold") {
-          config_.edgeThreshold = std::get<double>(value);
-        } else if (key == "surfThreshold") {
-          config_.surfThreshold = std::get<double>(value);
-        } else if (key == "odometrySurfLeafSize") {
-          config_.odometrySurfLeafSize = std::get<double>(value);
-        } else if (key == "mappingCornerLeafSize") {
-          config_.mappingCornerLeafSize = std::get<double>(value);
-        } else if (key == "mappingSurfLeafSize") {
-          config_.mappingSurfLeafSize = std::get<double>(value);
-        } else if (key == "z_tolerance") {
-          config_.z_tolerance = std::get<double>(value);
-        } else if (key == "rotation_tolerance") {
-          config_.rotation_tolerance = std::get<double>(value);
-        } else if (key == "mappingProcessInterval") {
-          config_.mappingProcessInterval = std::get<double>(value);
-        } else if (key == "surroundingkeyframeAddingDistThreshold") {
-          config_.surroundingkeyframeAddingDistThreshold =
-            std::get<double>(value);
-        } else if (key == "surroundingkeyframeAddingAngleThreshold") {
-          config_.surroundingkeyframeAddingAngleThreshold =
-            std::get<double>(value);
-        } else if (key == "surroundingKeyframeDensity") {
-          config_.surroundingKeyframeDensity = std::get<double>(value);
-        } else if (key == "surroundingKeyframeSearchRadius") {
-          config_.surroundingKeyframeSearchRadius = std::get<double>(value);
-        } else if (key == "globalMapVisualizationSearchRadius") {
-          config_.globalMapVisualizationSearchRadius = std::get<double>(value);
-        } else if (key == "globalMapVisualizationPoseDensity") {
-          config_.globalMapVisualizationPoseDensity = std::get<double>(value);
-        } else if (key == "globalMapVisualizationLeafSize") {
-          config_.globalMapVisualizationLeafSize = std::get<double>(value);
-        } else {
-          throw std::invalid_argument(
-            "Invalid parameter, LioSAM doesn't have double param " + key
-          );
-        }
-      } else if (std::holds_alternative<std::string>(value)) {
-        throw std::invalid_argument(
-          "Invalid parameter, LioSAM doesn't have string param " + key
-        );
-      } else {
-        throw std::invalid_argument("Invalid parameter type");
-      }
-    }
-  }
-
   // Doers
   void initialize() override {
     lio_sam_ = std::make_unique<lio_sam::LIOSAM>(config_);
@@ -215,7 +147,8 @@ public:
     lio_sam_->addImuMeasurement(imuMsg);
   }
 
-  std::vector<evalio::Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<evalio::Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
     pcl::PointCloud<lio_sam::PointXYZIRT>::Ptr cloud;
     cloud.reset(new pcl::PointCloud<lio_sam::PointXYZIRT>);
@@ -235,7 +168,7 @@ public:
     for (size_t i = 0; i < used_points->points.size(); ++i) {
       to_evalio_point(result[i], used_points->points[i]);
     }
-    return result;
+    return {{"point", result}};
   }
 
 private:

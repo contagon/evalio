@@ -21,11 +21,11 @@ public:
   NB_TRAMPOLINE(Pipeline, 9);
 
   // Getters
-  evalio::SE3 const pose() override {
+  const evalio::SE3 pose() override {
     NB_OVERRIDE_PURE(pose);
   }
 
-  const std::vector<evalio::Point> map() override {
+  const std::map<std::string, std::vector<evalio::Point>> map() override {
     NB_OVERRIDE_PURE(map);
   }
 
@@ -42,7 +42,8 @@ public:
     NB_OVERRIDE_PURE(set_imu_T_lidar, T);
   }
 
-  void set_params(std::map<std::string, Param> params) override {
+  std::map<std::string, Param>
+  set_params(std::map<std::string, Param> params) override {
     NB_OVERRIDE_PURE(set_params, params);
   }
 
@@ -55,10 +56,11 @@ public:
     NB_OVERRIDE_PURE(add_imu, mm);
   }
 
-  std::vector<Point> add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<Point>>
+  add_lidar(evalio::LidarMeasurement mm) override {
     NB_OVERRIDE_PURE(add_lidar, mm);
   }
-};
+}; // namespace evalio
 
 inline void makeBasePipeline(nb::module_& m) {
   nb::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")

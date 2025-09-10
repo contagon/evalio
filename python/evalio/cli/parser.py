@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from inspect import isclass
+from evalio.utils import print_warning
 import yaml
 import os
 import importlib
@@ -228,7 +229,14 @@ class PipelineBuilder:
     def build(self, dataset: Dataset) -> Pipeline:
         pipe = self.pipeline()
         # Set user params
-        pipe.set_params(self.params)
+        params = pipe.set_params(self.params)
+        if len(params) > 0:
+            for k, v in params.items():
+                print_warning(
+                    f"Pipeline {self.name} has unused parameters: {k}={v}. "
+                    "Please check your configuration."
+                )
+
         # Set dataset params
         pipe.set_imu_params(dataset.imu_params())
         pipe.set_lidar_params(dataset.lidar_params())
