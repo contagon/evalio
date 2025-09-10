@@ -1,5 +1,6 @@
 from .base import Dataset, DatasetIterator, set_data_dir, get_data_dir
 from .botanic_garden import BotanicGarden
+from .cumulti import CUMulti
 from .enwide import EnWide
 from .helipr import HeLiPR
 from .hilti_2022 import Hilti2022
@@ -16,6 +17,7 @@ __all__ = [
     "Dataset",
     "DatasetIterator",
     "BotanicGarden",
+    "CUMulti",
     "EnWide",
     "HeLiPR",
     "Hilti2022",
