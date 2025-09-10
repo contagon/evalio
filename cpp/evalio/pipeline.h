@@ -4,6 +4,7 @@
 #include <map>
 #include <variant>
 
+#include "evalio/macros.h"
 #include "evalio/types.h"
 
 // Gotten from here, so we don't have to use pybind here directly
@@ -50,18 +51,20 @@ public:
 
   // Getters
   virtual const SE3 pose() = 0;
-  virtual const std::vector<Point> map() = 0;
+  virtual const std::map<std::string, std::vector<Point>> map() = 0;
 
   // Setters
   virtual void set_imu_params(ImuParams params) = 0;
   virtual void set_lidar_params(LidarParams params) = 0;
   virtual void set_imu_T_lidar(SE3 T) = 0;
-  virtual void set_params(std::map<std::string, Param>) = 0;
+  virtual std::map<std::string, Param>
+  set_params(std::map<std::string, Param> params) = 0;
 
   // Doers
   virtual void initialize() = 0;
   virtual void add_imu(ImuMeasurement mm) = 0;
-  virtual std::vector<Point> add_lidar(LidarMeasurement mm) = 0;
+  virtual std::map<std::string, std::vector<Point>>
+  add_lidar(LidarMeasurement mm) = 0;
 };
 
 } // namespace evalio

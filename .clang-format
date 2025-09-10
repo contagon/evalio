@@ -4,7 +4,7 @@ AlignAfterOpenBracket: BlockIndent    # New in v14. For earlier clang-format ver
 AlignConsecutiveMacros: false
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignEscapedNewlines: DontAlign
+AlignEscapedNewlines: LeftWithLastLine
 AlignOperands: false
 AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: false

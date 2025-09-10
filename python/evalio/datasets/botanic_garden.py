@@ -57,7 +57,7 @@ class BotanicGarden(Dataset):
         )
 
     def ground_truth_raw(self) -> Trajectory:
-        if self.seq_name == "1008_03":
+        if self.seq_name == "b1008_03":
             filename = f"{self.seq_name[1:]}_gt_output.txt"
         else:
             filename = f"{self.seq_name[1:]}_GT_output.txt"

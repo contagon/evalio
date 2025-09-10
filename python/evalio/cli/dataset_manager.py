@@ -5,6 +5,8 @@ import typer
 from typing import Annotated, cast
 from .completions import DatasetArg
 
+import shutil
+
 from evalio.datasets import RosbagIter
 
 from rosbags.rosbag1 import (
@@ -89,7 +91,10 @@ def rm(
             print(f"Removing from {builder.dataset.folder}")
             for f in builder.dataset.files():
                 print(f"  Removing {f}")
-                (builder.dataset.folder / f).unlink()
+                if (builder.dataset.folder / f).is_file():
+                    (builder.dataset.folder / f).unlink()
+                else:
+                    shutil.rmtree(builder.dataset.folder / f, ignore_errors=True)
         except Exception as e:
             print(f"Error removing {builder}\n: {e}")
         print(f"---------- Finished {builder} ----------")
