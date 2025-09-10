@@ -1,0 +1,100 @@
+diff --git a/cpp/genz_icp/3rdparty/find_dependencies.cmake b/cpp/genz_icp/3rdparty/find_dependencies.cmake
+index c30ad1a..efe0989 100644
+--- a/cpp/genz_icp/3rdparty/find_dependencies.cmake
++++ b/cpp/genz_icp/3rdparty/find_dependencies.cmake
+@@ -28,13 +28,7 @@ endif()
+ function(find_external_dependecy PACKAGE_NAME TARGET_NAME INCLUDED_CMAKE_PATH)
+   string(TOUPPER ${PACKAGE_NAME} PACKAGE_NAME_UP)
+   set(USE_FROM_SYSTEM_OPTION "USE_SYSTEM_${PACKAGE_NAME_UP}")
+-  if(${${USE_FROM_SYSTEM_OPTION}})
+-    find_package(${PACKAGE_NAME} QUIET NO_MODULE)
+-  endif()
+-  if(NOT ${${USE_FROM_SYSTEM_OPTION}} OR NOT TARGET ${TARGET_NAME})
+-    set(${USE_FROM_SYSTEM_OPTION} OFF PARENT_SCOPE)
+-    include(${INCLUDED_CMAKE_PATH})
+-  endif()
++  find_package(${PACKAGE_NAME} NO_MODULE)
+ endfunction()
+ 
+ find_external_dependecy("Eigen3" "Eigen3::Eigen" "${CMAKE_CURRENT_LIST_DIR}/eigen/eigen.cmake")
+diff --git a/cpp/genz_icp/CMakeLists.txt b/cpp/genz_icp/CMakeLists.txt
+index 32fbe45..d053a0e 100644
+--- a/cpp/genz_icp/CMakeLists.txt
++++ b/cpp/genz_icp/CMakeLists.txt
+@@ -21,7 +21,7 @@
+ # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ # SOFTWARE.
+ cmake_minimum_required(VERSION 3.16...3.26)
+-project(genz_icp_cpp VERSION 0.3.0 LANGUAGES CXX)
++project(genz_icp_cpp VERSION 0.2.0 LANGUAGES CXX)
+ 
+ # Setup build options
+ option(USE_CCACHE "Build using Ccache if found on the path" ON)
+diff --git a/cpp/genz_icp/core/Registration.cpp b/cpp/genz_icp/core/Registration.cpp
+index f07ad94..d4bac0c 100644
+--- a/cpp/genz_icp/core/Registration.cpp
++++ b/cpp/genz_icp/core/Registration.cpp
+@@ -30,7 +30,6 @@
+ #include <sophus/se3.hpp>
+ #include <sophus/so3.hpp>
+ #include <tuple>
+-#include <iostream>
+ 
+ namespace Eigen {
+ using Matrix6d = Eigen::Matrix<double, 6, 6>;
+@@ -142,34 +141,6 @@ std::tuple<Eigen::Matrix6d, Eigen::Vector6d> BuildLinearSystem(
+ 
+     return std::make_tuple(JTJ, JTr);
+ }
+-
+-void VisualizeStatus(size_t planar_count, size_t non_planar_count, double alpha) {
+-    const int bar_width = 52;
+-    const std::string planar_color = "\033[1;38;2;0;119;187m";
+-    const std::string non_planar_color = "\033[1;38;2;238;51;119m";
+-    const std::string alpha_color = "\033[1;32m";
+-
+-    printf("\033[2J\033[1;1H"); // Clear terminal
+-    std::cout << "====================== GenZ-ICP ======================\n";
+-    std::cout << non_planar_color << "# of non-planar points: " << non_planar_count << ", ";
+-    std::cout << planar_color << "# of planar points: " << planar_count << "\033[0m\n";
+-
+-    std::cout << "Unstructured  <-----  ";
+-    std::cout << alpha_color << "alpha: " << std::fixed << std::setprecision(3) << alpha << "\033[0m";
+-    std::cout << "  ----->  Structured\n";
+-
+-    const int alpha_location = static_cast<int>(bar_width * alpha); 
+-    std::cout << "[";
+-    for (int i = 0; i < bar_width; ++i) {
+-        if (i == alpha_location) {
+-            std::cout << "\033[1;32m█\033[0m"; 
+-        } else {
+-            std::cout << "-"; 
+-        }
+-    }
+-    std::cout << "]\n";
+-    std::cout.flush();
+-}
+ }  // namespace
+ 
+ namespace genz_icp {
+@@ -208,7 +179,6 @@ std::tuple<Sophus::SE3d, std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector
+         T_icp = estimation * T_icp;
+         // Termination criteria
+         if (dx.norm() < convergence_criterion_ || j == max_num_iterations_ - 1) {
+-            VisualizeStatus(planar_count, non_planar_count, alpha);
+             final_planar_points = src_planar;
+             final_non_planar_points = src_non_planar;
+             break;
+diff --git a/cpp/genz_icp/core/VoxelHashMap.hpp b/cpp/genz_icp/core/VoxelHashMap.hpp
+index de7cdb5..0a0ab84 100644
+--- a/cpp/genz_icp/core/VoxelHashMap.hpp
++++ b/cpp/genz_icp/core/VoxelHashMap.hpp
+@@ -28,7 +28,7 @@
+ 
+ #include <tsl/robin_map.h>
+ 
+-#include <Eigen/Core>
++#include <Eigen/Dense>
+ #include <sophus/se3.hpp>
+ #include <vector>
+ 

@@ -19,6 +19,10 @@ using namespace nb::literals;
   #include "bindings/pipelines/loam.h"
 #endif
 
+#ifdef EVALIO_GENZ_ICP
+  #include "bindings/pipelines/genz_icp.h"
+#endif
+
 namespace evalio {
 inline void makePipelines(nb::module_& m) {
   // List all the pipelines here
@@ -59,7 +63,20 @@ inline void makePipelines(nb::module_& m) {
     "Lidar Odometry and Mapping (LOAM) pipeline. LOAM is a baseline "
     "lidar-only odometry method that pioneered feature-based ICP. "
     "Our implementation permits both scan-to-scan or scan-to-map matching.";
+#endif
 
+#ifdef EVALIO_GENZ_ICP
+  nb::class_<GenZICP, evalio::Pipeline>(m, "GenZICP")
+    .def(nb::init<>())
+    .def_static("name", &GenZICP::name)
+    .def_static("default_params", &GenZICP::default_params)
+    .def_static("url", &GenZICP::url)
+    .def_static("version", &GenZICP::version)
+    .doc() =
+    "Genz-ICP LiDAR-only pipeline is an extension of KissICP that "
+    "additionally estimates normals in the local submap voxel map for "
+    "increased robustness. It also includes a novel weighting scheme for"
+    " weighting point-to-plane and point-to-point correspondences.";
 #endif
 }
 } // namespace evalio
