@@ -65,9 +65,11 @@ set(DEF "") # definitions to pass to the python module
 set(RESULTS "") # for printing results
 
 message("################### Searching for pipelines ###################")
-find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline EVALIO_KISS_ICP)
-find_pipeline(LIO-SAM                lio_sam           EVALIO_LIO_SAM)
-find_pipeline(loam                   loam              EVALIO_LOAM)
+# find_pipeline(directory              target_name       definition_name)
+find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline  EVALIO_KISS_ICP)
+find_pipeline(LIO-SAM                lio_sam            EVALIO_LIO_SAM)
+find_pipeline(loam                   loam               EVALIO_LOAM)
+find_pipeline(genz-icp/cpp/genz_icp  genz_icp::pipeline EVALIO_GENZ_ICP)
 message("###################    Pipeline Results     ###################")
 if(NOT "${RESULTS}" STREQUAL "")
     string(STRIP "${RESULTS}" RESULTS)
@@ -111,14 +113,9 @@ function(module_subs MOD FILE)
     )
 endfunction()
 
-# option for github actions
-# see ci.yml
-option(EVALIO_PYTHON_STUBS "Build Python bindings with stubs" ON)
-if(EVALIO_PYTHON_STUBS)
-    module_subs(_cpp           __init__.pyi)
-    module_subs(_cpp.pipelines pipelines.pyi)
-    module_subs(_cpp.types     types.pyi)
-endif()
+module_subs(_cpp           __init__.pyi)
+module_subs(_cpp.pipelines pipelines.pyi)
+module_subs(_cpp.types     types.pyi)
 
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)

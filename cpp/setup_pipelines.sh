@@ -35,6 +35,16 @@ git checkout main
 git apply ../../pipelines/loam.patch
 cd ..
 
+# GenZ-ICP
+if [ ! -d "genz-icp" ]; then
+    git clone https://github.com/cocel-postech/genz-icp.git
+fi
+cd genz-icp
+git stash
+git switch --detach v0.2.0
+git apply ../../pipelines/genz_icp.patch
+cd ..
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then
