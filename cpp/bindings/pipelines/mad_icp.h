@@ -64,8 +64,14 @@ public:
   }
 
   const std::map<std::string, std::vector<evalio::Point>> map() override {
-    // TODO: Find a way to get the points from the mad_icp_ object
-    return {};
+    auto leaves = mad_icp_->modelLeaves();
+    std::vector<evalio::Point> output_points;
+    output_points.reserve(leaves.size());
+    for (auto point : leaves) {
+      output_points.push_back(to_evalio_point(point));
+    }
+
+    return {{"planar", output_points}};
   }
 
   // Setters
@@ -126,6 +132,7 @@ public:
 
     // Copy
     std::vector<Eigen::Vector3d> points;
+    points.reserve(mm.points.size());
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
     }
@@ -133,8 +140,14 @@ public:
     // Run through pipeline
     mad_icp_->compute(mm.stamp.to_sec(), points);
 
-    // TODO: Eventually it'd be nice to pull out the kd-tree info in some way
-    return {{"point", mm.points}};
+    auto leaves = mad_icp_->currentLeaves();
+    std::vector<evalio::Point> output_points;
+    output_points.reserve(leaves.size());
+    for (const auto& point : leaves) {
+      output_points.push_back(to_evalio_point(point));
+    }
+
+    return {{"planar", output_points}};
   }
 
 private:

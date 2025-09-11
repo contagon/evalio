@@ -91,7 +91,7 @@ find_package(
 FetchContent_Declare(
     nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind
-    GIT_TAG v2.7.0
+    GIT_TAG v2.9.2
     FIND_PACKAGE_ARGS
         CONFIG # uses find_package first, git if it fails
 )
@@ -104,20 +104,18 @@ target_compile_definitions(_cpp PRIVATE ${DEF})
 install(TARGETS _cpp DESTINATION evalio)
 
 # handle stubs
-function(module_subs MOD FILE)
-    message(STATUS "Adding ${MOD} stubs")
-    nanobind_add_stub(
-        ${MOD}_stubs
-        INSTALL_TIME
-        MODULE evalio.${MOD}
-        OUTPUT evalio/_cpp/${FILE} # install directly to final location
-        PYTHON_PATH "."
-    )
-endfunction()
+nanobind_add_stub(
+    evalio_stubs
+    INSTALL_TIME
+    MODULE evalio._cpp
+    RECURSIVE
 
-module_subs(_cpp           __init__.pyi)
-module_subs(_cpp.pipelines pipelines.pyi)
-module_subs(_cpp.types     types.pyi)
+    OUTPUT_PATH evalio
+    OUTPUT
+        evalio/_cpp/__init__.pyi
+        evalio/_cpp/pipelines.pyi
+        evalio/_cpp/types.pyi
+)
 
 # install licenses as well
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../licenses DESTINATION .)

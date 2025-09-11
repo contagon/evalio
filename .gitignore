@@ -23,6 +23,7 @@ __pycache__
 python/evalio/_cpp
 tests/data-old
 data
+.envrc
 
 # for building
 compile_commands.json

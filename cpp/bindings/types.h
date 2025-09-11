@@ -553,21 +553,6 @@ inline void makeTypes(nb::module_& m) {
     .def("inverse", &SE3::inverse, "Compute the inverse.")
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
-    .def(
-      "transform_in_place",
-      nb::overload_cast<Point&>(&SE3::transform_in_place, nb::const_),
-      "point"_a,
-      "Transform a Point in place."
-    )
-    .def(
-      "transform_in_place",
-      nb::overload_cast<LidarMeasurement&>(
-        &SE3::transform_in_place,
-        nb::const_
-      ),
-      "scan"_a,
-      "Transform a LidarMeasurement in place."
-    )
     .def(nb::self * nb::self, "Compose two rigid body transformations.")
     .def(nb::self == nb::self, "Check for equality")
     .def(nb::self != nb::self, "Check for inequality")

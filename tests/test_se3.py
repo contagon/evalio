@@ -57,44 +57,6 @@ def test_to_matrix():
     assert np.allclose(mat, se3.toMat())
 
 
-def test_transform_point():
-    p = Point(x=1, y=2, z=3)
-
-    t = np.array([1, 2, 3])
-    r = R.from_rotvec([1.0, 0.2, 0.3])
-
-    qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)  # type: ignore
-    se3 = SE3(so3, t)
-
-    as_np = np.array([p.x, p.y, p.z])
-    p_expected = r.apply(as_np) + t
-    se3.transform_in_place(p)
-
-    assert math.isclose(p_expected[0], p.x)
-    assert math.isclose(p_expected[1], p.y)
-    assert math.isclose(p_expected[2], p.z)
-
-
-def test_transform_scan():
-    scan = LidarMeasurement(Stamp.from_sec(0.0), [Point(x=1, y=2, z=3)])
-
-    t = np.array([1, 2, 3])
-    r = R.from_rotvec([1.0, 0.2, 0.3])
-
-    qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)  # type: ignore
-    se3 = SE3(so3, t)
-
-    as_np = np.array([scan.points[0].x, scan.points[0].y, scan.points[0].z])
-    p_expected = r.apply(as_np) + t
-    se3.transform_in_place(scan)
-
-    assert math.isclose(p_expected[0], scan.points[0].x)
-    assert math.isclose(p_expected[1], scan.points[0].y)
-    assert math.isclose(p_expected[2], scan.points[0].z)
-
-
 def test_log_exp():
     xi = np.array([0.1, 0.2, 0.3, 4.0, 5.0, 6.0])
     se3 = SE3.exp(xi)
