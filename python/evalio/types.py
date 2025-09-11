@@ -26,7 +26,7 @@ class Trajectory:
     """List of timestamps for each pose."""
     poses: list[SE3]
     """List of poses, in the same order as the timestamps."""
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, bool | int | float | str] = field(default_factory=dict)
     """Metadata associated with the trajectory, such as the dataset name or other information."""
 
     def __post_init__(self):

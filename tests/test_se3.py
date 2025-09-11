@@ -24,7 +24,7 @@ def test_constructor():
     r = R.from_rotvec([1.0, 0.2, 0.3])
 
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)  # type: ignore
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
 
     is_close(T(r, t), SE3(so3, t))
 
@@ -47,7 +47,7 @@ def test_to_matrix():
     r = R.from_rotvec([1.0, 0.2, 0.3])
 
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)  # type: ignore
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
     se3 = SE3(so3, t)
 
     mat = np.eye(4)
