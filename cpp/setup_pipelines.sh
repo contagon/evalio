@@ -60,7 +60,7 @@ if [ ! -d "ct_icp" ]; then
 fi
 cd ct_icp
 git stash
-git switch --detach e59a445a49f9f50bda269afd06292e8454e1575e
+git switch --detach icra_2022
 git apply ../../pipelines/ct_icp.patch
 cd ..
 

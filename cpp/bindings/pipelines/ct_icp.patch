@@ -1,0 +1,109 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8bd6661..e20167d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.14)
+-project(CT_ICP)
++project(CT_ICP VERSION 0.0.1 LANGUAGES CXX)
+ 
+ set(CMAKE_CXX_STANDARD 17)
+ 
+@@ -14,8 +14,13 @@ endif()
+ set(CMAKE_INSTALL_PREFIX ${RUNTIME_DESTINATION})
+ set(CT_ICP_RUNTIME_DESTINATION ${RUNTIME_DESTINATION})
+ 
+-include(cmake/external.cmake)
+-include(cmake/test.cmake)
++find_package(Eigen3 REQUIRED)
++find_package(Ceres REQUIRED)
++find_package(tsl-robin-map REQUIRED)
++
++# TODO: Verify I'm good without these (and try to remove tinyply)
++find_package(yaml-cpp REQUIRED)
++find_package(glog REQUIRED)
+ 
+ find_package(OpenMP)
+ if(NOT TARGET OpenMP::OpenMP_CXX)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ff36666..d24dce0 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -3,11 +3,3 @@ add_subdirectory(ct_icp)
+ if (WITH_PYTHON_BINDING)
+     add_subdirectory(binding)
+ endif()
+-
+-add_executable(slam slam.cpp ct_icp/evaluate_slam.hpp)
+-target_link_libraries(slam PUBLIC CT_ICP TCLAP Ceres::ceres glog::glog Eigen3::Eigen OpenMP::OpenMP_CXX)
+-install(TARGETS slam DESTINATION ${CT_ICP_RUNTIME_DESTINATION})
+-if (WITH_VIZ3D)
+-    target_link_libraries(slam PUBLIC viz3d)
+-    target_compile_definitions(slam PUBLIC CT_ICP_WITH_VIZ=1)
+-endif ()
+diff --git a/src/ct_icp/CMakeLists.txt b/src/ct_icp/CMakeLists.txt
+index aa47362..9205105 100644
+--- a/src/ct_icp/CMakeLists.txt
++++ b/src/ct_icp/CMakeLists.txt
+@@ -9,15 +9,10 @@ add_library(CT_ICP STATIC ct_icp.cpp ct_icp.hpp types.hpp
+         evaluate_slam.hpp evaluate_slam.cpp
+         ${Utilities_SRC})
+ 
+-target_include_directories(CT_ICP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
++target_include_directories(CT_ICP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+ target_link_libraries(CT_ICP PUBLIC Eigen3::Eigen Ceres::ceres glog::glog tsl::robin_map yaml-cpp OpenMP::OpenMP_CXX)
+ 
+ if (WITH_VIZ3D)
+     target_compile_definitions(CT_ICP PUBLIC CT_ICP_WITH_VIZ=1)
+     target_link_libraries(CT_ICP PUBLIC viz3d)
+-endif ()
+-
+-
+-# Add Tests
+-CT_ICP_ADD_TEST(test_ceres CT_ICP Eigen3::Eigen Ceres::ceres glog::glog)
+-
++endif ()
+\ No newline at end of file
+diff --git a/src/ct_icp/cost_functions.h b/src/ct_icp/cost_functions.h
+index d0510b2..5143da8 100644
+--- a/src/ct_icp/cost_functions.h
++++ b/src/ct_icp/cost_functions.h
+@@ -36,9 +36,10 @@ namespace ct_icp {
+             transformed(1, 0) += trans_params[1];
+             transformed(2, 0) += trans_params[2];
+ 
+-            residual[0] = weight_ *
+-                          (reference_.template cast<T>() - transformed).transpose() *
+-                          reference_normal_.template cast<T>();
++            T product = (reference_.template cast<T>() - transformed).transpose() *
++                        reference_normal_.template cast<T>();
++            residual[0] = T(weight_) * product;
++
+             return true;
+         }
+ 
+@@ -78,8 +79,9 @@ namespace ct_icp {
+             transformed(1, 0) += alpha_m * begin_trans_params[1] + alpha_timestamps_ * end_trans_params[1];
+             transformed(2, 0) += alpha_m * begin_trans_params[2] + alpha_timestamps_ * end_trans_params[2];
+ 
+-            residual[0] = weight_ * (reference_point_.template cast<T>() - transformed).transpose() *
+-                          reference_normal_.template cast<T>();
++            T product = (reference_point_.template cast<T>() - transformed).transpose() *
++                        reference_normal_.template cast<T>();
++            residual[0] = T(weight_) * product;
+ 
+             return true;
+         }
+diff --git a/src/ct_icp/ct_icp.cpp b/src/ct_icp/ct_icp.cpp
+index 5190bd0..94d0d9d 100644
+--- a/src/ct_icp/ct_icp.cpp
++++ b/src/ct_icp/ct_icp.cpp
+@@ -298,7 +298,7 @@ namespace ct_icp {
+         inline void AddParameterBlocks(Eigen::Quaterniond &begin_quat, Eigen::
+         Quaterniond &end_quat, Eigen::Vector3d &begin_t, Eigen::Vector3d &end_t) {
+             CHECK(!parameter_block_set_) << "The parameter block was already set";
+-            auto *parameterization = new ceres::EigenQuaternionParameterization();
++            auto *parameterization = new ceres::EigenQuaternionManifold();
+             begin_t_ = &begin_t.x();
+             end_t_ = &end_t.x();
+             begin_quat_ = &begin_quat.x();
