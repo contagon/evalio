@@ -47,7 +47,7 @@ cd ..
 
 # MAD-ICP
 if [ ! -d "mad-icp" ]; then
-    git clone git@github.com:rvp-group/mad-icp.git
+    git clone https://github.com/rvp-group/mad-icp.git
 fi
 cd mad-icp
 git stash

@@ -132,6 +132,7 @@ public:
 
     // Copy
     std::vector<Eigen::Vector3d> points;
+    points.reserve(mm.points.size());
     for (auto point : mm.points) {
       points.push_back(to_eigen_point(point));
     }
@@ -142,7 +143,7 @@ public:
     auto leaves = mad_icp_->currentLeaves();
     std::vector<evalio::Point> output_points;
     output_points.reserve(leaves.size());
-    for (auto point : leaves) {
+    for (const auto& point : leaves) {
       output_points.push_back(to_evalio_point(point));
     }
 
