@@ -84,7 +84,7 @@ def eval_dataset(
         rr.connect_grpc()
         rr.log(
             "gt",
-            convert(gt_og, color=[144, 144, 144]),
+            convert(gt_og, color=(144, 144, 144)),
             static=True,
         )
 

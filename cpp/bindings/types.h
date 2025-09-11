@@ -36,8 +36,16 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("nsec", &Duration::nsec, "Underlying nanoseconds representation")
     .def(nb::self < nb::self, "Compare two Durations")
     .def(nb::self > nb::self, "Compare two Durations")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def(nb::self - nb::self, "Compute the difference between two Durations")
     .def(nb::self + nb::self, "Add two Durations")
     .def("__repr__", &Duration::toString)
@@ -87,8 +95,16 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("nsec", &Stamp::nsec, "Underlying nanoseconds storage")
     .def(nb::self < nb::self, "Compare two Stamps to see which happened first")
     .def(nb::self > nb::self, "Compare two Stamps to see which happened first")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for equality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def(
       nb::self - nb::self,
       "Compute the difference between two Stamps, returning a duration"
@@ -159,8 +175,16 @@ inline void makeTypes(nb::module_& m) {
       "scanline index."
     )
     .def_rw("col", &Point::col, "Column index of the point in the point cloud.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &Point::toString)
     .def(
       "__getstate__",
@@ -231,8 +255,16 @@ inline void makeTypes(nb::module_& m) {
       &LidarMeasurement::to_vec_stamps,
       "Convert the point stamps to a list of durations."
     )
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &LidarMeasurement::toString)
     .def(
       "__getstate__",
@@ -322,8 +354,16 @@ inline void makeTypes(nb::module_& m) {
       &ImuMeasurement::accel,
       "Accelerometer measurement as a 3D vector."
     )
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &ImuMeasurement::toString)
     .def(
       "__getstate__",
@@ -443,8 +483,16 @@ inline void makeTypes(nb::module_& m) {
     .def("toMat", &SO3::toMat, "Convert the rotation to a 3x3 matrix.")
     .def("rotate", &SO3::rotate, "v"_a, "Rotate a 3D vector by the rotation.")
     .def(nb::self * nb::self, "Compose two rotations.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &SO3::toString)
     .def("__copy__", [](const SO3& self) { return SO3(self); })
     .def(
@@ -493,8 +541,16 @@ inline void makeTypes(nb::module_& m) {
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &SE3::toString)
     .def("__copy__", [](const SE3& self) { return SE3(self); })
     .def(
