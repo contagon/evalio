@@ -56,7 +56,7 @@ git apply ../../pipelines/mad_icp.patch
 cd ..
 
 if [ ! -d "ct_icp" ]; then
-    git clone git@github.com:jedeschaud/ct_icp.git
+    git clone https://github.com/jedeschaud/ct_icp.git
 fi
 cd ct_icp
 git stash

@@ -109,7 +109,8 @@ inline void makePipelines(nb::module_& m) {
     .def_static("version", &CTICP::version)
     .doc() =
     "CT-ICP LiDAR-only pipeline performs continuous-time ICP over "
-    "a small window of scans to perform more accurate dewarping performance.";
+    "a small window of scans to perform more accurate dewarping performance. "
+    "This is the version based on the 2022-ICRA paper.";
 #endif
 }
 } // namespace evalio
