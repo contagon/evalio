@@ -136,10 +136,20 @@ index 1f5784c..2577d68 100755
    for (auto& moving : moving_leaves_) {
      const Eigen::Vector3d ml = X_ * moving->mean_;
 diff --git a/mad_icp/src/odometry/mad_icp.h b/mad_icp/src/odometry/mad_icp.h
-index 04b080b..d1cf77f 100755
+index 04b080b..4596c45 100755
 --- a/mad_icp/src/odometry/mad_icp.h
 +++ b/mad_icp/src/odometry/mad_icp.h
-@@ -52,7 +52,7 @@ public:
+@@ -35,7 +35,9 @@
+ #include <Eigen/Eigenvalues>
+ #include <fstream>
+ #include <iostream>
++#ifdef OPENMP_AVAILABLE
+ #include <omp.h>
++#endif
+ #include <sstream>
+ 
+ class MADicp {
+@@ -52,7 +54,7 @@ public:
  
    void oneRound();
  

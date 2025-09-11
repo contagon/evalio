@@ -51,7 +51,7 @@ if [ ! -d "mad-icp" ]; then
 fi
 cd mad-icp
 git stash
-git switch --detach v0.0.10
+git switch --detach 0.0.10
 git apply ../../pipelines/mad_icp.patch
 cd ..
 
