@@ -14,7 +14,7 @@ err_console = Console(stderr=True)
 all_sequences_names = list(
     itertools.chain.from_iterable(
         [seq.full_name for seq in d.sequences()] + [f"{d.dataset_name()}/*"]
-        for d in DatasetBuilder._all_datasets().values()
+        for d in DatasetBuilder.all_datasets().values()
     )
 )
 
@@ -22,14 +22,14 @@ all_sequences_names = list(
 # ------------------------- Completions ------------------------- #
 def complete_dataset(incomplete: str, ctx: typer.Context):
     # TODO: Check for * to remove autocompletion for all of that dataset
-    already_listed = ctx.params.get("datasets") or []
+    already_listed: list[str] = ctx.params.get("datasets") or []
 
     for name in all_sequences_names:
         if name not in already_listed and name.startswith(incomplete):
             yield name
 
 
-def validate_datasets(datasets: list[str]):
+def validate_datasets(datasets: list[str]) -> list[str]:
     if not datasets:
         return []
 
@@ -50,18 +50,18 @@ def validate_datasets(datasets: list[str]):
     return datasets
 
 
-valid_pipelines = list(PipelineBuilder._all_pipelines().keys())
+valid_pipelines = list(PipelineBuilder.all_pipelines().keys())
 
 
 def complete_pipeline(incomplete: str, ctx: typer.Context):
-    already_listed = ctx.params.get("pipelines") or []
+    already_listed: list[str] = ctx.params.get("pipelines") or []
 
     for name in valid_pipelines:
         if name not in already_listed and name.startswith(incomplete):
             yield name
 
 
-def validate_pipelines(pipelines: list[str]):
+def validate_pipelines(pipelines: list[str]) -> list[str]:
     if not pipelines:
         return []
 

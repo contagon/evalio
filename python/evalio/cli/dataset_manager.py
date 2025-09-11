@@ -19,7 +19,7 @@ from rosbags.rosbag2 import (
     Writer as Writer2,
 )
 from rosbags.typesys import get_typestore, Stores
-from rosbags.interfaces import ConnectionExtRosbag2
+from rosbags.interfaces import Connection, ConnectionExtRosbag2
 
 app = typer.Typer()
 
@@ -33,7 +33,7 @@ def dl(datasets: DatasetArg) -> None:
     valid_datasets = DatasetBuilder.parse(datasets)
 
     # Check if already downloaded
-    to_download = []
+    to_download: list[DatasetBuilder] = []
     for builder in valid_datasets:
         if builder.is_downloaded():
             print(f"Skipping download for {builder}, already exists")
@@ -107,8 +107,8 @@ def filter_ros1(bag: Path, topics: list[str]) -> None:
 
     with Reader1(bag) as reader, Writer1(bag_temp) as writer:
         # Gather all the connections (messages) that we want to keep
-        conn_write = {}
-        conn_read = []
+        conn_write: dict[int, Connection] = {}
+        conn_read: list[Connection] = []
         other_topics = False
         for conn in reader.connections:
             if conn.topic not in topics:
@@ -158,8 +158,8 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
 
     with Reader2(bag) as reader, Writer2(bag_temp, storage_plugin=storage) as writer:
         # Gather all the connections (messages) that we want to keep
-        conn_write = {}
-        conn_read = []
+        conn_write: dict[int, Connection] = {}
+        conn_read: list[Connection] = []
         other_topics = False
         for conn in reader.connections:
             if conn.topic not in topics:
@@ -212,7 +212,7 @@ def filter(
     valid_datasets = DatasetBuilder.parse(datasets)
 
     # Check if already downloaded
-    to_filter = []
+    to_filter: list[DatasetBuilder] = []
     for builder in valid_datasets:
         if not builder.is_downloaded():
             print(f"Skipping filter for {builder}, not downloaded")
@@ -239,7 +239,7 @@ def filter(
         if is2:
             bags = data.path
         else:
-            bags = []
+            bags: list[Path] = []
             for path in data.path:
                 if path.is_dir():
                     bags += list(path.glob("*.bag"))

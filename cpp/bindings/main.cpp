@@ -22,7 +22,7 @@ NB_MODULE(_cpp, m) {
   evalio::makeTypes(m_types);
 
   auto m_helpers =
-    m.def_submodule("_helpers", "Helper functions for internal evalio usage.");
+    m.def_submodule("helpers", "Helper functions for internal evalio usage.");
   evalio::makeConversions(m_helpers);
 
   auto m_pipelines = m.def_submodule("pipelines", "Pipelines used in evalio.");

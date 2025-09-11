@@ -54,7 +54,7 @@ class Trajectory:
     def from_csv(
         path: Path,
         fieldnames: list[str],
-        delimiter=",",
+        delimiter: str = ",",
         skip_lines: Optional[int] = None,
     ) -> "Trajectory":
         """Flexible loader for stamped poses stored in csv files.
@@ -77,8 +77,8 @@ class Trajectory:
         Returns:
             Trajectory: Stored dataset
         """
-        poses = []
-        stamps = []
+        poses: list[SE3] = []
+        stamps: list[Stamp] = []
 
         with open(path) as f:
             csvfile = list(filter(lambda row: row[0] != "#", f))

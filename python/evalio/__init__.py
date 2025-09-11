@@ -5,6 +5,8 @@ import warnings
 from tqdm import TqdmExperimentalWarning
 import atexit
 
+Param = bool | int | float | str
+
 
 # remove false nanobind reference leak warnings
 # https://github.com/wjakob/nanobind/discussions/13

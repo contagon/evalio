@@ -2,6 +2,7 @@ import atexit
 import csv
 from pathlib import Path
 from typing import Sequence
+from evalio import Param
 import yaml
 from evalio.types import SE3, Stamp
 
@@ -22,7 +23,7 @@ def save_config(
     output.mkdir(parents=True, exist_ok=True)
     path = output / "config.yaml"
 
-    out = dict()
+    out: dict[str, list[dict[str, Param]]] = dict()
     out["datasets"] = [d.as_dict() for d in datasets]
     out["pipelines"] = [p.as_dict() for p in pipelines]
 

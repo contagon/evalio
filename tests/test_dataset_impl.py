@@ -2,7 +2,7 @@ from evalio.cli.parser import DatasetBuilder
 from evalio.datasets import Dataset
 import pytest
 
-datasets = DatasetBuilder._all_datasets().values()
+datasets = DatasetBuilder.all_datasets().values()
 
 
 # Test to ensure all datasets implement the required attributes
@@ -20,6 +20,6 @@ def test_impl(dataset):
     ]
 
     for a in attrs:
-        assert getattr(dataset, a) != getattr(
-            Dataset, a
-        ), f"{dataset} should implement {a}"
+        assert getattr(dataset, a) != getattr(Dataset, a), (
+            f"{dataset} should implement {a}"
+        )

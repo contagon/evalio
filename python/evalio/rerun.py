@@ -7,6 +7,7 @@ from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
 from evalio.utils import print_warning
 import numpy as np
+from numpy.typing import NDArray
 
 from dataclasses import dataclass
 
@@ -21,19 +22,23 @@ from evalio.stats import _check_overstep
 # These colors are pulled directly from the rerun skybox colors
 # https://github.com/rerun-io/rerun/blob/main/crates/viewer/re_renderer/shader/generic_skybox.wgsl#L19
 # We avoid them to make sure our colors are distinct from viewer colors
-def skybox_dark_rgb(dir: np.ndarray) -> tuple[float, float, float]:
+def skybox_dark_rgb(dir: NDArray[np.float64]) -> tuple[float, float, float]:
     rgb = dir * 0.5 + np.full(3, 0.5)
     rgb = np.full(3, 0.05) + 0.20 * rgb
     return (float(rgb[0]), float(rgb[1]), float(rgb[2]))
 
 
-def skybox_light_rgb(dir: np.ndarray) -> tuple[float, float, float]:
+def skybox_light_rgb(dir: NDArray[np.float64]) -> tuple[float, float, float]:
     rgb = dir * 0.5 + np.full(3, 0.5)
     rgb = np.full(3, 0.7) + 0.20 * rgb
     return (float(rgb[0]), float(rgb[1]), float(rgb[2]))
 
 
-GT_COLOR = (144, 144, 144)  # Color for ground truth in rerun
+GT_COLOR = (
+    144.0 / 255.0,
+    144.0 / 255.0,
+    144.0 / 255.0,
+)  # Color for ground truth in rerun
 
 
 @dataclass
@@ -292,8 +297,8 @@ try:
 
     @overload
     def convert(
-        obj: np.ndarray,
-        color: Optional[Literal["z"] | np.ndarray] = None,
+        obj: NDArray[np.float64],
+        color: Optional[Literal["z"] | NDArray[np.float64]] = None,
         radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert an (n, 3) numpy array to a rerun Points3D.
@@ -354,7 +359,7 @@ try:
         ...
 
     def convert(
-        obj: object,
+        obj: Any,
         color: Optional[Any] = None,
         radii: Optional[float] = None,
     ) -> rr.Transform3D | rr.Points3D:

@@ -6,16 +6,14 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3
+from evalio.types import Trajectory, SO3, ImuParams, LidarParams, SE3
+
 import numpy as np
 from enum import auto
 import os
 
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
 

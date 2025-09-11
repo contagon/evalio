@@ -1,9 +1,10 @@
+from types import ModuleType
 import functools
 import itertools
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence, cast
 
 from inspect import isclass
 from evalio.utils import print_warning
@@ -14,6 +15,7 @@ import importlib
 import evalio
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
+from evalio import Param
 
 
 # ------------------------- Parsing input ------------------------- #
@@ -25,7 +27,7 @@ class DatasetBuilder:
     length: Optional[int] = None
 
     @staticmethod
-    def _search_module(module) -> dict[str, type[Dataset]]:
+    def _search_module(module: ModuleType) -> dict[str, type[Dataset]]:
         return dict(
             (cls.dataset_name(), cls)
             for cls in module.__dict__.values()
@@ -36,13 +38,13 @@ class DatasetBuilder:
 
     @staticmethod
     @functools.cache
-    def _all_datasets() -> dict[str, type[Dataset]]:
+    def all_datasets() -> dict[str, type[Dataset]]:
         datasets = DatasetBuilder._search_module(evalio.datasets)
 
         # Parse env variable for more
         if "EVALIO_CUSTOM" in os.environ:
             for dataset in os.environ["EVALIO_CUSTOM"].split(","):
-                module = importlib.import_module(dataset)
+                module: ModuleType = importlib.import_module(dataset)
                 datasets |= DatasetBuilder._search_module(module)
 
         return datasets
@@ -50,13 +52,19 @@ class DatasetBuilder:
     @classmethod
     @functools.cache
     def _get_dataset(cls, name: str) -> type[Dataset]:
-        DatasetType = cls._all_datasets().get(name, None)
+        DatasetType = cls.all_datasets().get(name, None)
         if DatasetType is None:
             raise ValueError(f"Dataset {name} not found")
         return DatasetType
 
     @classmethod
-    def parse(cls, d: dict | str | Sequence[dict | str]) -> list["DatasetBuilder"]:
+    def parse(
+        cls,
+        d: None
+        | str
+        | dict[str, int | float | str]
+        | Sequence[dict[str, int | float | str] | str],
+    ) -> list["DatasetBuilder"]:
         # If empty just return
         if d is None:
             return []
@@ -74,8 +82,8 @@ class DatasetBuilder:
 
         # If given a dictionary
         elif isinstance(d, dict):
-            name, seq = d.pop("name").split("/")
-            length = d.pop("length", None)
+            name, seq = cast(str, d.pop("name")).split("/")
+            length = cast(Optional[int], d.pop("length", None))
             assert len(d) == 0, f"Invalid dataset configuration {d}"
             if seq == "*":
                 return [
@@ -93,8 +101,8 @@ class DatasetBuilder:
         else:
             raise ValueError(f"Invalid dataset configuration {d}")
 
-    def as_dict(self) -> dict[str, str | int]:
-        out: dict[str, str | int] = {"name": self.dataset.full_name}
+    def as_dict(self) -> dict[str, Param]:
+        out: dict[str, Param] = {"name": self.dataset.full_name}
         if self.length is not None:
             out["length"] = self.length
 
@@ -121,7 +129,7 @@ PIPELINE_METHODS = [m for m in dir(Pipeline) if not m.startswith("_")]
 class PipelineBuilder:
     name: str
     pipeline: type[Pipeline]
-    params: dict
+    params: dict[str, Param]
 
     def __post_init__(self):
         # Make sure all parameters are valid
@@ -137,7 +145,7 @@ class PipelineBuilder:
         self.params = all_params
 
     @staticmethod
-    def _is_pipeline(obj) -> bool:
+    def _is_pipeline(obj: Any) -> bool:
         # First check the normal way to short circuit
         if issubclass(obj, Pipeline):
             return True
@@ -154,7 +162,7 @@ class PipelineBuilder:
         return True
 
     @staticmethod
-    def _search_module(module) -> dict[str, type[Pipeline]]:
+    def _search_module(module: ModuleType) -> dict[str, type[Pipeline]]:
         return dict(
             (cls.name(), cls)
             for cls in module.__dict__.values()
@@ -165,7 +173,7 @@ class PipelineBuilder:
 
     @staticmethod
     @functools.lru_cache
-    def _all_pipelines() -> dict[str, type[Pipeline]]:
+    def all_pipelines() -> dict[str, type[Pipeline]]:
         pipelines = PipelineBuilder._search_module(evalio.pipelines)
 
         # Parse env variable for more
@@ -179,13 +187,16 @@ class PipelineBuilder:
     @classmethod
     @functools.lru_cache
     def _get_pipeline(cls, name: str) -> type[Pipeline]:
-        PipelineType = cls._all_pipelines().get(name, None)
+        PipelineType = cls.all_pipelines().get(name, None)
         if PipelineType is None:
             raise ValueError(f"Pipeline {name} not found")
         return PipelineType
 
     @classmethod
-    def parse(cls, p: dict | str | Sequence[dict | str]) -> list["PipelineBuilder"]:
+    def parse(
+        cls,
+        p: None | str | dict[str, int | float | str] | Sequence[dict[str, Param] | str],
+    ) -> list["PipelineBuilder"]:
         # If empty just return
         if p is None:
             return []
@@ -197,13 +208,13 @@ class PipelineBuilder:
         # If given a dictionary
         elif isinstance(p, dict):
             kind = p.pop("pipeline")
-            name = p.pop("name", kind)
+            name = cast(str, p.pop("name", kind))
             kind = cls._get_pipeline(kind)
             # If the dictionary has a sweep parameter in it
             if "sweep" in p:
-                sweep = p.pop("sweep")
+                sweep = cast(dict[str, list[Param]], p.pop("sweep"))
                 keys, values = zip(*sweep.items())
-                results = []
+                results: list[PipelineBuilder] = []
                 for options in itertools.product(*values):
                     parsed_name = deepcopy(name)
                     params = deepcopy(p)
@@ -223,7 +234,7 @@ class PipelineBuilder:
         else:
             raise ValueError(f"Invalid pipeline configuration {p}")
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Param]:
         return {"name": self.name, "pipeline": self.pipeline.name(), **self.params}
 
     def build(self, dataset: Dataset) -> Pipeline:

@@ -173,7 +173,7 @@ def run(
             for data in dbuilder.build():
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
-                elif isinstance(data, LidarMeasurement):
+                elif isinstance(data, LidarMeasurement):  # pyright: ignore reportUnnecessaryIsInstance
                     features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)
