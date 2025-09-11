@@ -978,6 +978,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#evalio.pipelines.MadICP" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MadICP
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1268,6 +1277,15 @@
   <a href="#evalio.pipelines.LioSAM" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LioSAM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evalio.pipelines.MadICP" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MadICP
     </span>
   </a>
   
@@ -1847,6 +1865,51 @@
 
 
         <p>Lidar-Inertial Smoothing and Mapping (LioSAM) pipeline. LioSAM is an extension of LOAM (=&gt; uses planar and edge features) that additionally utilizes an IMU for initializing ICP steps and for dewarping points</p>
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="evalio.pipelines.MadICP" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">MadICP</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+
+
+        <p>MAD-ICP LiDAR-only pipeline is an extension of KissICP that utilizes a novel kd-tree representation that implicitly computes normals to perform point-to-plane registration.</p>
 
 
 
