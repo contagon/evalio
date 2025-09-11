@@ -1,0 +1,241 @@
+diff --git a/mad_icp/CMakeLists.txt b/mad_icp/CMakeLists.txt
+index ce5239e..acfbd1a 100755
+--- a/mad_icp/CMakeLists.txt
++++ b/mad_icp/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # TODO: Change version to at least 3.11 and include FetchContent for Eigen
+ cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+ 
+-project(mad_icp LANGUAGES CXX)
++project(mad_icp LANGUAGES CXX VERSION 0.0.10)
+ 
+ set(CMAKE_BUILD_TYPE Release)
+ set(CMAKE_CXX_STANDARD 17)
+@@ -13,61 +13,12 @@ option(COMPILE_CPP_APPS "Set to ON to compile C++ applications" OFF)
+ 
+ # Eigen
+ # TODO: Detect if Eigen exists in system, oterwhise, download it through FetchContent
+-find_package(Eigen3 3.3 NO_MODULE)
+-
+-if(${Eigen3_DIR} STREQUAL "Eigen3_DIR-NOTFOUND")
+-    message(CHECK_START "Fetching Eigen3")
+-    list(APPEND CMAKE_MESSAGE_INDENT "  ")
+-
+-    include(FetchContent)
+-    FetchContent_Declare(
+-        Eigen
+-        URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz)
+-    FetchContent_GetProperties(Eigen)
+-
+-    if(NOT eigen_POPULATED)
+-        FetchContent_Populate(Eigen)
+-        add_subdirectory(${eigen_SOURCE_DIR} ${eigen_BINARY_DIR} EXCLUDE_FROM_ALL)
+-    endif()
+-
+-    list(POP_BACK CMAKE_MESSAGE_INDENT)
+-    message(CHECK_PASS "fetched")
+-endif()
++find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+ 
+ # OpenMP
+-find_package(OpenMP REQUIRED)
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+-
+-# Python bindings
+-find_package(pybind11)
+-
+-if(NOT DEFINED pybind11_FOUND)
+-    message(CHECK_START "Fetching pybind11")
+-    list(APPEND CMAKE_MESSAGE_INDENT "  ")
+-    include(FetchContent)
+-    FetchContent_Declare(
+-        pybind11
+-        GIT_REPOSITORY https://github.com/pybind/pybind11
+-        GIT_TAG v2.12
+-    )
+-
+-    FetchContent_GetProperties(pybind11)
+-
+-    if(NOT pybind11_POPULATED)
+-        FetchContent_Populate(pybind11)
+-        add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
+-    endif()
+-
+-    message(CHECK_PASS "fetched")
++find_package(OpenMP)
++if(NOT OPENMP_FOUND)
++    message(STATUS "OpenMP not found, disabling OpenMP support")
+ endif()
+ 
+-include_directories(
+-    ${PROJECT_SOURCE_DIR}/src
+-    ${PYTHON_INCLUDE_DIRS}
+-)
+-
+-add_subdirectory(src)
+-
+-# TODO only if one wants to build cpp runners
+-add_subdirectory(apps/cpp_runners)
+\ No newline at end of file
++add_subdirectory(src)
+\ No newline at end of file
+diff --git a/mad_icp/src/CMakeLists.txt b/mad_icp/src/CMakeLists.txt
+index 91a5fd1..ab83177 100755
+--- a/mad_icp/src/CMakeLists.txt
++++ b/mad_icp/src/CMakeLists.txt
+@@ -1,3 +1,2 @@
+ add_subdirectory(tools)
+-add_subdirectory(odometry)
+-add_subdirectory(pybind)
++add_subdirectory(odometry)
+\ No newline at end of file
+diff --git a/mad_icp/src/odometry/CMakeLists.txt b/mad_icp/src/odometry/CMakeLists.txt
+index 9083530..faffeb4 100755
+--- a/mad_icp/src/odometry/CMakeLists.txt
++++ b/mad_icp/src/odometry/CMakeLists.txt
+@@ -1,11 +1,20 @@
+-add_library(odometry STATIC
++add_library(mad_odometry STATIC
+   vel_estimator.cpp
+   pipeline.cpp
+   mad_icp.cpp
+ )
+ 
+-target_link_libraries(odometry
++target_link_libraries(mad_odometry
+   tools
+   Eigen3::Eigen
+ )
+-target_compile_features(odometry PUBLIC)
+\ No newline at end of file
++target_compile_features(mad_odometry PUBLIC)
++target_include_directories(mad_odometry PUBLIC
++  ${CMAKE_CURRENT_SOURCE_DIR}
++  ${CMAKE_CURRENT_SOURCE_DIR}/..
++)
++
++if(OPENMP_FOUND)
++  target_link_libraries(mad_odometry ${OpenMP_CXX_FLAGS})
++  target_compile_definitions(mad_odometry PUBLIC OPENMP_AVAILABLE)
++endif()
+\ No newline at end of file
+diff --git a/mad_icp/src/odometry/mad_icp.cpp b/mad_icp/src/odometry/mad_icp.cpp
+index 1f5784c..2577d68 100755
+--- a/mad_icp/src/odometry/mad_icp.cpp
++++ b/mad_icp/src/odometry/mad_icp.cpp
+@@ -71,8 +71,8 @@ void MADicp::errorAndJacobian(double& e,
+   J.block<1, 3>(0, 3) = -J.block<1, 3>(0, 0) * skew(moving_point);
+ }
+ 
+-void MADicp::update(const MADtree* fixed_tree) {
+-  const int thread_id = omp_get_thread_num();
++void MADicp::update(const MADtree* fixed_tree, int i) {
++  const int thread_id = i;
+ 
+   for (auto& moving : moving_leaves_) {
+     const Eigen::Vector3d ml = X_ * moving->mean_;
+diff --git a/mad_icp/src/odometry/mad_icp.h b/mad_icp/src/odometry/mad_icp.h
+index 04b080b..4596c45 100755
+--- a/mad_icp/src/odometry/mad_icp.h
++++ b/mad_icp/src/odometry/mad_icp.h
+@@ -35,7 +35,9 @@
+ #include <Eigen/Eigenvalues>
+ #include <fstream>
+ #include <iostream>
++#ifdef OPENMP_AVAILABLE
+ #include <omp.h>
++#endif
+ #include <sstream>
+ 
+ class MADicp {
+@@ -52,7 +54,7 @@ public:
+ 
+   void oneRound();
+ 
+-  void update(const MADtree* fixed_tree);
++  void update(const MADtree* fixed_tree, int i);
+ 
+   void updateState();
+ 
+diff --git a/mad_icp/src/odometry/pipeline.cpp b/mad_icp/src/odometry/pipeline.cpp
+index 715f02f..4ee549a 100755
+--- a/mad_icp/src/odometry/pipeline.cpp
++++ b/mad_icp/src/odometry/pipeline.cpp
+@@ -31,6 +31,7 @@
+ #include <filesystem>
+ #include <tools/constants.h>
+ 
++namespace mad {
+ Pipeline::Pipeline(double sensor_hz,
+                    bool deskew,
+                    double b_max,
+@@ -62,7 +63,9 @@ Pipeline::Pipeline(double sensor_hz,
+   loop_time = (1. / sensor_hz_) * 1000;
+ 
+   max_parallel_levels_ = static_cast<int>(std::log2(num_threads));
++#ifdef OPENMP_AVAILABLE
+   omp_set_num_threads(num_threads);
++#endif
+ }
+ 
+ Pipeline::~Pipeline() {
+@@ -177,12 +180,15 @@ void Pipeline::compute(const double& curr_stamp, ContainerType curr_cloud_mem) {
+ 
+     icp_.resetAdders();
+ 
++#ifdef OPENMP_AVAILABLE
+ #pragma omp parallel for
+-    for (const Frame* frame : keyframes_) {
+-      icp_.update(frame->tree_);
++#endif
++    for (size_t i = 0; i < keyframes_.size(); ++i) {
++      icp_.update(keyframes_[i]->tree_, i);
+     }
+-
++#ifdef OPENMP_AVAILABLE
+ #pragma omp barrier
++#endif
+ 
+     icp_.updateState();
+ 
+@@ -305,4 +311,5 @@ const ContainerType Pipeline::modelLeaves() {
+     }
+   }
+   return leaves;
+-}
+\ No newline at end of file
++}
++} // namespace mad
+\ No newline at end of file
+diff --git a/mad_icp/src/odometry/pipeline.h b/mad_icp/src/odometry/pipeline.h
+index ad7e158..f1d619b 100755
+--- a/mad_icp/src/odometry/pipeline.h
++++ b/mad_icp/src/odometry/pipeline.h
+@@ -42,6 +42,7 @@
+ #include <random>
+ #include <vector>
+ 
++namespace mad {
+ class Pipeline {
+ public:
+   Pipeline(double sensor_hz,
+@@ -101,3 +102,4 @@ protected:
+   bool is_map_updated_;
+   float loop_time;
+ };
++} // namespace mad
+\ No newline at end of file
+diff --git a/mad_icp/src/tools/CMakeLists.txt b/mad_icp/src/tools/CMakeLists.txt
+index 5342c94..9b106b0 100755
+--- a/mad_icp/src/tools/CMakeLists.txt
++++ b/mad_icp/src/tools/CMakeLists.txt
+@@ -2,4 +2,5 @@ add_library(tools STATIC
+   mad_tree.cpp
+ )
+ target_link_libraries(tools PUBLIC Eigen3::Eigen)
+-target_compile_features(tools PUBLIC)
+\ No newline at end of file
++target_compile_features(tools PUBLIC)
++target_include_directories(tools PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+\ No newline at end of file
