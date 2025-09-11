@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8bd6661..e20167d 100644
+index 8bd6661..ff24457 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,5 +1,5 @@
@@ -9,7 +9,7 @@ index 8bd6661..e20167d 100644
  
  set(CMAKE_CXX_STANDARD 17)
  
-@@ -14,8 +14,13 @@ endif()
+@@ -14,8 +14,9 @@ endif()
  set(CMAKE_INSTALL_PREFIX ${RUNTIME_DESTINATION})
  set(CT_ICP_RUNTIME_DESTINATION ${RUNTIME_DESTINATION})
  
@@ -18,10 +18,6 @@ index 8bd6661..e20167d 100644
 +find_package(Eigen3 REQUIRED)
 +find_package(Ceres REQUIRED)
 +find_package(tsl-robin-map REQUIRED)
-+
-+# TODO: Verify I'm good without these (and try to remove tinyply)
-+find_package(yaml-cpp REQUIRED)
-+find_package(glog REQUIRED)
  
  find_package(OpenMP)
  if(NOT TARGET OpenMP::OpenMP_CXX)
