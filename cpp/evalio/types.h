@@ -442,23 +442,6 @@ struct SE3 {
     return SE3(rot * other.rot, rot.rotate(other.trans) + trans);
   }
 
-  void transform_in_place(Point& point) const {
-    Eigen::Map<Eigen::Vector3d> p(&point.x);
-    p = rot.rotate(p) + trans;
-  }
-
-  void transform_in_place(LidarMeasurement& scan) const {
-    for (auto& point : scan.points) {
-      transform_in_place(point);
-    }
-  }
-
-  Point operator*(const Point& point) const {
-    Point p_transformed = point;
-    transform_in_place(p_transformed);
-    return p_transformed;
-  }
-
   std::string toString() const {
     std::ostringstream oss;
     oss << "SE3(rot: [" << rot.toStringBrief() << "], "
