@@ -18,12 +18,20 @@
 #endif
 
 #define NOP
+
+// The following macros assume that each tuple has exactly 4 elements:
+// (type, name, default_value, member_variable)
+// - type: the C++ type of the parameter
+// - name: the parameter's name (used as a key)
+// - default_value: the default value for the parameter
+// - member_variable: the member variable to store the value
 #define MAP_TUPLE0(f, x, ...)                                              \
   f(EL0 x, EL1 x, EL2 x, EL3 x) __VA_OPT__(MAP_TUPLE1 NOP(f, __VA_ARGS__))
 #define MAP_TUPLE1(f, x, ...)                                              \
   f(EL0 x, EL1 x, EL2 x, EL3 x) __VA_OPT__(MAP_TUPLE0 NOP(f, __VA_ARGS__))
 #define MAP_TUPLE(f, ...) __VA_OPT__(EVAL(MAP_TUPLE0(f, __VA_ARGS__)))
 
+// Macros to extract elements from a 4-element tuple
 #define EL0(a, b, c, d) a
 #define EL1(a, b, c, d) b
 #define EL2(a, b, c, d) c

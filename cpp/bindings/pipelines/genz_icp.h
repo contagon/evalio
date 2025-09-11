@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <stdexcept>
 
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -24,6 +23,8 @@ public:
     return "https://github.com/cocel-postech/genz-icp";
   }
 
+  // These parameters are pulled from the default ros node parameters
+  // https://github.com/cocel-postech/genz-icp/blob/master/ros/launch/odometry.launch#L11-L24
   // clang-format off
   EVALIO_SETUP_PARAMS(
     // map params
