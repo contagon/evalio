@@ -321,6 +321,12 @@ struct SO3 {
     return toEigen() * v;
   }
 
+  static Eigen::Matrix3d hat(const Eigen::Vector3d& xi) {
+    Eigen::Matrix3d Omega;
+    Omega << 0, -xi.z(), xi.y(), xi.z(), 0, -xi.x(), -xi.y(), xi.x(), 0;
+    return Omega;
+  }
+
   static SO3 exp(const Eigen::Vector3d& v) {
     Eigen::AngleAxisd axis(v.norm(), v.normalized());
     Eigen::Quaterniond q(axis);
@@ -380,6 +386,56 @@ struct SE3 {
   SE3 inverse() const {
     const auto inv_rot = rot.inverse();
     return SE3(inv_rot, inv_rot.rotate(-trans));
+  }
+
+  static SE3 exp(const Eigen::Matrix<double, 6, 1>& xi) {
+    Eigen::Vector3d omega = xi.head<3>();
+    Eigen::Vector3d xyz = xi.tail<3>();
+
+    double theta2 = omega.squaredNorm();
+    double B, C;
+    if (theta2 < 1e-5) {
+      B = 0.5;
+      C = 1.0 / 6.0;
+    } else {
+      double theta = std::sqrt(theta2);
+      double A = std::sin(theta) / theta;
+      B = (1.0 - std::cos(theta)) / theta2;
+      C = (1.0 - A) / theta2;
+    }
+
+    SO3 R = SO3::exp(omega);
+    Eigen::Matrix3d Omega = SO3::hat(omega);
+    Eigen::Matrix3d V =
+      Eigen::Matrix3d::Identity() + B * Omega + C * Omega * Omega;
+
+    return SE3(R, V * xyz);
+  }
+
+  Eigen::Matrix<double, 6, 1> log() const {
+    Eigen::Vector3d omega = rot.log();
+
+    double theta2 = omega.squaredNorm();
+    double B, C;
+    if (theta2 < 1e-5) {
+      B = 0.5;
+      C = 1.0 / 6.0;
+    } else {
+      double theta = std::sqrt(theta2);
+      double A = std::sin(theta) / theta;
+      B = (1.0 - std::cos(theta)) / theta2;
+      C = (1.0 - A) / theta2;
+    }
+
+    Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
+    Eigen::Matrix3d wx = SO3::hat(omega);
+    Eigen::Matrix3d V = I + B * wx + C * wx * wx;
+
+    Eigen::Vector3d xyz = V.inverse() * trans;
+    Eigen::Matrix<double, 6, 1> xi;
+    xi << omega, xyz;
+
+    return xi;
   }
 
   SE3 operator*(const SE3& other) const {
