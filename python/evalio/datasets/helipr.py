@@ -181,7 +181,7 @@ class HeLiPR(Dataset):
             "riverside_06": "1-ll0t8goMGb0Qb86nvkerC4quJS3mzPU",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

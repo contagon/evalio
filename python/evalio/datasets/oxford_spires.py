@@ -135,7 +135,7 @@ class OxfordSpires(Dataset):
         return LidarParams(
             num_rows=64,
             num_columns=1200,
-            min_range=0.1,
+            min_range=1.0,
             max_range=60.0,
             brand="Hesai",
             model="QT-64",
