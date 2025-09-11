@@ -1,6 +1,4 @@
 {
-  "name": "evalio",
-  "version": "0.1.0",
   "vcpkg-configuration": {
     "default-registry": {
       "kind": "git",
@@ -15,9 +13,13 @@
       }
     ]
   },
+  "name": "evalio",
+  "version": "0.3.0",
   "dependencies": [
+    "ceres",
     "eigen3",
     "gtsam",
+    "nanoflann",
     {
       "name": "opencv",
       "default-features": false,
@@ -36,10 +38,8 @@
       "name": "pcl",
       "default-features": false
     },
-    "sophus",
-    "tbb",
     "robin-map",
-    "ceres",
-    "nanoflann"
+    "sophus",
+    "tbb"
   ]
 }

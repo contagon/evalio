@@ -113,4 +113,5 @@ files = [
     { filename = "CMakeLists.txt" },
     { filename = "pyproject.toml" },
     { filename = "python/evalio/__init__.py" },
+    { filename = "vcpkg.json" },
 ]
