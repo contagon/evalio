@@ -50,7 +50,7 @@ VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 # VCPKG_INSTALL_OPTIONS = "--debug"
 
 [tool.cibuildwheel]
-build = ["cp*-manylinux_x86_64", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
+build = ["cp*-manylinux_x86_64", "cp*-macosx_arm64"]
 skip = ["cp310-*"]
 manylinux-x86_64-image = "manylinux_2_28"
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
