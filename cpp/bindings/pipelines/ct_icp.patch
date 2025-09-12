@@ -128,3 +128,16 @@ index 6d28837..a351632 100644
 -} // namespace ct_icp
 \ No newline at end of file
 +} // namespace ct_icp
+diff --git a/src/ct_icp/odometry.hpp b/src/ct_icp/odometry.hpp
+index 0027f30..8c58d86 100644
+--- a/src/ct_icp/odometry.hpp
++++ b/src/ct_icp/odometry.hpp
+@@ -4,6 +4,8 @@
+ #include "ct_icp.hpp"
+ #include <map>
+ 
++using namespace std;
++
+ namespace ct_icp {
+ 
+     enum MOTION_COMPENSATION {
