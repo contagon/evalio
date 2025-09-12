@@ -106,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [macos-latest]
     env:
       VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -124,11 +124,16 @@ jobs:
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
 
-      - uses: pypa/cibuildwheel@v2.23.0
-        name: Build wheel
-        env:
-          CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_arm64"
-          CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL AWS_REQUEST_CHECKSUM_CALCULATION AWS_RESPONSE_CHECKSUM_VALIDATION
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
+      # - uses: pypa/cibuildwheel@v2.23.0
+      #   name: Build wheel
+      #   env:
+      #     CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_arm64"
+      #     CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL AWS_REQUEST_CHECKSUM_CALCULATION AWS_RESPONSE_CHECKSUM_VALIDATION
 
       # save artifacts for testing
       - uses: actions/upload-artifact@v4
