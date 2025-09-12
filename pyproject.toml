@@ -74,8 +74,7 @@ before-all = """
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "11"
 # Switch to installed clang for openmp support
-CMAKE_C_COMPILER = "/usr/local/opt/llvm/bin/clang"
-CMAKE_CXX_COMPILER = "/usr/local/opt/llvm/bin/clang++"
+PATH = "/usr/local/opt/llvm/bin:$PATH"
 
 # local development
 [tool.uv]
