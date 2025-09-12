@@ -114,7 +114,7 @@ index 9083530..46b8952 100755
 +)
 \ No newline at end of file
 diff --git a/mad_icp/src/odometry/pipeline.cpp b/mad_icp/src/odometry/pipeline.cpp
-index 715f02f..618f38f 100755
+index 715f02f..8056b5d 100755
 --- a/mad_icp/src/odometry/pipeline.cpp
 +++ b/mad_icp/src/odometry/pipeline.cpp
 @@ -31,6 +31,7 @@
@@ -125,6 +125,17 @@ index 715f02f..618f38f 100755
  Pipeline::Pipeline(double sensor_hz,
                     bool deskew,
                     double b_max,
+@@ -178,8 +179,8 @@ void Pipeline::compute(const double& curr_stamp, ContainerType curr_cloud_mem) {
+     icp_.resetAdders();
+ 
+ #pragma omp parallel for
+-    for (const Frame* frame : keyframes_) {
+-      icp_.update(frame->tree_);
++    for (int i = 0; i < keyframes_.size(); ++i) {
++      icp_.update(keyframes_[i]->tree_);
+     }
+ 
+ #pragma omp barrier
 @@ -305,4 +306,5 @@ const ContainerType Pipeline::modelLeaves() {
      }
    }
