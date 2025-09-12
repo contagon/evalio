@@ -38,11 +38,15 @@ index ff36666..d24dce0 100644
 -    target_compile_definitions(slam PUBLIC CT_ICP_WITH_VIZ=1)
 -endif ()
 diff --git a/src/ct_icp/CMakeLists.txt b/src/ct_icp/CMakeLists.txt
-index aa47362..9205105 100644
+index aa47362..051fe9d 100644
 --- a/src/ct_icp/CMakeLists.txt
 +++ b/src/ct_icp/CMakeLists.txt
-@@ -9,15 +9,10 @@ add_library(CT_ICP STATIC ct_icp.cpp ct_icp.hpp types.hpp
-         evaluate_slam.hpp evaluate_slam.cpp
+@@ -5,19 +5,12 @@ add_library(CT_ICP STATIC ct_icp.cpp ct_icp.hpp types.hpp
+         odometry.cpp odometry.hpp
+         dataset.cpp dataset.hpp
+         utils.hpp
+-        io.cpp io.hpp
+-        evaluate_slam.hpp evaluate_slam.cpp
          ${Utilities_SRC})
  
 -target_include_directories(CT_ICP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
