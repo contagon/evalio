@@ -67,7 +67,7 @@ before-all = """
 
 [tool.cibuildwheel.macos]
 before-all = """
-    brew install libomp
+    brew install llvm libomp
 """
 
 # tbb requires at least 10.13, pcl 10.15. We bump to 11 for simplicity.
