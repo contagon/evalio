@@ -38,16 +38,19 @@ index ff36666..d24dce0 100644
 -    target_compile_definitions(slam PUBLIC CT_ICP_WITH_VIZ=1)
 -endif ()
 diff --git a/src/ct_icp/CMakeLists.txt b/src/ct_icp/CMakeLists.txt
-index aa47362..245389f 100644
+index aa47362..27a2856 100644
 --- a/src/ct_icp/CMakeLists.txt
 +++ b/src/ct_icp/CMakeLists.txt
-@@ -5,19 +5,12 @@ add_library(CT_ICP STATIC ct_icp.cpp ct_icp.hpp types.hpp
+@@ -3,21 +3,12 @@ file(GLOB Utilities_SRC "Utilities/*")
+ add_library(CT_ICP STATIC ct_icp.cpp ct_icp.hpp types.hpp
+         cost_functions.h cost_function.cpp
          odometry.cpp odometry.hpp
-         dataset.cpp dataset.hpp
-         utils.hpp
+-        dataset.cpp dataset.hpp
+-        utils.hpp
 -        io.cpp io.hpp
 -        evaluate_slam.hpp evaluate_slam.cpp
-         ${Utilities_SRC})
+-        ${Utilities_SRC})
++        utils.hpp)
  
 -target_include_directories(CT_ICP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 -target_link_libraries(CT_ICP PUBLIC Eigen3::Eigen Ceres::ceres glog::glog tsl::robin_map yaml-cpp OpenMP::OpenMP_CXX)
@@ -57,14 +60,12 @@ index aa47362..245389f 100644
  if (WITH_VIZ3D)
      target_compile_definitions(CT_ICP PUBLIC CT_ICP_WITH_VIZ=1)
      target_link_libraries(CT_ICP PUBLIC viz3d)
--endif ()
+ endif ()
 -
 -
 -# Add Tests
 -CT_ICP_ADD_TEST(test_ceres CT_ICP Eigen3::Eigen Ceres::ceres glog::glog)
 -
-+endif ()
-\ No newline at end of file
 diff --git a/src/ct_icp/cost_functions.h b/src/ct_icp/cost_functions.h
 index d0510b2..5143da8 100644
 --- a/src/ct_icp/cost_functions.h
@@ -108,3 +109,22 @@ index 5190bd0..94d0d9d 100644
              begin_t_ = &begin_t.x();
              end_t_ = &end_t.x();
              begin_quat_ = &begin_quat.x();
+diff --git a/src/ct_icp/odometry.cpp b/src/ct_icp/odometry.cpp
+index 6d28837..a351632 100644
+--- a/src/ct_icp/odometry.cpp
++++ b/src/ct_icp/odometry.cpp
+@@ -1,7 +1,6 @@
+ #include <omp.h>
+ #include <chrono>
+ #include "odometry.hpp"
+-#include "Utilities/PersoTimer.h"
+ #include "utils.hpp"
+ #include <iostream>
+ #include <fstream>
+@@ -830,4 +829,4 @@ namespace ct_icp {
+     /* -------------------------------------------------------------------------------------------------------------- */
+ 
+ 
+-} // namespace ct_icp
+\ No newline at end of file
++} // namespace ct_icp
