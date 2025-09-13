@@ -23,6 +23,14 @@ using namespace nb::literals;
   #include "bindings/pipelines/genz_icp.h"
 #endif
 
+#ifdef EVALIO_MAD_ICP
+  #include "bindings/pipelines/mad_icp.h"
+#endif
+
+#ifdef EVALIO_CT_ICP
+  #include "bindings/pipelines/ct_icp.h"
+#endif
+
 namespace evalio {
 inline void makePipelines(nb::module_& m) {
   // List all the pipelines here
@@ -77,6 +85,32 @@ inline void makePipelines(nb::module_& m) {
     "additionally estimates normals in the local submap voxel map for "
     "increased robustness. It also includes a novel weighting scheme for"
     " weighting point-to-plane and point-to-point correspondences.";
+#endif
+
+#ifdef EVALIO_MAD_ICP
+  nb::class_<MadICP, evalio::Pipeline>(m, "MadICP")
+    .def(nb::init<>())
+    .def_static("name", &MadICP::name)
+    .def_static("default_params", &MadICP::default_params)
+    .def_static("url", &MadICP::url)
+    .def_static("version", &MadICP::version)
+    .doc() =
+    "MAD-ICP LiDAR-only pipeline is an extension of KissICP that "
+    "utilizes a novel kd-tree representation that implicitly computes "
+    "normals to perform point-to-plane registration.";
+#endif
+
+#ifdef EVALIO_CT_ICP
+  nb::class_<CTICP, evalio::Pipeline>(m, "CTICP")
+    .def(nb::init<>())
+    .def_static("name", &CTICP::name)
+    .def_static("default_params", &CTICP::default_params)
+    .def_static("url", &CTICP::url)
+    .def_static("version", &CTICP::version)
+    .doc() =
+    "CT-ICP LiDAR-only pipeline performs continuous-time ICP over "
+    "a small window of scans to perform more accurate dewarping performance. "
+    "This is the version based on the 2022-ICRA paper.";
 #endif
 }
 } // namespace evalio

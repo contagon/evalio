@@ -143,6 +143,17 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.0
         name: Build wheel
         env:
+          # install openmp stuff for mac
+          CIBW_BEFORE_ALL_MACOS: >
+              curl -O https://mac.r-project.org/openmp/openmp-19.1.0-darwin20-Release.tar.gz &&
+              sudo tar fvxz openmp-19.1.0-darwin20-Release.tar.gz -C /
+          # install aws cli for vcpkg caching
+          CIBW_BEFORE_ALL_LINUX: >
+              yum -y install curl zip unzip tar &&
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" &&
+              unzip awscliv2.zip &&
+              ./aws/install
+
           CIBW_BUILD: "cp311-manylinux_x86_64 cp311-macosx_arm64"
           CIBW_ENVIRONMENT_PASS_LINUX: VCPKG_BINARY_SOURCES AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL AWS_REQUEST_CHECKSUM_CALCULATION AWS_RESPONSE_CHECKSUM_VALIDATION
 
@@ -151,3 +162,8 @@ jobs:
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     detached: true

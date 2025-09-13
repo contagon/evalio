@@ -45,6 +45,25 @@ git switch --detach v0.2.0
 git apply ../../pipelines/genz_icp.patch
 cd ..
 
+# MAD-ICP
+if [ ! -d "mad-icp" ]; then
+    git clone https://github.com/rvp-group/mad-icp.git
+fi
+cd mad-icp
+git stash
+git switch --detach 0.0.10
+git apply ../../pipelines/mad_icp.patch
+cd ..
+
+if [ ! -d "ct_icp" ]; then
+    git clone https://github.com/jedeschaud/ct_icp.git
+fi
+cd ct_icp
+git stash
+git switch --detach icra_2022
+git apply ../../pipelines/ct_icp.patch
+cd ..
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then
