@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from evalio.types import SE3, SO3
+from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import math
@@ -8,7 +9,7 @@ import math
 @dataclass
 class T:
     r: R
-    t: np.ndarray
+    t: NDArray[np.float64]
 
 
 def is_close(t: T, se3: SE3):

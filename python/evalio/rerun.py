@@ -1,5 +1,5 @@
-from typing import Any, Literal, Optional, Sequence, overload
-from uuid import uuid4
+from typing import Any, Literal, Optional, Sequence, cast, overload, TypedDict
+from uuid import uuid4, UUID
 
 from evalio.cli.parser import PipelineBuilder
 from evalio.types import LidarParams, Trajectory, Stamp
@@ -16,7 +16,7 @@ import typer
 import distinctipy
 
 from evalio.types import SE3, LidarMeasurement, Point
-from evalio.stats import _check_overstep
+from evalio.stats import check_overstep
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -73,6 +73,9 @@ try:
     import rerun.blueprint as rrb
 
     OverrideType = dict[rr.datatypes.EntityPathLike, list[rr.AsComponents]]
+    RerunArgs = TypedDict(
+        "RerunArgs", {"application_id": str, "recording_id": UUID, "make_default": bool}
+    )
 
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs):
@@ -135,7 +138,7 @@ try:
             if not self.args.show:
                 return
 
-            self.recording_params = {
+            self.recording_params: RerunArgs = {
                 "application_id": str(dataset),
                 "recording_id": uuid4(),
                 "make_default": True,
@@ -205,7 +208,7 @@ try:
                     gt_index = 0
                     while self.gt.stamps[gt_index] < data.stamp:
                         gt_index += 1
-                    if _check_overstep(self.gt.stamps, data.stamp, gt_index):
+                    if check_overstep(self.gt.stamps, data.stamp, gt_index):
                         gt_index -= 1
                     gt_o_T_imu_0 = self.gt.poses[gt_index]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
@@ -377,13 +380,14 @@ try:
             rr.Transform3D | rr.Points3D: Rerun type.
         """
         # If we have an empty list, assume it's a point cloud with no points
-        if isinstance(obj, list) and len(obj) == 0:
+        if isinstance(obj, list) and len(obj) == 0:  # type: ignore
             return rr.Points3D(np.zeros((0, 3)), colors=color, radii=radii)
 
         # Handle point clouds
         if isinstance(obj, LidarMeasurement):
             color_parsed = None
             if isinstance(color, tuple):
+                color = cast(tuple[int, int, int], color)
                 color_parsed = np.asarray(color)
             elif color == "intensity":
                 max_intensity = max([p.intensity for p in obj.points])
@@ -406,15 +410,19 @@ try:
             )
 
         elif isinstance(obj, list) and isinstance(obj[0], Point):
+            obj = cast(list[Point], obj)
             return convert(
                 LidarMeasurement(Stamp.from_sec(0), obj), color=color, radii=radii
             )
 
-        elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:
+        elif isinstance(obj, np.ndarray) and len(obj.shape) == 2 and obj.shape[1] == 3:  # type: ignore
+            obj = cast(NDArray[np.float64], obj)
             if isinstance(color, str) and color == "z":
                 zs = obj[:, 2]
                 min_z, max_z = min(zs), max(zs)
                 color = np.zeros_like(obj)
+                color = cast(NDArray[np.float64], color)
+
                 val = (zs - min_z) / (max_z - min_z)
                 color[:, 0] = 1.0 - val
                 color[:, 1] = val
@@ -437,13 +445,14 @@ try:
         elif isinstance(obj, Trajectory):
             return convert(obj.poses, color=color)
         elif isinstance(obj, list) and isinstance(obj[0], SE3):
+            obj = cast(list[SE3], obj)
             points = np.zeros((len(obj), 3))
             for i, pose in enumerate(obj):
                 points[i] = pose.trans
             return rr.Points3D(points, colors=color)
 
         else:
-            raise ValueError(f"Cannot convert {type(obj)} to rerun type")
+            raise ValueError(f"Cannot convert {type(obj)} to rerun type")  # type: ignore
 
 except Exception:
 

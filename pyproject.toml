@@ -99,6 +99,7 @@ include = ["python", "tests"]
 # Eventually would like to fix all the errors to switch to "strict"
 typeCheckingMode = "strict"
 stubPath = "python/typings"
+reportPrivateUsage = "none"
 
 [tool.bumpversion]
 allow_dirty = false

@@ -7,7 +7,7 @@ datasets = DatasetBuilder.all_datasets().values()
 
 # Test to ensure all datasets implement the required attributes
 @pytest.mark.parametrize("dataset", datasets)
-def test_impl(dataset):
+def test_impl(dataset: type[Dataset]):
     attrs = [
         "data_iter",
         "ground_truth_raw",

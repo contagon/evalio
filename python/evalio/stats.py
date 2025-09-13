@@ -1,6 +1,7 @@
 from enum import StrEnum, auto
 
 from evalio.utils import print_warning
+from numpy.typing import NDArray
 from .types import Stamp, Trajectory, SE3
 
 from dataclasses import dataclass
@@ -12,7 +13,17 @@ from typing import cast
 from copy import deepcopy
 
 
-def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
+def check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
+    """Checks if we overshot the closest stamp.
+
+    Args:
+        stamps (list[Stamp]): List of stamps
+        s (Stamp): Stamp we want to find the closest to
+        idx (int): Index of the closest stamp
+
+    Returns:
+        bool: True if we overshot the closest stamp (ie it's idx - 1), False if it's good (ie it's idx)
+    """
     return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
 
 
@@ -47,9 +58,9 @@ class Error:
     """
 
     # Shape: (n,)
-    trans: np.ndarray
+    trans: NDArray[np.float64]
     """translation error, shape (n,), in meters"""
-    rot: np.ndarray
+    rot: NDArray[np.float64]
     """rotation error, shape (n,), in degrees"""
 
     def summarize(self, metric: MetricKind) -> Metric:
@@ -145,7 +156,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     first_pose_idx = 0
     while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
         first_pose_idx += 1
-    if _check_overstep(traj1.stamps, traj2.stamps[0], first_pose_idx):
+    if check_overstep(traj1.stamps, traj2.stamps[0], first_pose_idx):
         first_pose_idx -= 1
     traj1.stamps = traj1.stamps[first_pose_idx:]
     traj1.poses = traj1.poses[first_pose_idx:]
@@ -154,7 +165,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     first_pose_idx = 0
     while traj2.stamps[first_pose_idx] < traj1.stamps[0]:
         first_pose_idx += 1
-    if _check_overstep(traj2.stamps, traj1.stamps[0], first_pose_idx):
+    if check_overstep(traj2.stamps, traj1.stamps[0], first_pose_idx):
         first_pose_idx -= 1
     traj2.stamps = traj2.stamps[first_pose_idx:]
     traj2.poses = traj2.poses[first_pose_idx:]
@@ -170,14 +181,14 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
 
     # Align the two trajectories by subsampling keeping traj1 stamps
     traj1_idx = 0
-    traj1_stamps = []
-    traj1_poses = []
+    traj1_stamps: list[Stamp] = []
+    traj1_poses: list[SE3] = []
     for i, stamp in enumerate(traj2.stamps):
         while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
             traj1_idx += 1
 
         # go back one if we overshot
-        if _check_overstep(traj1.stamps, stamp, traj1_idx):
+        if check_overstep(traj1.stamps, stamp, traj1_idx):
             traj1_idx -= 1
 
         traj1_stamps.append(traj1.stamps[traj1_idx])
@@ -230,8 +241,8 @@ def _check_aligned(traj: Trajectory, gt: Trajectory) -> bool:
     """
     # Check if the two trajectories are aligned
     delta = gt.poses[0].inverse() * traj.poses[0]
-    t = cast(np.ndarray, delta.trans)
-    r = cast(np.ndarray, delta.rot.log())
+    t = delta.trans
+    r = delta.rot.log()
     return len(traj.stamps) == len(gt.stamps) and (t @ t < 1e-6) and (r @ r < 1e-6)  # type: ignore
 
 
@@ -279,8 +290,8 @@ def rte(traj: Trajectory, gt: Trajectory, window: int = 100) -> Error:
         print_warning(f"Window size {window} is larger than number of poses {len(gt)}")
         return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
 
-    window_deltas_poses = []
-    window_deltas_gts = []
+    window_deltas_poses: list[SE3] = []
+    window_deltas_gts: list[SE3] = []
     for i in range(len(gt) - window):
         window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[i + window])
         window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[i + window])

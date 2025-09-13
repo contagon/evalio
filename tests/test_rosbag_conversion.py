@@ -45,7 +45,7 @@ def make_imu():
 
 
 def make_lidar() -> LidarMeasurement:
-    all_points = []
+    all_points: list[Point] = []
     for i in range(HEIGHT):
         for j in range(WIDTH):
             t = Duration.from_sec(j / (WIDTH * 10))
@@ -82,7 +82,7 @@ def get_mm(iterator: RosbagIter):
 # ------------------------- The tests ------------------------- #
 # all points row major
 @pytest.fixture(scope="session")
-def all_row_major(tmp_path_factory):
+def all_row_major(tmp_path_factory: pytest.TempPathFactory):
     bag = tmp_path_factory.mktemp("bag") / "all_row_major.bag"
 
     imu = make_imu()
@@ -111,7 +111,7 @@ def test_all_row_major(all_row_major: Fixture):
 
 # all points col major
 @pytest.fixture(scope="session")
-def all_col_major(tmp_path_factory):
+def all_col_major(tmp_path_factory: pytest.TempPathFactory):
     bag = tmp_path_factory.mktemp("bag") / "all_col_major.bag"
 
     imu = make_imu()
@@ -120,7 +120,7 @@ def all_col_major(tmp_path_factory):
     # Convert the row major lidar to column major
     # pull out the points from C++, otherwise its sloowww
     original_points = lidar_expected.points
-    points = []
+    points: list[Point] = []
     for i in range(WIDTH):
         for j in range(HEIGHT):
             points.append(original_points[j * WIDTH + i])
@@ -149,7 +149,7 @@ def test_all_col_major(all_col_major: Fixture):
 
 # only valid row major
 @pytest.fixture(scope="session")
-def only_valid_row_major(tmp_path_factory):
+def only_valid_row_major(tmp_path_factory: pytest.TempPathFactory):
     bag = tmp_path_factory.mktemp("bag") / "only_valid_row_major.bag"
 
     imu = make_imu()
@@ -184,11 +184,14 @@ def only_valid_row_major(tmp_path_factory):
     # Save the bag with missing points
     rosbag_saver(bag, [imu], [LidarMeasurement(lidar.stamp, points_to_save)])
     # return the others
-    points_expected = sum(points_expected, [])
+    empty: list[Point] = []
+    points_expected = sum(points_expected, empty)
     return Fixture(imu, LidarMeasurement(lidar.stamp, points_expected), bag)
 
 
-def test_only_valid_row_major(capsys, only_valid_row_major: Fixture):
+def test_only_valid_row_major(
+    capsys: pytest.CaptureFixture[str], only_valid_row_major: Fixture
+):
     iterator = RosbagIter(
         only_valid_row_major.bag,
         lidar_topic="/lidar",
@@ -213,7 +216,7 @@ def test_only_valid_row_major(capsys, only_valid_row_major: Fixture):
 
 # only valid col major
 @pytest.fixture(scope="session")
-def only_valid_col_major(tmp_path_factory):
+def only_valid_col_major(tmp_path_factory: pytest.TempPathFactory):
     bag = tmp_path_factory.mktemp("bag") / "only_valid_col_major.bag"
 
     imu = make_imu()
@@ -221,7 +224,7 @@ def only_valid_col_major(tmp_path_factory):
 
     # Switch points to column major
     to_return = lidar.points
-    to_save = []
+    to_save: list[Point] = []
     for i in range(WIDTH):
         for j in range(HEIGHT):
             to_save.append(deepcopy(to_return[j * WIDTH + i]))
@@ -266,7 +269,7 @@ def test_only_valid_col_major(only_valid_col_major: Fixture):
 
 # time stamps relative to the end
 @pytest.fixture(scope="session")
-def point_stamp_relative_end(tmp_path_factory):
+def point_stamp_relative_end(tmp_path_factory: pytest.TempPathFactory):
     bag = tmp_path_factory.mktemp("bag") / "point_stamp_relative_end.bag"
 
     imu = make_imu()

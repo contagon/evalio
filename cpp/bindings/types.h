@@ -52,12 +52,14 @@ inline void makeTypes(nb::module_& m) {
     .def("__copy__", [](const Duration& self) { return Duration(self); })
     .def(
       "__deepcopy__",
-      [](const Duration& self, nb::dict) { return Duration(self); },
+      [](const Duration& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return Duration(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const Duration& p) { return nb::make_tuple(p.nsec); }
+      [](const Duration& p) { return std::make_tuple(p.nsec); }
     )
     .def(
       "__setstate__",
@@ -115,12 +117,14 @@ inline void makeTypes(nb::module_& m) {
     .def("__copy__", [](const Stamp& self) { return Stamp(self); })
     .def(
       "__deepcopy__",
-      [](const Stamp& self, nb::dict) { return Stamp(self); },
+      [](const Stamp& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return Stamp(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const Stamp& p) { return nb::make_tuple(p.sec, p.nsec); }
+      [](const Stamp& p) { return std::make_tuple(p.sec, p.nsec); }
     )
     .def(
       "__setstate__",
@@ -497,12 +501,14 @@ inline void makeTypes(nb::module_& m) {
     .def("__copy__", [](const SO3& self) { return SO3(self); })
     .def(
       "__deepcopy__",
-      [](const SO3& self, nb::dict) { return SO3(self); },
+      [](const SO3& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return SO3(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const SO3& p) { return nb::make_tuple(p.qx, p.qy, p.qz, p.qw); }
+      [](const SO3& p) { return std::make_tuple(p.qx, p.qy, p.qz, p.qw); }
     )
     .def(
       "__setstate__",
@@ -555,13 +561,15 @@ inline void makeTypes(nb::module_& m) {
     .def("__copy__", [](const SE3& self) { return SE3(self); })
     .def(
       "__deepcopy__",
-      [](const SE3& self, nb::dict) { return SE3(self); },
+      [](const SE3& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return SE3(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
       [](const SE3& p) {
-        return nb::make_tuple(
+        return std::make_tuple(
           p.rot.qx,
           p.rot.qy,
           p.rot.qz,
