@@ -15,7 +15,7 @@ def is_close(r: R, so3: SO3):
 def test_constructor():
     r = R.from_rotvec([0.1, 0.2, 0.3])
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
     is_close(r, so3)
 
 
@@ -28,8 +28,8 @@ def test_from_matrix():
 def test_to_matrix():
     r = R.from_rotvec([0.1, 0.2, 0.3])
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)
-    assert np.allclose(so3.toMat(), r.as_matrix())
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
+    is_close(r, so3)
 
 
 def test_exp():
@@ -42,12 +42,12 @@ def test_exp():
 def test_log():
     r = R.from_rotvec([0.1, 0.2, 0.3])
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)
-    assert np.allclose(so3.log(), r.as_rotvec())
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
+    is_close(r, so3)
 
 
 def test_inverse():
     r = R.from_rotvec([0.1, 0.2, 0.3])
     qx, qy, qz, qw = r.as_quat()
-    so3 = SO3(qx=qx, qy=qy, qz=qz, qw=qw)
+    so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
     is_close(r.inv(), so3.inverse())

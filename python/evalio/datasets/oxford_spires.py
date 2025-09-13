@@ -6,15 +6,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3, Duration
+from evalio.types import Trajectory, SO3, Duration, Stamp, SE3, ImuParams, LidarParams
 import numpy as np
 
 from enum import auto
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
 
@@ -69,8 +66,8 @@ class OxfordSpires(Dataset):
             delimiter=" ",
         )
 
-        poses = []
-        stamps = []
+        poses: list[SE3] = []
+        stamps: list[Stamp] = []
         for i in range(1, len(traj)):
             if traj.stamps[i] - traj.stamps[i - 1] > Duration.from_sec(1e-2):
                 poses.append(traj.poses[i])
@@ -261,7 +258,7 @@ class OxfordSpires(Dataset):
             "observatory_quarter_02": "1iPQQD2zijlCf8a6J8YW5QBlVE2KsYRdZ",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

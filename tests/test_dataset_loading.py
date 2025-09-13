@@ -11,7 +11,7 @@ from utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
 data_dir = Path("tests/data")
-dataset_classes = DatasetBuilder._all_datasets()
+dataset_classes = DatasetBuilder.all_datasets()
 datasets = [
     cls.sequences()[0]
     for cls in dataset_classes.values()

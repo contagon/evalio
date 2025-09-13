@@ -11,15 +11,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3
+from evalio.types import Trajectory, SO3, SE3, ImuParams, LidarParams
 import numpy as np
 from tqdm.rich import tqdm
 
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
 

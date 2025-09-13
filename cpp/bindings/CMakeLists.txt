@@ -115,6 +115,7 @@ nanobind_add_stub(
         evalio/_cpp/__init__.pyi
         evalio/_cpp/pipelines.pyi
         evalio/_cpp/types.pyi
+        evalio/_cpp/helpers.pyi
 )
 
 # install licenses as well

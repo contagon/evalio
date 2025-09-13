@@ -6,14 +6,11 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3
+from evalio.types import Trajectory, SO3, SE3, ImuParams, LidarParams
 import numpy as np
 from enum import auto
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
 
@@ -205,7 +202,7 @@ class NewerCollege2021(Dataset):
             "maths_hard": "1Rb2TBKP7ISC2XzDGU68ix5lFjEB6jXeX",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

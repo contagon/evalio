@@ -13,7 +13,7 @@ def test_dataset_build():
         zip(
             *[
                 (s, s.full_name)
-                for d in DatasetBuilder._all_datasets().values()
+                for d in DatasetBuilder.all_datasets().values()
                 for s in d.sequences()
             ]
         ),
