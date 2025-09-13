@@ -19,6 +19,8 @@ jobs:
   # check python typing
   types:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_EDITABLE: true
     steps:
       - uses: actions/checkout@v4
         name: Checkout
