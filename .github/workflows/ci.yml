@@ -19,8 +19,6 @@ jobs:
   # check python typing
   types:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_EDITABLE: true
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -30,6 +28,8 @@ jobs:
           enable-cache: true
       - name: Install the project
         run: uv sync --dev --verbose
+      - name: Copy stubs into place
+        run: cp -r .venv/lib/python$(cat .python-version)/site-packages/evalio/_cpp python/evalio
       - name: Run basedpyright
         run: uv run basedpyright
 
