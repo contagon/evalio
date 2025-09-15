@@ -1,9 +1,8 @@
 from pathlib import Path
-from evalio.types import LidarParams, Point
-from evalio.types import ImuMeasurement, LidarMeasurement, Stamp
-from evalio.datasets.loaders import RawDataIter, RosbagIter
-import numpy as np
 
+import numpy as np
+from evalio.datasets.loaders import RawDataIter, RosbagIter
+from evalio.types import ImuMeasurement, LidarMeasurement, LidarParams, Point, Stamp
 from utils import rosbag_saver
 
 

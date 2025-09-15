@@ -1,9 +1,9 @@
 from copy import deepcopy
-from evalio.types import Stamp
-from evalio.types import SE3, Trajectory
-from evalio import stats
-from utils import rand_se3, isclose_se3
+
 import numpy as np
+from evalio import stats
+from evalio.types import SE3, Stamp, Trajectory
+from utils import isclose_se3, rand_se3
 
 ID = SE3.identity()
 

@@ -1,6 +1,7 @@
-from evalio.cli.parser import DatasetBuilder
-from pathlib import Path
 import pickle  # noqa: F401
+from pathlib import Path
+
+from evalio.cli.parser import DatasetBuilder
 
 dataset_classes = DatasetBuilder.all_datasets()
 datasets = [

@@ -1,21 +1,27 @@
+import os
 import tarfile
+from enum import auto
+from pathlib import Path
+from typing import Optional, Sequence
 
 import numpy as np
 
-from evalio.types import Trajectory
 from evalio._cpp.helpers import helipr_bin_to_evalio  # type: ignore
-from enum import auto
+from evalio.datasets.loaders import RawDataIter
+from evalio.types import (
+    SE3,
+    SO3,
+    ImuMeasurement,
+    ImuParams,
+    LidarParams,
+    Stamp,
+    Trajectory,
+)
+
 from .base import (
     Dataset,
     DatasetIterator,
 )
-from evalio.types import SE3, SO3, Stamp, ImuParams, LidarParams, ImuMeasurement
-from evalio.datasets.loaders import RawDataIter
-
-import os
-
-from pathlib import Path
-from typing import Sequence, Optional
 
 """
 Note, we do everything based off of the Ouster Lidar, mounted at the top of the vehicle.

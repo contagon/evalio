@@ -1,16 +1,14 @@
 from pathlib import Path
 from typing import Annotated, Optional, Sequence, cast
 
-from evalio.utils import print_warning
-from rich.table import Table
-from rich.console import Console
-from rich import box
-
-from evalio.types import Trajectory
-from evalio import Param, stats
-
 import typer
+from rich import box
+from rich.console import Console
+from rich.table import Table
 
+from evalio import Param, stats
+from evalio.types import Trajectory
+from evalio.utils import print_warning
 
 app = typer.Typer()
 
@@ -75,6 +73,7 @@ def eval_dataset(
     convert = None
     if visualize:
         import rerun as rr
+
         from evalio.rerun import convert  # type: ignore
 
         rr.init(

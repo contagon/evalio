@@ -2,8 +2,10 @@ import atexit
 import csv
 from pathlib import Path
 from typing import Sequence
-from evalio import Param
+
 import yaml
+
+from evalio import Param
 from evalio.types import SE3, Stamp
 
 from .parser import DatasetBuilder, PipelineBuilder

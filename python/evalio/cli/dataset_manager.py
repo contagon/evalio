@@ -1,25 +1,31 @@
-from pathlib import Path
-from evalio.utils import print_warning
-from .parser import DatasetBuilder
-import typer
-from typing import Annotated, cast
-from .completions import DatasetArg
-
 import shutil
+from pathlib import Path
+from typing import Annotated, cast
 
-from evalio.datasets import RosbagIter
-
+import typer
+from rosbags.interfaces import Connection, ConnectionExtRosbag2
 from rosbags.rosbag1 import (
     Reader as Reader1,
+)
+from rosbags.rosbag1 import (
     Writer as Writer1,
 )
 from rosbags.rosbag2 import (
     Reader as Reader2,
+)
+from rosbags.rosbag2 import (
     StoragePlugin,
+)
+from rosbags.rosbag2 import (
     Writer as Writer2,
 )
-from rosbags.typesys import get_typestore, Stores
-from rosbags.interfaces import Connection, ConnectionExtRosbag2
+from rosbags.typesys import Stores, get_typestore
+
+from evalio.datasets import RosbagIter
+from evalio.utils import print_warning
+
+from .completions import DatasetArg
+from .parser import DatasetBuilder
 
 app = typer.Typer()
 

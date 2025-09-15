@@ -1,35 +1,35 @@
 from collections.abc import Iterator
-from typing import Callable, Any, Optional, TypeVar
+from dataclasses import dataclass
+from enum import StrEnum, auto
 from pathlib import Path
+from typing import Any, Callable, Optional, TypeVar
+
+import numpy as np
+from rich import box
+from rich.console import Console
+from rich.table import Table
+from rosbags.highlevel import AnyReader
+from rosbags.typesys import Stores, get_typestore
 
 from evalio._cpp.helpers import (  # type: ignore
     DataType,
     Field,
     PointCloudMetadata,
-    pc2_to_evalio,
     fill_col_col_major,
     fill_col_row_major,
+    pc2_to_evalio,
     reorder_points,
     shift_point_stamps,
 )
+from evalio.datasets.base import DatasetIterator, Measurement
 from evalio.types import (
+    Duration,
     ImuMeasurement,
     LidarMeasurement,
     LidarParams,
     Stamp,
-    Duration,
 )
-from evalio.datasets.base import DatasetIterator, Measurement
-from rosbags.highlevel import AnyReader
-from rosbags.typesys import Stores, get_typestore
-import numpy as np
-from dataclasses import dataclass
-from enum import StrEnum, auto
 from evalio.utils import print_warning
-
-from rich.table import Table
-from rich.console import Console
-from rich import box
 
 
 # ------------------------- Iterator over a rosbag ------------------------- #

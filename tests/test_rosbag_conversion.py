@@ -1,25 +1,24 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from evalio.types import (
-    ImuMeasurement,
-    LidarMeasurement,
-    Stamp,
-    Point,
-    LidarParams,
-    Duration,
-)
+
+import numpy as np
+import pytest
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarMajor,
     LidarPointStamp,
     RosbagIter,
 )
-import numpy as np
-import pytest
-
-from utils import rosbag_saver, check_lidar_eq
-
-from copy import deepcopy
+from evalio.types import (
+    Duration,
+    ImuMeasurement,
+    LidarMeasurement,
+    LidarParams,
+    Point,
+    Stamp,
+)
+from utils import check_lidar_eq, rosbag_saver
 
 # Create a row major point cloud
 WIDTH = 256

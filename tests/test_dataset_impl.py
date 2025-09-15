@@ -1,6 +1,6 @@
+import pytest
 from evalio.cli.parser import DatasetBuilder
 from evalio.datasets import Dataset
-import pytest
 
 datasets = DatasetBuilder.all_datasets().values()
 

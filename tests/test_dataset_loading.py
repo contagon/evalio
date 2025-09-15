@@ -1,12 +1,12 @@
-from evalio.types import Stamp, SE3, Trajectory
-from evalio.types import ImuMeasurement, LidarMeasurement
-from evalio.cli.parser import DatasetBuilder
-from evalio.datasets.base import Dataset
-import pytest
-from pathlib import Path
 import pickle
 from enum import Enum, auto
+from pathlib import Path
+
 import numpy as np
+import pytest
+from evalio.cli.parser import DatasetBuilder
+from evalio.datasets.base import Dataset
+from evalio.types import SE3, ImuMeasurement, LidarMeasurement, Stamp, Trajectory
 from utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #

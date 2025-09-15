@@ -1,7 +1,8 @@
-import mkdocs_gen_files
-from evalio.cli.ls import ls, Kind
-from rich.table import Table
 from typing import Optional, cast
+
+import mkdocs_gen_files
+from evalio.cli.ls import Kind, ls
+from rich.table import Table
 
 
 def clean_cell(cell: str) -> str:

@@ -1,6 +1,6 @@
 from evalio.cli.parser import DatasetBuilder
-from rich import print
 from evalio.utils import print_warning
+from rich import print
 
 # Helper script to get the lengths of all datasets
 # Easier than manually checking each

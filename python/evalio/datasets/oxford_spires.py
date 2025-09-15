@@ -1,3 +1,10 @@
+import os
+from enum import auto
+from pathlib import Path
+from typing import Optional, Sequence
+
+import numpy as np
+
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -6,18 +13,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3, Duration, Stamp, SE3, ImuParams, LidarParams
-import numpy as np
+from evalio.types import SE3, SO3, Duration, ImuParams, LidarParams, Stamp, Trajectory
 
-from enum import auto
 from .base import (
     Dataset,
     DatasetIterator,
 )
-
-import os
-from pathlib import Path
-from typing import Sequence, Optional
 
 
 class OxfordSpires(Dataset):

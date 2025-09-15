@@ -1,13 +1,15 @@
-from evalio.datasets.base import Dataset
-from .parser import DatasetBuilder, PipelineBuilder
-from typing import Optional, TypeVar, Annotated
-import typer
 from enum import StrEnum, auto
-from rapidfuzz.process import extract_iter
+from typing import Annotated, Optional, TypeVar
 
+import typer
+from rapidfuzz.process import extract_iter
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
+
+from evalio.datasets.base import Dataset
+
+from .parser import DatasetBuilder, PipelineBuilder
 
 app = typer.Typer()
 

@@ -1,9 +1,8 @@
-from pathlib import Path
-from typing import Iterable, Iterator, Optional, Union
-from itertools import islice
-
 import os
-from enum import StrEnum, auto, Enum
+from enum import Enum, StrEnum, auto
+from itertools import islice
+from pathlib import Path
+from typing import Iterable, Iterator, Optional, Sequence, Union
 
 from evalio.types import (
     SE3,
@@ -13,9 +12,7 @@ from evalio.types import (
     LidarParams,
     Trajectory,
 )
-
 from evalio.utils import print_warning
-from typing import Sequence
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 

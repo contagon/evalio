@@ -1,16 +1,14 @@
-from enum import StrEnum, auto
-
-from evalio.utils import print_warning
-from numpy.typing import NDArray
-from .types import Stamp, Trajectory, SE3
-
+from copy import deepcopy
 from dataclasses import dataclass
-
-import numpy as np
-
+from enum import StrEnum, auto
 from typing import cast
 
-from copy import deepcopy
+import numpy as np
+from numpy.typing import NDArray
+
+from evalio.utils import print_warning
+
+from .types import SE3, Stamp, Trajectory
 
 
 def check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:

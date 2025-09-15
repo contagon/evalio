@@ -1,21 +1,21 @@
-from types import ModuleType
 import functools
+import importlib
 import itertools
+import os
 from copy import deepcopy
 from dataclasses import dataclass
+from inspect import isclass
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Optional, Sequence, cast
 
-from inspect import isclass
-from evalio.utils import print_warning
 import yaml
-import os
-import importlib
 
 import evalio
+from evalio import Param
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-from evalio import Param
+from evalio.utils import print_warning
 
 
 # ------------------------- Parsing input ------------------------- #

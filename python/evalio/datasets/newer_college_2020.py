@@ -1,3 +1,10 @@
+import os
+from enum import auto
+from pathlib import Path
+from typing import Optional, Sequence
+
+import numpy as np
+
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -6,19 +13,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3, ImuParams, LidarParams, SE3
-
-import numpy as np
-from enum import auto
-import os
+from evalio.types import SE3, SO3, ImuParams, LidarParams, Trajectory
 
 from .base import (
     Dataset,
     DatasetIterator,
 )
-
-from pathlib import Path
-from typing import Sequence, Optional
 
 
 class NewerCollege2020(Dataset):

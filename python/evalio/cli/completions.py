@@ -1,13 +1,11 @@
-from typing import TypeAlias
+import itertools
+from typing import Annotated, Optional, TypeAlias
 
-from .parser import PipelineBuilder, DatasetBuilder
 import typer
 from rapidfuzz.process import extractOne
-from typing import Annotated, Optional
-import itertools
-
 from rich.console import Console
 
+from .parser import DatasetBuilder, PipelineBuilder
 
 err_console = Console(stderr=True)
 

@@ -6,9 +6,8 @@ from enum import auto
 from pathlib import Path
 
 import numpy as np
-from tqdm.rich import tqdm
-
 from rosbags.typesys import Stores
+from tqdm.rich import tqdm
 
 from evalio.datasets.loaders import (
     LidarDensity,
@@ -18,7 +17,7 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import SE3, Trajectory, ImuParams, LidarParams
+from evalio.types import SE3, ImuParams, LidarParams, Trajectory
 
 from .base import Dataset, DatasetIterator
 

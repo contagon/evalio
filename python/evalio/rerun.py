@@ -1,22 +1,18 @@
-from typing import Any, Literal, Optional, Sequence, cast, overload, TypedDict
-from uuid import uuid4, UUID
-
-from evalio.cli.parser import PipelineBuilder
-from evalio.types import LidarParams, Trajectory, Stamp
-from evalio.datasets import Dataset
-from evalio.pipelines import Pipeline
-from evalio.utils import print_warning
-import numpy as np
-from numpy.typing import NDArray
-
 from dataclasses import dataclass
-
-import typer
+from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
+from uuid import UUID, uuid4
 
 import distinctipy
+import numpy as np
+import typer
+from numpy.typing import NDArray
 
-from evalio.types import SE3, LidarMeasurement, Point
+from evalio.cli.parser import PipelineBuilder
+from evalio.datasets import Dataset
+from evalio.pipelines import Pipeline
 from evalio.stats import check_overstep
+from evalio.types import SE3, LidarMeasurement, LidarParams, Point, Stamp, Trajectory
+from evalio.utils import print_warning
 
 
 # These colors are pulled directly from the rerun skybox colors

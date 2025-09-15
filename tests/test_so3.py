@@ -1,7 +1,8 @@
+import math
+
+import numpy as np
 from evalio.types import SO3
 from scipy.spatial.transform import Rotation as R
-import numpy as np
-import math
 
 
 def is_close(r: R, so3: SO3):

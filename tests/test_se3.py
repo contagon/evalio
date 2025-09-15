@@ -1,9 +1,10 @@
+import math
 from dataclasses import dataclass
+
+import numpy as np
 from evalio.types import SE3, SO3
 from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation as R
-import numpy as np
-import math
 
 
 @dataclass

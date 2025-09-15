@@ -1,4 +1,4 @@
-from evalio.cli.ls import ls, Kind
+from evalio.cli.ls import Kind, ls
 from evalio.cli.parser import DatasetBuilder
 
 
