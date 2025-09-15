@@ -1,4 +1,4 @@
-from evalio.types import Stamp, Duration
+from evalio.types import Duration, Stamp
 
 
 def test_stamp_from_sec():

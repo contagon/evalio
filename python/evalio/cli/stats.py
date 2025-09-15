@@ -1,21 +1,19 @@
 from pathlib import Path
-from typing import Annotated, Optional, Sequence
-
-from evalio.utils import print_warning
-from rich.table import Table
-from rich.console import Console
-from rich import box
-
-from evalio.types import Trajectory
-from evalio import stats
+from typing import Annotated, Optional, Sequence, cast
 
 import typer
+from rich import box
+from rich.console import Console
+from rich.table import Table
 
+from evalio import Param, stats
+from evalio.types import Trajectory
+from evalio.utils import print_warning
 
 app = typer.Typer()
 
 
-def dict_diff(dicts: Sequence[dict]) -> list[str]:
+def dict_diff(dicts: Sequence[dict[str, Param]]) -> list[str]:
     """Compute which values are different between a list of dictionaries.
 
     Assumes each dictionary has the same keys.
@@ -33,7 +31,7 @@ def dict_diff(dicts: Sequence[dict]) -> list[str]:
         assert len(d) == size
 
     # compare all dictionaries to find varying keys
-    diff = []
+    diff: list[str] = []
     for k in dicts[0].keys():
         if any(d[k] != dicts[0][k] for d in dicts):
             diff.append(k)
@@ -50,7 +48,7 @@ def eval_dataset(
     length: Optional[int],
 ):
     # Load all trajectories
-    trajectories = []
+    trajectories: list[Trajectory] = []
     for file_path in dir.glob("*.csv"):
         traj = Trajectory.from_experiment(file_path)
         trajectories.append(traj)
@@ -75,7 +73,8 @@ def eval_dataset(
     convert = None
     if visualize:
         import rerun as rr
-        from evalio.rerun import convert
+
+        from evalio.rerun import convert  # type: ignore
 
         rr.init(
             str(dir),
@@ -84,16 +83,16 @@ def eval_dataset(
         rr.connect_grpc()
         rr.log(
             "gt",
-            convert(gt_og, color=[144, 144, 144]),
+            convert(gt_og, color=(144, 144, 144)),
             static=True,
         )
 
     # Group into pipelines so we can compare keys
     # (other pipelines will have different keys)
-    pipelines = set(traj.metadata["pipeline"] for traj in trajs)
+    pipelines = set(cast(str, traj.metadata["pipeline"]) for traj in trajs)
     grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
     for traj in trajs:
-        grouped_trajs[traj.metadata["pipeline"]].append(traj)
+        grouped_trajs[cast(str, traj.metadata["pipeline"])].append(traj)
 
     # Find all keys that were different
     keys_to_print = ["pipeline"]
@@ -103,8 +102,8 @@ def eval_dataset(
             keys.remove("name")
             keys_to_print += keys
 
-    results = []
-    for pipeline, trajs in grouped_trajs.items():
+    results: list[dict[str, Param]] = []
+    for _pipeline, trajs in grouped_trajs.items():
         # Iterate over each
         for traj in trajs:
             traj_aligned, gt_aligned = stats.align(traj, gt_og)
@@ -128,7 +127,7 @@ def eval_dataset(
 
             if rr is not None and convert is not None and visualize:
                 rr.log(
-                    traj.metadata["name"],
+                    cast(str, traj.metadata["name"]),
                     convert(traj_aligned),
                     static=True,
                 )
@@ -204,7 +203,7 @@ def eval(
     c.print(f"Evaluating RTE over a window of size {window}, using metric {metric}.")
 
     # Collect all bottom level directories
-    bottom_level_dirs = []
+    bottom_level_dirs: list[Path] = []
     for directory in directories_path:
         for subdir in directory.glob("**/"):
             if not _contains_dir(subdir):

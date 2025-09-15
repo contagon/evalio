@@ -1,9 +1,12 @@
-from . import _cpp, datasets, pipelines, types, utils, stats
+import atexit
+import warnings
+
+from tqdm import TqdmExperimentalWarning
+
+from . import _cpp, datasets, pipelines, stats, types, utils
 from ._cpp import abi_tag as _abi_tag
 
-import warnings
-from tqdm import TqdmExperimentalWarning
-import atexit
+Param = bool | int | float | str
 
 
 # remove false nanobind reference leak warnings

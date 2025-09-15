@@ -1,35 +1,35 @@
 from collections.abc import Iterator
-from typing import Callable, Any, Optional, TypeVar
+from dataclasses import dataclass
+from enum import StrEnum, auto
 from pathlib import Path
+from typing import Any, Callable, Optional, TypeVar
 
-from evalio._cpp._helpers import (  # type: ignore
+import numpy as np
+from rich import box
+from rich.console import Console
+from rich.table import Table
+from rosbags.highlevel import AnyReader
+from rosbags.typesys import Stores, get_typestore
+
+from evalio._cpp.helpers import (  # type: ignore
     DataType,
     Field,
     PointCloudMetadata,
-    pc2_to_evalio,
     fill_col_col_major,
     fill_col_row_major,
+    pc2_to_evalio,
     reorder_points,
     shift_point_stamps,
 )
+from evalio.datasets.base import DatasetIterator, Measurement
 from evalio.types import (
+    Duration,
     ImuMeasurement,
     LidarMeasurement,
     LidarParams,
     Stamp,
-    Duration,
 )
-from evalio.datasets.base import DatasetIterator, Measurement
-from rosbags.highlevel import AnyReader
-from rosbags.typesys import Stores, get_typestore
-import numpy as np
-from dataclasses import dataclass
-from enum import StrEnum, auto
 from evalio.utils import print_warning
-
-from rich.table import Table
-from rich.console import Console
-from rich import box
 
 
 # ------------------------- Iterator over a rosbag ------------------------- #
@@ -113,7 +113,7 @@ class RosbagIter(DatasetIterator):
             self.path = [path]
         else:
 
-            def is_ros2_bag(d):
+            def is_ros2_bag(d: Path) -> bool:
                 return bool(list(d.glob("*.mcap")) + list(d.glob("*.db3")))
 
             # Path provided is a directory may be ros2 bag/ dir or contain multiple bags
@@ -175,7 +175,7 @@ class RosbagIter(DatasetIterator):
             connections=self.connections_lidar + self.connections_imu
         )
 
-        for connection, timestamp, rawdata in iterator:
+        for connection, _timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
             if connection.msgtype == "sensor_msgs/msg/PointCloud2":
                 yield self._lidar_conversion(msg)
@@ -187,14 +187,14 @@ class RosbagIter(DatasetIterator):
     def imu_iter(self) -> Iterator[ImuMeasurement]:
         iterator = self.reader.messages(connections=self.connections_imu)
 
-        for connection, timestamp, rawdata in iterator:
+        for connection, _timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
             yield self._imu_conversion(msg)
 
     def lidar_iter(self) -> Iterator[LidarMeasurement]:
         iterator = self.reader.messages(connections=self.connections_lidar)
 
-        for connection, timestamp, rawdata in iterator:
+        for connection, _timestamp, rawdata in iterator:
             msg = self.reader.deserialize(rawdata, connection.msgtype)
             yield self._lidar_conversion(msg)
 
@@ -210,7 +210,7 @@ class RosbagIter(DatasetIterator):
 
     def _lidar_conversion(self, msg: Any) -> LidarMeasurement:
         # ------------------------- Convert to our type ------------------------- #
-        fields = []
+        fields: list[Field] = []
         for f in msg.fields:
             fields.append(
                 Field(name=f.name, datatype=DataType(f.datatype), offset=f.offset)

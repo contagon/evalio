@@ -36,20 +36,30 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("nsec", &Duration::nsec, "Underlying nanoseconds representation")
     .def(nb::self < nb::self, "Compare two Durations")
     .def(nb::self > nb::self, "Compare two Durations")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def(nb::self - nb::self, "Compute the difference between two Durations")
     .def(nb::self + nb::self, "Add two Durations")
     .def("__repr__", &Duration::toString)
     .def("__copy__", [](const Duration& self) { return Duration(self); })
     .def(
       "__deepcopy__",
-      [](const Duration& self, nb::dict) { return Duration(self); },
+      [](const Duration& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return Duration(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const Duration& p) { return nb::make_tuple(p.nsec); }
+      [](const Duration& p) { return std::make_tuple(p.nsec); }
     )
     .def(
       "__setstate__",
@@ -87,8 +97,16 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("nsec", &Stamp::nsec, "Underlying nanoseconds storage")
     .def(nb::self < nb::self, "Compare two Stamps to see which happened first")
     .def(nb::self > nb::self, "Compare two Stamps to see which happened first")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for equality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def(
       nb::self - nb::self,
       "Compute the difference between two Stamps, returning a duration"
@@ -99,12 +117,14 @@ inline void makeTypes(nb::module_& m) {
     .def("__copy__", [](const Stamp& self) { return Stamp(self); })
     .def(
       "__deepcopy__",
-      [](const Stamp& self, nb::dict) { return Stamp(self); },
+      [](const Stamp& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return Stamp(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const Stamp& p) { return nb::make_tuple(p.sec, p.nsec); }
+      [](const Stamp& p) { return std::make_tuple(p.sec, p.nsec); }
     )
     .def(
       "__setstate__",
@@ -159,8 +179,16 @@ inline void makeTypes(nb::module_& m) {
       "scanline index."
     )
     .def_rw("col", &Point::col, "Column index of the point in the point cloud.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &Point::toString)
     .def(
       "__getstate__",
@@ -231,8 +259,16 @@ inline void makeTypes(nb::module_& m) {
       &LidarMeasurement::to_vec_stamps,
       "Convert the point stamps to a list of durations."
     )
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &LidarMeasurement::toString)
     .def(
       "__getstate__",
@@ -322,8 +358,16 @@ inline void makeTypes(nb::module_& m) {
       &ImuMeasurement::accel,
       "Accelerometer measurement as a 3D vector."
     )
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &ImuMeasurement::toString)
     .def(
       "__getstate__",
@@ -443,18 +487,28 @@ inline void makeTypes(nb::module_& m) {
     .def("toMat", &SO3::toMat, "Convert the rotation to a 3x3 matrix.")
     .def("rotate", &SO3::rotate, "v"_a, "Rotate a 3D vector by the rotation.")
     .def(nb::self * nb::self, "Compose two rotations.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &SO3::toString)
     .def("__copy__", [](const SO3& self) { return SO3(self); })
     .def(
       "__deepcopy__",
-      [](const SO3& self, nb::dict) { return SO3(self); },
+      [](const SO3& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return SO3(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
-      [](const SO3& p) { return nb::make_tuple(p.qx, p.qy, p.qz, p.qw); }
+      [](const SO3& p) { return std::make_tuple(p.qx, p.qy, p.qz, p.qw); }
     )
     .def(
       "__setstate__",
@@ -493,19 +547,29 @@ inline void makeTypes(nb::module_& m) {
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")
-    .def(nb::self == nb::self, "Check for equality")
-    .def(nb::self != nb::self, "Check for inequality")
+    .def(
+      nb::self == nb::self,
+      "Check for equality",
+      nb::sig("def __eq__(self, arg: object, /) -> bool")
+    )
+    .def(
+      nb::self != nb::self,
+      "Check for inequality",
+      nb::sig("def __ne__(self, arg: object, /) -> bool")
+    )
     .def("__repr__", &SE3::toString)
     .def("__copy__", [](const SE3& self) { return SE3(self); })
     .def(
       "__deepcopy__",
-      [](const SE3& self, nb::dict) { return SE3(self); },
+      [](const SE3& self, nb::typed<nb::dict, nb::any, nb::any>) {
+        return SE3(self);
+      },
       "memo"_a
     )
     .def(
       "__getstate__",
       [](const SE3& p) {
-        return nb::make_tuple(
+        return std::make_tuple(
           p.rot.qx,
           p.rot.qy,
           p.rot.qz,

@@ -1,9 +1,8 @@
-from pathlib import Path
-from typing import Iterable, Iterator, Optional, Union
-from itertools import islice
-
 import os
-from enum import StrEnum, auto, Enum
+from enum import Enum, StrEnum, auto
+from itertools import islice
+from pathlib import Path
+from typing import Iterable, Iterator, Optional, Sequence, Union
 
 from evalio.types import (
     SE3,
@@ -13,14 +12,12 @@ from evalio.types import (
     LidarParams,
     Trajectory,
 )
-
 from evalio.utils import print_warning
-from typing import Sequence
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
-_DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
-_WARNED = False
+_data_dir = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
+_warned = False
 
 
 class DatasetIterator(Iterable[Measurement]):
@@ -236,12 +233,12 @@ class Dataset(StrEnum):
 
     @classmethod
     def _warn_default_dir(cls):
-        global _DATA_DIR, _WARNED
-        if not _WARNED and _DATA_DIR == Path("./evalio_data"):
+        global _data_dir, _warned
+        if not _warned and _data_dir == Path("./evalio_data"):
             print_warning(
                 "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
             )
-            _WARNED = True
+            _warned = True
 
     # ------------------------- Helpers that leverage from the iterator ------------------------- #
 
@@ -352,8 +349,8 @@ class Dataset(StrEnum):
         Returns:
             Path: Path to the dataset folder.
         """
-        global _DATA_DIR
-        return _DATA_DIR / self.full_name
+        global _data_dir
+        return _data_dir / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
         """Shows the size of the dataset on disk, in GB.
@@ -386,9 +383,9 @@ class CharKinds(Enum):
         return CharKinds.OTHER
 
 
-def pascal_to_snake(identifier):
-    # only split when going from lower to something else
-    splits = []
+def pascal_to_snake(identifier: str) -> str:
+    # Only split when going from lower to something else
+    splits: list[int] = []
     last_kind = CharKinds.from_char(identifier[0])
     for i, char in enumerate(identifier[1:], start=1):
         kind = CharKinds.from_char(char)
@@ -407,9 +404,9 @@ def set_data_dir(directory: Path):
     Args:
         directory (Path): Directory
     """
-    global _DATA_DIR, _WARNED
-    _DATA_DIR = directory
-    _WARNED = True
+    global _data_dir, _warned
+    _data_dir = directory
+    _warned = True
 
 
 def get_data_dir() -> Path:
@@ -418,5 +415,5 @@ def get_data_dir() -> Path:
     Returns:
         Path: Directory where datasets are stored.
     """
-    global _DATA_DIR
-    return _DATA_DIR
+    global _data_dir
+    return _data_dir

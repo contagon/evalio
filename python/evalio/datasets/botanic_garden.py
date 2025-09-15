@@ -1,5 +1,10 @@
 from enum import auto
+from pathlib import Path
+from typing import Optional, Sequence
 
+import numpy as np
+
+from evalio._cpp.helpers import fill_col_split_row_velodyne  # type: ignore
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -8,20 +13,9 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio._cpp._helpers import fill_col_split_row_velodyne  # type: ignore
-from evalio.types import Trajectory
-import numpy as np
+from evalio.types import SE3, ImuParams, LidarParams, Trajectory
 
-from .base import (
-    SE3,
-    Dataset,
-    ImuParams,
-    LidarParams,
-    DatasetIterator,
-)
-
-from pathlib import Path
-from typing import Sequence, Optional
+from .base import Dataset, DatasetIterator
 
 
 class BotanicGarden(Dataset):

@@ -1,20 +1,19 @@
 from pathlib import Path
-from evalio.cli.completions import DatasetOpt, PipelineOpt
-from evalio.utils import print_warning
-from tqdm.rich import tqdm
-import numpy as np
+from typing import Annotated, Optional
 
-from evalio.types import ImuMeasurement, LidarMeasurement
+import numpy as np
+import typer
+from rich import print
+from tqdm.rich import tqdm
+
+from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.rerun import RerunVis, VisArgs
+from evalio.types import ImuMeasurement, LidarMeasurement
+from evalio.utils import print_warning
 
 from .parser import DatasetBuilder, PipelineBuilder, parse_config
-from .writer import TrajectoryWriter, save_config, save_gt
 from .stats import eval
-
-from rich import print
-from typing import Optional, Annotated
-import typer
-
+from .writer import TrajectoryWriter, save_config, save_gt
 
 app = typer.Typer()
 
@@ -173,7 +172,7 @@ def run(
             for data in dbuilder.build():
                 if isinstance(data, ImuMeasurement):
                     pipe.add_imu(data)
-                elif isinstance(data, LidarMeasurement):
+                elif isinstance(data, LidarMeasurement):  # pyright: ignore reportUnnecessaryIsInstance
                     features = pipe.add_lidar(data)
                     pose = pipe.pose()
                     writer.write(data.stamp, pose)

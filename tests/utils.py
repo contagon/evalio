@@ -1,22 +1,33 @@
 from pathlib import Path
 
+import numpy as np
+from evalio.types import SE3, SO3, ImuMeasurement, LidarMeasurement, Point
+
 # We arbitrarily choose to use ROS1 Noetic for this example
 # but the rosbags abstraction should make it ROS version agnostic
 from rosbags.rosbag1 import Writer
 from rosbags.typesys import Stores, get_typestore
 from rosbags.typesys.stores.ros1_noetic import (
     builtin_interfaces__msg__Time as RosTime,
-    std_msgs__msg__Header as Header,
-    sensor_msgs__msg__PointCloud2 as RosPointCloud2,
-    sensor_msgs__msg__PointField as RosPointField,
-    sensor_msgs__msg__Imu as RosImu,
-    geometry_msgs__msg__Vector3 as RosVector3,
+)
+from rosbags.typesys.stores.ros1_noetic import (
     geometry_msgs__msg__Quaternion as RosQuaternion,
 )
-
-from evalio.types import ImuMeasurement, LidarMeasurement, Point, SE3, SO3
-
-import numpy as np
+from rosbags.typesys.stores.ros1_noetic import (
+    geometry_msgs__msg__Vector3 as RosVector3,
+)
+from rosbags.typesys.stores.ros1_noetic import (
+    sensor_msgs__msg__Imu as RosImu,
+)
+from rosbags.typesys.stores.ros1_noetic import (
+    sensor_msgs__msg__PointCloud2 as RosPointCloud2,
+)
+from rosbags.typesys.stores.ros1_noetic import (
+    sensor_msgs__msg__PointField as RosPointField,
+)
+from rosbags.typesys.stores.ros1_noetic import (
+    std_msgs__msg__Header as Header,
+)
 
 
 def isclose_se3(a: SE3, b: SE3) -> bool:

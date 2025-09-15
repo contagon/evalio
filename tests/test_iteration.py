@@ -1,13 +1,13 @@
-from evalio.types import LidarParams, Point
-from evalio.types import ImuMeasurement, LidarMeasurement, Stamp
-from evalio.datasets.loaders import RawDataIter, RosbagIter
-import numpy as np
+from pathlib import Path
 
+import numpy as np
+from evalio.datasets.loaders import RawDataIter, RosbagIter
+from evalio.types import ImuMeasurement, LidarMeasurement, LidarParams, Point, Stamp
 from utils import rosbag_saver
 
 
 def make_imus(num: int = 200) -> list[ImuMeasurement]:
-    imus = []
+    imus: list[ImuMeasurement] = []
     for i in range(num):
         imus.append(
             ImuMeasurement(
@@ -21,7 +21,7 @@ def make_imus(num: int = 200) -> list[ImuMeasurement]:
 
 
 def make_lidars(num: int = 10) -> list[LidarMeasurement]:
-    lidars = []
+    lidars: list[LidarMeasurement] = []
     pt = Point()
     for i in range(num):
         # offset a smidge from the imus
@@ -47,7 +47,7 @@ def test_rawdata():
     assert count == exp_count
 
 
-def test_rosbag(tmp_path):
+def test_rosbag(tmp_path: Path):
     imus = make_imus()
     lidars = make_lidars()
     bag = tmp_path / "bags"

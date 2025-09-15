@@ -1,3 +1,10 @@
+import os
+from enum import auto
+from pathlib import Path
+from typing import Optional, Sequence
+
+import numpy as np
+
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -6,21 +13,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3
-import numpy as np
-from enum import auto
+from evalio.types import SE3, SO3, ImuParams, LidarParams, Trajectory
+
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
-
-import os
-
-from pathlib import Path
-from typing import Sequence, Optional
 
 
 class NewerCollege2021(Dataset):
@@ -205,7 +203,7 @@ class NewerCollege2021(Dataset):
             "maths_hard": "1Rb2TBKP7ISC2XzDGU68ix5lFjEB6jXeX",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

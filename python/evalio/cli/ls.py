@@ -1,13 +1,15 @@
-from evalio.datasets.base import Dataset
-from .parser import DatasetBuilder, PipelineBuilder
-from typing import Optional, TypeVar, Annotated
-import typer
 from enum import StrEnum, auto
-from rapidfuzz.process import extract_iter
+from typing import Annotated, Optional, TypeVar
 
+import typer
+from rapidfuzz.process import extract_iter
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
+
+from evalio.datasets.base import Dataset
+
+from .parser import DatasetBuilder, PipelineBuilder
 
 app = typer.Typer()
 
@@ -86,7 +88,7 @@ def ls(
     if kind == Kind.datasets:
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
-        all_datasets = list(DatasetBuilder._all_datasets().values())
+        all_datasets = list(DatasetBuilder.all_datasets().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.dataset_name() for d in all_datasets], score_cutoff=90
@@ -102,7 +104,7 @@ def ls(
         # That should be about it, making the rest should be automatic
 
         # Gather all info
-        all_info = {
+        all_info: dict[str, list[str]] = {
             "Name": [],
             "Sequences": [],
             "DL": [],
@@ -204,7 +206,7 @@ def ls(
     if kind == Kind.pipelines:
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
-        all_pipelines = list(PipelineBuilder._all_pipelines().values())
+        all_pipelines = list(PipelineBuilder.all_pipelines().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.name() for d in all_pipelines], score_cutoff=90

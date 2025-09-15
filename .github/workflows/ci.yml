@@ -16,6 +16,23 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         name: Ruff
 
+  # check python typing
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --dev --verbose --all-extras
+      - name: Copy stubs into place
+        run: cp -r .venv/lib/python$(cat .python-version)/site-packages/evalio/_cpp python/evalio
+      - name: Run basedpyright
+        run: uv run basedpyright
+
   # check cpp formatting
   clang-format:
     runs-on: ubuntu-latest
@@ -27,6 +44,7 @@ jobs:
       with:
         clang-format-version: '20'
 
+  # Make sure docs can be built and deploy if on master branch
   docs:
     runs-on: ubuntu-latest
     env:

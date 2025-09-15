@@ -1,8 +1,10 @@
+from pathlib import Path
+from typing import Annotated, Optional
+
+import typer
+
 import evalio
 from evalio.datasets import set_data_dir
-import typer
-from typing import Annotated, Optional
-from pathlib import Path
 
 # import typer apps
 from .dataset_manager import app as app_dl

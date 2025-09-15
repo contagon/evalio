@@ -1,7 +1,11 @@
-from enum import auto
 import urllib
 import urllib.request
+from enum import auto
 from pathlib import Path
+from typing import Optional, Sequence, cast
+
+import numpy as np
+from tqdm.rich import tqdm
 
 from evalio.datasets.loaders import (
     LidarDensity,
@@ -11,19 +15,12 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import Trajectory, SO3
-import numpy as np
-from tqdm.rich import tqdm
+from evalio.types import SE3, SO3, ImuParams, LidarParams, Trajectory
 
 from .base import (
-    SE3,
     Dataset,
-    ImuParams,
-    LidarParams,
     DatasetIterator,
 )
-
-from typing import Sequence, cast, Optional
 
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27

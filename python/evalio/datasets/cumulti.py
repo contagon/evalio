@@ -6,9 +6,8 @@ from enum import auto
 from pathlib import Path
 
 import numpy as np
-from tqdm.rich import tqdm
-
 from rosbags.typesys import Stores
+from tqdm.rich import tqdm
 
 from evalio.datasets.loaders import (
     LidarDensity,
@@ -18,9 +17,9 @@ from evalio.datasets.loaders import (
     LidarStamp,
     RosbagIter,
 )
-from evalio.types import SE3, Trajectory
+from evalio.types import SE3, ImuParams, LidarParams, Trajectory
 
-from .base import Dataset, DatasetIterator, ImuParams, LidarParams
+from .base import Dataset, DatasetIterator
 
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
