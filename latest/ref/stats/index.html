@@ -1005,6 +1005,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evalio.stats.check_overstep" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;check_overstep
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evalio.stats.rte" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;rte
@@ -1289,6 +1298,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evalio.stats.check_overstep" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;check_overstep
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evalio.stats.rte" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;rte
@@ -1394,7 +1412,7 @@ Generally output from computing <a class="autorefs autorefs-internal" title="   
   </span>
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">rot</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">rot</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -1418,7 +1436,7 @@ Generally output from computing <a class="autorefs autorefs-internal" title="   
   </span>
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">trans</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">trans</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2078,6 +2096,69 @@ Will not modify the original trajectories.</p>
 )          –
           <div class="doc-md-description">
             <p>The computed error</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="evalio.stats.check_overstep" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">check_overstep</span>
+
+
+</h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_overstep</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">stamps</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">],</span> <span class="n">s</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n"><span title="int">int</span></span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Checks if we overshot the closest stamp.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>stamps</code></b>
+              (<code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="            Stamp (evalio.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>List of stamps</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>s</code></b>
+              (<code><a class="autorefs autorefs-internal" title="            Stamp (evalio.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Stamp we want to find the closest to</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>idx</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Index of the closest stamp</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>bool</code></b> (              <code><span title="bool">bool</span></code>
+)          –
+          <div class="doc-md-description">
+            <p>True if we overshot the closest stamp (ie it's idx - 1), False if it's good (ie it's idx)</p>
           </div>
         </li>
     </ul>
