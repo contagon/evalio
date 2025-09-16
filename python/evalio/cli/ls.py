@@ -10,10 +10,15 @@ from rich.table import Table
 from evalio.datasets.base import Dataset
 
 from .parser import DatasetBuilder, PipelineBuilder
+from .typer_docstrings import from_docstring
 
 app = typer.Typer()
 
 T = TypeVar("T")
+
+
+def opt(name: str):
+    return typer.Option(f"--{name}", "-" + name[0], show_default=False)
 
 
 def unique(lst: list[T]):
@@ -47,43 +52,25 @@ class Kind(StrEnum):
 
 
 @app.command(no_args_is_help=True)
+@from_docstring
 def ls(
-    kind: Annotated[
-        Kind, typer.Argument(help="The kind of object to list", show_default=False)
-    ],
-    search: Annotated[
-        Optional[str],
-        typer.Option(
-            "--search",
-            "-s",
-            help="Fuzzy search for a pipeline or dataset by name",
-            show_default=False,
-        ),
-    ] = None,
-    quiet: Annotated[
-        bool,
-        typer.Option(
-            "--quiet",
-            "-q",
-            help="Output less verbose information",
-        ),
-    ] = False,
-    show_hyperlinks: Annotated[
-        bool,
-        typer.Option(
-            "--show-hyperlinks",
-            help="Output full links. For terminals that don't support hyperlinks (OSC 8).",
-        ),
-    ] = False,
-    show: Annotated[
-        bool,
-        typer.Option(
-            hidden=True,
-        ),
-    ] = True,
+    kind: Kind,
+    search: Annotated[Optional[str], opt("search")] = None,
+    quiet: Annotated[bool, opt("quiet")] = False,
+    show_hyperlinks: Annotated[bool, typer.Option("--show-hyperlinks")] = False,
+    show: Annotated[bool, typer.Option(hidden=True)] = True,
 ) -> Optional[Table]:
-    """
-    List dataset and pipeline information
+    """List available dataset or pipeline information
+
+    Args:
+        kind (Kind): The kind of object to list.
+        search (Optional[str]): Fuzzy search for a pipeline or dataset by name.
+        quiet (bool): Output less verbose information.
+        show_hyperlinks (bool): Output full links. For terminals that don't support hyperlinks (OSC 8).
+        show (bool): Show the table.
+
+    Returns:
+        Optional[Table]: _description_
     """
     if kind == Kind.datasets:
         # Search for datasets using rapidfuzz
