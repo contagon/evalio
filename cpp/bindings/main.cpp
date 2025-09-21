@@ -8,6 +8,8 @@
 namespace nb = nanobind;
 
 NB_MODULE(_cpp, m) {
+  nb::set_leak_warnings(false);
+
   m.def(
     "abi_tag",
     []() { return nb::detail::abi_tag(); },

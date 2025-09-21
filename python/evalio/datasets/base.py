@@ -6,6 +6,7 @@ from typing import Iterable, Iterator, Optional, Sequence, Union
 
 from evalio.types import (
     SE3,
+    GroundTruth,
     ImuMeasurement,
     ImuParams,
     LidarMeasurement,
@@ -221,6 +222,8 @@ class Dataset(StrEnum):
         for i in range(len(gt_traj)):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
+
+        gt_traj.metadata = GroundTruth(sequence=self.full_name)
 
         return gt_traj
 

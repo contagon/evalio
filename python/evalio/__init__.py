@@ -6,8 +6,6 @@ from tqdm import TqdmExperimentalWarning
 from . import _cpp, datasets, pipelines, stats, types, utils
 from ._cpp import abi_tag as _abi_tag
 
-Param = bool | int | float | str
-
 
 # remove false nanobind reference leak warnings
 # https://github.com/wjakob/nanobind/discussions/13
