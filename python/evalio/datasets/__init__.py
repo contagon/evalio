@@ -10,6 +10,14 @@ from .newer_college_2020 import NewerCollege2020
 from .newer_college_2021 import NewerCollege2021
 from .oxford_spires import OxfordSpires
 
+from .parser import (
+    all_datasets,
+    get_dataset,
+    all_sequences,
+    get_sequence,
+    register_dataset,
+)
+
 __all__ = [
     "get_data_dir",
     "set_data_dir",
@@ -26,4 +34,9 @@ __all__ = [
     "OxfordSpires",
     "RawDataIter",
     "RosbagIter",
+    "all_datasets",
+    "get_dataset",
+    "all_sequences",
+    "get_sequence",
+    "register_dataset",
 ]
