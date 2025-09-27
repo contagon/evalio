@@ -6,7 +6,14 @@ import numpy as np
 import pytest
 from evalio.cli.parser import DatasetBuilder
 from evalio.datasets.base import Dataset
-from evalio.types import SE3, ImuMeasurement, LidarMeasurement, Stamp, Trajectory
+from evalio.types import (
+    SE3,
+    GroundTruth,
+    ImuMeasurement,
+    LidarMeasurement,
+    Stamp,
+    Trajectory,
+)
 from utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
@@ -72,7 +79,7 @@ def fake_groundtruth() -> Trajectory:
         for i in range(1_000, 10_000, 1_000)
     ]
     poses = [rand_se3() for _ in range(len(stamps))]
-    return Trajectory(metadata={}, stamps=stamps, poses=poses)
+    return Trajectory(stamps=stamps, poses=poses, metadata=GroundTruth(sequence="fake"))
 
 
 def serialize_gt(gt: Trajectory, style: StampStyle) -> list[str]:

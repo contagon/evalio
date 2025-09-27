@@ -12,7 +12,7 @@ from typing import Any, Optional, Sequence, cast
 import yaml
 
 import evalio
-from evalio import Param
+from evalio.types import Param
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
 from evalio.utils import print_warning

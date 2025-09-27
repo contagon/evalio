@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from evalio.cli.parser import PipelineBuilder
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-from evalio.stats import check_overstep
+from evalio.stats import _check_overstep
 from evalio.types import SE3, LidarMeasurement, LidarParams, Point, Stamp, Trajectory
 from evalio.utils import print_warning
 
@@ -204,7 +204,7 @@ try:
                     gt_index = 0
                     while self.gt.stamps[gt_index] < data.stamp:
                         gt_index += 1
-                    if check_overstep(self.gt.stamps, data.stamp, gt_index):
+                    if _check_overstep(self.gt.stamps, data.stamp, gt_index):
                         gt_index -= 1
                     gt_o_T_imu_0 = self.gt.poses[gt_index]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
