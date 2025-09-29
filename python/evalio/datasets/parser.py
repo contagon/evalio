@@ -1,12 +1,31 @@
 import importlib
 from inspect import isclass
+import itertools
 from types import ModuleType
-from typing import Optional
+from typing import Callable, Optional, Sequence, TypedDict, cast
 
 from evalio import datasets
 from evalio.datasets.base import Dataset
 
 _DATASETS: set[type[Dataset]] = set()
+
+
+class DatasetNotFound(Exception):
+    def __init__(self, name: str):
+        super().__init__(f"Dataset '{name}' not found")
+        self.name = name
+
+
+class SequenceNotFound(Exception):
+    def __init__(self, name: str):
+        super().__init__(f"Sequence '{name}' not found")
+        self.name = name
+
+
+class InvalidDatasetConfig(Exception):
+    def __init__(self, config: str):
+        super().__init__(f"Invalid config: '{config}'")
+        self.config = config
 
 
 # ------------------------- Handle Registration of Datasets ------------------------- #
@@ -52,8 +71,8 @@ def all_datasets() -> dict[str, type[Dataset]]:
     return {d.dataset_name(): d for d in _DATASETS}
 
 
-def get_dataset(name: str) -> Optional[type[Dataset]]:
-    return all_datasets().get(name, None)
+def get_dataset(name: str) -> type[Dataset] | DatasetNotFound:
+    return all_datasets().get(name, DatasetNotFound(name))
 
 
 def all_sequences() -> dict[str, Dataset]:
@@ -62,10 +81,63 @@ def all_sequences() -> dict[str, Dataset]:
     }
 
 
-def get_sequence(name: str) -> Optional[Dataset]:
-    return all_sequences().get(name, None)
+def get_sequence(name: str) -> Dataset | SequenceNotFound:
+    return all_sequences().get(name, SequenceNotFound(name))
 
 
 register_dataset(module=datasets)
 
+
 # ------------------------- Handle yaml parsing ------------------------- #
+class DatasetConfig(TypedDict):
+    name: str
+    length: Optional[int]
+
+
+ConfigError = DatasetNotFound | SequenceNotFound | InvalidDatasetConfig
+
+
+def parse_config(
+    d: str | DatasetConfig | Sequence[str | DatasetConfig],
+) -> list[tuple[Dataset, int]] | ConfigError:
+    name: Optional[str] = None
+    length: Optional[int] = None
+    # If given a list of values
+    if isinstance(d, list):
+        results = [parse_config(x) for x in d]
+        for r in results:
+            if isinstance(r, ConfigError):
+                return r
+        results = cast(list[list[tuple[Dataset, int]]], results)
+        return list(itertools.chain.from_iterable(results))
+
+    # If it's a single config
+    elif isinstance(d, str):
+        name = d
+        length = None
+    elif isinstance(d, dict):
+        name = d.get("name", None)
+        length = d.get("length", None)
+    else:
+        return InvalidDatasetConfig(str(d))
+
+    if name is None:  # type: ignore
+        return InvalidDatasetConfig(str(d))
+
+    length_lambda: Callable[[Dataset], int]
+    if length is None:
+        length_lambda = lambda s: len(s)
+    else:
+        length_lambda = lambda s: length
+
+    if name[-2:] == "/*":
+        ds_name, _ = name.split("/")
+        ds = get_dataset(ds_name)
+        if isinstance(ds, DatasetNotFound):
+            return ds
+        return [(s, length_lambda(s)) for s in ds.sequences()]
+
+    ds = get_sequence(name)
+    if isinstance(ds, SequenceNotFound):
+        return ds
+    return [(ds, length_lambda(ds))]

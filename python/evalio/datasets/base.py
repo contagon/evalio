@@ -1,24 +1,25 @@
 import os
-from enum import Enum, StrEnum, auto
+from enum import StrEnum
 from itertools import islice
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Sequence, Union
 
-from evalio.types import (
+from evalio._cpp.types import (  # type: ignore
     SE3,
-    GroundTruth,
     ImuMeasurement,
     ImuParams,
     LidarMeasurement,
     LidarParams,
-    Trajectory,
 )
-from evalio.utils import print_warning
+
+from evalio.types import GroundTruth, Trajectory
+
+from evalio.utils import print_warning, pascal_to_snake
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
-_data_dir = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
-_warned = False
+_DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
+_WARNED = False
 
 
 class DatasetIterator(Iterable[Measurement]):
@@ -236,12 +237,12 @@ class Dataset(StrEnum):
 
     @classmethod
     def _warn_default_dir(cls):
-        global _data_dir, _warned
-        if not _warned and _data_dir == Path("./evalio_data"):
+        global _DATA_DIR, _WARNED
+        if not _WARNED and _DATA_DIR == Path("./evalio_data"):
             print_warning(
-                "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
+                "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_DATA_DIR(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
             )
-            _warned = True
+            _WARNED = True
 
     # ------------------------- Helpers that leverage from the iterator ------------------------- #
 
@@ -352,8 +353,8 @@ class Dataset(StrEnum):
         Returns:
             Path: Path to the dataset folder.
         """
-        global _data_dir
-        return _data_dir / self.full_name
+        global _DATA_DIR
+        return _DATA_DIR / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
         """Shows the size of the dataset on disk, in GB.
@@ -368,38 +369,6 @@ class Dataset(StrEnum):
             return sum(f.stat().st_size for f in self.folder.glob("**/*")) / 1e9
 
 
-# For converting dataset names to snake case
-class CharKinds(Enum):
-    LOWER = auto()
-    UPPER = auto()
-    DIGIT = auto()
-    OTHER = auto()
-
-    @staticmethod
-    def from_char(char: str):
-        if char.islower():
-            return CharKinds.LOWER
-        if char.isupper():
-            return CharKinds.UPPER
-        if char.isdigit():
-            return CharKinds.DIGIT
-        return CharKinds.OTHER
-
-
-def pascal_to_snake(identifier: str) -> str:
-    # Only split when going from lower to something else
-    splits: list[int] = []
-    last_kind = CharKinds.from_char(identifier[0])
-    for i, char in enumerate(identifier[1:], start=1):
-        kind = CharKinds.from_char(char)
-        if last_kind == CharKinds.LOWER and kind != CharKinds.LOWER:
-            splits.append(i)
-        last_kind = kind
-
-    parts = [identifier[i:j] for i, j in zip([0] + splits, splits + [None])]
-    return "_".join(parts).lower()
-
-
 # ------------------------- Helpers ------------------------- #
 def set_data_dir(directory: Path):
     """Set the global location where datasets are stored. This will be used to store the downloaded data.
@@ -407,9 +376,9 @@ def set_data_dir(directory: Path):
     Args:
         directory (Path): Directory
     """
-    global _data_dir, _warned
-    _data_dir = directory
-    _warned = True
+    global _DATA_DIR, _WARNED
+    _DATA_DIR = directory
+    _WARNED = True
 
 
 def get_data_dir() -> Path:
@@ -418,5 +387,5 @@ def get_data_dir() -> Path:
     Returns:
         Path: Directory where datasets are stored.
     """
-    global _data_dir
-    return _data_dir
+    global _DATA_DIR
+    return _DATA_DIR

@@ -16,6 +16,10 @@ from .parser import (
     all_sequences,
     get_sequence,
     register_dataset,
+    parse_config,
+    DatasetNotFound,
+    SequenceNotFound,
+    InvalidDatasetConfig,
 )
 
 __all__ = [
@@ -39,4 +43,8 @@ __all__ = [
     "all_sequences",
     "get_sequence",
     "register_dataset",
+    "parse_config",
+    "DatasetNotFound",
+    "SequenceNotFound",
+    "InvalidDatasetConfig",
 ]

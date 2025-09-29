@@ -1,12 +1,29 @@
+from __future__ import annotations
+
 import importlib
 from inspect import isclass
+import itertools
 from types import ModuleType
-from typing import Any, Optional
+from typing import Any, Optional, cast, Sequence
 
 from evalio import pipelines
 from evalio.pipelines import Pipeline
+from evalio.types import Param
+
 
 _PIPELINES: set[type[Pipeline]] = set()
+
+
+class PipelineNotFound(Exception):
+    def __init__(self, name: str):
+        super().__init__(f"Pipeline '{name}' not found")
+        self.name = name
+
+
+class InvalidPipelineConfig(Exception):
+    def __init__(self, config: str):
+        super().__init__(f"Invalid config: '{config}'")
+        self.config = config
 
 
 # ------------------------- Handle Registration of Pipelines ------------------------- #
@@ -66,7 +83,7 @@ def all_pipelines() -> dict[str, type[Pipeline]]:
     return {p.name(): p for p in _PIPELINES}
 
 
-def get_pipeline(name: str) -> Optional[type[Pipeline]]:
+def get_pipeline(name: str) -> type[Pipeline] | PipelineNotFound:
     """Get a pipeline class by its name.
 
     Args:
@@ -75,9 +92,74 @@ def get_pipeline(name: str) -> Optional[type[Pipeline]]:
     Returns:
         Optional[type[Pipeline]]: The pipeline class, or None if not found.
     """
-    return all_pipelines().get(name, None)
+    return all_pipelines().get(name, PipelineNotFound(name))
 
 
 register_pipeline(module=pipelines)
 
+
 # ------------------------- Handle yaml parsing ------------------------- #
+def _sweep(
+    sweep: dict[str, Param],
+    params: dict[str, Param],
+    pipe: type[Pipeline],
+) -> list[tuple[type[Pipeline], dict[str, Param]]]:
+    keys, values = zip(*sweep.items())
+    results: list[tuple[type[Pipeline], dict[str, Param]]] = []
+    for options in itertools.product(*values):
+        p = params.copy()
+        for k, o in zip(keys, options):
+            p[k] = o
+        results.append((pipe, p))
+    return results
+
+
+ConfigError = PipelineNotFound | InvalidPipelineConfig
+
+
+def parse_config(
+    p: str | dict[str, Param] | Sequence[str | dict[str, Param]],
+) -> list[tuple[type[Pipeline], dict[str, Param]]] | ConfigError:
+    """Parse a pipeline configuration.
+
+    Args:
+        p (str | dict[str, Param] | Sequence[str | dict[str, Param]]): The pipeline configuration.
+
+    Raises:
+        ValueError: If the pipeline is not found.
+        ValueError: If the configuration is invalid.
+
+    Returns:
+        list[tuple[type[Pipeline], dict[str, Param]]]: A list of tuples containing the pipeline class and its parameters.
+    """
+    if isinstance(p, str):
+        pipe = get_pipeline(p)
+        if isinstance(pipe, PipelineNotFound):
+            return pipe
+        return [(pipe, {})]
+
+    elif isinstance(p, dict):
+        name = p.pop("name", None)
+        if name is None:
+            return InvalidPipelineConfig(f"Need pipeline name: {str(p)}")
+
+        pipe = get_pipeline(cast(str, name))
+        if isinstance(pipe, PipelineNotFound):
+            return pipe
+
+        if "sweep" in p:
+            sweep = cast(dict[str, Param], p.pop("sweep"))
+            return _sweep(sweep, p, pipe)
+        else:
+            return [(pipe, p)]
+
+    elif isinstance(p, list):
+        results = [parse_config(x) for x in p]
+        for r in results:
+            if isinstance(r, ConfigError):
+                return r
+        results = cast(list[list[tuple[type[Pipeline], dict[str, Param]]]], results)
+        return list(itertools.chain.from_iterable(results))
+
+    else:
+        return InvalidPipelineConfig(f"Invalid pipeline configuration {p}")
