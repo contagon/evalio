@@ -66,37 +66,32 @@ def _search_module(module: ModuleType) -> set[type[Pipeline]]:
 def register_pipeline(
     pipeline: Optional[type[Pipeline]] = None,
     module: Optional[ModuleType | str] = None,
-):
+) -> int | ImportError:
     """Add a pipeline or a module containing pipelines to the registry.
 
     Args:
         pipeline (Optional[type[Pipeline]], optional): A specific pipeline class to add. Defaults to None.
         module (Optional[ModuleType  |  str], optional): The module to search for pipelines. Defaults to None.
-
-    Raises:
-        ValueError: If the module does not contain any pipelines.
-        ValueError: If the pipeline is not a valid Pipeline subclass.
-        ValueError: If both module and pipeline are None.
     """
     global _PIPELINES
 
+    total = 0
     if module is not None:
         if isinstance(module, str):
             try:
                 module = importlib.import_module(module)
-            except ImportError:
-                raise ValueError(f"Failed to import '{module}'")
+            except ImportError as e:
+                return e
 
-        if len(new_pipes := _search_module(module)) > 0:
-            _PIPELINES.update(new_pipes)
-        else:
-            raise ValueError(f"Module {module.__name__} does not contain any pipelines")
+        new_pipes = _search_module(module)
+        _PIPELINES.update(new_pipes)
+        total += len(new_pipes)
 
-    if pipeline is not None:
-        if _is_pipe(pipeline):
-            _PIPELINES.add(pipeline)
-        else:
-            raise ValueError(f"{pipeline} is not a valid Pipeline subclass")
+    if pipeline is not None and _is_pipe(pipeline):
+        _PIPELINES.add(pipeline)
+        total += 1
+
+    return total
 
 
 def all_pipelines() -> dict[str, type[Pipeline]]:

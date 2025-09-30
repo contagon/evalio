@@ -5,7 +5,7 @@ These are extended types that do depend on other parts of evalio.
 from __future__ import annotations
 
 from enum import Enum
-from dataclasses import dataclass, InitVar
+from dataclasses import dataclass
 from typing import Any, Optional, Self
 from evalio.types.base import Param, Metadata
 
@@ -39,47 +39,11 @@ class Experiment(Metadata):
     """Total time taken for the experiment, as a string."""
     max_step_elapsed: Optional[float] = None
     """Maximum time taken for a single step in the experiment, as a string."""
-    do_verify: InitVar[bool] = False
-    """If true, verify the experiment parameters are valid."""
 
-    def __post_init__(self, do_verify: bool):
-        if do_verify:
-            self.verify()
-
-    def verify(self):
-        # Verify pipeline is good
-        ThisPipeline = pl.get_pipeline(self.pipeline)
-        if isinstance(ThisPipeline, pl.PipelineNotFound):
-            raise ValueError(
-                f"Experiment '{self.name}' has unknown pipeline '{self.pipeline}'"
-            )
-
-        all_params = ThisPipeline.default_params()
-        for key in self.pipeline_params.keys():
-            if key not in all_params:
-                raise ValueError(
-                    f"Invalid parameter '{key}' for pipeline '{ThisPipeline.name()}'"
-                )
-            elif key in all_params and not isinstance(
-                self.pipeline_params[key], type(all_params[key])
-            ):
-                raise ValueError(
-                    f"Invalid type for parameter '{key}' for pipeline '{ThisPipeline.name()}': "
-                    f"expected '{type(all_params[key]).__name__}', got '{type(self.pipeline_params[key]).__name__}'"
-                )
-
-        # Verify dataset is good
-        dataset = ds.get_sequence(self.sequence)
-        if isinstance(dataset, ds.SequenceNotFound):
-            raise ValueError(
-                f"Experiment {self.name} has unknown dataset {self.sequence}"
-            )
-
-        if self.sequence_length > (length := len(dataset)):
-            print_warning(
-                f"Experiment '{self.name}' has sequence_length {self.sequence_length} > dataset length {len(dataset)}, reducing to {len(dataset)}"
-            )
-            self.sequence_length = length
+    def to_dict(self) -> dict[str, Any]:
+        d = super().to_dict()
+        d["status"] = self.status.value
+        return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -88,18 +52,16 @@ class Experiment(Metadata):
 
         return super().from_dict(data)
 
-    def make_pipeline(self) -> pl.Pipeline:
+    def make_pipeline(
+        self,
+    ) -> pl.Pipeline | ds.DatasetConfigError | pl.PipelineConfigError:
         ThisPipeline = pl.get_pipeline(self.pipeline)
         if isinstance(ThisPipeline, pl.PipelineNotFound):
-            raise ValueError(
-                f"Experiment {self.name} has unknown pipeline {self.pipeline}"
-            )
+            return ThisPipeline
 
         dataset = ds.get_sequence(self.sequence)
         if isinstance(dataset, ds.SequenceNotFound):
-            raise ValueError(
-                f"Experiment {self.name} has unknown dataset {self.sequence}"
-            )
+            return dataset
 
         pipe = ThisPipeline()
 

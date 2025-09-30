@@ -46,28 +46,26 @@ def _search_module(module: ModuleType) -> set[type[Dataset]]:
 def register_dataset(
     dataset: Optional[type[Dataset]] = None,
     module: Optional[ModuleType | str] = None,
-):
+) -> int | ImportError:
     global _DATASETS
 
+    total = 0
     if module is not None:
         if isinstance(module, str):
             try:
                 module = importlib.import_module(module)
-            except ImportError:
-                raise ValueError(f"Failed to import '{module}'")
+            except ImportError as e:
+                return e
 
-        if len(new_ds := _search_module(module)) > 0:
-            _DATASETS.update(new_ds)
-        else:
-            raise ValueError(
-                f"Module {module.__name__} does not contain any datasets or pipelines"
-            )
+        new_ds = _search_module(module)
+        _DATASETS.update(new_ds)
+        total += len(new_ds)
 
-    if dataset is not None:
-        if _is_dataset(dataset):
-            _DATASETS.add(dataset)
-        else:
-            raise ValueError(f"{dataset} is not a valid Dataset subclass")
+    if dataset is not None and _is_dataset(dataset):
+        _DATASETS.add(dataset)
+        total += 1
+
+    return total
 
 
 def all_datasets() -> dict[str, type[Dataset]]:
@@ -125,11 +123,9 @@ def parse_config(
     if name is None:  # type: ignore
         return InvalidDatasetConfig("Missing 'name' in dataset config")
 
-    length_lambda: Callable[[Dataset], int]
-    if length is None:
-        length_lambda = lambda s: len(s)
-    else:
-        length_lambda = lambda s: length
+    length_lambda: Callable[[Dataset], int] = (
+        lambda s: len(s) if length is None else min(len(s), length)
+    )
 
     if name[-2:] == "/*":
         ds_name, _ = name.split("/")

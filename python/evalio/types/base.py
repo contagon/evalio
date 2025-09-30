@@ -61,18 +61,20 @@ class Metadata:
         return cls(**data)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        d["type"] = self.tag()  # add type tag for deserialization
+        del d["file"]  # don't serialize the file path
+        return d
 
     def to_yaml(self) -> str:
         data = self.to_dict()
-        data["type"] = self.tag()
         return yaml.safe_dump(data)
 
     @classmethod
-    def parse(cls, yaml_str: str) -> Metadata | FailedMetadataParse:
+    def from_yaml(cls, yaml_str: str) -> Metadata | FailedMetadataParse:
         data = yaml.safe_load(yaml_str)
 
-        if "type: " not in data:
+        if "type" not in data:
             return FailedMetadataParse("No type field found in metadata.")
 
         for name, subclass in cls._registry.items():
@@ -218,10 +220,10 @@ class Trajectory:
             metadata_filter = filter(
                 lambda row: row[0] == "#" and not row.startswith("# timestamp,"), file
             )
-            metadata_list = [row[1:].strip() for row in metadata_filter]
-            metadata_str = "\n".join(metadata_list)
+            metadata_list = [row[1:] for row in metadata_filter]
+            metadata_str = "".join(metadata_list)
 
-            metadata = Metadata.parse(metadata_str)
+            metadata = Metadata.from_yaml(metadata_str)
             if isinstance(metadata, FailedMetadataParse):
                 return metadata
 
@@ -260,18 +262,26 @@ class Trajectory:
 
         metadata_str = self.metadata.to_yaml()
         metadata_str = metadata_str.replace("\n", "\n# ")
-        return f"# {metadata_str}\n#\n"
+        return f"# {metadata_str}\n"
 
-    def open(self, path: Path):
-        self._file = path.open("w")
-        self._csv_writer = csv.writer(self._file)
+    def _write(self):
+        if self._file is None or self._csv_writer is None:
+            print_warning("Trajectory.write_experiment: No file is open.")
+            return
 
         # write everything we've got so far
         if self.metadata is not None:
             self._file.write(self._serialize_metadata())
 
         self._file.write("# timestamp, x, y, z, qx, qy, qz, qw\n")
-        self._csv_writer.writerow(self._serialize_pose(s, p) for s, p in self)
+        self._csv_writer.writerows(self._serialize_pose(s, p) for s, p in self)
+
+    def open(self, path: Path):
+        if self.metadata is not None:
+            self.metadata.file = path
+        self._file = path.open("w")
+        self._csv_writer = csv.writer(self._file)
+        self._write()
 
     def close(self):
         """Close the CSV file if it is open with [write_experiment][evalio.types.Trajectory.write_experiment] and incremental writing."""
@@ -286,20 +296,17 @@ class Trajectory:
         self.open(path)
         self.close()
 
-    def update_metadata(self):
-        """Update the metadata in an open file."""
+    def rewrite(self):
+        """Update the contents of an open file."""
         if self._file is None or self._csv_writer is None:
-            print_warning("Trajectory.update_metadata: No file is open.")
+            print_warning("Trajectory.rewrite: No file is open.")
             return
 
         if self.metadata is None:
-            print_warning("Trajectory.update_metadata: No metadata to update.")
+            print_warning("Trajectory.rewrite: No metadata to update.")
             return
 
-        # Go back to the start of the file and rewrite the metadata
+        # Go to start, empty, and rewrite
         self._file.seek(0)
-        self._file.write(self._serialize_metadata())
-
-        # Rewrite all the poses
-        self._file.write("# timestamp, x, y, z, qx, qy, qz, qw\n")
-        self._csv_writer.writerow(self._serialize_pose(s, p) for s, p in self)
+        self._file.truncate()
+        self._write()
