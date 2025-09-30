@@ -20,6 +20,7 @@ from .parser import (
     DatasetNotFound,
     SequenceNotFound,
     InvalidDatasetConfig,
+    DatasetConfigError,
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "DatasetNotFound",
     "SequenceNotFound",
     "InvalidDatasetConfig",
+    "DatasetConfigError",
 ]

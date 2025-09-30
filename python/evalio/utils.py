@@ -9,6 +9,13 @@ def print_warning(warn: str):
     Console(soft_wrap=True).print(f"[bold red]Warning[/bold red]: {warn}")
 
 
+class CustomException(Exception):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.args == other.args
+
+
 # For converting dataset names to snake case
 class CharKinds(Enum):
     LOWER = auto()

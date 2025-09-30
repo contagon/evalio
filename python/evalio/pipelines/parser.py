@@ -9,21 +9,47 @@ from typing import Any, Optional, cast, Sequence
 from evalio import pipelines
 from evalio.pipelines import Pipeline
 from evalio.types import Param
+from evalio.utils import CustomException
 
 
 _PIPELINES: set[type[Pipeline]] = set()
 
 
-class PipelineNotFound(Exception):
+class PipelineNotFound(CustomException):
     def __init__(self, name: str):
         super().__init__(f"Pipeline '{name}' not found")
         self.name = name
 
 
-class InvalidPipelineConfig(Exception):
+class InvalidPipelineConfig(CustomException):
     def __init__(self, config: str):
         super().__init__(f"Invalid config: '{config}'")
         self.config = config
+
+
+class UnusedPipelineParam(CustomException):
+    def __init__(self, param: str, pipeline: str):
+        super().__init__(f"Parameter '{param}' is not used in pipeline '{pipeline}'")
+        self.param = param
+        self.pipeline = pipeline
+
+
+class InvalidPipelineParamType(CustomException):
+    def __init__(self, param: str, expected_type: type, actual_type: type):
+        super().__init__(
+            f"Parameter '{param}' has invalid type. Expected '{expected_type.__name__}', got '{actual_type.__name__}'"
+        )
+        self.param = param
+        self.expected_type = expected_type
+        self.actual_type = actual_type
+
+
+PipelineConfigError = (
+    PipelineNotFound
+    | InvalidPipelineConfig
+    | UnusedPipelineParam
+    | InvalidPipelineParamType
+)
 
 
 # ------------------------- Handle Registration of Pipelines ------------------------- #
@@ -103,31 +129,53 @@ def _sweep(
     sweep: dict[str, Param],
     params: dict[str, Param],
     pipe: type[Pipeline],
-) -> list[tuple[type[Pipeline], dict[str, Param]]]:
+) -> list[tuple[type[Pipeline], dict[str, Param]]] | PipelineConfigError:
     keys, values = zip(*sweep.items())
     results: list[tuple[type[Pipeline], dict[str, Param]]] = []
     for options in itertools.product(*values):
         p = params.copy()
         for k, o in zip(keys, options):
             p[k] = o
+        err = validate_params(pipe, p)
+        if err is not None:
+            return err
         results.append((pipe, p))
     return results
 
 
-ConfigError = PipelineNotFound | InvalidPipelineConfig
+def validate_params(
+    pipe: type[Pipeline],
+    params: dict[str, Param],
+) -> None | PipelineConfigError:
+    """Validate the parameters for a given pipeline.
+
+    Args:
+        pipe (type[Pipeline]): The pipeline class.
+        params (dict[str, Param]): The parameters to validate.
+
+    Returns:
+        Optional[PipelineConfigError]: An error if validation fails, otherwise None.
+    """
+    default_params = pipe.default_params()
+    for p in params:
+        if p not in default_params:
+            return UnusedPipelineParam(p, pipe.name())
+
+        expected_type = type(default_params[p])
+        actual_type = type(params[p])
+        if actual_type != expected_type:
+            return InvalidPipelineParamType(p, expected_type, actual_type)
+
+    return None
 
 
 def parse_config(
     p: str | dict[str, Param] | Sequence[str | dict[str, Param]],
-) -> list[tuple[type[Pipeline], dict[str, Param]]] | ConfigError:
+) -> list[tuple[type[Pipeline], dict[str, Param]]] | PipelineConfigError:
     """Parse a pipeline configuration.
 
     Args:
         p (str | dict[str, Param] | Sequence[str | dict[str, Param]]): The pipeline configuration.
-
-    Raises:
-        ValueError: If the pipeline is not found.
-        ValueError: If the configuration is invalid.
 
     Returns:
         list[tuple[type[Pipeline], dict[str, Param]]]: A list of tuples containing the pipeline class and its parameters.
@@ -151,12 +199,16 @@ def parse_config(
             sweep = cast(dict[str, Param], p.pop("sweep"))
             return _sweep(sweep, p, pipe)
         else:
+            err = validate_params(pipe, p)
+            if err is not None:
+                return err
+
             return [(pipe, p)]
 
     elif isinstance(p, list):
         results = [parse_config(x) for x in p]
         for r in results:
-            if isinstance(r, ConfigError):
+            if isinstance(r, PipelineConfigError):
                 return r
         results = cast(list[list[tuple[type[Pipeline], dict[str, Param]]]], results)
         return list(itertools.chain.from_iterable(results))

@@ -2,30 +2,34 @@ import importlib
 from inspect import isclass
 import itertools
 from types import ModuleType
-from typing import Callable, Optional, Sequence, TypedDict, cast
+from typing import Callable, NotRequired, Optional, Sequence, TypedDict, cast
 
 from evalio import datasets
 from evalio.datasets.base import Dataset
+from evalio.utils import CustomException
 
 _DATASETS: set[type[Dataset]] = set()
 
 
-class DatasetNotFound(Exception):
+class DatasetNotFound(CustomException):
     def __init__(self, name: str):
         super().__init__(f"Dataset '{name}' not found")
         self.name = name
 
 
-class SequenceNotFound(Exception):
+class SequenceNotFound(CustomException):
     def __init__(self, name: str):
         super().__init__(f"Sequence '{name}' not found")
         self.name = name
 
 
-class InvalidDatasetConfig(Exception):
+class InvalidDatasetConfig(CustomException):
     def __init__(self, config: str):
         super().__init__(f"Invalid config: '{config}'")
         self.config = config
+
+
+DatasetConfigError = DatasetNotFound | SequenceNotFound | InvalidDatasetConfig
 
 
 # ------------------------- Handle Registration of Datasets ------------------------- #
@@ -91,22 +95,19 @@ register_dataset(module=datasets)
 # ------------------------- Handle yaml parsing ------------------------- #
 class DatasetConfig(TypedDict):
     name: str
-    length: Optional[int]
-
-
-ConfigError = DatasetNotFound | SequenceNotFound | InvalidDatasetConfig
+    length: NotRequired[Optional[int]]
 
 
 def parse_config(
     d: str | DatasetConfig | Sequence[str | DatasetConfig],
-) -> list[tuple[Dataset, int]] | ConfigError:
+) -> list[tuple[Dataset, int]] | DatasetConfigError:
     name: Optional[str] = None
     length: Optional[int] = None
     # If given a list of values
     if isinstance(d, list):
         results = [parse_config(x) for x in d]
         for r in results:
-            if isinstance(r, ConfigError):
+            if isinstance(r, DatasetConfigError):
                 return r
         results = cast(list[list[tuple[Dataset, int]]], results)
         return list(itertools.chain.from_iterable(results))
@@ -122,7 +123,7 @@ def parse_config(
         return InvalidDatasetConfig(str(d))
 
     if name is None:  # type: ignore
-        return InvalidDatasetConfig(str(d))
+        return InvalidDatasetConfig("Missing 'name' in dataset config")
 
     length_lambda: Callable[[Dataset], int]
     if length is None:
