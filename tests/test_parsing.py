@@ -62,9 +62,9 @@ PIPELINES: list[Any] = [
     ({"pipeline": "fake", "param1": 5}, [("fake", FakePipeline, {"param1": 5})]),
     (["fake", {"pipeline": "fake", "param1": 3}], [("fake", FakePipeline, {}), ("fake", FakePipeline, {"param1": 3})]),
     ({"pipeline": "fake", "sweep": {"param1": [1, 2, 3]}}, [
-        ("fake", FakePipeline, {"param1": 1}),
-        ("fake", FakePipeline, {"param1": 2}),
-        ("fake", FakePipeline, {"param1": 3}),
+        ("fake__param1-1", FakePipeline, {"param1": 1}),
+        ("fake__param1-2", FakePipeline, {"param1": 2}),
+        ("fake__param1-3", FakePipeline, {"param1": 3}),
     ]),
     # bad ones
     ("unknown", pl.PipelineNotFound("unknown")),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import importlib
 from inspect import isclass
 import itertools
@@ -129,13 +130,15 @@ def _sweep(
     keys, values = zip(*sweep.items())
     results: list[tuple[str, type[Pipeline], dict[str, Param]]] = []
     for options in itertools.product(*values):
+        parsed_name = deepcopy(name)
         p = params.copy()
         for k, o in zip(keys, options):
             p[k] = o
+            parsed_name += f"__{k}-{o}"
         err = validate_params(pipe, p)
         if err is not None:
             return err
-        results.append((name, pipe, p))
+        results.append((parsed_name, pipe, p))
     return results
 
 

@@ -202,6 +202,7 @@ def run_from_cli(
     # save_config(pipelines, datasets, out)
 
     # ------------------------- Convert to experiments ------------------------- #
+    out.mkdir(parents=True, exist_ok=True)
     experiments = [
         ty.Experiment(
             name=name,
@@ -246,7 +247,7 @@ def run(
     for exp in experiments:
         # For the type checker
         if (
-            isinstance(exp.sequence, str)  # type: ignore
+            not isinstance(exp.sequence, ds.Dataset)
             or isinstance(exp.pipeline, str)
             or exp.file is None
         ):
@@ -256,11 +257,6 @@ def run(
         if not (gt_file := exp.file.parent / "gt.csv").exists():
             exp.sequence.ground_truth().to_file(gt_file)
 
-        # start vis if needed
-        if prev_dataset != exp.sequence:
-            prev_dataset = exp.sequence
-            vis.new_dataset(exp.sequence)
-
         # Figure out the status of the experiment
         if not exp.file.exists() or exp.file.stat().st_size == 0:
             status = ty.ExperimentStatus.NotRun
@@ -269,7 +265,12 @@ def run(
             if isinstance(traj, ty.Trajectory) and isinstance(
                 traj.metadata, ty.Experiment
             ):
-                status = traj.metadata.status
+                # If the sequence length has changed, mark as not run
+                if traj.metadata.sequence_length != exp.sequence_length:
+                    status = ty.ExperimentStatus.NotRun
+                else:
+                    status = traj.metadata.status
+
             else:
                 status = ty.ExperimentStatus.Fail
 
@@ -289,6 +290,11 @@ def run(
                 print(f"Overwriting {info}")
             case ty.ExperimentStatus.NotRun:
                 print(f"Running {info}")
+
+        # start vis if needed
+        if prev_dataset != exp.sequence:
+            prev_dataset = exp.sequence
+            vis.new_dataset(exp.sequence)
 
         # Run the pipeline in a different process so we can recover from segfaults
         process = multiprocessing.Process(target=run_single, args=(exp, vis))
@@ -324,6 +330,7 @@ def run_single(
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
     pipe, dataset = cast(tuple[pl.Pipeline, ds.Dataset], output)
+    exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
     traj.open(exp.file)
     vis.new_pipe(exp.name)

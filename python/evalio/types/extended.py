@@ -55,6 +55,8 @@ class Experiment(Metadata):
     def from_dict(cls, data: dict[str, Any]) -> Self:
         if "status" in data:
             data["status"] = ExperimentStatus(data["status"])
+        else:
+            data["status"] = ExperimentStatus.Started
 
         return super().from_dict(data)
 
@@ -70,9 +72,12 @@ class Experiment(Metadata):
         else:
             ThisPipeline = self.pipeline
 
-        dataset = ds.get_sequence(self.sequence)
-        if isinstance(dataset, ds.SequenceNotFound):
-            return dataset
+        if isinstance(self.sequence, ds.Dataset):
+            dataset = self.sequence
+        else:
+            dataset = ds.get_sequence(self.sequence)
+            if isinstance(dataset, ds.SequenceNotFound):
+                return dataset
 
         pipe = ThisPipeline()
 
