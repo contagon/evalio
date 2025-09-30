@@ -7,7 +7,6 @@ import numpy as np
 import typer
 from numpy.typing import NDArray
 
-from evalio.cli.parser import PipelineBuilder
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
 from evalio.stats import _check_overstep
@@ -74,12 +73,13 @@ try:
     )
 
     class RerunVis:  # type: ignore
-        def __init__(self, args: VisArgs):
+        def __init__(self, args: VisArgs, pipeline_names: list[str]):
             self.args = args
 
             # To be set during new_recording
             self.lidar_params: Optional[LidarParams] = None
             self.gt: Optional[Trajectory] = None
+            self.pipeline_names = pipeline_names
 
             # To be found during log
             self.gt_o_T_imu_o: Optional[SE3] = None
@@ -108,15 +108,13 @@ try:
                 + [skybox_light_rgb(dir) for dir in directions]
             )
 
-        def _blueprint(self, pipelines: list[PipelineBuilder]) -> rr.BlueprintLike:
+        def _blueprint(self) -> rr.BlueprintLike:
             # Eventually we'll be able to glob these, but for now, just take in the names beforehand
             # https://github.com/rerun-io/rerun/issues/6673
             # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
             overrides: OverrideType = {
-                f"{p.name}/imu": [
-                    rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)
-                ]
-                for p in pipelines
+                f"{n}/imu": [rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)]
+                for n in self.pipeline_names
             }
 
             if self.args.image:
@@ -130,7 +128,7 @@ try:
             else:
                 return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
 
-        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
+        def new_dataset(self, dataset: Dataset):
             if not self.args.show:
                 return
 
@@ -141,7 +139,7 @@ try:
             }
             self.rec = rr.RecordingStream(**self.recording_params)
             self.rec.connect_grpc()
-            self.rec.send_blueprint(self._blueprint(pipelines))
+            self.rec.send_blueprint(self._blueprint())
 
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
@@ -453,11 +451,11 @@ try:
 except Exception:
 
     class RerunVis:
-        def __init__(self, args: VisArgs) -> None:
+        def __init__(self, args: VisArgs, pipeline_names: list[str]) -> None:
             if args.show:
                 print_warning("Rerun not found, visualization disabled")
 
-        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
+        def new_dataset(self, dataset: Dataset):
             pass
 
         def log(

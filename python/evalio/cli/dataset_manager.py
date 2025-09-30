@@ -21,13 +21,26 @@ from rosbags.rosbag2 import (
 )
 from rosbags.typesys import Stores, get_typestore
 
-from evalio.datasets import RosbagIter
+import evalio.datasets as ds
 from evalio.utils import print_warning
 
 from .completions import DatasetArg
-from .parser import DatasetBuilder
 
 app = typer.Typer()
+
+
+def parse_datasets(
+    datasets: DatasetArg,
+) -> list[ds.Dataset]:
+    """
+    Parse datasets from command line argument
+    """
+    # parse all datasets
+    valid_datasets = ds.parse_config(datasets)
+    if isinstance(valid_datasets, ds.DatasetConfigError):
+        print_warning(f"Error parsing datasets: {valid_datasets}")
+        return []
+    return [b[0] for b in valid_datasets]
 
 
 @app.command(no_args_is_help=True)
@@ -36,15 +49,15 @@ def dl(datasets: DatasetArg) -> None:
     Download datasets
     """
     # parse all datasets
-    valid_datasets = DatasetBuilder.parse(datasets)
+    valid_datasets = parse_datasets(datasets)
 
     # Check if already downloaded
-    to_download: list[DatasetBuilder] = []
-    for builder in valid_datasets:
-        if builder.is_downloaded():
-            print(f"Skipping download for {builder}, already exists")
+    to_download: list[ds.Dataset] = []
+    for dataset in valid_datasets:
+        if dataset.is_downloaded():
+            print(f"Skipping download for {dataset}, already exists")
         else:
-            to_download.append(builder)
+            to_download.append(dataset)
 
     if len(to_download) == 0:
         print("Nothing to download, finishing")
@@ -52,17 +65,17 @@ def dl(datasets: DatasetArg) -> None:
 
     # download each dataset
     print("Will download: ")
-    for builder in to_download:
-        print(f"  {builder}")
+    for dataset in to_download:
+        print(f"  {dataset}")
     print()
 
-    for builder in to_download:
-        print(f"---------- Beginning {builder} ----------")
+    for dataset in to_download:
+        print(f"---------- Beginning {dataset} ----------")
         try:
-            builder.download()
+            dataset.download()
         except Exception as e:
-            print(f"Error downloading {builder}\n: {e}")
-        print(f"---------- Finished {builder} ----------")
+            print(f"Error downloading {dataset}\n: {e}")
+        print(f"---------- Finished {dataset} ----------")
 
 
 @app.command(no_args_is_help=True)
@@ -84,26 +97,26 @@ def rm(
     If --force is not used, will ask for confirmation.
     """
     # parse all datasets
-    to_remove = DatasetBuilder.parse(datasets)
+    to_remove = parse_datasets(datasets)
 
     print("Will remove: ")
-    for builder in to_remove:
-        print(f"  {builder}")
+    for dataset in to_remove:
+        print(f"  {dataset}")
     print()
 
-    for builder in to_remove:
-        print(f"---------- Beginning {builder} ----------")
+    for dataset in to_remove:
+        print(f"---------- Beginning {dataset} ----------")
         try:
-            print(f"Removing from {builder.dataset.folder}")
-            for f in builder.dataset.files():
+            print(f"Removing from {dataset.folder}")
+            for f in dataset.files():
                 print(f"  Removing {f}")
-                if (builder.dataset.folder / f).is_file():
-                    (builder.dataset.folder / f).unlink()
+                if (dataset.folder / f).is_file():
+                    (dataset.folder / f).unlink()
                 else:
-                    shutil.rmtree(builder.dataset.folder / f, ignore_errors=True)
+                    shutil.rmtree(dataset.folder / f, ignore_errors=True)
         except Exception as e:
-            print(f"Error removing {builder}\n: {e}")
-        print(f"---------- Finished {builder} ----------")
+            print(f"Error removing {dataset}\n: {e}")
+        print(f"---------- Finished {dataset} ----------")
 
 
 def filter_ros1(bag: Path, topics: list[str]) -> None:
@@ -215,27 +228,27 @@ def filter(
     Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.
     """
     # parse all datasets
-    valid_datasets = DatasetBuilder.parse(datasets)
+    valid_datasets = parse_datasets(datasets)
 
     # Check if already downloaded
-    to_filter: list[DatasetBuilder] = []
-    for builder in valid_datasets:
-        if not builder.is_downloaded():
-            print(f"Skipping filter for {builder}, not downloaded")
+    to_filter: list[ds.Dataset] = []
+    for dataset in valid_datasets:
+        if not dataset.is_downloaded():
+            print(f"Skipping filter for {dataset}, not downloaded")
         else:
-            to_filter.append(builder)
+            to_filter.append(dataset)
 
     print("Will filter: ")
-    for builder in to_filter:
-        print(f"  {builder}")
+    for dataset in to_filter:
+        print(f"  {dataset}")
     print()
 
-    for builder in to_filter:
-        print(f"---------- Filtering {builder} ----------")
+    for dataset in to_filter:
+        print(f"---------- Filtering {dataset} ----------")
         # try:
-        data = builder.build().data_iter()
-        if not isinstance(data, RosbagIter):
-            print(f"{builder} is not a RosbagDataset, skipping filtering")
+        data = dataset.data_iter()
+        if not isinstance(data, ds.RosbagIter):
+            print(f"{dataset} is not a RosbagDataset, skipping filtering")
             continue
 
         is2 = (data.path[0] / "metadata.yaml").exists()
@@ -266,5 +279,5 @@ def filter(
                 filter_ros1(bag, topics)
 
         # except Exception as e:
-        #     print(f"Error filtering {builder}\n: {e}")
-        print(f"---------- Finished {builder} ----------")
+        #     print(f"Error filtering {dataset}\n: {e}")
+        print(f"---------- Finished {dataset} ----------")

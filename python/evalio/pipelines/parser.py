@@ -123,10 +123,11 @@ register_pipeline(module=pipelines)
 def _sweep(
     sweep: dict[str, Param],
     params: dict[str, Param],
+    name: str,
     pipe: type[Pipeline],
-) -> list[tuple[type[Pipeline], dict[str, Param]]] | PipelineConfigError:
+) -> list[tuple[str, type[Pipeline], dict[str, Param]]] | PipelineConfigError:
     keys, values = zip(*sweep.items())
-    results: list[tuple[type[Pipeline], dict[str, Param]]] = []
+    results: list[tuple[str, type[Pipeline], dict[str, Param]]] = []
     for options in itertools.product(*values):
         p = params.copy()
         for k, o in zip(keys, options):
@@ -134,7 +135,7 @@ def _sweep(
         err = validate_params(pipe, p)
         if err is not None:
             return err
-        results.append((pipe, p))
+        results.append((name, pipe, p))
     return results
 
 
@@ -166,7 +167,7 @@ def validate_params(
 
 def parse_config(
     p: str | dict[str, Param] | Sequence[str | dict[str, Param]],
-) -> list[tuple[type[Pipeline], dict[str, Param]]] | PipelineConfigError:
+) -> list[tuple[str, type[Pipeline], dict[str, Param]]] | PipelineConfigError:
     """Parse a pipeline configuration.
 
     Args:
@@ -179,33 +180,41 @@ def parse_config(
         pipe = get_pipeline(p)
         if isinstance(pipe, PipelineNotFound):
             return pipe
-        return [(pipe, {})]
+        return [(p, pipe, {})]
 
     elif isinstance(p, dict):
+        pipe_name = p.pop("pipeline", None)
+        if pipe_name is None:
+            return InvalidPipelineConfig(f"Need pipeline name: {str(p)}")
+        pipe_name = cast(str, pipe_name)
+
         name = p.pop("name", None)
         if name is None:
-            return InvalidPipelineConfig(f"Need pipeline name: {str(p)}")
+            name = pipe_name
+        name = cast(str, name)
 
-        pipe = get_pipeline(cast(str, name))
+        pipe = get_pipeline(pipe_name)
         if isinstance(pipe, PipelineNotFound):
             return pipe
 
         if "sweep" in p:
             sweep = cast(dict[str, Param], p.pop("sweep"))
-            return _sweep(sweep, p, pipe)
+            return _sweep(sweep, p, name, pipe)
         else:
             err = validate_params(pipe, p)
             if err is not None:
                 return err
 
-            return [(pipe, p)]
+            return [(name, pipe, p)]
 
     elif isinstance(p, list):
         results = [parse_config(x) for x in p]
         for r in results:
             if isinstance(r, PipelineConfigError):
                 return r
-        results = cast(list[list[tuple[type[Pipeline], dict[str, Param]]]], results)
+        results = cast(
+            list[list[tuple[str, type[Pipeline], dict[str, Param]]]], results
+        )
         return list(itertools.chain.from_iterable(results))
 
     else:

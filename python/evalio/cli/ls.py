@@ -7,9 +7,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from evalio.datasets.base import Dataset
-
-from .parser import DatasetBuilder, PipelineBuilder
+from evalio import datasets as ds, pipelines as pl
 
 app = typer.Typer()
 
@@ -25,7 +23,7 @@ def unique(lst: list[T]):
     return list(dict.fromkeys(lst))
 
 
-def extract_len(d: Dataset) -> str:
+def extract_len(d: ds.Dataset) -> str:
     """Get the length of a dataset in a human readable format
 
     Args:
@@ -88,7 +86,7 @@ def ls(
     if kind == Kind.datasets:
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
-        all_datasets = list(DatasetBuilder.all_datasets().values())
+        all_datasets = list(ds.all_datasets().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.dataset_name() for d in all_datasets], score_cutoff=90
@@ -206,7 +204,7 @@ def ls(
     if kind == Kind.pipelines:
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
-        all_pipelines = list(PipelineBuilder.all_pipelines().values())
+        all_pipelines = list(pl.all_pipelines().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.name() for d in all_pipelines], score_cutoff=90

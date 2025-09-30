@@ -17,23 +17,24 @@ class ExperimentStatus(Enum):
     Complete = "complete"
     Fail = "fail"
     Started = "started"
+    NotRun = "not_run"
 
 
 @dataclass(kw_only=True)
 class Experiment(Metadata):
     name: str
     """Name of the experiment."""
-    sequence: str
+    sequence: str | ds.Dataset
     """Dataset used to run the experiment."""
     sequence_length: int
     """Length of the sequence, if set"""
-    pipeline: str
+    pipeline: str | type[pl.Pipeline]
     """Pipeline used to generate the trajectory."""
     pipeline_version: str
     """Version of the pipeline used."""
     pipeline_params: dict[str, Param]
     """Parameters used for the pipeline."""
-    status: ExperimentStatus = ExperimentStatus.Started
+    status: ExperimentStatus = ExperimentStatus.NotRun
     """Status of the experiment, e.g. "success", "failure", etc."""
     total_elapsed: Optional[float] = None
     """Total time taken for the experiment, as a string."""
@@ -43,6 +44,11 @@ class Experiment(Metadata):
     def to_dict(self) -> dict[str, Any]:
         d = super().to_dict()
         d["status"] = self.status.value
+        if isinstance(self.pipeline, type):
+            d["pipeline"] = self.pipeline.name()
+        if isinstance(self.sequence, ds.Dataset):
+            d["sequence"] = self.sequence.full_name
+
         return d
 
     @classmethod
@@ -52,12 +58,17 @@ class Experiment(Metadata):
 
         return super().from_dict(data)
 
-    def make_pipeline(
+    def setup(
         self,
-    ) -> pl.Pipeline | ds.DatasetConfigError | pl.PipelineConfigError:
-        ThisPipeline = pl.get_pipeline(self.pipeline)
-        if isinstance(ThisPipeline, pl.PipelineNotFound):
-            return ThisPipeline
+    ) -> (
+        tuple[pl.Pipeline, ds.Dataset] | ds.DatasetConfigError | pl.PipelineConfigError
+    ):
+        if isinstance(self.pipeline, str):
+            ThisPipeline = pl.get_pipeline(self.pipeline)
+            if isinstance(ThisPipeline, pl.PipelineNotFound):
+                return ThisPipeline
+        else:
+            ThisPipeline = self.pipeline
 
         dataset = ds.get_sequence(self.sequence)
         if isinstance(dataset, ds.SequenceNotFound):
@@ -82,4 +93,4 @@ class Experiment(Metadata):
         # Initialize pipeline
         pipe.initialize()
 
-        return pipe
+        return pipe, dataset

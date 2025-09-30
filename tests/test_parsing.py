@@ -56,23 +56,24 @@ pl.register_pipeline(FakePipeline)
 # fmt: off
 PIPELINES: list[Any] = [
     # good ones
-    ("fake", [(FakePipeline, {})]),
-    ({"name": "fake"}, [(FakePipeline, {})]),
-    ({"name": "fake", "param1": 5}, [(FakePipeline, {"param1": 5})]),
-    (["fake", {"name": "fake", "param1": 3}], [(FakePipeline, {}), (FakePipeline, {"param1": 3})]),
-    ({"name": "fake", "sweep": {"param1": [1, 2, 3]}}, [
-        (FakePipeline, {"param1": 1}),
-        (FakePipeline, {"param1": 2}),
-        (FakePipeline, {"param1": 3}),
+    ("fake", [("fake", FakePipeline, {})]),
+    ({"pipeline": "fake"}, [("fake", FakePipeline, {})]),
+    ({"name": "test", "pipeline": "fake"}, [("test", FakePipeline, {})]),
+    ({"pipeline": "fake", "param1": 5}, [("fake", FakePipeline, {"param1": 5})]),
+    (["fake", {"pipeline": "fake", "param1": 3}], [("fake", FakePipeline, {}), ("fake", FakePipeline, {"param1": 3})]),
+    ({"pipeline": "fake", "sweep": {"param1": [1, 2, 3]}}, [
+        ("fake", FakePipeline, {"param1": 1}),
+        ("fake", FakePipeline, {"param1": 2}),
+        ("fake", FakePipeline, {"param1": 3}),
     ]),
     # bad ones
     ("unknown", pl.PipelineNotFound("unknown")),
-    ({"name": "unknown"}, pl.PipelineNotFound("unknown")),
+    ({"pipeline": "unknown"}, pl.PipelineNotFound("unknown")),
     ({"param1": 5}, pl.InvalidPipelineConfig("Need pipeline name: {'param1': 5}")), # type: ignore
-    ({"name": "fake", "param3": 10}, pl.UnusedPipelineParam("param3", "fake")),
-    ({"name": "fake", "param1": "wrong_type"}, pl.InvalidPipelineParamType("param1", int, str)),
-    ({"name": "fake", "sweep": {"param1": [1.0, 2, 3]}}, pl.InvalidPipelineParamType("param1", int, float)),
-    ({"name": "fake", "sweep": {"param3": [1.0, 2, 3]}}, pl.UnusedPipelineParam("param3", "fake")),
+    ({"pipeline": "fake", "param3": 10}, pl.UnusedPipelineParam("param3", "fake")),
+    ({"pipeline": "fake", "param1": "wrong_type"}, pl.InvalidPipelineParamType("param1", int, str)),
+    ({"pipeline": "fake", "sweep": {"param1": [1.0, 2, 3]}}, pl.InvalidPipelineParamType("param1", int, float)),
+    ({"pipeline": "fake", "sweep": {"param3": [1.0, 2, 3]}}, pl.UnusedPipelineParam("param3", "fake")),
 ]
 # fmt: on
 

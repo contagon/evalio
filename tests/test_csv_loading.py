@@ -4,8 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from evalio.cli.parser import DatasetBuilder
-from evalio.datasets.base import Dataset
+import evalio.datasets as ds
 from evalio.types import (
     SE3,
     GroundTruth,
@@ -18,7 +17,7 @@ from utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
 data_dir = Path("tests/data")
-dataset_classes = DatasetBuilder.all_datasets()
+dataset_classes = ds.all_datasets()
 datasets = [
     cls.sequences()[0]
     for cls in dataset_classes.values()
@@ -31,7 +30,7 @@ datasets = [
 
 
 @pytest.mark.parametrize("dataset", datasets)
-def test_load_imu(dataset: Dataset):
+def test_load_imu(dataset: ds.Dataset):
     imu = dataset.get_one_imu()
     with open(data_dir / f"imu_{dataset.dataset_name()}.pkl", "rb") as f:
         imu_cached: ImuMeasurement = pickle.load(f)
@@ -42,7 +41,7 @@ def test_load_imu(dataset: Dataset):
 
 
 @pytest.mark.parametrize("dataset", datasets)
-def test_load_lidar(dataset: Dataset):
+def test_load_lidar(dataset: ds.Dataset):
     lidar = dataset.get_one_lidar()
     with open(data_dir / f"lidar_{dataset.dataset_name()}.pkl", "rb") as f:
         lidar_cached: LidarMeasurement = pickle.load(f)

@@ -1,25 +1,51 @@
+import multiprocessing
 from pathlib import Path
-from typing import Annotated, Optional
-
-import numpy as np
-import typer
-from rich import print
-from tqdm.rich import tqdm
-
 from evalio.cli.completions import DatasetOpt, PipelineOpt
-from evalio.rerun import RerunVis, VisArgs
-from evalio.types import ImuMeasurement, LidarMeasurement
+from evalio.types.base import Trajectory
 from evalio.utils import print_warning
+from tqdm.rich import tqdm
+import yaml
 
-from .parser import DatasetBuilder, PipelineBuilder, parse_config
-from .stats import eval
-from .writer import TrajectoryWriter, save_config, save_gt
+from evalio import datasets as ds, pipelines as pl, types as ty
+from evalio.rerun import RerunVis, VisArgs
+
+# from .stats import evaluate
+
+from rich import print
+from typing import Optional, Annotated, cast
+import typer
+
+from time import time
+
 
 app = typer.Typer()
 
 
+# def save_config(
+#     pipelines: Sequence[PipelineBuilder],
+#     datasets: Sequence[DatasetBuilder],
+#     output: Path,
+# ):
+#     # If it's just a file, don't save the entire config file
+#     if output.suffix == ".csv":
+#         return
+
+#     print(f"Saving config to {output}")
+
+#     output.mkdir(parents=True, exist_ok=True)
+#     path = output / "config.yaml"
+
+#     out = dict()
+#     out["datasets"] = [d.as_dict() for d in datasets]
+#     out["pipelines"] = [p.as_dict() for p in pipelines]
+
+#     with open(path, "w") as f:
+#         yaml.dump(out, f)
+
+
 @app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
 def run_from_cli(
+    # Config file
     config: Annotated[
         Optional[Path],
         typer.Option(
@@ -30,6 +56,7 @@ def run_from_cli(
             show_default=False,
         ),
     ] = None,
+    # Manual options
     in_datasets: DatasetOpt = None,
     in_pipelines: PipelineOpt = None,
     in_out: Annotated[
@@ -42,6 +69,7 @@ def run_from_cli(
             show_default=False,
         ),
     ] = None,
+    # misc options
     length: Annotated[
         Optional[int],
         typer.Option(
@@ -71,25 +99,43 @@ def run_from_cli(
             parser=VisArgs.parse,
         ),
     ] = None,
+    rerun_failed: Annotated[
+        bool,
+        typer.Option(
+            "--rerun-failed",
+            help="Rerun failed experiments. If not set, will skip previously failed experiments.",
+            show_default=False,
+        ),
+    ] = False,
 ):
     if (in_pipelines or in_datasets or length) and config:
         raise typer.BadParameter(
             "Cannot specify both config and manual options", param_hint="run"
         )
 
-    # Go through visualization options
-    if show is None:
-        vis_args = VisArgs(show=visualize)
-    else:
-        vis_args = show
-    vis = RerunVis(vis_args)
-
-    # Parse the config file if provided
+    # ------------------------- Parse Config file ------------------------- #
     if config is not None:
-        pipelines, datasets, out = parse_config(config)
-        if out is None:
-            out = Path("./evalio_results") / config.stem
+        # load from yaml
+        with open(config, "r") as f:
+            params = yaml.safe_load(f)
 
+        if "datasets" not in params:
+            raise typer.BadParameter(
+                "No datasets specified in config", param_hint="run"
+            )
+        if "pipelines" not in params:
+            raise typer.BadParameter(
+                "No pipelines specified in config", param_hint="run"
+            )
+
+        datasets = ds.parse_config(params.get("datasets", None))
+        pipelines = pl.parse_config(params.get("pipelines", None))
+
+        out = (
+            params["output_dir"] if "output_dir" in params else Path("./evalio_results")
+        )
+
+    # ------------------------- Parse manual options ------------------------- #
     else:
         if in_pipelines is None:
             raise typer.BadParameter(
@@ -100,12 +146,15 @@ def run_from_cli(
                 "Must specify at least one dataset", param_hint="run"
             )
 
-        pipelines = PipelineBuilder.parse(in_pipelines)
-        datasets = DatasetBuilder.parse(in_datasets)
+        if length is not None:
+            temp_datasets: list[ds.DatasetConfig] = [
+                {"name": d, "length": length} for d in in_datasets
+            ]
+        else:
+            temp_datasets = [{"name": d} for d in in_datasets]
 
-        if length:
-            for d in datasets:
-                d.length = length
+        pipelines = pl.parse_config(in_pipelines)
+        datasets = ds.parse_config(temp_datasets)
 
         if in_out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
@@ -113,33 +162,27 @@ def run_from_cli(
         else:
             out = in_out
 
+    # ------------------------- Miscellaneous ------------------------- #
+    # error out if either is wrong
+    if isinstance(datasets, ds.DatasetConfigError):
+        raise typer.BadParameter(
+            f"Error in datasets config: {datasets}", param_hint="run"
+        )
+    if isinstance(pipelines, pl.PipelineConfigError):
+        raise typer.BadParameter(
+            f"Error in pipelines config: {pipelines}", param_hint="run"
+        )
+
     if out.suffix == ".csv" and (len(pipelines) > 1 or len(datasets) > 1):
         raise typer.BadParameter(
             "Output must be a directory when running multiple experiments",
             param_hint="run",
         )
 
-    run(pipelines, datasets, out, vis)
-
-
-def plural(num: int, word: str) -> str:
-    return f"{num} {word}{'s' if num > 1 else ''}"
-
-
-def run(
-    pipelines: list[PipelineBuilder],
-    datasets: list[DatasetBuilder],
-    output: Path,
-    vis: RerunVis,
-):
     print(
-        f"Running {plural(len(pipelines), 'pipeline')} on {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
+        f"Running {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
-    lengths = [
-        min(d.length if d.length is not None else np.inf, len(d.build()))
-        for d in datasets
-    ]
-    dtime = sum(le / d.dataset.lidar_params().rate for le, d in zip(lengths, datasets))  # type: ignore
+    dtime = sum(le / d.lidar_params().rate for d, le in datasets)
     dtime *= len(pipelines)
     if dtime > 3600:
         print(f"Estimated time (if real-time): {dtime / 3600:.2f} hours")
@@ -147,43 +190,177 @@ def run(
         print(f"Estimated time (if real-time): {dtime / 60:.2f} minutes")
     else:
         print(f"Estimated time (if real-time): {dtime:.2f} seconds")
-    print(f"Output will be saved to {output}\n")
-    save_config(pipelines, datasets, output)
+    print(f"Output will be saved to {out}\n")
 
-    for dbuilder in datasets:
-        save_gt(output, dbuilder)
-        vis.new_recording(dbuilder.build(), pipelines)
+    # Go through visualization options
+    if show is None:
+        vis_args = VisArgs(show=visualize)
+    else:
+        vis_args = show
+    vis = RerunVis(vis_args, [p[0] for p in pipelines])
 
-        # Found how much we'll be iterating
-        length = len(dbuilder.build().data_iter())
-        if dbuilder.length is not None and dbuilder.length < length:
-            length = dbuilder.length
+    # save_config(pipelines, datasets, out)
 
-        for pbuilder in pipelines:
-            print(f"Running {pbuilder} on {dbuilder}")
-            # Build everything
-            dataset = dbuilder.build()
-            pipe = pbuilder.build(dataset)
-            writer = TrajectoryWriter(output, pbuilder, dbuilder)
-            vis.new_pipe(pbuilder.name)
+    # ------------------------- Convert to experiments ------------------------- #
+    experiments = [
+        ty.Experiment(
+            name=name,
+            sequence=sequence,
+            sequence_length=length,
+            pipeline=pipeline,
+            pipeline_version=pipeline.version(),
+            pipeline_params=params,
+            file=out / f"{name}.csv",
+        )
+        for sequence, length in datasets
+        for name, pipeline, params in pipelines
+    ]
 
-            # Run the pipeline
-            loop = tqdm(total=length)
-            for data in dbuilder.build():
-                if isinstance(data, ImuMeasurement):
-                    pipe.add_imu(data)
-                elif isinstance(data, LidarMeasurement):  # pyright: ignore reportUnnecessaryIsInstance
-                    features = pipe.add_lidar(data)
-                    pose = pipe.pose()
-                    writer.write(data.stamp, pose)
+    run(experiments, vis, rerun_failed)
 
-                    vis.log(data, features, pose, pipe)
 
-                    loop.update()
-                    if loop.n >= length:
-                        loop.close()
-                        break
+def plural(num: int, word: str) -> str:
+    return f"{num} {word}{'s' if num > 1 else ''}"
 
-            writer.close()
 
-    eval([str(output)], False, "RTEt")
+def run(
+    experiments: list[ty.Experiment],
+    vis: RerunVis,
+    rerun_failed: bool,
+):
+    # Make sure everything is in the experiments that we need
+    len_before = len(experiments)
+    experiments = [
+        exp
+        for exp in experiments
+        if isinstance(exp.sequence, ds.Dataset)
+        and not isinstance(exp.pipeline, str)
+        and exp.file is not None
+    ]
+    if len(experiments) < len_before:
+        print_warning(
+            f"Some experiments were invalid and will be skipped ({len_before - len(experiments)} out of {len_before})"
+        )
+
+    prev_dataset = None
+    for exp in experiments:
+        # For the type checker
+        if (
+            isinstance(exp.sequence, str)  # type: ignore
+            or isinstance(exp.pipeline, str)
+            or exp.file is None
+        ):
+            continue
+
+        # save ground truth if we haven't already
+        if not (gt_file := exp.file.parent / "gt.csv").exists():
+            exp.sequence.ground_truth().to_file(gt_file)
+
+        # start vis if needed
+        if prev_dataset != exp.sequence:
+            prev_dataset = exp.sequence
+            vis.new_dataset(exp.sequence)
+
+        # Figure out the status of the experiment
+        if not exp.file.exists() or exp.file.stat().st_size == 0:
+            status = ty.ExperimentStatus.NotRun
+        else:
+            traj = ty.Trajectory.from_file(exp.file)
+            if isinstance(traj, ty.Trajectory) and isinstance(
+                traj.metadata, ty.Experiment
+            ):
+                status = traj.metadata.status
+            else:
+                status = ty.ExperimentStatus.Fail
+
+        # Do something based on the status
+        info = f"{exp.pipeline.name()} on {exp.sequence}"
+        match status:
+            case ty.ExperimentStatus.Complete:
+                print(f"Skipping {info}, already finished")
+                continue
+            case ty.ExperimentStatus.Fail:
+                if rerun_failed:
+                    print(f"Rerunning {info}, previously failed")
+                else:
+                    print(f"Skipping {info}, previously failed")
+                    continue
+            case ty.ExperimentStatus.Started:
+                print(f"Overwriting {info}")
+            case ty.ExperimentStatus.NotRun:
+                print(f"Running {info}")
+
+        # Run the pipeline in a different process so we can recover from segfaults
+        process = multiprocessing.Process(target=run_single, args=(exp, vis))
+        process.start()
+        process.join()
+        exitcode = process.exitcode
+        process.close()
+
+        # If it failed, mark the status as failed
+        if exitcode != 0:
+            exp.status = ty.ExperimentStatus.Fail
+            traj = ty.Trajectory.from_file(exp.file)
+            if isinstance(traj, ty.Trajectory) and isinstance(
+                traj.metadata, ty.Experiment
+            ):
+                traj.metadata = exp
+                traj.to_file()
+            else:
+                Trajectory(metadata=exp).to_file()
+
+    # if len(experiments) > 1:
+    #     if (file := experiments[0].file) is not None:
+    #         evaluate([str(file.parent)])
+
+
+def run_single(
+    exp: ty.Experiment,
+    vis: RerunVis,
+):
+    # Build everything
+    output = exp.setup()
+    if isinstance(output, (ds.DatasetConfigError, pl.PipelineConfigError)):
+        print_warning(f"Error setting up experiment {exp.name}: {output}")
+        return
+    pipe, dataset = cast(tuple[pl.Pipeline, ds.Dataset], output)
+    traj = ty.Trajectory(metadata=exp)
+    traj.open(exp.file)
+    vis.new_pipe(exp.name)
+
+    time_running = 0.0
+    time_max = 0.0
+    time_total = 0.0
+
+    loop = tqdm(total=exp.sequence_length)
+    for data in dataset:
+        if isinstance(data, ty.ImuMeasurement):
+            start = time()
+            pipe.add_imu(data)
+            time_running += time() - start
+        elif isinstance(data, ty.LidarMeasurement):  # type: ignore
+            start = time()
+            features = pipe.add_lidar(data)
+            pose = pipe.pose()
+            time_running += time() - start
+
+            time_total += time_running
+            if time_running > time_max:
+                time_max = time_running
+            time_running = 0.0
+
+            traj.append(data.stamp, pose)
+            vis.log(data, features, pose, pipe)
+
+            loop.update()
+            if loop.n >= exp.sequence_length:
+                loop.close()
+                break
+
+    loop.close()
+    if isinstance(traj.metadata, ty.Experiment):
+        traj.metadata.status = ty.ExperimentStatus.Complete
+        traj.metadata.total_elapsed = time_total
+        traj.metadata.max_step_elapsed = time_max
+    traj.rewrite()
+    traj.close()

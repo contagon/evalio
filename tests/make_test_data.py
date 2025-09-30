@@ -1,9 +1,9 @@
 import pickle  # noqa: F401
 from pathlib import Path
 
-from evalio.cli.parser import DatasetBuilder
+import evalio.datasets as ds
 
-dataset_classes = DatasetBuilder.all_datasets()
+dataset_classes = ds.all_datasets()
 datasets = [
     cls(cls.sequences()[0])
     for cls in dataset_classes.values()

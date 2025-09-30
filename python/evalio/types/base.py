@@ -6,7 +6,7 @@ They MUST not depend on anything else in evalio, or else circular imports will o
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import csv
 from _csv import Writer
 from enum import Enum
@@ -95,9 +95,9 @@ class GroundTruth(Metadata):
 
 @dataclass(kw_only=True)
 class Trajectory:
-    stamps: list[Stamp]
+    stamps: list[Stamp] = field(default_factory=list)
     """List of timestamps for each pose."""
-    poses: list[SE3]
+    poses: list[SE3] = field(default_factory=list)
     """List of poses, in the same order as the timestamps."""
     metadata: Optional[Metadata] = None
     """Metadata associated with the trajectory, such as the dataset name or other information."""
@@ -276,9 +276,23 @@ class Trajectory:
         self._file.write("# timestamp, x, y, z, qx, qy, qz, qw\n")
         self._csv_writer.writerows(self._serialize_pose(s, p) for s, p in self)
 
-    def open(self, path: Path):
-        if self.metadata is not None:
-            self.metadata.file = path
+    def open(self, path: Optional[Path] = None):
+        """Open a CSV file for writing.
+
+        This will overwrite any existing file. If no path is provided, will use the path in the metadata, if it exists.
+
+        Args:
+            path (Optional[Path], optional): Path to the CSV file. Defaults to None.
+        """
+        if path is not None:
+            pass
+        elif self.metadata is not None and self.metadata.file is not None:
+            path = self.metadata.file
+        else:
+            print_warning(
+                "Trajectory.open: No metadata or path provided, cannot set metadata file."
+            )
+            return
         self._file = path.open("w")
         self._csv_writer = csv.writer(self._file)
         self._write()
@@ -292,7 +306,7 @@ class Trajectory:
         else:
             print_warning("Trajectory.close: No file to close.")
 
-    def to_file(self, path: Path):
+    def to_file(self, path: Optional[Path] = None):
         self.open(path)
         self.close()
 
