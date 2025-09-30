@@ -123,9 +123,9 @@ register_pipeline(module=pipelines)
 # ------------------------- Handle yaml parsing ------------------------- #
 def _sweep(
     sweep: dict[str, Param],
-    params: dict[str, Param],
     name: str,
     pipe: type[Pipeline],
+    params: dict[str, Param],
 ) -> list[tuple[str, type[Pipeline], dict[str, Param]]] | PipelineConfigError:
     keys, values = zip(*sweep.items())
     results: list[tuple[str, type[Pipeline], dict[str, Param]]] = []
@@ -183,32 +183,36 @@ def parse_config(
         pipe = get_pipeline(p)
         if isinstance(pipe, PipelineNotFound):
             return pipe
-        return [(p, pipe, {})]
+        return [(p, pipe, pipe.default_params())]
 
     elif isinstance(p, dict):
-        pipe_name = p.pop("pipeline", None)
-        if pipe_name is None:
-            return InvalidPipelineConfig(f"Need pipeline name: {str(p)}")
-        pipe_name = cast(str, pipe_name)
+        # figure out name of pipeline
+        if "pipeline" not in p:
+            return InvalidPipelineConfig(f"Need pipeline: {str(p)}")
+        pipe_name = cast(str, p["pipeline"])
 
-        name = p.pop("name", None)
-        if name is None:
-            name = pipe_name
+        # figure out the name
+        name = p.pop("name", pipe_name)
         name = cast(str, name)
 
+        # Construct pipeline
         pipe = get_pipeline(pipe_name)
         if isinstance(pipe, PipelineNotFound):
             return pipe
 
+        # Construct params
+        params = pipe.default_params() | p
+
+        # Handle sweeps
         if "sweep" in p:
             sweep = cast(dict[str, Param], p.pop("sweep"))
-            return _sweep(sweep, p, name, pipe)
+            return _sweep(sweep, name, pipe, params)
         else:
-            err = validate_params(pipe, p)
+            err = validate_params(pipe, params)
             if err is not None:
                 return err
 
-            return [(name, pipe, p)]
+            return [(name, pipe, params)]
 
     elif isinstance(p, list):
         results = [parse_config(x) for x in p]
