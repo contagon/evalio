@@ -1,5 +1,5 @@
 from enum import StrEnum, auto
-from typing import Annotated, Optional, TypeVar
+from typing import Annotated, Literal, Optional, TypeVar, TypedDict
 
 import typer
 from rapidfuzz.process import extract_iter
@@ -83,6 +83,9 @@ def ls(
     """
     List dataset and pipeline information
     """
+    ColOpts = TypedDict("ColOpts", {"vertical": Literal["top", "middle", "bottom"]})
+    col_opts: ColOpts = {"vertical": "middle"}
+
     if kind == Kind.datasets:
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
@@ -177,20 +180,19 @@ def ls(
             highlight=True,
             box=box.ROUNDED,
         )
-        col_opts = {"vertical": "middle"}
 
-        table.add_column("Name", justify="center", **col_opts)  # type: ignore
+        table.add_column("Name", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
-            table.add_column("DL", justify="right", **col_opts)  # type: ignore
-        table.add_column("Size", justify="center", **col_opts)  # type: ignore
+            table.add_column("Sequences", justify="right", **col_opts)
+            table.add_column("DL", justify="right", **col_opts)
+        table.add_column("Size", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Len", justify="center", **col_opts)  # type: ignore
-        table.add_column("Env", justify="center", **col_opts)  # type: ignore
-        table.add_column("Vehicle", justify="center", **col_opts)  # type: ignore
-        table.add_column("IMU", justify="center", **col_opts)  # type: ignore
-        table.add_column("LiDAR", justify="center", **col_opts)  # type: ignore
-        table.add_column("Info", justify="center", **col_opts)  # type: ignore
+            table.add_column("Len", justify="center", **col_opts)
+        table.add_column("Env", justify="center", **col_opts)
+        table.add_column("Vehicle", justify="center", **col_opts)
+        table.add_column("IMU", justify="center", **col_opts)
+        table.add_column("LiDAR", justify="center", **col_opts)
+        table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
@@ -253,14 +255,13 @@ def ls(
             highlight=True,
             box=box.ROUNDED,
         )
-        col_opts = {"vertical": "middle"}
 
-        table.add_column("Name", justify="center", **col_opts)  # type: ignore
-        table.add_column("Version", justify="center", **col_opts)  # type: ignore
+        table.add_column("Name", justify="center", **col_opts)
+        table.add_column("Version", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Params", justify="right", **col_opts)  # type: ignore
-            table.add_column("Default", justify="left", **col_opts)  # type: ignore
-        table.add_column("Info", justify="center", **col_opts)  # type: ignore
+            table.add_column("Params", justify="right", **col_opts)
+            table.add_column("Default", justify="left", **col_opts)
+        table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore

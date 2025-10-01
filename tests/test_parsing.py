@@ -70,7 +70,7 @@ PIPELINES: list[Any] = [
     # bad ones
     ("unknown", pl.PipelineNotFound("unknown")),
     ({"pipeline": "unknown"}, pl.PipelineNotFound("unknown")),
-    ({"param1": 5}, pl.InvalidPipelineConfig("Need pipeline: {'param1': 5}")), # type: ignore
+    ({"param1": 5}, pl.InvalidPipelineConfig("Need pipeline: {'param1': 5}")), 
     ({"pipeline": "fake", "param3": 10}, pl.UnusedPipelineParam("param3", "fake")),
     ({"pipeline": "fake", "param1": "wrong_type"}, pl.InvalidPipelineParamType("param1", int, str)),
     ({"pipeline": "fake", "sweep": {"param1": [1.0, 2, 3]}}, pl.InvalidPipelineParamType("param1", int, float)),

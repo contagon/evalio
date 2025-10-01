@@ -295,7 +295,7 @@ class MultiCampus(Dataset):
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

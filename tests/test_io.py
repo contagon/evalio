@@ -67,7 +67,7 @@ def test_trajectory_incremental_serde(tmp_path: Path):
 
     # must trigger entire rewrite to update metadata
     traj.open(path)
-    traj.metadata.sequence = "random_name"  # type: ignore
+    traj.metadata.sequence = "random_name"
     traj.rewrite()
     traj.close()
 

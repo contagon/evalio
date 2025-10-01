@@ -179,7 +179,7 @@ class NewerCollege2020(Dataset):
             "parkland_mound": "1CMcmw9pAT1Mm-Zh-nS87i015CO-xFHwl",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
 
