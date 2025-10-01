@@ -25,8 +25,7 @@ app = typer.Typer()
 def eval_dataset(
     dir: Path,
     visualize: bool,
-    window_kind: stats.WindowKind,
-    window_size: Optional[int | float],
+    windows: list[stats.WindowKind],
     metric: stats.MetricKind,
     length: Optional[int],
 ) -> Optional[list[dict[str, Any]]]:
@@ -95,18 +94,11 @@ def eval_dataset(
             gt_aligned.stamps = gt_aligned.stamps[:length]
             gt_aligned.poses = gt_aligned.poses[:length]
         ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
-        rte = stats.rte(traj_aligned, gt_aligned, window_kind, window_size).summarize(
-            metric
-        )
+        r.update({"ATEt": ate.trans, "ATEr": ate.rot})
 
-        r.update(
-            {
-                "RTEt": rte.trans,
-                "RTEr": rte.rot,
-                "ATEt": ate.trans,
-                "ATEr": ate.rot,
-            }
-        )
+        for w in windows:
+            rte = stats.rte(traj_aligned, gt_aligned, w).summarize(metric)
+            r.update({f"RTEt_{w.name()}": rte.trans, f"RTEr_{w.name()}": rte.rot})
 
         results.append(r)
 
@@ -126,11 +118,10 @@ def _contains_dir(directory: Path) -> bool:
 
 def evaluate(
     directories: list[Path],
-    window_size: Optional[float],
-    window_kind: stats.WindowKind,
+    windows: list[stats.WindowKind],
     metric: stats.MetricKind,
-    length: Optional[int],
-    visualize: bool,
+    length: Optional[int] = None,
+    visualize: bool = False,
 ) -> list[dict[str, Any]]:
     # Collect all bottom level directories
     bottom_level_dirs: list[Path] = []
@@ -144,8 +135,7 @@ def evaluate(
         delayed(eval_dataset)(
             d,
             visualize,
-            window_kind,
-            window_size,
+            windows,
             metric,
             length,
         )
@@ -166,14 +156,14 @@ def evaluate_typer(
     ] = False,
     # output options
     sort: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "-s",
             "--sort",
-            help="Sort results by the name of a column.",
+            help="Sort results by the name of a column. Defaults to RTEt.",
             rich_help_panel="Output options",
         ),
-    ] = "RTEt",
+    ] = None,
     reverse: Annotated[
         bool,
         typer.Option(
@@ -227,24 +217,22 @@ def evaluate_typer(
         ),
     ] = False,
     # metric options
-    window_size: Annotated[
-        Optional[float],
+    w_distance: Annotated[
+        Optional[list[float]],
         typer.Option(
-            "-w",
-            "--window-size",
-            help="Window size for RTE. Defaults to 100 time steps for time windows, 10 meters for distance windows.",
+            "--w-distance",
+            help="Window size in meters for RTE computation. May be repeated. Defaults to 30m.",
             rich_help_panel="Metric options",
         ),
     ] = None,
-    window_kind: Annotated[
-        stats.WindowKind,
+    w_scans: Annotated[
+        Optional[list[int]],
         typer.Option(
-            "-k",
-            "--window-kind",
-            help="Kind of window to use for RTE. Defaults to time.",
+            "--w-scans",
+            help="Window size in number of scans for RTE computation. May be repeated. Defaults to none.",
             rich_help_panel="Metric options",
         ),
-    ] = stats.WindowKind.time,
+    ] = None,
     metric: Annotated[
         stats.MetricKind,
         typer.Option(
@@ -291,26 +279,23 @@ def evaluate_typer(
     elif only_failed:
         filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
 
-    match window_kind:
-        case stats.WindowKind.distance:
-            if window_size is None:
-                window_size = 10
-            words = "meters"
-        case stats.WindowKind.time:
-            if window_size is None:
-                window_size = 200
-            words = "time steps"
+    windows: list[stats.WindowKind] = []
+    if w_scans is not None:
+        windows.extend([stats.ScanWindow(t) for t in w_scans])
+    if w_distance is not None:
+        windows.extend([stats.DistanceWindow(d) for d in w_distance])
+    if len(windows) == 0:
+        windows = [stats.DistanceWindow(30.0)]
+
+    if sort is None:
+        sort = f"RTEt_{windows[0].name()}"
 
     c = Console()
-    c.print(
-        f"Evaluating RTE over a window of {window_size} {words}, using metric {metric}."
-    )
 
     # ------------------------- Compute all results ------------------------- #
     results = evaluate(
         directories,
-        window_size,
-        window_kind,
+        windows,
         metric,
         length,
         visualize,

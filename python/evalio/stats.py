@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from typing import Optional, cast
+from typing import cast
 from numpy.typing import NDArray
 
 from copy import deepcopy
@@ -29,13 +29,31 @@ class MetricKind(StrEnum):
     """Sqrt of Sum of squared errors"""
 
 
-class WindowKind(StrEnum):
-    """Simple enum to define whether the window computed should be based on distance or time."""
+@dataclass
+class DistanceWindow:
+    """Dataclass to hold the parameters for a distance-based window."""
 
-    distance = auto()
-    """Window based on distance"""
-    time = auto()
-    """Window based on time"""
+    distance: float
+    """Distance in meters"""
+
+    def name(self) -> str:
+        """Get a string representation of the window."""
+        return f"{self.distance:.1f}m"
+
+
+@dataclass
+class ScanWindow:
+    """Dataclass to hold the parameters for a scan-based window."""
+
+    scans: int
+    """Number of scans"""
+
+    def name(self) -> str:
+        """Get a string representation of the window."""
+        return f"{self.scans}s"
+
+
+WindowKind = DistanceWindow | ScanWindow
 
 
 @dataclass(kw_only=True)
@@ -278,8 +296,7 @@ def ate(traj: Trajectory[M1], gt: Trajectory[M2]) -> Error:
 def rte(
     traj: Trajectory[M1],
     gt: Trajectory[M2],
-    kind: WindowKind = WindowKind.time,
-    window: Optional[float | int] = None,
+    window: WindowKind = DistanceWindow(30),
 ) -> Error:
     """Compute the Relative Trajectory Error (RTE) between two trajectories.
 
@@ -289,41 +306,35 @@ def rte(
     Args:
         traj (Trajectory): One of the trajectories
         gt (Trajectory): The other trajectory
-        kind (WindowKind, optional): The kind of window to use for the RTE. Defaults to WindowKind.time.
-        window (int | float, optional): Window size for the RTE. If window kind is distance, defaults to 10m. If time, defaults to 100 scans.
-
+        window (WindowKind, optional): The window to use for computing the RTE.
+            Either a [DistanceWindow][evalio.stats.DistanceWindow] or a [ScanWindow][evalio.stats.ScanWindow].
+            Defaults to DistanceWindow(30), which is a 30 meter window.
     Returns:
         Error: The computed error
     """
     if not _check_aligned(traj, gt):
         traj, gt = align(traj, gt)
 
-    if window is None:
-        match kind:
-            case WindowKind.distance:
-                window = 10
-            case WindowKind.time:
-                window = 200
-
-    if window <= 0:
+    if (isinstance(window, ScanWindow) and window.scans <= 0) or (
+        isinstance(window, DistanceWindow) and window.distance <= 0
+    ):
         raise ValueError("Window size must be positive")
 
-    if window > len(gt) - 1:
+    if isinstance(window, ScanWindow) and window.scans > len(gt) - 1:
         print_warning(f"Window size {window} is larger than number of poses {len(gt)}")
         return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
 
     window_deltas_poses: list[SE3] = []
     window_deltas_gts: list[SE3] = []
 
-    if kind == WindowKind.time:
-        assert isinstance(window, int), (
-            "Window size must be an integer for time-based RTE"
-        )
-        for i in range(len(gt) - window):
-            window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[i + window])
-            window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[i + window])
+    if isinstance(window, ScanWindow):
+        for i in range(len(gt) - window.scans):
+            window_deltas_poses.append(
+                traj.poses[i].inverse() * traj.poses[i + window.scans]
+            )
+            window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[i + window.scans])
 
-    elif kind == WindowKind.distance:
+    elif isinstance(window, DistanceWindow):
         # Compute deltas for all of ground truth poses
         dist = np.zeros(len(gt))
         for i in range(1, len(gt)):
@@ -336,7 +347,9 @@ def rte(
 
         # Find our pairs for computation
         for i in range(len(gt)):
-            while end_idx < len(gt) and cum_dist[end_idx] - cum_dist[i] < window:
+            while (
+                end_idx < len(gt) and cum_dist[end_idx] - cum_dist[i] < window.distance
+            ):
                 end_idx += 1
 
             if end_idx >= len(gt):

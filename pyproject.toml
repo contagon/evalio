@@ -104,6 +104,7 @@ typeCheckingMode = "strict"
 stubPath = "python/typings"
 reportPrivateUsage = "none"
 reportConstantRedefinition = "none"
+reportUnnecessaryIsInstance = "none"
 
 [tool.bumpversion]
 allow_dirty = false
