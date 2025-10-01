@@ -1,4 +1,12 @@
-from evalio._cpp.pipelines import *  # type: ignore  # noqa: F403
+from evalio._cpp.pipelines import (  # type: ignore
+    Pipeline,
+    CTICP,
+    KissICP,
+    GenZICP,
+    LOAM,
+    LioSAM,
+    MadICP,
+)
 
 from .parser import (
     register_pipeline,
@@ -15,6 +23,13 @@ from .parser import (
 
 
 __all__ = [
+    "Pipeline",
+    "CTICP",
+    "KissICP",
+    "GenZICP",
+    "LOAM",
+    "LioSAM",
+    "MadICP",
     "all_pipelines",
     "get_pipeline",
     "register_pipeline",
