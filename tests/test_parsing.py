@@ -54,22 +54,23 @@ class FakePipeline(pl.Pipeline):
 pl.register_pipeline(FakePipeline)
 
 # fmt: off
+dp = FakePipeline.default_params()
 PIPELINES: list[Any] = [
     # good ones
-    ("fake", [("fake", FakePipeline, {})]),
-    ({"pipeline": "fake"}, [("fake", FakePipeline, {})]),
-    ({"name": "test", "pipeline": "fake"}, [("test", FakePipeline, {})]),
-    ({"pipeline": "fake", "param1": 5}, [("fake", FakePipeline, {"param1": 5})]),
-    (["fake", {"pipeline": "fake", "param1": 3}], [("fake", FakePipeline, {}), ("fake", FakePipeline, {"param1": 3})]),
+    ("fake", [("fake", FakePipeline, dp)]),
+    ({"pipeline": "fake"}, [("fake", FakePipeline, dp)]),
+    ({"name": "test", "pipeline": "fake"}, [("test", FakePipeline, dp)]),
+    ({"pipeline": "fake", "param1": 5}, [("fake", FakePipeline, dp | {"param1": 5})]),
+    (["fake", {"pipeline": "fake", "param1": 3}], [("fake", FakePipeline, dp), ("fake", FakePipeline, dp | {"param1": 3})]),
     ({"pipeline": "fake", "sweep": {"param1": [1, 2, 3]}}, [
-        ("fake__param1-1", FakePipeline, {"param1": 1}),
-        ("fake__param1-2", FakePipeline, {"param1": 2}),
-        ("fake__param1-3", FakePipeline, {"param1": 3}),
+        ("fake__param1-1", FakePipeline, dp | {"param1": 1}),
+        ("fake__param1-2", FakePipeline, dp | {"param1": 2}),
+        ("fake__param1-3", FakePipeline, dp | {"param1": 3}),
     ]),
     # bad ones
     ("unknown", pl.PipelineNotFound("unknown")),
     ({"pipeline": "unknown"}, pl.PipelineNotFound("unknown")),
-    ({"param1": 5}, pl.InvalidPipelineConfig("Need pipeline name: {'param1': 5}")), # type: ignore
+    ({"param1": 5}, pl.InvalidPipelineConfig("Need pipeline: {'param1': 5}")), # type: ignore
     ({"pipeline": "fake", "param3": 10}, pl.UnusedPipelineParam("param3", "fake")),
     ({"pipeline": "fake", "param1": "wrong_type"}, pl.InvalidPipelineParamType("param1", int, str)),
     ({"pipeline": "fake", "sweep": {"param1": [1.0, 2, 3]}}, pl.InvalidPipelineParamType("param1", int, float)),

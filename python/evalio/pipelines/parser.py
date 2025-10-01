@@ -189,7 +189,7 @@ def parse_config(
         # figure out name of pipeline
         if "pipeline" not in p:
             return InvalidPipelineConfig(f"Need pipeline: {str(p)}")
-        pipe_name = cast(str, p["pipeline"])
+        pipe_name = cast(str, p.pop("pipeline"))
 
         # figure out the name
         name = p.pop("name", pipe_name)
@@ -205,7 +205,7 @@ def parse_config(
 
         # Handle sweeps
         if "sweep" in p:
-            sweep = cast(dict[str, Param], p.pop("sweep"))
+            sweep = cast(dict[str, Param], params.pop("sweep"))
             return _sweep(sweep, name, pipe, params)
         else:
             err = validate_params(pipe, params)
