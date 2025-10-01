@@ -2,7 +2,7 @@ import os
 from enum import StrEnum
 from itertools import islice
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Sequence, Union
+from typing import Iterable, Iterator, Optional, Sequence, Union, cast
 
 from evalio._cpp.types import (  # type: ignore
     SE3,
@@ -210,7 +210,7 @@ class Dataset(StrEnum):
 
         return True
 
-    def ground_truth(self) -> Trajectory:
+    def ground_truth(self) -> Trajectory[GroundTruth]:
         """Get the ground truth trajectory in the **IMU** frame, rather than the ground truth frame as returned in [ground_truth_raw][evalio.datasets.Dataset.ground_truth_raw].
 
         Returns:
@@ -224,6 +224,7 @@ class Dataset(StrEnum):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
 
+        gt_traj = cast(Trajectory[GroundTruth], gt_traj)
         gt_traj.metadata = GroundTruth(sequence=self.full_name)
 
         return gt_traj

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
+from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
@@ -10,7 +11,16 @@ from numpy.typing import NDArray
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
 from evalio.stats import _check_overstep
-from evalio.types import SE3, LidarMeasurement, LidarParams, Point, Stamp, Trajectory
+from evalio.types import (
+    SE3,
+    GroundTruth,
+    LidarMeasurement,
+    LidarParams,
+    Metadata,
+    Point,
+    Stamp,
+    Trajectory,
+)
 from evalio.utils import print_warning
 
 
@@ -78,7 +88,7 @@ try:
 
             # To be set during new_recording
             self.lidar_params: Optional[LidarParams] = None
-            self.gt: Optional[Trajectory] = None
+            self.gt: Optional[Trajectory[GroundTruth]] = None
             self.pipeline_names = pipeline_names
 
             # To be found during log
@@ -326,9 +336,11 @@ try:
         """
         ...
 
+    M = TypeVar("M", bound=Metadata | None)
+
     @overload
     def convert(
-        obj: Trajectory,
+        obj: Trajectory[M],
         color: Optional[tuple[int, int, int] | tuple[float, float, float]] = None,
     ) -> rr.Points3D:
         """Convert a Trajectory a rerun Points3D.

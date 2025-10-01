@@ -31,8 +31,8 @@ def eval_dataset(
     length: Optional[int],
 ) -> Optional[list[dict[str, Any]]]:
     # Load all trajectories
-    gt_og: Optional[ty.Trajectory] = None
-    all_trajs: list[ty.Trajectory] = []
+    gt_og: Optional[ty.Trajectory[ty.GroundTruth]] = None
+    all_trajs: list[ty.Trajectory[ty.Experiment]] = []
     for file_path in dir.glob("*.csv"):
         traj = ty.Trajectory.from_file(file_path)
         if not isinstance(traj, ty.Trajectory):
@@ -42,9 +42,9 @@ def eval_dataset(
             if gt_og is not None:
                 print_warning(f"Multiple ground truths found in {dir}, skipping.")
                 continue
-            gt_og = traj
+            gt_og = cast(ty.Trajectory[ty.GroundTruth], traj)
         elif isinstance(traj.metadata, ty.Experiment):
-            all_trajs.append(traj)
+            all_trajs.append(cast(ty.Trajectory[ty.Experiment], traj))
 
     if gt_og is None:
         print_warning(f"No ground truth found in {dir}, skipping.")
@@ -82,7 +82,7 @@ def eval_dataset(
     # Iterate over each
     results: list[dict[str, Any]] = []
     for index, traj in enumerate(all_trajs):
-        r = cast(ty.Experiment, traj.metadata).to_dict()
+        r = traj.metadata.to_dict()
         # flatten pipeline params
         r.update(r["pipeline_params"])
         del r["pipeline_params"]
@@ -112,7 +112,7 @@ def eval_dataset(
 
         if rr is not None and convert is not None and colors is not None and visualize:
             rr.log(
-                cast(ty.Experiment, traj.metadata).name,
+                traj.metadata.name,
                 convert(traj_aligned, color=colors[index]),
                 static=True,
             )

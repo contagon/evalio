@@ -1,7 +1,8 @@
 from enum import StrEnum, auto
+from typing_extensions import TypeVar
 
 from evalio.utils import print_warning
-from .types import Stamp, Trajectory, SE3
+from .types import Stamp, Trajectory, SE3, Metadata
 
 from dataclasses import dataclass
 
@@ -100,9 +101,13 @@ class Error:
         )
 
 
+M1 = TypeVar("M1", bound=Metadata | None)
+M2 = TypeVar("M2", bound=Metadata | None)
+
+
 def align(
-    traj: Trajectory, gt: Trajectory, in_place: bool = False
-) -> tuple[Trajectory, Trajectory]:
+    traj: Trajectory[M1], gt: Trajectory[M2], in_place: bool = False
+) -> tuple[Trajectory[M1], Trajectory[M2]]:
     """Align the trajectories both spatially and temporally.
 
     The resulting trajectories will be have the same origin as the second ("gt") trajectory.
@@ -123,7 +128,7 @@ def align(
     return traj, gt
 
 
-def align_poses(traj: Trajectory, other: Trajectory):
+def align_poses(traj: Trajectory[M1], other: Trajectory[M2]):
     """Align the trajectory in place to another trajectory. Operates in place.
 
     This results in the current trajectory having an identical first pose to the other trajectory.
@@ -141,7 +146,7 @@ def align_poses(traj: Trajectory, other: Trajectory):
         traj.poses[i] = delta * traj.poses[i]
 
 
-def align_stamps(traj1: Trajectory, traj2: Trajectory):
+def align_stamps(traj1: Trajectory[M1], traj2: Trajectory[M2]):
     """Select the closest poses in traj1 and traj2. Operates in place.
 
     Does this by finding the higher frame rate trajectory and subsampling it to the closest poses of the other one.
@@ -175,7 +180,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     traj_1_dt = (traj1.stamps[-1] - traj1.stamps[0]).to_sec() / len(traj1.stamps)
     traj_2_dt = (traj2.stamps[-1] - traj2.stamps[0]).to_sec() / len(traj2.stamps)
     if traj_1_dt > traj_2_dt:
-        traj1, traj2 = traj2, traj1
+        traj1, traj2 = traj2, traj1  # type: ignore
         swapped = True
 
     # Align the two trajectories by subsampling keeping traj1 stamps
@@ -202,7 +207,7 @@ def align_stamps(traj1: Trajectory, traj2: Trajectory):
     traj1.poses = traj1_poses
 
     if swapped:
-        traj1, traj2 = traj2, traj1
+        traj1, traj2 = traj2, traj1  # type: ignore
 
 
 def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
@@ -228,7 +233,7 @@ def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
     return Error(rot=error_r, trans=error_t)
 
 
-def _check_aligned(traj: Trajectory, gt: Trajectory) -> bool:
+def _check_aligned(traj: Trajectory[M1], gt: Trajectory[M2]) -> bool:
     """Check if the two trajectories are aligned.
 
     This is done by checking if the first poses are identical, and if there's the same number of poses in both trajectories.
@@ -250,7 +255,7 @@ def _check_aligned(traj: Trajectory, gt: Trajectory) -> bool:
     )
 
 
-def ate(traj: Trajectory, gt: Trajectory) -> Error:
+def ate(traj: Trajectory[M1], gt: Trajectory[M2]) -> Error:
     """Compute the Absolute Trajectory Error (ATE) between two trajectories.
 
     Will check if the two trajectories are aligned and if not, will align them.
@@ -271,8 +276,8 @@ def ate(traj: Trajectory, gt: Trajectory) -> Error:
 
 
 def rte(
-    traj: Trajectory,
-    gt: Trajectory,
+    traj: Trajectory[M1],
+    gt: Trajectory[M2],
     kind: WindowKind = WindowKind.time,
     window: Optional[float | int] = None,
 ) -> Error:

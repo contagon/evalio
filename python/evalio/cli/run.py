@@ -361,9 +361,8 @@ def run_single(
                 break
 
     loop.close()
-    if isinstance(traj.metadata, ty.Experiment):
-        traj.metadata.status = ty.ExperimentStatus.Complete
-        traj.metadata.total_elapsed = time_total
-        traj.metadata.max_step_elapsed = time_max
+    traj.metadata.status = ty.ExperimentStatus.Complete
+    traj.metadata.total_elapsed = time_total
+    traj.metadata.max_step_elapsed = time_max
     traj.rewrite()
     traj.close()

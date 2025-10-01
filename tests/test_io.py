@@ -36,8 +36,7 @@ def test_trajectory_serde(tmp_path: Path):
         metadata=make_exp(),
     )
 
-    if traj.metadata is not None:
-        traj.metadata.file = path
+    traj.metadata.file = path
 
     traj.to_file(path)
 
@@ -56,9 +55,7 @@ def test_trajectory_incremental_serde(tmp_path: Path):
         poses=[ty.SE3.exp(np.random.rand(6)) for _ in range(5)],
         metadata=make_exp(),
     )
-
-    if traj.metadata is not None:
-        traj.metadata.file = path
+    traj.metadata.file = path
 
     # poses are automatically written as they are added
     traj.open(path)
@@ -70,8 +67,7 @@ def test_trajectory_incremental_serde(tmp_path: Path):
 
     # must trigger entire rewrite to update metadata
     traj.open(path)
-    if traj.metadata is not None:
-        traj.metadata.sequence = "random_name"  # type: ignore
+    traj.metadata.sequence = "random_name"  # type: ignore
     traj.rewrite()
     traj.close()
 

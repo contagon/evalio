@@ -72,7 +72,7 @@ class StampStyle(Enum):
                 return f"{stamp.sec}, {stamp.nsec}"
 
 
-def fake_groundtruth() -> Trajectory:
+def fake_groundtruth() -> Trajectory[GroundTruth]:
     stamps = [
         Stamp.from_nsec(i + np.random.randint(-500, 500))
         for i in range(1_000, 10_000, 1_000)
@@ -81,7 +81,7 @@ def fake_groundtruth() -> Trajectory:
     return Trajectory(stamps=stamps, poses=poses, metadata=GroundTruth(sequence="fake"))
 
 
-def serialize_gt(gt: Trajectory, style: StampStyle) -> list[str]:
+def serialize_gt(gt: Trajectory[GroundTruth], style: StampStyle) -> list[str]:
     def serialize_se3(se3: SE3) -> str:
         return f"{se3.trans[0]}, {se3.trans[1]}, {se3.trans[2]}, {se3.rot.qx}, {se3.rot.qy}, {se3.rot.qz}, {se3.rot.qw}"
 

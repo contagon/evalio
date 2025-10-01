@@ -11,12 +11,13 @@ import csv
 from _csv import Writer
 from enum import Enum
 from io import TextIOWrapper
+from typing_extensions import TypeVar
 from evalio.utils import print_warning
 import numpy as np
 import yaml
 
 from pathlib import Path
-from typing import Any, ClassVar, Optional, Self
+from typing import Any, ClassVar, Generic, Optional, Self, cast
 
 from evalio._cpp.types import (  # type: ignore
     SE3,
@@ -93,13 +94,16 @@ class GroundTruth(Metadata):
     """Dataset used to run the experiment."""
 
 
+M = TypeVar("M", bound=Metadata | None, default=None)
+
+
 @dataclass(kw_only=True)
-class Trajectory:
+class Trajectory(Generic[M]):
     stamps: list[Stamp] = field(default_factory=list)
     """List of timestamps for each pose."""
     poses: list[SE3] = field(default_factory=list)
     """List of poses, in the same order as the timestamps."""
-    metadata: Optional[Metadata] = None
+    metadata: M = None  # type: ignore
     """Metadata associated with the trajectory, such as the dataset name or other information."""
     _file: Optional[TextIOWrapper] = None
     _csv_writer: Optional[Writer] = None
@@ -205,7 +209,9 @@ class Trajectory:
         return Trajectory.from_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
     @staticmethod
-    def from_file(path: Path) -> Trajectory | FailedMetadataParse | FileNotFoundError:
+    def from_file(
+        path: Path,
+    ) -> Trajectory[Metadata] | FailedMetadataParse | FileNotFoundError:
         """Load a saved evalio trajectory from file.
 
         Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
@@ -236,6 +242,7 @@ class Trajectory:
             path,
             fieldnames=["sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
         )
+        trajectory = cast(Trajectory[Metadata], trajectory)
         trajectory.metadata = metadata
 
         return trajectory
