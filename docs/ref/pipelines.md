@@ -2,4 +2,18 @@ For more information about the pipelines included in evalio, see the [included p
 
 ::: evalio.pipelines
     options:
-        members_order: source
+        members:
+            - Pipeline
+            - CTICP
+            - KissICP
+            - GenZICP
+            - LOAM
+            - LioSAM
+            - MadICP
+            - PipelineNotFound
+            - UnusedPipelineParam
+            - InvalidPipelineParamType
+            - all_pipelines
+            - get_pipeline
+            - register_pipeline
+            - validate_params

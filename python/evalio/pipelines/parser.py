@@ -17,6 +17,8 @@ _PIPELINES: set[type[Pipeline]] = set()
 
 
 class PipelineNotFound(CustomException):
+    """Raised when a pipeline is not found in the registry."""
+
     def __init__(self, name: str):
         super().__init__(f"Pipeline '{name}' not found")
         self.name = name
@@ -29,6 +31,8 @@ class InvalidPipelineConfig(CustomException):
 
 
 class UnusedPipelineParam(CustomException):
+    """Raised when a parameter is not used in the pipeline."""
+
     def __init__(self, param: str, pipeline: str):
         super().__init__(f"Parameter '{param}' is not used in pipeline '{pipeline}'")
         self.param = param
@@ -36,6 +40,8 @@ class UnusedPipelineParam(CustomException):
 
 
 class InvalidPipelineParamType(CustomException):
+    """Raised when a parameter has an invalid type."""
+
     def __init__(self, param: str, expected_type: type, actual_type: type):
         super().__init__(
             f"Parameter '{param}' has invalid type. Expected '{expected_type.__name__}', got '{actual_type.__name__}'"
