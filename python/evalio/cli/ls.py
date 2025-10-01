@@ -14,11 +14,11 @@ app = typer.Typer()
 T = TypeVar("T")
 
 
-def unique(lst: list[T]):
+def unique(lst: list[T]) -> list[T]:
     """Get unique elements from a list while preserving order
 
     Returns:
-        _type_: Unique list
+        List of unique elements
     """
     return list(dict.fromkeys(lst))
 
@@ -30,7 +30,7 @@ def extract_len(d: ds.Dataset) -> str:
         d (Dataset): Dataset to get length of
 
     Returns:
-        str: Length of dataset
+        Length of dataset in minutes or '-' if length is unknown
     """
     length = d.quick_len()
     if length is None:

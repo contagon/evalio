@@ -54,6 +54,7 @@ class WindowSeconds:
 
 
 WindowKind = WindowMeters | WindowSeconds
+"""Type alias for either a [WindowMeters][evalio.stats.WindowMeters] or a [WindowSeconds][evalio.stats.WindowSeconds]."""
 
 
 @dataclass(kw_only=True)
@@ -89,7 +90,7 @@ class Error:
                 either mean, median, or sse.
 
         Returns:
-            Metric: The summarized error
+            The summarized error
         """
         match metric:
             case MetricKind.mean:
@@ -236,7 +237,7 @@ def _compute_metric(gts: list[ty.SE3], poses: list[ty.SE3]) -> Error:
         poses (list[SE3]): The other list of poses
 
     Returns:
-        Error: The computed error
+        The computed error
     """
     assert len(gts) == len(poses)
 
@@ -261,7 +262,7 @@ def _check_aligned(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> bool:
         gt (Trajectory): The other trajectory
 
     Returns:
-        bool: True if the two trajectories are aligned, False otherwise
+        True if the two trajectories are aligned, False otherwise
     """
     # Check if the two trajectories are aligned
     delta = gt.poses[0].inverse() * traj.poses[0]
@@ -284,7 +285,7 @@ def ate(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> Error:
         gt (Trajectory): The other trajectory
 
     Returns:
-        Error: The computed error
+        The computed error
     """
     if not _check_aligned(traj, gt):
         traj, gt = align(traj, gt)
@@ -310,7 +311,7 @@ def rte(
             Either a [WindowMeters][evalio.stats.WindowMeters] or a [WindowSeconds][evalio.stats.WindowSeconds].
             Defaults to WindowMeters(30), which is a 30 meter window.
     Returns:
-        Error: The computed error
+        The computed error
     """
     if not _check_aligned(traj, gt):
         traj, gt = align(traj, gt)

@@ -68,8 +68,8 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Duration class for representing a positive or negative delta time, uses "
-    "int64 as the underlying data storage for nanoseconds.";
+    "Duration class for representing a positive or negative delta time. \n\n"
+    "Uses int64 as the underlying data storage for nanoseconds.";
 
   nb::class_<Stamp>(m, "Stamp")
     .def(
@@ -133,8 +133,8 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Stamp class for representing an absolute point in time, uses uint32 as "
-    "the underlying data storage for seconds and nanoseconds.";
+    "Stamp class for representing an absolute point in time.\n\n"
+    "Uses uint32 as the underlying data storage for seconds and nanoseconds.";
   ;
 
   // Lidar
@@ -232,7 +232,7 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Point is a general point structure in evalio, with common "
+    "Point is the general point structure in evalio, with common "
     "point cloud attributes included.";
 
   nb::class_<LidarMeasurement>(m, "LidarMeasurement")
@@ -284,8 +284,9 @@ inline void makeTypes(nb::module_& m) {
     )
     .doc() =
     "LidarMeasurement is a structure for storing a point cloud "
-    "measurement, with a timestamp and a vector of points. Note, "
-    "the stamp always represents the _start_ of the scan. "
+    "measurement, with a timestamp and a vector of points.\n\n"
+
+    "Note, the stamp always represents the _start_ of the scan. "
     "Additionally, the points are always in row major format.";
 
   nb::class_<LidarParams>(m, "LidarParams")
@@ -522,7 +523,7 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "SO3 class for representing a 3D rotation using a quaternion. "
+    "SO3 class for representing a 3D rotation using a quaternion.\n\n"
     "This is outfitted with some basic functionality, but mostly "
     "intended for storage and converting between types.";
 
@@ -599,9 +600,9 @@ inline void makeTypes(nb::module_& m) {
     )
     .doc() =
     "SE3 class for representing a 3D rigid body transformation "
-    "using a quaternion and a translation vector. This is outfitted "
-    "with some basic functionality, but mostly intended for storage "
-    "and converting between types.";
+    "using a quaternion and a translation vector.\n\n"
+    "This is outfitted with some basic functionality, but is mostly "
+    "intended for storage and converting between types.";
 }
 
 } // namespace evalio

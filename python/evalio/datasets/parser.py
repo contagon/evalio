@@ -12,12 +12,16 @@ _DATASETS: set[type[Dataset]] = set()
 
 
 class DatasetNotFound(CustomException):
+    """Exception raised when a dataset is not found."""
+
     def __init__(self, name: str):
         super().__init__(f"Dataset '{name}' not found")
         self.name = name
 
 
 class SequenceNotFound(CustomException):
+    """Exception raised when a sequence is not found."""
+
     def __init__(self, name: str):
         super().__init__(f"Sequence '{name}' not found")
         self.name = name
@@ -47,6 +51,15 @@ def register_dataset(
     dataset: Optional[type[Dataset]] = None,
     module: Optional[ModuleType | str] = None,
 ) -> int | ImportError:
+    """Register a dataset.
+
+    Args:
+        dataset (Optional[type[Dataset]], optional): The dataset class to register. Defaults to None.
+        module (Optional[ModuleType  |  str], optional): The module containing datasets to register. Defaults to None.
+
+    Returns:
+        The number of datasets registered or an ImportError.
+    """
     global _DATASETS
 
     total = 0
@@ -69,21 +82,47 @@ def register_dataset(
 
 
 def all_datasets() -> dict[str, type[Dataset]]:
+    """Get all registered datasets.
+
+    Returns:
+        A dictionary mapping dataset names to their classes.
+    """
     global _DATASETS
     return {d.dataset_name(): d for d in _DATASETS}
 
 
 def get_dataset(name: str) -> type[Dataset] | DatasetNotFound:
+    """Get a registered dataset by name.
+
+    Args:
+        name (str): The name of the dataset to retrieve.
+
+    Returns:
+        The dataset class if found, or a DatasetNotFound error.
+    """
     return all_datasets().get(name, DatasetNotFound(name))
 
 
 def all_sequences() -> dict[str, Dataset]:
+    """Get all sequences from all registered datasets.
+
+    Returns:
+        A dictionary mapping sequence names to their dataset classes.
+    """
     return {
         seq.full_name: seq for d in all_datasets().values() for seq in d.sequences()
     }
 
 
 def get_sequence(name: str) -> Dataset | SequenceNotFound:
+    """Get a registered sequence by name.
+
+    Args:
+        name (str): The name of the sequence to retrieve.
+
+    Returns:
+        The dataset object if found, or a SequenceNotFound error.
+    """
     return all_sequences().get(name, SequenceNotFound(name))
 
 

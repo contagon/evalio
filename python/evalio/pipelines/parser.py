@@ -99,7 +99,7 @@ def all_pipelines() -> dict[str, type[Pipeline]]:
     """Get all registered pipelines.
 
     Returns:
-        dict[str, type[Pipeline]]: A dictionary mapping pipeline names to their classes.
+        A dictionary mapping pipeline names to their classes.
     """
     global _PIPELINES
     return {p.name(): p for p in _PIPELINES}
@@ -112,7 +112,7 @@ def get_pipeline(name: str) -> type[Pipeline] | PipelineNotFound:
         name (str): The name of the pipeline.
 
     Returns:
-        Optional[type[Pipeline]]: The pipeline class, or None if not found.
+        The pipeline class if found, otherwise a PipelineNotFound error.
     """
     return all_pipelines().get(name, PipelineNotFound(name))
 
@@ -145,7 +145,7 @@ def _sweep(
 def validate_params(
     pipe: type[Pipeline],
     params: dict[str, Param],
-) -> None | PipelineConfigError:
+) -> None | InvalidPipelineParamType | UnusedPipelineParam:
     """Validate the parameters for a given pipeline.
 
     Args:
@@ -153,7 +153,7 @@ def validate_params(
         params (dict[str, Param]): The parameters to validate.
 
     Returns:
-        Optional[PipelineConfigError]: An error if validation fails, otherwise None.
+        An error if validation fails, otherwise None.
     """
     default_params = pipe.default_params()
     for p in params:
@@ -171,14 +171,6 @@ def validate_params(
 def parse_config(
     p: str | dict[str, Param] | Sequence[str | dict[str, Param]],
 ) -> list[tuple[str, type[Pipeline], dict[str, Param]]] | PipelineConfigError:
-    """Parse a pipeline configuration.
-
-    Args:
-        p (str | dict[str, Param] | Sequence[str | dict[str, Param]]): The pipeline configuration.
-
-    Returns:
-        list[tuple[type[Pipeline], dict[str, Param]]]: A list of tuples containing the pipeline class and its parameters.
-    """
     if isinstance(p, str):
         pipe = get_pipeline(p)
         if isinstance(pipe, PipelineNotFound):

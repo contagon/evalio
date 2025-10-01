@@ -10,7 +10,7 @@ from evalio._cpp.types import (  # type: ignore
     Stamp,
 )
 
-from .base import Param, Trajectory, Metadata, GroundTruth
+from .base import Param, Trajectory, Metadata, GroundTruth, FailedMetadataParse
 from .extended import Experiment, ExperimentStatus
 
 
@@ -27,6 +27,7 @@ __all__ = [
     "Stamp",
     # base includes
     "GroundTruth",
+    "FailedMetadataParse",
     "Metadata",
     "Param",
     "Trajectory",

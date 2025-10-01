@@ -14,6 +14,8 @@ from evalio.utils import print_warning
 
 
 class ExperimentStatus(Enum):
+    """Status of the experiment."""
+
     Complete = "complete"
     Fail = "fail"
     Started = "started"
@@ -22,12 +24,18 @@ class ExperimentStatus(Enum):
 
 @dataclass(kw_only=True)
 class Experiment(Metadata):
+    """An experiment is a single run of a pipeline on a dataset.
+
+    It contains all the information needed to reproduce the run, including
+    the pipeline parameters, dataset, and status.
+    """
+
     name: str
     """Name of the experiment."""
     sequence: str | ds.Dataset
     """Dataset used to run the experiment."""
     sequence_length: int
-    """Length of the sequence, if set"""
+    """Length of the sequence"""
     pipeline: str | type[pl.Pipeline]
     """Pipeline used to generate the trajectory."""
     pipeline_version: str
@@ -62,9 +70,15 @@ class Experiment(Metadata):
 
     def setup(
         self,
-    ) -> (
-        tuple[pl.Pipeline, ds.Dataset] | ds.DatasetConfigError | pl.PipelineConfigError
-    ):
+    ) -> tuple[pl.Pipeline, ds.Dataset] | ds.SequenceNotFound | pl.PipelineNotFound:
+        """Setup the experiment by initializing the pipeline and dataset.
+
+        Args:
+            self (Experiment): The experiment instance.
+
+        Returns:
+            Tuple containing the initialized pipeline and dataset, or an error if the pipeline or dataset could not be found or configured.
+        """
         if isinstance(self.pipeline, str):
             ThisPipeline = pl.get_pipeline(self.pipeline)
             if isinstance(ThisPipeline, pl.PipelineNotFound):

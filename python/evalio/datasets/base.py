@@ -35,7 +35,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over IMU measurements.
 
         Yields:
-            Iterator[ImuMeasurement]: Iterator of IMU measurements.
+            Iterator of IMU measurements.
         """
         ...
 
@@ -43,7 +43,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over Lidar measurements.
 
         Yields:
-            Iterator[LidarMeasurement]: Iterator of Lidar measurements.
+            Iterator of Lidar measurements.
         """
         ...
 
@@ -51,7 +51,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over all measurements.
 
         Yields:
-            Iterator[Measurement]: Iterator of all measurements (IMU and Lidar).
+            Iterator of all measurements (IMU and Lidar).
         """
 
         ...
@@ -61,7 +61,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Number of lidar scans.
 
         Returns:
-            int: Number of lidar scans.
+            Number of lidar scans.
         """
         ...
 
@@ -79,7 +79,7 @@ class Dataset(StrEnum):
         Provides an iterator over the dataset's measurements.
 
         Returns:
-            DatasetIterator: An iterator that yields measurements from the dataset.
+            An iterator that yields measurements from the dataset.
         """
         ...
 
@@ -89,7 +89,7 @@ class Dataset(StrEnum):
         Retrieves the raw ground truth trajectory, as represented in the ground truth frame.
 
         Returns:
-            Trajectory: The raw ground truth trajectory data.
+            The raw ground truth trajectory data.
         """
         ...
 
@@ -98,7 +98,7 @@ class Dataset(StrEnum):
         """Returns the transformation from IMU to Lidar frame.
 
         Returns:
-            SE3: Transformation from IMU to Lidar frame.
+            Transformation from IMU to Lidar frame.
         """
         ...
 
@@ -106,7 +106,7 @@ class Dataset(StrEnum):
         """Retrieves the transformation from IMU to ground truth frame.
 
         Returns:
-            SE3: Transformation from IMU to ground truth frame.
+            Transformation from IMU to ground truth frame.
         """
         ...
 
@@ -114,7 +114,7 @@ class Dataset(StrEnum):
         """Specifies the parameters of the IMU.
 
         Returns:
-            ImuParams: Parameters of the IMU.
+            Parameters of the IMU.
         """
         ...
 
@@ -122,7 +122,7 @@ class Dataset(StrEnum):
         """Specifies the parameters of the Lidar.
 
         Returns:
-            LidarParams: Parameters of the Lidar.
+            Parameters of the Lidar.
         """
         ...
 
@@ -132,7 +132,7 @@ class Dataset(StrEnum):
         If a returned type is a Path, it will be checked as is. If it is a string, it will be prepended with [folder][evalio.datasets.Dataset.folder].
 
         Returns:
-            list[str]: _description_
+            List of files required to run this dataset.
         """
         ...
 
@@ -142,7 +142,7 @@ class Dataset(StrEnum):
         """Webpage with the dataset information.
 
         Returns:
-            str: URL of the dataset webpage.
+            URL of the dataset webpage.
         """
         return "-"
 
@@ -150,7 +150,7 @@ class Dataset(StrEnum):
         """Environment where the dataset was collected.
 
         Returns:
-            str: Environment where the dataset was collected.
+            Environment where the dataset was collected.
         """
         return "-"
 
@@ -158,7 +158,7 @@ class Dataset(StrEnum):
         """Vehicle used to collect the dataset.
 
         Returns:
-            str: Vehicle used to collect the dataset.
+            Vehicle used to collect the dataset.
         """
         return "-"
 
@@ -166,7 +166,7 @@ class Dataset(StrEnum):
         """Hardcoded number of lidar scans in the dataset, rather than computing by loading all the data (slow).
 
         Returns:
-            Optional[int]: Number of lidar scans in the dataset. None if not available.
+            Number of lidar scans in the dataset. None if not available.
         """
         return None
 
@@ -188,7 +188,7 @@ class Dataset(StrEnum):
         This is the name that will be used when parsing directly from a string. Currently is automatically generated from the class name, but can be overridden.
 
         Returns:
-            str: _description_
+            Name of the dataset.
         """
         return pascal_to_snake(cls.__name__)
 
@@ -197,7 +197,7 @@ class Dataset(StrEnum):
         """Verify if the dataset is downloaded.
 
         Returns:
-            bool: True if the dataset is downloaded, False otherwise.
+            True if the dataset is downloaded, False otherwise.
         """
         self._warn_default_dir()
         for f in self.files():
@@ -214,7 +214,7 @@ class Dataset(StrEnum):
         """Get the ground truth trajectory in the **IMU** frame, rather than the ground truth frame as returned in [ground_truth_raw][evalio.datasets.Dataset.ground_truth_raw].
 
         Returns:
-            Trajectory: The ground truth trajectory in the IMU frame.
+            The ground truth trajectory in the IMU frame.
         """
         gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
@@ -253,7 +253,7 @@ class Dataset(StrEnum):
         If quick_len is available, it will be used. Otherwise, it will load the entire dataset to get the length.
 
         Returns:
-            int: Number of lidar scans.
+            Number of lidar scans.
         """
         if (length := self.quick_len()) is not None:
             return length
@@ -265,7 +265,7 @@ class Dataset(StrEnum):
         """Main interface for iterating over measurements of all types.
 
         Returns:
-            Iterator[Measurement]: Iterator of all measurements (IMU and Lidar).
+            Iterator of all measurements (IMU and Lidar).
         """
         self._fail_not_downloaded()
         return self.data_iter().__iter__()
@@ -274,7 +274,7 @@ class Dataset(StrEnum):
         """Iterate over just IMU measurements.
 
         Returns:
-            Iterable[ImuMeasurement]: Iterator of IMU measurements.
+            Iterator of IMU measurements.
         """
         self._fail_not_downloaded()
         return self.data_iter().imu_iter()
@@ -283,7 +283,7 @@ class Dataset(StrEnum):
         """Iterate over just Lidar measurements.
 
         Returns:
-            Iterable[LidarMeasurement]: Iterator of Lidar measurements.
+            Iterator of Lidar measurements.
         """
         self._fail_not_downloaded()
         return self.data_iter().lidar_iter()
@@ -297,7 +297,7 @@ class Dataset(StrEnum):
             idx (int, optional): Index of measurement to get. Defaults to 0.
 
         Returns:
-            LidarMeasurement: The Lidar measurement at the given index.
+            The Lidar measurement at the given index.
         """
         return next(islice(self.lidar(), idx, idx + 1))
 
@@ -310,7 +310,7 @@ class Dataset(StrEnum):
             idx (int, optional): Index of measurement to get. Defaults to 0.
 
         Returns:
-            ImuMeasurement: The IMU measurement at the given index.
+            The IMU measurement at the given index.
         """
         return next(islice(self.imu(), idx, idx + 1))
 
@@ -323,7 +323,7 @@ class Dataset(StrEnum):
         """Name of the sequence, in snake case.
 
         Returns:
-            str: Name of the sequence.
+            Name of the sequence.
         """
         return self.value
 
@@ -334,7 +334,7 @@ class Dataset(StrEnum):
         Example: "dataset_name/sequence_name"
 
         Returns:
-            str: Full name of the dataset.
+            Full name of the dataset.
         """
         return f"{self.dataset_name()}/{self.seq_name}"
 
@@ -343,7 +343,7 @@ class Dataset(StrEnum):
         """All sequences in the dataset.
 
         Returns:
-            list[Dataset]: List of all sequences in the dataset.
+            List of all sequences in the dataset.
         """
         return list(cls.__members__.values())
 
@@ -352,7 +352,7 @@ class Dataset(StrEnum):
         """The folder in the global dataset directory where this dataset is stored.
 
         Returns:
-            Path: Path to the dataset folder.
+            Path to the dataset folder.
         """
         global _DATA_DIR
         return _DATA_DIR / self.full_name
@@ -361,7 +361,7 @@ class Dataset(StrEnum):
         """Shows the size of the dataset on disk, in GB.
 
         Returns:
-            Optional[float]: Size of the dataset on disk, in GB. None if the dataset is not downloaded.
+            Size of the dataset on disk, in GB. None if the dataset is not downloaded.
         """
 
         if not self.is_downloaded():
@@ -383,10 +383,10 @@ def set_data_dir(directory: Path):
 
 
 def get_data_dir() -> Path:
-    """Get the global data directory. This will be used to store the downloaded data.
+    """Get the global data directory. This is where downloaded data is stored.
 
     Returns:
-        Path: Directory where datasets are stored.
+        Directory where datasets are stored.
     """
     global _DATA_DIR
     return _DATA_DIR

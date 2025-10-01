@@ -383,7 +383,7 @@ try:
             ValueError: If the object is not an implemented type for conversion.
 
         Returns:
-            rr.Transform3D | rr.Points3D: Rerun type.
+            Rerun type.
         """
         # If we have an empty list, assume it's a point cloud with no points
         if isinstance(obj, list) and len(obj) == 0:  # type: ignore

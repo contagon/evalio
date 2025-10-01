@@ -41,7 +41,7 @@ def pascal_to_snake(identifier: str) -> str:
         identifier (str): The PascalCase identifier to convert.
 
     Returns:
-        str: The converted snake_case identifier.
+        The converted snake_case identifier.
     """
     # Only split when going from lower to something else
     # this handles digits better than other approaches
