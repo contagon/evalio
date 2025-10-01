@@ -12,7 +12,7 @@ from evalio.rerun import RerunVis, VisArgs
 # from .stats import evaluate
 
 from rich import print
-from typing import Optional, Annotated, cast
+from typing import Optional, Annotated
 import typer
 
 from time import time
@@ -132,7 +132,9 @@ def run_from_cli(
         pipelines = pl.parse_config(params.get("pipelines", None))
 
         out = (
-            params["output_dir"] if "output_dir" in params else Path("./evalio_results")
+            params["output_dir"]
+            if "output_dir" in params
+            else Path("./evalio_results") / config.stem
         )
 
     # ------------------------- Parse manual options ------------------------- #
@@ -202,7 +204,6 @@ def run_from_cli(
     # save_config(pipelines, datasets, out)
 
     # ------------------------- Convert to experiments ------------------------- #
-    out.mkdir(parents=True, exist_ok=True)
     experiments = [
         ty.Experiment(
             name=name,
@@ -211,7 +212,7 @@ def run_from_cli(
             pipeline=pipeline,
             pipeline_version=pipeline.version(),
             pipeline_params=params,
-            file=out / f"{name}.csv",
+            file=out / sequence / f"{name}.csv",
         )
         for sequence, length in datasets
         for name, pipeline, params in pipelines
@@ -258,21 +259,16 @@ def run(
             exp.sequence.ground_truth().to_file(gt_file)
 
         # Figure out the status of the experiment
-        if not exp.file.exists() or exp.file.stat().st_size == 0:
-            status = ty.ExperimentStatus.NotRun
-        else:
-            traj = ty.Trajectory.from_file(exp.file)
-            if isinstance(traj, ty.Trajectory) and isinstance(
-                traj.metadata, ty.Experiment
-            ):
-                # If the sequence length has changed, mark as not run
-                if traj.metadata.sequence_length != exp.sequence_length:
-                    status = ty.ExperimentStatus.NotRun
-                else:
-                    status = traj.metadata.status
-
+        traj = ty.Trajectory.from_file(exp.file)
+        if isinstance(traj, ty.Trajectory) and isinstance(traj.metadata, ty.Experiment):
+            # If the sequence length has changed, mark as started
+            if traj.metadata.sequence_length != exp.sequence_length:
+                status = ty.ExperimentStatus.Started
             else:
-                status = ty.ExperimentStatus.Fail
+                status = traj.metadata.status
+
+        else:
+            status = ty.ExperimentStatus.NotRun
 
         # Do something based on the status
         info = f"{exp.pipeline.name()} on {exp.sequence}"
@@ -326,10 +322,10 @@ def run_single(
 ):
     # Build everything
     output = exp.setup()
-    if isinstance(output, (ds.DatasetConfigError, pl.PipelineConfigError)):
+    if isinstance(output, ds.DatasetConfigError | pl.PipelineConfigError):
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
-    pipe, dataset = cast(tuple[pl.Pipeline, ds.Dataset], output)
+    pipe, dataset = output
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
     traj.open(exp.file)

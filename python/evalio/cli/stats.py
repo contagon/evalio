@@ -1,65 +1,54 @@
 from pathlib import Path
-from typing import Annotated, Optional, Sequence, cast
+from typing import Annotated, Any, Callable, Optional, cast
 
-import typer
-from rich import box
-from rich.console import Console
-from rich.table import Table
+import polars as pl
+import itertools
 
-from evalio import Param, stats
-from evalio.types import Trajectory
 from evalio.utils import print_warning
+from rich.table import Table
+from rich.console import Console
+from rich import box
+
+from evalio import types as ty
+from evalio import stats
+
+import numpy as np
+import typer
+
+import distinctipy
+
+from joblib import Parallel, delayed
 
 app = typer.Typer()
-
-
-def dict_diff(dicts: Sequence[dict[str, Param]]) -> list[str]:
-    """Compute which values are different between a list of dictionaries.
-
-    Assumes each dictionary has the same keys.
-
-    Args:
-        dicts (Sequence[dict]): List of dictionaries to compare.
-
-    Returns:
-        list[str]: Keys that don't have identical values between all dictionaries.
-    """
-
-    # quick sanity check
-    size = len(dicts[0])
-    for d in dicts:
-        assert len(d) == size
-
-    # compare all dictionaries to find varying keys
-    diff: list[str] = []
-    for k in dicts[0].keys():
-        if any(d[k] != dicts[0][k] for d in dicts):
-            diff.append(k)
-
-    return diff
 
 
 def eval_dataset(
     dir: Path,
     visualize: bool,
-    sort: Optional[str],
-    window_size: int,
+    window_kind: stats.WindowKind,
+    window_size: Optional[int | float],
     metric: stats.MetricKind,
     length: Optional[int],
-):
+) -> Optional[list[dict[str, Any]]]:
     # Load all trajectories
-    trajectories: list[Trajectory] = []
+    gt_og: Optional[ty.Trajectory] = None
+    all_trajs: list[ty.Trajectory] = []
     for file_path in dir.glob("*.csv"):
-        traj = Trajectory.from_experiment(file_path)
-        trajectories.append(traj)
+        traj = ty.Trajectory.from_file(file_path)
+        if not isinstance(traj, ty.Trajectory):
+            print_warning(f"Could not load trajectory from {file_path}, skipping.")
+            continue
+        elif isinstance(traj.metadata, ty.GroundTruth):
+            if gt_og is not None:
+                print_warning(f"Multiple ground truths found in {dir}, skipping.")
+                continue
+            gt_og = traj
+        elif isinstance(traj.metadata, ty.Experiment):
+            all_trajs.append(traj)
 
-    gt_list: list[Trajectory] = []
-    trajs: list[Trajectory] = []
-    for t in trajectories:
-        (gt_list if "gt" in t.metadata else trajs).append(t)
-
-    assert len(gt_list) == 1, f"Found multiple ground truths in {dir}"
-    gt_og = gt_list[0]
+    if gt_og is None:
+        print_warning(f"No ground truth found in {dir}, skipping.")
+        return None
 
     # Setup visualization
     if visualize:
@@ -71,10 +60,10 @@ def eval_dataset(
 
     rr = None
     convert = None
+    colors = None
     if visualize:
         import rerun as rr
-
-        from evalio.rerun import convert  # type: ignore
+        from evalio.rerun import convert, GT_COLOR
 
         rr.init(
             str(dir),
@@ -83,131 +72,315 @@ def eval_dataset(
         rr.connect_grpc()
         rr.log(
             "gt",
-            convert(gt_og, color=(144, 144, 144)),
+            convert(gt_og, color=GT_COLOR),
             static=True,
         )
 
-    # Group into pipelines so we can compare keys
-    # (other pipelines will have different keys)
-    pipelines = set(cast(str, traj.metadata["pipeline"]) for traj in trajs)
-    grouped_trajs: dict[str, list[Trajectory]] = {p: [] for p in pipelines}
-    for traj in trajs:
-        grouped_trajs[cast(str, traj.metadata["pipeline"])].append(traj)
+        # generate colors for visualization
+        colors = distinctipy.get_colors(len(all_trajs) + 1)
 
-    # Find all keys that were different
-    keys_to_print = ["pipeline"]
-    for _, trajs in grouped_trajs.items():
-        keys = dict_diff([traj.metadata for traj in trajs])
-        if len(keys) > 0:
-            keys.remove("name")
-            keys_to_print += keys
+    # Iterate over each
+    results: list[dict[str, Any]] = []
+    for index, traj in enumerate(all_trajs):
+        r = cast(ty.Experiment, traj.metadata).to_dict()
+        # flatten pipeline params
+        r.update(r["pipeline_params"])
+        del r["pipeline_params"]
 
-    results: list[dict[str, Param]] = []
-    for _pipeline, trajs in grouped_trajs.items():
-        # Iterate over each
-        for traj in trajs:
-            traj_aligned, gt_aligned = stats.align(traj, gt_og)
-            if length is not None and len(traj_aligned) > length:
-                traj_aligned.stamps = traj_aligned.stamps[:length]
-                traj_aligned.poses = traj_aligned.poses[:length]
-                gt_aligned.stamps = gt_aligned.stamps[:length]
-                gt_aligned.poses = gt_aligned.poses[:length]
-            ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
-            rte = stats.rte(traj_aligned, gt_aligned, window_size).summarize(metric)
-            r = {
-                "name": traj.metadata["name"],
+        # add metrics
+        traj_aligned, gt_aligned = stats.align(traj, gt_og)
+        if length is not None and len(traj_aligned) > length:
+            traj_aligned.stamps = traj_aligned.stamps[:length]
+            traj_aligned.poses = traj_aligned.poses[:length]
+            gt_aligned.stamps = gt_aligned.stamps[:length]
+            gt_aligned.poses = gt_aligned.poses[:length]
+        ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
+        rte = stats.rte(traj_aligned, gt_aligned, window_kind, window_size).summarize(
+            metric
+        )
+
+        r.update(
+            {
                 "RTEt": rte.trans,
                 "RTEr": rte.rot,
                 "ATEt": ate.trans,
                 "ATEr": ate.rot,
-                "length": len(traj_aligned),
             }
-            r.update({k: traj.metadata.get(k, "--") for k in keys_to_print})
-            results.append(r)
+        )
 
-            if rr is not None and convert is not None and visualize:
-                rr.log(
-                    cast(str, traj.metadata["name"]),
-                    convert(traj_aligned),
-                    static=True,
-                )
+        results.append(r)
 
-    if sort is not None:
-        results = sorted(results, key=lambda x: x[sort])
+        if rr is not None and convert is not None and colors is not None and visualize:
+            rr.log(
+                cast(ty.Experiment, traj.metadata).name,
+                convert(traj_aligned, color=colors[index]),
+                static=True,
+            )
 
-    table = Table(
-        title=str(dir),
-        highlight=True,
-        box=box.ROUNDED,
-        min_width=len(str(dir)) + 5,
-    )
-
-    for key, val in results[0].items():
-        table.add_column(key, justify="right" if isinstance(val, float) else "center")
-
-    for result in results:
-        row = [
-            f"{item:.3f}" if isinstance(item, float) else str(item)
-            for item in result.values()
-        ]
-        table.add_row(*row)
-
-    print()
-    Console().print(table)
+    return results
 
 
 def _contains_dir(directory: Path) -> bool:
     return any(directory.is_dir() for directory in directory.glob("*"))
 
 
+def evaluate(
+    directories: list[Path],
+    window_size: Optional[float],
+    window_kind: stats.WindowKind,
+    metric: stats.MetricKind,
+    length: Optional[int],
+    visualize: bool,
+) -> list[dict[str, Any]]:
+    # Collect all bottom level directories
+    bottom_level_dirs: list[Path] = []
+    for directory in directories:
+        for subdir in directory.glob("**/"):
+            if not _contains_dir(subdir):
+                bottom_level_dirs.append(subdir)
+
+    # Compute them all in parallel
+    results = Parallel(n_jobs=-2)(
+        delayed(eval_dataset)(
+            d,
+            visualize,
+            window_kind,
+            window_size,
+            metric,
+            length,
+        )
+        for d in bottom_level_dirs
+    )
+    results = [r for r in results if r is not None]
+
+    return list(itertools.chain.from_iterable(results))
+
+
 @app.command("stats", no_args_is_help=True)
-def eval(
+def evaluate_typer(
     directories: Annotated[
-        list[str], typer.Argument(help="Directory of results to evaluate.")
+        list[Path], typer.Argument(help="Directory of results to evaluate.")
     ],
     visualize: Annotated[
         bool, typer.Option("--visualize", "-v", help="Visualize results.")
     ] = False,
+    # output options
     sort: Annotated[
         str,
-        typer.Option("-s", "--sort", help="Sort results by the name of a column."),
-    ] = "RTEt",
-    window: Annotated[
-        int,
         typer.Option(
-            "-w", "--window", help="Window size for RTE. Defaults to 100 time-steps."
+            "-s",
+            "--sort",
+            help="Sort results by the name of a column.",
+            rich_help_panel="Output options",
         ),
-    ] = 200,
+    ] = "RTEt",
+    reverse: Annotated[
+        bool,
+        typer.Option(
+            "--reverse",
+            "-r",
+            help="Reverse the sorting order. Defaults to False.",
+            rich_help_panel="Output options",
+        ),
+    ] = False,
+    # filtering options
+    filter_str: Annotated[
+        Optional[str],
+        typer.Option(
+            "-f",
+            "--filter",
+            help="Python expressions to filter results rows. 'True' rows will be kept. Example: --filter 'RTEt < 0.5'",
+            rich_help_panel="Filtering options",
+        ),
+    ] = None,
+    only_complete: Annotated[
+        bool,
+        typer.Option(
+            "--only-complete",
+            help="Only show results for trajectories that completed.",
+            rich_help_panel="Filtering options",
+        ),
+    ] = False,
+    only_failed: Annotated[
+        bool,
+        typer.Option(
+            "--only-failed",
+            help="Only show results for trajectories that failed.",
+            rich_help_panel="Filtering options",
+        ),
+    ] = False,
+    hide_columns: Annotated[
+        list[str],
+        typer.Option(
+            "-s",
+            "--show-columns",
+            help="Comma-separated list of columns to show.",
+            rich_help_panel="Output options",
+        ),
+    ] = ["pipeline_version", "total_elapsed", "pipeline"],
+    print_columns: Annotated[
+        bool,
+        typer.Option(
+            "--print-columns",
+            help="Print the names of all available columns.",
+            rich_help_panel="Output options",
+        ),
+    ] = False,
+    # metric options
+    window_size: Annotated[
+        Optional[float],
+        typer.Option(
+            "-w",
+            "--window-size",
+            help="Window size for RTE. Defaults to 100 time steps for time windows, 10 meters for distance windows.",
+            rich_help_panel="Metric options",
+        ),
+    ] = None,
+    window_kind: Annotated[
+        stats.WindowKind,
+        typer.Option(
+            "-k",
+            "--window-kind",
+            help="Kind of window to use for RTE. Defaults to time.",
+            rich_help_panel="Metric options",
+        ),
+    ] = stats.WindowKind.time,
     metric: Annotated[
         stats.MetricKind,
         typer.Option(
             "--metric",
             "-m",
             help="Metric to use for ATE/RTE computation. Defaults to sse.",
+            rich_help_panel="Metric options",
         ),
     ] = stats.MetricKind.sse,
     length: Annotated[
         Optional[int],
         typer.Option(
-            "-l", "--length", help="Specify subset of trajectory to evaluate."
+            "-l",
+            "--length",
+            help="Specify subset of trajectory to evaluate.",
+            rich_help_panel="Metric options",
         ),
     ] = None,
-):
+) -> None:
     """
     Evaluate the results of experiments.
     """
+    # ------------------------- Process all inputs ------------------------- #
+    # Parse some of the options
+    if only_complete and only_failed:
+        raise typer.BadParameter(
+            "Can only use one of --only-complete, --only-incomplete, or --only-failed."
+        )
 
-    directories_path = [Path(d) for d in directories]
+    # Parse the filtering options
+    filter_method: Callable[[dict[str, Any]], bool]
+    if filter_str is None:
+        filter_method = lambda r: True  # noqa: E731
+    else:
+        filter_method = lambda r: eval(  # noqa: E731
+            filter_str,
+            {"__builtins__": None},
+            {"np": np, **r},
+        )
+
+    original_filter = filter_method
+    if only_complete:
+        filter_method = lambda r: original_filter(r) and r["status"] == "complete"  # noqa: E731
+    elif only_failed:
+        filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
+
+    match window_kind:
+        case stats.WindowKind.distance:
+            if window_size is None:
+                window_size = 10
+            words = "meters"
+        case stats.WindowKind.time:
+            if window_size is None:
+                window_size = 200
+            words = "time steps"
 
     c = Console()
-    c.print(f"Evaluating RTE over a window of size {window}, using metric {metric}.")
+    c.print(
+        f"Evaluating RTE over a window of {window_size} {words}, using metric {metric}."
+    )
 
-    # Collect all bottom level directories
-    bottom_level_dirs: list[Path] = []
-    for directory in directories_path:
-        for subdir in directory.glob("**/"):
-            if not _contains_dir(subdir):
-                bottom_level_dirs.append(subdir)
+    # ------------------------- Compute all results ------------------------- #
+    results = evaluate(
+        directories,
+        window_size,
+        window_kind,
+        metric,
+        length,
+        visualize,
+    )
 
-    for d in bottom_level_dirs:
-        eval_dataset(d, visualize, sort, window, metric, length)
+    # ------------------------- Filter all results ------------------------- #
+    try:
+        results = [r for r in results if filter_method(r)]
+    except Exception as e:
+        print_warning(f"Error filtering results: {e}")
+
+    # convert to polars dataframe for easier processing
+    if len(results) == 0:
+        print_warning("No results found.")
+        return
+
+    df = pl.DataFrame(results)
+
+    # clean up timing
+    df = df.with_columns(
+        ((pl.col("sequence_length") / pl.col("total_elapsed")).alias("Hz"))
+    )
+    df = df.rename({"max_step_elapsed": "Max (s)"})
+
+    # print columns if requested
+    if print_columns:
+        c.print("Available columns:")
+        for col in df.columns:
+            c.print(f" - {col}")
+        return
+
+    # delete unneeded columns
+    remove_columns = [col for col in df.columns if df[col].drop_nulls().n_unique() == 1]
+    remove_columns.extend([col for col in hide_columns if col in df.columns])
+    df = df.drop(remove_columns)
+
+    # sort if requested
+    if sort not in df.columns:
+        print_warning(f"Column {sort} not found, cannot sort.")
+    else:
+        df = df.sort(sort, descending=reverse)
+
+    # ------------------------- Print ------------------------- #
+    # Print sequence by sequence
+    for sequence in df["sequence"].unique():
+        df_sequence = df.filter(pl.col("sequence") == sequence)
+        df_sequence = df_sequence.drop("sequence")
+        if df_sequence.is_empty():
+            continue
+
+        table = Table(
+            title=f"Results for {sequence}",
+            box=box.ROUNDED,
+            highlight=True,
+            # show_lines=True,
+            # header_style="bold magenta",
+            # min_width =
+        )
+
+        for col in df_sequence.columns:
+            table.add_column(
+                col,
+                justify="right" if df_sequence[col].dtype is pl.Float64 else "left",
+                no_wrap=True,
+            )
+
+        for row in df_sequence.iter_rows():
+            table.add_row(
+                *[f"{x:.3f}" if isinstance(x, float) else str(x) for x in row]
+            )
+
+        c.print(table)
+        c.print("\n")

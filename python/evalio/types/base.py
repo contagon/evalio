@@ -205,7 +205,7 @@ class Trajectory:
         return Trajectory.from_csv(path, ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"])
 
     @staticmethod
-    def from_file(path: Path) -> Trajectory | FailedMetadataParse:
+    def from_file(path: Path) -> Trajectory | FailedMetadataParse | FileNotFoundError:
         """Load a saved evalio trajectory from file.
 
         Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
@@ -216,6 +216,9 @@ class Trajectory:
         Returns:
             Trajectory: Loaded trajectory with metadata, stamps, and poses.
         """
+        if not path.exists():
+            return FileNotFoundError(f"File {path} does not exist.")
+
         with open(path) as file:
             metadata_filter = filter(
                 lambda row: row[0] == "#" and not row.startswith("# timestamp,"), file
@@ -293,6 +296,8 @@ class Trajectory:
                 "Trajectory.open: No metadata or path provided, cannot set metadata file."
             )
             return
+
+        path.parent.mkdir(parents=True, exist_ok=True)
         self._file = path.open("w")
         self._csv_writer = csv.writer(self._file)
         self._write()
