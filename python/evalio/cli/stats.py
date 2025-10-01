@@ -217,19 +217,19 @@ def evaluate_typer(
         ),
     ] = False,
     # metric options
-    w_distance: Annotated[
+    w_meters: Annotated[
         Optional[list[float]],
         typer.Option(
-            "--w-distance",
+            "--w-meters",
             help="Window size in meters for RTE computation. May be repeated. Defaults to 30m.",
             rich_help_panel="Metric options",
         ),
     ] = None,
-    w_scans: Annotated[
-        Optional[list[int]],
+    w_seconds: Annotated[
+        Optional[list[float]],
         typer.Option(
-            "--w-scans",
-            help="Window size in number of scans for RTE computation. May be repeated. Defaults to none.",
+            "--w-seconds",
+            help="Window size in seconds for RTE computation. May be repeated. Defaults to none.",
             rich_help_panel="Metric options",
         ),
     ] = None,
@@ -280,12 +280,12 @@ def evaluate_typer(
         filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
 
     windows: list[stats.WindowKind] = []
-    if w_scans is not None:
-        windows.extend([stats.ScanWindow(t) for t in w_scans])
-    if w_distance is not None:
-        windows.extend([stats.DistanceWindow(d) for d in w_distance])
+    if w_seconds is not None:
+        windows.extend([stats.WindowSeconds(t) for t in w_seconds])
+    if w_meters is not None:
+        windows.extend([stats.WindowMeters(d) for d in w_meters])
     if len(windows) == 0:
-        windows = [stats.DistanceWindow(30.0)]
+        windows = [stats.WindowMeters(30.0)]
 
     if sort is None:
         sort = f"RTEt_{windows[0].name()}"

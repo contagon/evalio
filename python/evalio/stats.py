@@ -2,7 +2,7 @@ from enum import StrEnum, auto
 from typing_extensions import TypeVar
 
 from evalio.utils import print_warning
-from .types import Stamp, Trajectory, SE3, Metadata
+from . import types as ty
 
 from dataclasses import dataclass
 
@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from copy import deepcopy
 
 
-def _check_overstep(stamps: list[Stamp], s: Stamp, idx: int) -> bool:
+def _check_overstep(stamps: list[ty.Stamp], s: ty.Stamp, idx: int) -> bool:
     return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
 
 
@@ -30,30 +30,30 @@ class MetricKind(StrEnum):
 
 
 @dataclass
-class DistanceWindow:
+class WindowMeters:
     """Dataclass to hold the parameters for a distance-based window."""
 
-    distance: float
+    value: float
     """Distance in meters"""
 
     def name(self) -> str:
         """Get a string representation of the window."""
-        return f"{self.distance:.1f}m"
+        return f"{self.value:.1f}m"
 
 
 @dataclass
-class ScanWindow:
-    """Dataclass to hold the parameters for a scan-based window."""
+class WindowSeconds:
+    """Dataclass to hold the parameters for a time-based window."""
 
-    scans: int
-    """Number of scans"""
+    value: float
+    """Duration of the window in seconds"""
 
     def name(self) -> str:
         """Get a string representation of the window."""
-        return f"{self.scans}s"
+        return f"{self.value}s"
 
 
-WindowKind = DistanceWindow | ScanWindow
+WindowKind = WindowMeters | WindowSeconds
 
 
 @dataclass(kw_only=True)
@@ -119,13 +119,13 @@ class Error:
         )
 
 
-M1 = TypeVar("M1", bound=Metadata | None)
-M2 = TypeVar("M2", bound=Metadata | None)
+M1 = TypeVar("M1", bound=ty.Metadata | None)
+M2 = TypeVar("M2", bound=ty.Metadata | None)
 
 
 def align(
-    traj: Trajectory[M1], gt: Trajectory[M2], in_place: bool = False
-) -> tuple[Trajectory[M1], Trajectory[M2]]:
+    traj: ty.Trajectory[M1], gt: ty.Trajectory[M2], in_place: bool = False
+) -> tuple[ty.Trajectory[M1], ty.Trajectory[M2]]:
     """Align the trajectories both spatially and temporally.
 
     The resulting trajectories will be have the same origin as the second ("gt") trajectory.
@@ -146,7 +146,7 @@ def align(
     return traj, gt
 
 
-def align_poses(traj: Trajectory[M1], other: Trajectory[M2]):
+def align_poses(traj: ty.Trajectory[M1], other: ty.Trajectory[M2]):
     """Align the trajectory in place to another trajectory. Operates in place.
 
     This results in the current trajectory having an identical first pose to the other trajectory.
@@ -164,7 +164,7 @@ def align_poses(traj: Trajectory[M1], other: Trajectory[M2]):
         traj.poses[i] = delta * traj.poses[i]
 
 
-def align_stamps(traj1: Trajectory[M1], traj2: Trajectory[M2]):
+def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
     """Select the closest poses in traj1 and traj2. Operates in place.
 
     Does this by finding the higher frame rate trajectory and subsampling it to the closest poses of the other one.
@@ -203,8 +203,8 @@ def align_stamps(traj1: Trajectory[M1], traj2: Trajectory[M2]):
 
     # Align the two trajectories by subsampling keeping traj1 stamps
     traj1_idx = 0
-    traj1_stamps: list[Stamp] = []
-    traj1_poses: list[SE3] = []
+    traj1_stamps: list[ty.Stamp] = []
+    traj1_poses: list[ty.SE3] = []
     for i, stamp in enumerate(traj2.stamps):
         while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
             traj1_idx += 1
@@ -228,7 +228,7 @@ def align_stamps(traj1: Trajectory[M1], traj2: Trajectory[M2]):
         traj1, traj2 = traj2, traj1  # type: ignore
 
 
-def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
+def _compute_metric(gts: list[ty.SE3], poses: list[ty.SE3]) -> Error:
     """Iterate and compute the SE(3) delta between two lists of poses.
 
     Args:
@@ -251,7 +251,7 @@ def _compute_metric(gts: list[SE3], poses: list[SE3]) -> Error:
     return Error(rot=error_r, trans=error_t)
 
 
-def _check_aligned(traj: Trajectory[M1], gt: Trajectory[M2]) -> bool:
+def _check_aligned(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> bool:
     """Check if the two trajectories are aligned.
 
     This is done by checking if the first poses are identical, and if there's the same number of poses in both trajectories.
@@ -273,7 +273,7 @@ def _check_aligned(traj: Trajectory[M1], gt: Trajectory[M2]) -> bool:
     )
 
 
-def ate(traj: Trajectory[M1], gt: Trajectory[M2]) -> Error:
+def ate(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> Error:
     """Compute the Absolute Trajectory Error (ATE) between two trajectories.
 
     Will check if the two trajectories are aligned and if not, will align them.
@@ -294,9 +294,9 @@ def ate(traj: Trajectory[M1], gt: Trajectory[M2]) -> Error:
 
 
 def rte(
-    traj: Trajectory[M1],
-    gt: Trajectory[M2],
-    window: WindowKind = DistanceWindow(30),
+    traj: ty.Trajectory[M1],
+    gt: ty.Trajectory[M2],
+    window: WindowKind = WindowMeters(30),
 ) -> Error:
     """Compute the Relative Trajectory Error (RTE) between two trajectories.
 
@@ -307,34 +307,38 @@ def rte(
         traj (Trajectory): One of the trajectories
         gt (Trajectory): The other trajectory
         window (WindowKind, optional): The window to use for computing the RTE.
-            Either a [DistanceWindow][evalio.stats.DistanceWindow] or a [ScanWindow][evalio.stats.ScanWindow].
-            Defaults to DistanceWindow(30), which is a 30 meter window.
+            Either a [WindowMeters][evalio.stats.WindowMeters] or a [WindowSeconds][evalio.stats.WindowSeconds].
+            Defaults to WindowMeters(30), which is a 30 meter window.
     Returns:
         Error: The computed error
     """
     if not _check_aligned(traj, gt):
         traj, gt = align(traj, gt)
 
-    if (isinstance(window, ScanWindow) and window.scans <= 0) or (
-        isinstance(window, DistanceWindow) and window.distance <= 0
-    ):
+    if window.value <= 0:
         raise ValueError("Window size must be positive")
 
-    if isinstance(window, ScanWindow) and window.scans > len(gt) - 1:
-        print_warning(f"Window size {window} is larger than number of poses {len(gt)}")
-        return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
+    window_deltas_poses: list[ty.SE3] = []
+    window_deltas_gts: list[ty.SE3] = []
 
-    window_deltas_poses: list[SE3] = []
-    window_deltas_gts: list[SE3] = []
+    if isinstance(window, WindowSeconds):
+        # Find our pairs for computation
+        end_idx = 1
+        duration = ty.Duration.from_sec(window.value)
 
-    if isinstance(window, ScanWindow):
-        for i in range(len(gt) - window.scans):
-            window_deltas_poses.append(
-                traj.poses[i].inverse() * traj.poses[i + window.scans]
-            )
-            window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[i + window.scans])
+        for i in range(len(gt)):
+            while end_idx < len(gt) and gt.stamps[end_idx] - gt.stamps[i] < duration:
+                end_idx += 1
 
-    elif isinstance(window, DistanceWindow):
+            if end_idx >= len(gt):
+                break
+
+            window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[end_idx])
+            window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[end_idx])
+
+            end_idx_prev = end_idx
+
+    elif isinstance(window, WindowMeters):
         # Compute deltas for all of ground truth poses
         dist = np.zeros(len(gt))
         for i in range(1, len(gt)):
@@ -347,9 +351,7 @@ def rte(
 
         # Find our pairs for computation
         for i in range(len(gt)):
-            while (
-                end_idx < len(gt) and cum_dist[end_idx] - cum_dist[i] < window.distance
-            ):
+            while end_idx < len(gt) and cum_dist[end_idx] - cum_dist[i] < window.value:
                 end_idx += 1
 
             if end_idx >= len(gt):
@@ -361,6 +363,15 @@ def rte(
             window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[end_idx])
 
             end_idx_prev = end_idx
+
+    if len(window_deltas_poses) == 0:
+        if isinstance(traj.metadata, ty.Experiment):
+            print_warning(
+                f"No windows found with size {window} for '{traj.metadata.name}' on '{traj.metadata.sequence}'"
+            )
+        else:
+            print_warning(f"No windows found with size {window}")
+        return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
 
     # Compute the RTE
     return _compute_metric(window_deltas_gts, window_deltas_poses)
