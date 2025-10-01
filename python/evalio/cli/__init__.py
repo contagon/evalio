@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 import typer
 
@@ -38,8 +38,19 @@ def data_callback(value: Optional[Path]):
     """
     Set the data directory.
     """
-    if value:
+    if value is not None:
         set_data_dir(value)
+
+
+def module_callback(value: Optional[list[str]]) -> list[Any]:
+    """
+    Set the module to use.
+    """
+    if value is not None:
+        for module in value:
+            evalio._register_custom_modules(module)
+
+    return []
 
 
 @app.callback()
@@ -56,6 +67,17 @@ def global_options(
             show_default=False,
             rich_help_panel="Global options",
             callback=data_callback,
+        ),
+    ] = None,
+    custom_modules: Annotated[
+        Optional[list[str]],
+        typer.Option(
+            "-M",
+            "--module",
+            help="Custom module to load (for custom datasets or pipelines). Can be used multiple times.",
+            show_default=False,
+            rich_help_panel="Global options",
+            callback=module_callback,
         ),
     ] = None,
     version: Annotated[

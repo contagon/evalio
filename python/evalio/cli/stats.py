@@ -9,8 +9,7 @@ from rich.table import Table
 from rich.console import Console
 from rich import box
 
-from evalio import types as ty
-from evalio import stats
+from evalio import types as ty, stats
 
 import numpy as np
 import typer

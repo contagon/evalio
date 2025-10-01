@@ -31,18 +31,18 @@ evalio downloads data to the path given by `-D`, `EVALIO_DATA` environment varia
 
 Once downloaded, a trajectory can then be easily used in python,
 ```python
-from evalio.datasets import Hilti2022
+from evalio import datasets as ds
 
 # for all data
-for mm in Hilti2022.basement_2:
+for mm in ds.Hilti2022.basement_2:
     print(mm)
 
 # for lidars
-for scan in Hilti2022.basement_2.lidar():
+for scan in ds.Hilti2022.basement_2.lidar():
     print(scan)
 
 # for imu
-for imu in Hilti2022.basement_2.imu():
+for imu in ds.Hilti2022.basement_2.imu():
     print(imu)
 ```
 
@@ -52,7 +52,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # get the 10th scan
-scan = Hilti2022.basement_2.get_one_lidar(10)
+scan = ds.Hilti2022.basement_2.get_one_lidar(10)
 # always in row-major order, with stamp at start of scan
 x = np.array([p.x for p in scan.points])
 y = np.array([p.y for p in scan.points])
@@ -68,7 +68,7 @@ from evalio.rerun import convert
 
 rr.init("evalio")
 rr.connect_tcp()
-for scan in Hilti2022.basement_2.lidar():
+for scan in ds.Hilti2022.basement_2.lidar():
     rr.set_time("timeline", timestamp=scan.stamp.to_sec())
     rr.log("lidar", convert(scan, color=[255, 0, 255]))
 ```
@@ -101,6 +101,7 @@ evalio stats results
 
 More complex experiments can be run, including varying pipeline parameters, via specifying a config file,
 ```yaml
+# If not specified, defaults to ./evalio_results/config_file_name
 output_dir: ./results/
 
 datasets:
