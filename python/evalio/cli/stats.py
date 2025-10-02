@@ -199,14 +199,14 @@ def evaluate_typer(
         ),
     ] = False,
     hide_columns: Annotated[
-        list[str],
+        Optional[list[str]],
         typer.Option(
             "-s",
-            "--show-columns",
-            help="Comma-separated list of columns to show.",
+            "--hide-columns",
+            help="Comma-separated list of columns to hide.",
             rich_help_panel="Output options",
         ),
-    ] = ["pipeline_version", "total_elapsed", "pipeline"],
+    ] = None,
     print_columns: Annotated[
         bool,
         typer.Option(
@@ -326,8 +326,20 @@ def evaluate_typer(
             c.print(f" - {col}")
         return
 
+    # hide some columns by default
+    if hide_columns is None:
+        hide_columns = []
+    hide_columns.extend(["pipeline_version", "total_elapsed", "pipeline"])
+
     # delete unneeded columns
-    remove_columns = [col for col in df.columns if df[col].drop_nulls().n_unique() == 1]
+    remove_columns = [
+        col
+        for col in df.columns
+        if col not in ["sequence", "name"]  # must keep these for later
+        and not col.startswith("RTE")  # want to keep metrics as well
+        and not col.startswith("ATE")
+        and df[col].drop_nulls().n_unique() == 1  # remove if they're all the same
+    ]
     remove_columns.extend([col for col in hide_columns if col in df.columns])
     df = df.drop(remove_columns)
 

@@ -212,7 +212,7 @@ def run_from_cli(
             pipeline=pipeline,
             pipeline_version=pipeline.version(),
             pipeline_params=params,
-            file=out / sequence / f"{name}.csv",
+            file=out / sequence.full_name / f"{name}.csv",
         )
         for sequence, length in datasets
         for name, pipeline, params in pipelines
@@ -271,7 +271,7 @@ def run(
             status = ty.ExperimentStatus.NotRun
 
         # Do something based on the status
-        info = f"{exp.pipeline.name()} on {exp.sequence}"
+        info = f"{exp.name} on {exp.sequence}"
         match status:
             case ty.ExperimentStatus.Complete:
                 print(f"Skipping {info}, already finished")
