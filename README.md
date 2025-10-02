@@ -93,7 +93,7 @@ evalio run -c config.yml
 
 ## Contributing
 
-Contributions are always welcome! Feel free to open an issue, pull request, etc. We're happy to help you get started. The following are rough instructions for specifically adding additional datasets or pipelines.
+Contributions are always welcome! Feel free to open an issue, pull request, etc. The documentation has a more details on developing new datasets and pipelines.
 
 ## Citation
 

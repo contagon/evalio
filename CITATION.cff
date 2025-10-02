@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Potokar"
+  given-names: "Easton"
+- family-names: "Kaess"
+  given-names: "Michael"
+title: "evalio"
+date-released: 2025
+url: "https://arxiv.org/abs/2507.16000"
+preferred-citation:
+  type: misc
+  authors:
+  - family-names: "Potokar"
+    given-names: "Easton"
+  - family-names: "Kaess"
+    given-names: "Michael"
+  title: "A Comprehensive Evaluation of LiDAR Odometry Techniques"
+  year: 2025
+  eprint: "2507.16000"
+  archivePrefix: "arXiv"
+  primaryClass: "cs.RO"
+  url: "https://arxiv.org/abs/2507.16000"
