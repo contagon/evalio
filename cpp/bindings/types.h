@@ -2,6 +2,7 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -545,6 +546,14 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("trans", &SE3::trans, "Translation as a 3D vector.")
     .def("toMat", &SE3::toMat, "Convert to a 4x4 matrix.")
     .def("inverse", &SE3::inverse, "Compute the inverse.")
+    .def_static(
+      "error",
+      &SE3::error,
+      "a"_a,
+      "b"_a,
+      "Compute the rotational (degrees) and translational (meters) error "
+      "between two SE3s as a tuple (rot, trans)."
+    )
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")

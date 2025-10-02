@@ -202,12 +202,15 @@ def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
         traj1, traj2 = traj2, traj1  # type: ignore
         swapped = True
 
+    # cache this value
+    len_traj1 = len(traj1)
+
     # Align the two trajectories by subsampling keeping traj1 stamps
     traj1_idx = 0
     traj1_stamps: list[ty.Stamp] = []
     traj1_poses: list[ty.SE3] = []
     for i, stamp in enumerate(traj2.stamps):
-        while traj1_idx < len(traj1) - 1 and traj1.stamps[traj1_idx] < stamp:
+        while traj1_idx < len_traj1 - 1 and traj1.stamps[traj1_idx] < stamp:
             traj1_idx += 1
 
         # go back one if we overshot
@@ -217,7 +220,7 @@ def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
         traj1_stamps.append(traj1.stamps[traj1_idx])
         traj1_poses.append(traj1.poses[traj1_idx])
 
-        if traj1_idx >= len(traj1) - 1:
+        if traj1_idx >= len_traj1 - 1:
             traj2.stamps = traj2.stamps[: i + 1]
             traj2.poses = traj2.poses[: i + 1]
             break
@@ -244,10 +247,7 @@ def _compute_metric(gts: list[ty.SE3], poses: list[ty.SE3]) -> Error:
     error_t = np.zeros(len(gts))
     error_r = np.zeros(len(gts))
     for i, (gt, pose) in enumerate(zip(gts, poses)):
-        delta = gt.inverse() * pose
-        error_t[i] = np.sqrt(delta.trans @ delta.trans)
-        r_diff = delta.rot.log()
-        error_r[i] = np.sqrt(r_diff @ r_diff) * 180 / np.pi
+        error_r[i], error_t[i] = ty.SE3.error(gt, pose)
 
     return Error(rot=error_r, trans=error_t)
 
@@ -322,16 +322,19 @@ def rte(
     window_deltas_poses: list[ty.SE3] = []
     window_deltas_gts: list[ty.SE3] = []
 
+    # cache this value
+    len_gt = len(gt)
+
     if isinstance(window, WindowSeconds):
         # Find our pairs for computation
         end_idx = 1
         duration = ty.Duration.from_sec(window.value)
 
-        for i in range(len(gt)):
-            while end_idx < len(gt) and gt.stamps[end_idx] - gt.stamps[i] < duration:
+        for i in range(len_gt):
+            while end_idx < len_gt and gt.stamps[end_idx] - gt.stamps[i] < duration:
                 end_idx += 1
 
-            if end_idx >= len(gt):
+            if end_idx >= len_gt:
                 break
 
             window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[end_idx])
@@ -341,8 +344,8 @@ def rte(
 
     elif isinstance(window, WindowMeters):
         # Compute deltas for all of ground truth poses
-        dist = np.zeros(len(gt))
-        for i in range(1, len(gt)):
+        dist = np.zeros(len_gt)
+        for i in range(1, len_gt):
             diff: NDArray[np.float64] = gt.poses[i].trans - gt.poses[i - 1].trans
             dist[i] = np.sqrt(diff @ diff)
 
@@ -351,11 +354,11 @@ def rte(
         end_idx_prev = 0
 
         # Find our pairs for computation
-        for i in range(len(gt)):
-            while end_idx < len(gt) and cum_dist[end_idx] - cum_dist[i] < window.value:
+        for i in range(len_gt):
+            while end_idx < len_gt and cum_dist[end_idx] - cum_dist[i] < window.value:
                 end_idx += 1
 
-            if end_idx >= len(gt):
+            if end_idx >= len_gt:
                 break
             elif end_idx == end_idx_prev:
                 continue
@@ -368,10 +371,10 @@ def rte(
     if len(window_deltas_poses) == 0:
         if isinstance(traj.metadata, ty.Experiment):
             print_warning(
-                f"No windows found with size {window} for '{traj.metadata.name}' on '{traj.metadata.sequence}'"
+                f"No {window} windows found for '{traj.metadata.name}' on '{traj.metadata.sequence}'"
             )
         else:
-            print_warning(f"No windows found with size {window}")
+            print_warning(f"No {window} windows found")
         return Error(rot=np.array([np.nan]), trans=np.array([np.nan]))
 
     # Compute the RTE

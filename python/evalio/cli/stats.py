@@ -1,6 +1,8 @@
+from copy import copy
 from pathlib import Path
 from typing import Annotated, Any, Callable, Optional, cast
 
+from evalio.types.base import Trajectory
 import polars as pl
 import itertools
 
@@ -86,17 +88,21 @@ def eval_dataset(
         del r["pipeline_params"]
 
         # add metrics
-        traj_aligned, gt_aligned = stats.align(traj, gt_og)
-        if length is not None and len(traj_aligned) > length:
-            traj_aligned.stamps = traj_aligned.stamps[:length]
-            traj_aligned.poses = traj_aligned.poses[:length]
+        gt_aligned = Trajectory(
+            stamps=[copy(s) for s in gt_og.stamps],
+            poses=[copy(p) for p in gt_og.poses],
+        )
+        stats.align(traj, gt_aligned, in_place=True)
+        if length is not None and len(traj) > length:
+            traj.stamps = traj.stamps[:length]
+            traj.poses = traj.poses[:length]
             gt_aligned.stamps = gt_aligned.stamps[:length]
             gt_aligned.poses = gt_aligned.poses[:length]
-        ate = stats.ate(traj_aligned, gt_aligned).summarize(metric)
+        ate = stats.ate(traj, gt_aligned).summarize(metric)
         r.update({"ATEt": ate.trans, "ATEr": ate.rot})
 
         for w in windows:
-            rte = stats.rte(traj_aligned, gt_aligned, w).summarize(metric)
+            rte = stats.rte(traj, gt_aligned, w).summarize(metric)
             r.update({f"RTEt_{w.name()}": rte.trans, f"RTEr_{w.name()}": rte.rot})
 
         results.append(r)
@@ -104,7 +110,7 @@ def eval_dataset(
         if rr is not None and convert is not None and colors is not None and visualize:
             rr.log(
                 traj.metadata.name,
-                convert(traj_aligned, color=colors[index]),
+                convert(traj, color=colors[index]),
                 static=True,
             )
 
