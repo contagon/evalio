@@ -229,6 +229,11 @@ class Trajectory(Generic[M]):
         poses: list[SE3] = []
         stamps: list[Stamp] = []
 
+        # Pre-check how stamps are stored for efficiency
+        swap_sec_t = "t" in fieldnames
+        has_sec_field = "sec" in fieldnames or "t" in fieldnames
+        has_nsec_field = "nsec" in fieldnames
+
         with open(path) as f:
             csvfile = list(filter(lambda row: row[0] != "#", f))
             if skip_lines is not None:
@@ -244,19 +249,22 @@ class Trajectory(Generic[M]):
                 t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
                 pose = SE3(r, t)
 
-                if "t" in fieldnames:
+                if swap_sec_t:
                     line["sec"] = line["t"]
 
-                if "nsec" not in fieldnames:
-                    s, ns = line["sec"].split(
-                        "."
-                    )  # parse separately to get exact stamp
-                    ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
-                    stamp = Stamp(sec=int(s), nsec=int(ns))
-                elif "sec" not in fieldnames:
-                    stamp = Stamp.from_nsec(int(line["nsec"]))
-                else:
-                    stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
+                match (has_sec_field, has_nsec_field):
+                    case (True, True):
+                        stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
+                    case (True, False):
+                        # parse separately to get exact stamp
+                        s, ns = line["sec"].split(".")
+                        ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
+                        stamp = Stamp(sec=int(s), nsec=int(ns))
+                    case (False, True):
+                        stamp = Stamp.from_nsec(int(line["nsec"]))
+                    case (False, False):
+                        raise ValueError("Must have at least one of 'sec' or 'nsec'.")
+
                 poses.append(pose)
                 stamps.append(stamp)
 
