@@ -554,6 +554,13 @@ inline void makeTypes(nb::module_& m) {
       "Compute the rotational (degrees) and translational (meters) error "
       "between two SE3s as a tuple (rot, trans)."
     )
+    .def_static(
+      "distance",
+      &SE3::distance,
+      "a"_a,
+      "b"_a,
+      "Compute the distance between two SE3s."
+    )
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")

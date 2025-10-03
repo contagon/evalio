@@ -346,8 +346,7 @@ def rte(
         # Compute deltas for all of ground truth poses
         dist = np.zeros(len_gt)
         for i in range(1, len_gt):
-            diff: NDArray[np.float64] = gt.poses[i].trans - gt.poses[i - 1].trans
-            dist[i] = np.sqrt(diff @ diff)
+            dist[i] = ty.SE3.distance(gt.poses[i], gt.poses[i - 1])
 
         cum_dist = np.cumsum(dist)
         end_idx = 1

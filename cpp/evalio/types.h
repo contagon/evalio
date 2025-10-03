@@ -388,13 +388,6 @@ struct SE3 {
     return SE3(inv_rot, inv_rot.rotate(-trans));
   }
 
-  static std::pair<double, double> error(const SE3& a, const SE3& b) {
-    auto delta = a.inverse() * b;
-    double rot_err = delta.rot.log().norm() * (180.0 / M_PI);
-    double trans_err = (delta.trans).norm();
-    return {rot_err, trans_err};
-  }
-
   static SE3 exp(const Eigen::Matrix<double, 6, 1>& xi) {
     Eigen::Vector3d omega = xi.head<3>();
     Eigen::Vector3d xyz = xi.tail<3>();
@@ -462,6 +455,18 @@ struct SE3 {
 
   bool operator!=(const SE3& other) const {
     return !(*this == other);
+  }
+
+  // Helpers for stats computations
+  static std::pair<double, double> error(const SE3& a, const SE3& b) {
+    auto delta = a.inverse() * b;
+    double rot_err = delta.rot.log().norm() * (180.0 / M_PI);
+    double trans_err = (delta.trans).norm();
+    return {rot_err, trans_err};
+  }
+
+  static double distance(const SE3& a, const SE3& b) {
+    return (a.trans - b.trans).norm();
   }
 };
 
