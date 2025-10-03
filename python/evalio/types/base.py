@@ -12,7 +12,6 @@ from _csv import Writer
 from io import TextIOWrapper
 from typing_extensions import TypeVar
 from evalio.utils import print_warning
-import numpy as np
 import yaml
 
 from pathlib import Path
@@ -20,9 +19,9 @@ from typing import Any, ClassVar, Generic, Iterator, Optional, Self, cast
 
 from evalio._cpp.types import (  # type: ignore
     SE3,
-    SO3,
     Stamp,
 )
+from evalio._cpp.helpers import parse_csv_line  # type: ignore
 
 from evalio.utils import pascal_to_snake
 
@@ -204,7 +203,7 @@ class Trajectory(Generic[M]):
         path: Path,
         fieldnames: list[str],
         delimiter: str = ",",
-        skip_lines: Optional[int] = None,
+        skip_lines: int = 0,
     ) -> Trajectory:
         """Flexible loader for stamped poses stored in csv files.
 
@@ -229,41 +228,14 @@ class Trajectory(Generic[M]):
         poses: list[SE3] = []
         stamps: list[Stamp] = []
 
-        # Pre-check how stamps are stored for efficiency
-        swap_sec_t = "t" in fieldnames
-        has_sec_field = "sec" in fieldnames or "t" in fieldnames
-        has_nsec_field = "nsec" in fieldnames
+        fields = {name: i for i, name in enumerate(fieldnames)}
 
         with open(path) as f:
-            csvfile = list(filter(lambda row: row[0] != "#", f))
-            if skip_lines is not None:
-                csvfile = csvfile[skip_lines:]
-            reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter=delimiter)
-            for line in reader:
-                r = SO3(
-                    qw=float(line["qw"]),
-                    qx=float(line["qx"]),
-                    qy=float(line["qy"]),
-                    qz=float(line["qz"]),
-                )
-                t = np.array([float(line["x"]), float(line["y"]), float(line["z"])])
-                pose = SE3(r, t)
-
-                if swap_sec_t:
-                    line["sec"] = line["t"]
-
-                match (has_sec_field, has_nsec_field):
-                    case (True, True):
-                        stamp = Stamp(sec=int(line["sec"]), nsec=int(line["nsec"]))
-                    case (True, False):
-                        # parse separately to get exact stamp
-                        s, ns = line["sec"].split(".")
-                        ns = ns.ljust(9, "0")  # pad to 9 digits for nanoseconds
-                        stamp = Stamp(sec=int(s), nsec=int(ns))
-                    case (False, True):
-                        stamp = Stamp.from_nsec(int(line["nsec"]))
-                    case (False, False):
-                        raise ValueError("Must have at least one of 'sec' or 'nsec'.")
+            csvfile = filter(lambda row: row[0] != "#", f)
+            for i, line in enumerate(csvfile):
+                if i < skip_lines:
+                    continue
+                stamp, pose = parse_csv_line(line, delimiter, fields)
 
                 poses.append(pose)
                 stamps.append(stamp)

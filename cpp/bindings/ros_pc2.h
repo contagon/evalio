@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstddef>
 #include <fstream>
+#include <map>
 
 #include "evalio/types.h"
 
@@ -386,6 +387,79 @@ inline LidarMeasurement helipr_bin_to_evalio(
   return mm;
 }
 
+/// Parse a CSV line into an SE3 object. The idx map should contain the indices
+/// of the required fields: "qw", "qx", "qy", "qz", "x", "y", "z".
+inline std::pair<Stamp, SE3> parse_csv_line(
+  const std::string& s,
+  const char delimiter,
+  const std::map<std::string, int>& idx
+) {
+  std::stringstream ss(s);
+  std::string item;
+  std::vector<std::string> elems;
+  while (std::getline(ss, item, delimiter)) {
+    elems.push_back(item);
+  }
+
+  // Parse out the fields
+  SO3 r = SO3 {
+    .qx = std::stod(elems[idx.at("qx")]),
+    .qy = std::stod(elems[idx.at("qy")]),
+    .qz = std::stod(elems[idx.at("qz")]),
+    .qw = std::stod(elems[idx.at("qw")]),
+  };
+  Eigen::Vector3d t = Eigen::Vector3d(
+    std::stod(elems[idx.at("x")]),
+    std::stod(elems[idx.at("y")]),
+    std::stod(elems[idx.at("z")])
+  );
+
+  Stamp stamp;
+  // If both sec/nsec are given
+  if (idx.count("sec") && idx.count("nsec")) {
+    stamp = Stamp {
+      .sec = static_cast<uint32_t>(std::stoul(elems[idx.at("sec")])),
+      .nsec = static_cast<uint32_t>(std::stoul(elems[idx.at("nsec")]))
+    };
+  }
+
+  // If only sec is given, split it into sec/nsec
+  else if (idx.count("sec")) {
+    // Find decimal place
+    std::string sec_str = elems[idx.at("sec")];
+    size_t dot_pos = sec_str.find('.');
+    if (dot_pos == std::string::npos) {
+      throw std::runtime_error("Failed to find decimal in sec field.");
+    }
+
+    // extract sec
+    uint32_t sec_part = std::stoul(sec_str.substr(0, dot_pos));
+
+    // extract & pad nsec
+    std::string nsec_str = sec_str.substr(dot_pos + 1);
+    if (nsec_str.size() > 9) {
+      throw std::runtime_error("Too many digits in fractional part of sec.");
+    } else if (nsec_str.size() < 9) {
+      nsec_str += std::string(9 - nsec_str.size(), '0');
+    }
+    uint32_t nsec_part = std::stoul(nsec_str);
+
+    stamp = Stamp {.sec = sec_part, .nsec = nsec_part};
+  }
+
+  // If only nsec is given
+  else if (idx.count("nsec")) {
+    stamp = Stamp::from_nsec(std::stoul(elems[idx.at("nsec")]));
+  }
+
+  // If neither is given, throw an error
+  else {
+    throw std::runtime_error("Must have at least one of 'sec' or 'nsec'.");
+  }
+
+  return std::make_pair(stamp, SE3(r, t));
+}
+
 // ---------------------- Create python bindings ---------------------- //
 inline void makeConversions(nb::module_& m) {
   nb::enum_<DataType>(m, "DataType")
@@ -454,6 +528,8 @@ inline void makeConversions(nb::module_& m) {
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
   // botanic garden velodyne reordering
   m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
+
+  m.def("parse_csv_line", &parse_csv_line);
 }
 
 } // namespace evalio

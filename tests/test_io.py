@@ -1,5 +1,6 @@
 from pathlib import Path
 from evalio import types as ty
+from evalio._cpp.helpers import parse_csv_line  # type: ignore
 import numpy as np
 
 
@@ -73,3 +74,57 @@ def test_trajectory_incremental_serde(tmp_path: Path):
 
     new_traj = ty.Trajectory.from_file(path)
     assert traj == new_traj
+
+
+def test_csv_line():
+    exp_pose = ty.SE3(
+        rot=ty.SO3(
+            qx=-0.9998805501718303,
+            qy=0.005631361428549012,
+            qz=0.0033964292086203895,
+            qw=0.013987044904833533,
+        ),
+        trans=np.array(
+            [
+                0.04846940144357503,
+                -0.03130991015433452,
+                -0.01876146196188756,
+            ]
+        ),
+    )
+
+    fields = ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+    fields = {v: i for i, v in enumerate(fields)}
+
+    # Try a standard one
+    line = "1670403901.143296798,0.04846940144357503,-0.03130991015433452,-0.01876146196188756,-0.9998805501718303,0.005631361428549012,0.0033964292086203895,0.013987044904833533"
+    stamp, pose = parse_csv_line(line, ",", fields)
+
+    assert stamp == ty.Stamp(sec=1670403901, nsec=143296798)
+    assert pose == exp_pose
+
+    # Try one with not padded nsec
+    # Try a standard one
+    line = "1670403901.143296,0.04846940144357503,-0.03130991015433452,-0.01876146196188756,-0.9998805501718303,0.005631361428549012,0.0033964292086203895,0.013987044904833533"
+    stamp, pose = parse_csv_line(line, ",", fields)
+
+    assert stamp == ty.Stamp(sec=1670403901, nsec=143296000)
+    assert pose == exp_pose
+
+    # Try one with both sec and nsec
+    fields = ["sec", "nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+    fields = {v: i for i, v in enumerate(fields)}
+    line = "1670403901,143296798,0.04846940144357503,-0.03130991015433452,-0.01876146196188756,-0.9998805501718303,0.005631361428549012,0.0033964292086203895,0.013987044904833533"
+    stamp, pose = parse_csv_line(line, ",", fields)
+
+    assert stamp == ty.Stamp(sec=1670403901, nsec=143296798)
+    assert pose == exp_pose
+
+    # Try one with just nsec
+    fields = ["nsec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+    fields = {v: i for i, v in enumerate(fields)}
+    line = "1670403901143296798,0.04846940144357503,-0.03130991015433452,-0.01876146196188756,-0.9998805501718303,0.005631361428549012,0.0033964292086203895,0.013987044904833533"
+    stamp, pose = parse_csv_line(line, ",", fields)
+
+    assert stamp == ty.Stamp.from_nsec(1670403901143296798)
+    assert pose == exp_pose
