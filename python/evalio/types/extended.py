@@ -46,7 +46,7 @@ class Experiment(Metadata):
     """Status of the experiment, e.g. "success", "failure", etc."""
     total_elapsed: Optional[float] = None
     """Total time taken for the experiment, as a string."""
-    max_step_elapsed: Optional[float] = None
+    max_elapsed: Optional[float] = None
     """Maximum time taken for a single step in the experiment, as a string."""
 
     def to_dict(self) -> dict[str, Any]:

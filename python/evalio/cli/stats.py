@@ -82,10 +82,7 @@ def eval_dataset(
     # Iterate over each
     results: list[dict[str, Any]] = []
     for index, traj in enumerate(all_trajs):
-        r = traj.metadata.to_dict()
-        # flatten pipeline params
-        r.update(r["pipeline_params"])
-        del r["pipeline_params"]
+        r: dict[str, Any] = {}
 
         # add metrics
         gt_aligned = Trajectory(
@@ -98,12 +95,21 @@ def eval_dataset(
             traj.poses = traj.poses[:length]
             gt_aligned.stamps = gt_aligned.stamps[:length]
             gt_aligned.poses = gt_aligned.poses[:length]
-        ate = stats.ate(traj, gt_aligned).summarize(metric)
-        r.update({"ATEt": ate.trans, "ATEr": ate.rot})
 
         for w in windows:
             rte = stats.rte(traj, gt_aligned, w).summarize(metric)
             r.update({f"RTEt_{w.name()}": rte.trans, f"RTEr_{w.name()}": rte.rot})
+
+        ate = stats.ate(traj, gt_aligned).summarize(metric)
+        r.update({"ATEt": ate.trans, "ATEr": ate.rot})
+
+        # add metadata
+        r |= traj.metadata.to_dict()
+        # flatten pipeline params
+        r.update(r["pipeline_params"])
+        del r["pipeline_params"]
+        # remove type tag
+        del r["type"]
 
         results.append(r)
 
@@ -207,9 +213,18 @@ def evaluate_typer(
     hide_columns: Annotated[
         Optional[list[str]],
         typer.Option(
+            "-h",
+            "--hide",
+            help="Columns to hide, may be repeated.",
+            rich_help_panel="Output options",
+        ),
+    ] = None,
+    show_columns: Annotated[
+        Optional[list[str]],
+        typer.Option(
             "-s",
-            "--hide-columns",
-            help="Comma-separated list of columns to hide.",
+            "--show",
+            help="Columns to force show, may be repeated.",
             rich_help_panel="Output options",
         ),
     ] = None,
@@ -242,7 +257,6 @@ def evaluate_typer(
         stats.MetricKind,
         typer.Option(
             "--metric",
-            "-m",
             help="Metric to use for ATE/RTE computation. Defaults to sse.",
             rich_help_panel="Metric options",
         ),
@@ -321,9 +335,8 @@ def evaluate_typer(
 
     # clean up timing
     df = df.with_columns(
-        ((pl.col("sequence_length") / pl.col("total_elapsed")).alias("Hz"))
+        ((pl.col("sequence_length") / pl.col("total_elapsed")).alias("hz"))
     )
-    df = df.rename({"max_step_elapsed": "Max (s)"})
 
     # print columns if requested
     if print_columns:
@@ -332,22 +345,52 @@ def evaluate_typer(
             c.print(f" - {col}")
         return
 
-    # hide some columns by default
-    if hide_columns is None:
-        hide_columns = []
-    hide_columns.extend(["pipeline_version", "total_elapsed", "pipeline"])
+    # iterate through pipelines, finding unneeded columns
+    unused_columns: set[str] = set()
+    for pipeline in df["pipeline"].unique():
+        df_pipeline = df.filter(pl.col("pipeline") == pipeline)
+        unused_columns = unused_columns.union(
+            col
+            for col in df_pipeline.columns
+            if df_pipeline[col].drop_nulls().n_unique() == 1
+        )
 
-    # delete unneeded columns
+    # add in a few more that we usually shouldn't need
+    unused_columns.add("total_elapsed")
+    unused_columns.add("pipeline")
+
     remove_columns = [
         col
-        for col in df.columns
+        for col in unused_columns
         if col not in ["sequence", "name"]  # must keep these for later
         and not col.startswith("RTE")  # want to keep metrics as well
         and not col.startswith("ATE")
-        and df[col].drop_nulls().n_unique() == 1  # remove if they're all the same
     ]
-    remove_columns.extend([col for col in hide_columns if col in df.columns])
+
+    # forcibly hide / show some columns
+    if hide_columns is not None:
+        for col in hide_columns:
+            if col not in df.columns:
+                print_warning(f"Column {col} not found, cannot hide.")
+            else:
+                remove_columns.append(col)
+
+    if show_columns is not None:
+        for col in show_columns:
+            if col not in df.columns:
+                print_warning(f"Column {col} not found, cannot show.")
+            elif col in remove_columns:
+                remove_columns.remove(col)
+
     df = df.drop(remove_columns)
+
+    # rearrange for a more useful ordering (name to the left)
+    cols = df.columns
+    if "pipeline" in cols:
+        cols.insert(0, cols.pop(cols.index("pipeline")))
+    if "name" in cols:
+        cols.insert(0, cols.pop(cols.index("name")))
+    df = df.select(cols)
 
     # sort if requested
     if sort not in df.columns:

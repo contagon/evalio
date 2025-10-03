@@ -13,7 +13,7 @@ def make_exp() -> ty.Experiment:
         pipeline_version="0.1.0",
         pipeline_params={"param1": 1, "param2": "value"},
         total_elapsed=10.5,
-        max_step_elapsed=0.24,
+        max_elapsed=0.24,
     )
 
 

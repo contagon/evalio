@@ -363,6 +363,6 @@ def run_single(
     loop.close()
     traj.metadata.status = ty.ExperimentStatus.Complete
     traj.metadata.total_elapsed = time_total
-    traj.metadata.max_step_elapsed = time_max
+    traj.metadata.max_elapsed = time_max
     traj.rewrite()
     traj.close()
