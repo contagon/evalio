@@ -2,6 +2,7 @@ from enum import StrEnum, auto
 from typing_extensions import TypeVar
 
 from evalio.utils import print_warning
+from evalio._cpp.helpers import closest  # type: ignore
 from . import types as ty
 
 from dataclasses import dataclass
@@ -12,10 +13,6 @@ from typing import cast
 from numpy.typing import NDArray
 
 from copy import deepcopy
-
-
-def _check_overstep(stamps: list[ty.Stamp], s: ty.Stamp, idx: int) -> bool:
-    return abs((stamps[idx - 1] - s).to_sec()) < abs((stamps[idx] - s).to_sec())
 
 
 class MetricKind(StrEnum):
@@ -179,7 +176,11 @@ def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
     first_pose_idx = 0
     while traj1.stamps[first_pose_idx] < traj2.stamps[0]:
         first_pose_idx += 1
-    if _check_overstep(traj1.stamps, traj2.stamps[0], first_pose_idx):
+    if not closest(
+        traj2.stamps[0],
+        traj1.stamps[first_pose_idx - 1],
+        traj1.stamps[first_pose_idx],
+    ):
         first_pose_idx -= 1
     traj1.stamps = traj1.stamps[first_pose_idx:]
     traj1.poses = traj1.poses[first_pose_idx:]
@@ -188,7 +189,11 @@ def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
     first_pose_idx = 0
     while traj2.stamps[first_pose_idx] < traj1.stamps[0]:
         first_pose_idx += 1
-    if _check_overstep(traj2.stamps, traj1.stamps[0], first_pose_idx):
+    if not closest(
+        traj1.stamps[0],
+        traj2.stamps[first_pose_idx - 1],
+        traj2.stamps[first_pose_idx],
+    ):
         first_pose_idx -= 1
     traj2.stamps = traj2.stamps[first_pose_idx:]
     traj2.poses = traj2.poses[first_pose_idx:]
@@ -214,7 +219,7 @@ def align_stamps(traj1: ty.Trajectory[M1], traj2: ty.Trajectory[M2]):
             traj1_idx += 1
 
         # go back one if we overshot
-        if _check_overstep(traj1.stamps, stamp, traj1_idx):
+        if not closest(stamp, traj1.stamps[traj1_idx - 1], traj1.stamps[traj1_idx]):
             traj1_idx -= 1
 
         traj1_stamps.append(traj1.stamps[traj1_idx])

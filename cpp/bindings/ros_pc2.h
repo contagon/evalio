@@ -460,6 +460,13 @@ inline std::pair<Stamp, SE3> parse_csv_line(
   return std::make_pair(stamp, SE3(r, t));
 }
 
+// Returns False if a is closer to idx, True if b is closer to idx
+inline bool closest(const Stamp& idx, const Stamp& a, const Stamp& b) {
+  auto a_diff = std::abs((a - idx).to_nsec());
+  auto b_diff = std::abs((b - idx).to_nsec());
+  return a_diff > b_diff;
+}
+
 // ---------------------- Create python bindings ---------------------- //
 inline void makeConversions(nb::module_& m) {
   nb::enum_<DataType>(m, "DataType")
@@ -530,6 +537,7 @@ inline void makeConversions(nb::module_& m) {
   m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
 
   m.def("parse_csv_line", &parse_csv_line);
+  m.def("closest", &closest);
 }
 
 } // namespace evalio
