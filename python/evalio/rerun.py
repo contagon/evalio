@@ -118,7 +118,7 @@ try:
                 + [skybox_light_rgb(dir) for dir in directions]
             )
 
-        def _blueprint(self) -> rr.BlueprintLike:
+        def _blueprint(self) -> rrb.BlueprintLike:
             # Eventually we'll be able to glob these, but for now, just take in the names beforehand
             # https://github.com/rerun-io/rerun/issues/6673
             # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
