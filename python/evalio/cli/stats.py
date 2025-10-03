@@ -337,6 +337,9 @@ def evaluate_typer(
         ((pl.col("sequence_length") / pl.col("total_elapsed")).alias("hz"))
     )
 
+    # rename length for brevity
+    df = df.rename({"sequence_length": "len"})
+
     # print columns if requested
     if print_columns:
         c.print("Available columns:")
@@ -399,7 +402,7 @@ def evaluate_typer(
 
     # ------------------------- Print ------------------------- #
     # Print sequence by sequence
-    for sequence in df["sequence"].unique():
+    for sequence in sorted(df["sequence"].unique()):
         df_sequence = df.filter(pl.col("sequence") == sequence)
         df_sequence = df_sequence.drop("sequence")
         if df_sequence.is_empty():

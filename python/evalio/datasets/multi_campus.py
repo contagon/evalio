@@ -79,7 +79,7 @@ class MultiCampus(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         return Trajectory.from_csv(
             self.folder / "pose_inW.csv",
-            ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            ["num", "sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,
         )
 
