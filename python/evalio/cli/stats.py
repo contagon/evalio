@@ -1,4 +1,3 @@
-from copy import copy
 from pathlib import Path
 from typing import Annotated, Any, Callable, Optional, cast
 
@@ -86,8 +85,8 @@ def eval_dataset(
 
         # add metrics
         gt_aligned = Trajectory(
-            stamps=[copy(s) for s in gt_og.stamps],
-            poses=[copy(p) for p in gt_og.poses],
+            stamps=[ty.Stamp(s) for s in gt_og.stamps],
+            poses=[ty.SE3(p) for p in gt_og.poses],
         )
         stats.align(traj, gt_aligned, in_place=True)
         if length is not None and len(traj) > length:

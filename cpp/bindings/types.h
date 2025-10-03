@@ -80,6 +80,7 @@ inline void makeTypes(nb::module_& m) {
       "nsec"_a,
       "Create a Stamp from seconds and nanoseconds"
     )
+    .def(nb::init<Stamp>(), "other"_a, "Copy constructor for Stamp.")
     .def_static(
       "from_sec",
       &Stamp::from_sec,
@@ -535,6 +536,7 @@ inline void makeTypes(nb::module_& m) {
       "trans"_a,
       "Create a SE3 from a rotation and translation."
     )
+    .def(nb::init<SE3>(), "other"_a, "Copy constructor for SE3.")
     .def_static("identity", &SE3::identity, "Create an identity SE3.")
     .def_static(
       "fromMat",
