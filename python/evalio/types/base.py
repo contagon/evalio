@@ -104,14 +104,16 @@ class Metadata:
             An instance of the metadata class or an error.
         """
         try:
-            data = yaml.load(yaml_str, Loader=yaml.CSafeLoader)
+            Loader = yaml.CSafeLoader
         except Exception as _:
-            print_warning(
-                "Failed to parse metadata with CSafeLoader, trying SafeLoader"
-            )
-            data = yaml.load(yaml_str, Loader=yaml.SafeLoader)
+            print_warning("Failed to import yaml.CSafeLoader, trying yaml.SafeLoader")
+            Loader = yaml.SafeLoader
 
-        if "type" not in data:
+        data = yaml.load(yaml_str, Loader=Loader)
+
+        if data is None:
+            return FailedMetadataParse("Metadata failed to parse.")
+        elif "type" not in data:
             return FailedMetadataParse("No type field found in metadata.")
 
         for name, subclass in cls._registry.items():

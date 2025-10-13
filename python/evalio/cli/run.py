@@ -117,7 +117,15 @@ def run_from_cli(
     if config is not None:
         # load from yaml
         with open(config, "r") as f:
-            params = yaml.safe_load(f)
+            try:
+                Loader = yaml.CSafeLoader
+            except Exception as _:
+                print_warning(
+                    "Failed to import yaml.CSafeLoader, trying yaml.SafeLoader"
+                )
+                Loader = yaml.SafeLoader
+
+            params = yaml.load(f, Loader=Loader)
 
         if "datasets" not in params:
             raise typer.BadParameter(

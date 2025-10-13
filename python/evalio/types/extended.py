@@ -68,6 +68,29 @@ class Experiment(Metadata):
 
         return super().from_dict(data)
 
+    @classmethod
+    def from_pl_ds(
+        cls, pipe: type[pl.Pipeline], ds_obj: ds.Dataset, **kwargs: Any
+    ) -> Self:
+        """Create an Experiment from a pipeline and dataset.
+
+        Args:
+            pipe (type[pl.Pipeline]): The pipeline class.
+            ds_obj (ds.Dataset): The dataset object.
+            **kwargs: Additional keyword arguments to pass to the Experiment constructor.
+
+        Returns:
+            Self: The created Experiment instance.
+        """
+        return cls(
+            name=pipe.name(),
+            sequence=ds_obj,
+            sequence_length=len(ds_obj),
+            pipeline=pipe,
+            pipeline_version=pipe.version(),
+            pipeline_params=pipe.default_params() | kwargs,
+        )
+
     def setup(
         self,
     ) -> tuple[pl.Pipeline, ds.Dataset] | ds.SequenceNotFound | pl.PipelineNotFound:

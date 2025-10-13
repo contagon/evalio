@@ -82,6 +82,9 @@ def eval_dataset(
     results: list[dict[str, Any]] = []
     for index, traj in enumerate(all_trajs):
         r: dict[str, Any] = {}
+        hz = None
+        if traj.metadata.total_elapsed is not None:
+            hz = len(traj) / traj.metadata.total_elapsed
 
         # add metrics
         gt_aligned = Trajectory(
@@ -104,6 +107,8 @@ def eval_dataset(
 
         # add metadata
         r |= traj.metadata.to_dict()
+        # add extra hz field
+        r["hz"] = hz
         # flatten pipeline params
         r.update(r["pipeline_params"])
         del r["pipeline_params"]
@@ -129,7 +134,7 @@ def _contains_dir(directory: Path) -> bool:
 def evaluate(
     directories: list[Path],
     windows: list[stats.WindowKind],
-    metric: stats.MetricKind,
+    metric: stats.MetricKind = stats.MetricKind.sse,
     length: Optional[int] = None,
     visualize: bool = False,
 ) -> list[dict[str, Any]]:
@@ -168,7 +173,7 @@ def evaluate_typer(
     sort: Annotated[
         Optional[str],
         typer.Option(
-            "-s",
+            "-S",
             "--sort",
             help="Sort results by the name of a column. Defaults to RTEt.",
             rich_help_panel="Output options",
@@ -331,11 +336,6 @@ def evaluate_typer(
         return
 
     df = pl.DataFrame(results)
-
-    # clean up timing
-    df = df.with_columns(
-        ((pl.col("sequence_length") / pl.col("total_elapsed")).alias("hz"))
-    )
 
     # rename length for brevity
     df = df.rename({"sequence_length": "len"})
