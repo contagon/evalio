@@ -11,8 +11,6 @@ from rich.console import Console
 from rich import box
 
 from evalio import types as ty, stats
-
-import numpy as np
 import typer
 
 import distinctipy
@@ -290,11 +288,9 @@ def evaluate_typer(
     if filter_str is None:
         filter_method = lambda r: True  # noqa: E731
     else:
-        filter_method = lambda r: eval(  # noqa: E731
-            filter_str,
-            {"__builtins__": None},
-            {"np": np, **r},
-        )
+        from asteval import Interpreter
+
+        filter_method = lambda r: Interpreter(user_symbols=r).eval(filter_str)
 
     original_filter = filter_method
     if only_complete:
