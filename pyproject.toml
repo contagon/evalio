@@ -63,8 +63,8 @@ build-verbosity = 1
 MACOSX_DEPLOYMENT_TARGET = "11"
 
 # local development
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "cmake<4.0.0",
     "compdb>=0.2.0",
     "ruff>=0.6.8",
@@ -87,7 +87,7 @@ dev-dependencies = [
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
-ignore = ["E731"]
+lint.ignore = ["E731"]
 
 [tool.ruff.format]
 # https://docs.astral.sh/ruff/configuration/
