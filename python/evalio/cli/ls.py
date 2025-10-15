@@ -1,5 +1,5 @@
 from enum import StrEnum, auto
-from typing import Annotated, Optional, TypeVar
+from typing import Annotated, Literal, Optional, TypeVar, TypedDict
 
 import typer
 from rapidfuzz.process import extract_iter
@@ -7,32 +7,30 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from evalio.datasets.base import Dataset
-
-from .parser import DatasetBuilder, PipelineBuilder
+from evalio import datasets as ds, pipelines as pl
 
 app = typer.Typer()
 
 T = TypeVar("T")
 
 
-def unique(lst: list[T]):
+def unique(lst: list[T]) -> list[T]:
     """Get unique elements from a list while preserving order
 
     Returns:
-        _type_: Unique list
+        List of unique elements
     """
     return list(dict.fromkeys(lst))
 
 
-def extract_len(d: Dataset) -> str:
+def extract_len(d: ds.Dataset) -> str:
     """Get the length of a dataset in a human readable format
 
     Args:
         d (Dataset): Dataset to get length of
 
     Returns:
-        str: Length of dataset
+        Length of dataset in minutes or '-' if length is unknown
     """
     length = d.quick_len()
     if length is None:
@@ -85,10 +83,13 @@ def ls(
     """
     List dataset and pipeline information
     """
+    ColOpts = TypedDict("ColOpts", {"vertical": Literal["top", "middle", "bottom"]})
+    col_opts: ColOpts = {"vertical": "middle"}
+
     if kind == Kind.datasets:
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
-        all_datasets = list(DatasetBuilder.all_datasets().values())
+        all_datasets = list(ds.all_datasets().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.dataset_name() for d in all_datasets], score_cutoff=90
@@ -179,20 +180,19 @@ def ls(
             highlight=True,
             box=box.ROUNDED,
         )
-        col_opts = {"vertical": "middle"}
 
-        table.add_column("Name", justify="center", **col_opts)  # type: ignore
+        table.add_column("Name", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Sequences", justify="right", **col_opts)  # type: ignore
-            table.add_column("DL", justify="right", **col_opts)  # type: ignore
-        table.add_column("Size", justify="center", **col_opts)  # type: ignore
+            table.add_column("Sequences", justify="right", **col_opts)
+            table.add_column("DL", justify="right", **col_opts)
+        table.add_column("Size", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Len", justify="center", **col_opts)  # type: ignore
-        table.add_column("Env", justify="center", **col_opts)  # type: ignore
-        table.add_column("Vehicle", justify="center", **col_opts)  # type: ignore
-        table.add_column("IMU", justify="center", **col_opts)  # type: ignore
-        table.add_column("LiDAR", justify="center", **col_opts)  # type: ignore
-        table.add_column("Info", justify="center", **col_opts)  # type: ignore
+            table.add_column("Len", justify="center", **col_opts)
+        table.add_column("Env", justify="center", **col_opts)
+        table.add_column("Vehicle", justify="center", **col_opts)
+        table.add_column("IMU", justify="center", **col_opts)
+        table.add_column("LiDAR", justify="center", **col_opts)
+        table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
@@ -206,7 +206,7 @@ def ls(
     if kind == Kind.pipelines:
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
-        all_pipelines = list(PipelineBuilder.all_pipelines().values())
+        all_pipelines = list(pl.all_pipelines().values())
         if search is not None:
             to_include = extract_iter(
                 search, [d.name() for d in all_pipelines], score_cutoff=90
@@ -255,14 +255,13 @@ def ls(
             highlight=True,
             box=box.ROUNDED,
         )
-        col_opts = {"vertical": "middle"}
 
-        table.add_column("Name", justify="center", **col_opts)  # type: ignore
-        table.add_column("Version", justify="center", **col_opts)  # type: ignore
+        table.add_column("Name", justify="center", **col_opts)
+        table.add_column("Version", justify="center", **col_opts)
         if not quiet:
-            table.add_column("Params", justify="right", **col_opts)  # type: ignore
-            table.add_column("Default", justify="left", **col_opts)  # type: ignore
-        table.add_column("Info", justify="center", **col_opts)  # type: ignore
+            table.add_column("Params", justify="right", **col_opts)
+            table.add_column("Default", justify="left", **col_opts)
+        table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore

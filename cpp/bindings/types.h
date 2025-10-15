@@ -2,6 +2,7 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -68,8 +69,8 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Duration class for representing a positive or negative delta time, uses "
-    "int64 as the underlying data storage for nanoseconds.";
+    "Duration class for representing a positive or negative delta time. \n\n"
+    "Uses int64 as the underlying data storage for nanoseconds.";
 
   nb::class_<Stamp>(m, "Stamp")
     .def(
@@ -79,6 +80,7 @@ inline void makeTypes(nb::module_& m) {
       "nsec"_a,
       "Create a Stamp from seconds and nanoseconds"
     )
+    .def(nb::init<Stamp>(), "other"_a, "Copy constructor for Stamp.")
     .def_static(
       "from_sec",
       &Stamp::from_sec,
@@ -133,8 +135,8 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Stamp class for representing an absolute point in time, uses uint32 as "
-    "the underlying data storage for seconds and nanoseconds.";
+    "Stamp class for representing an absolute point in time.\n\n"
+    "Uses uint32 as the underlying data storage for seconds and nanoseconds.";
   ;
 
   // Lidar
@@ -232,7 +234,7 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "Point is a general point structure in evalio, with common "
+    "Point is the general point structure in evalio, with common "
     "point cloud attributes included.";
 
   nb::class_<LidarMeasurement>(m, "LidarMeasurement")
@@ -284,8 +286,9 @@ inline void makeTypes(nb::module_& m) {
     )
     .doc() =
     "LidarMeasurement is a structure for storing a point cloud "
-    "measurement, with a timestamp and a vector of points. Note, "
-    "the stamp always represents the _start_ of the scan. "
+    "measurement, with a timestamp and a vector of points.\n\n"
+
+    "Note, the stamp always represents the _start_ of the scan. "
     "Additionally, the points are always in row major format.";
 
   nb::class_<LidarParams>(m, "LidarParams")
@@ -522,7 +525,7 @@ inline void makeTypes(nb::module_& m) {
       }
     )
     .doc() =
-    "SO3 class for representing a 3D rotation using a quaternion. "
+    "SO3 class for representing a 3D rotation using a quaternion.\n\n"
     "This is outfitted with some basic functionality, but mostly "
     "intended for storage and converting between types.";
 
@@ -533,6 +536,7 @@ inline void makeTypes(nb::module_& m) {
       "trans"_a,
       "Create a SE3 from a rotation and translation."
     )
+    .def(nb::init<SE3>(), "other"_a, "Copy constructor for SE3.")
     .def_static("identity", &SE3::identity, "Create an identity SE3.")
     .def_static(
       "fromMat",
@@ -544,6 +548,21 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("trans", &SE3::trans, "Translation as a 3D vector.")
     .def("toMat", &SE3::toMat, "Convert to a 4x4 matrix.")
     .def("inverse", &SE3::inverse, "Compute the inverse.")
+    .def_static(
+      "error",
+      &SE3::error,
+      "a"_a,
+      "b"_a,
+      "Compute the rotational (degrees) and translational (meters) error "
+      "between two SE3s as a tuple (rot, trans)."
+    )
+    .def_static(
+      "distance",
+      &SE3::distance,
+      "a"_a,
+      "b"_a,
+      "Compute the distance between two SE3s."
+    )
     .def_static("exp", &SE3::exp, "xi"_a, "Create a SE3 from a 3D vector.")
     .def("log", &SE3::log, "Compute the logarithm of the transformation.")
     .def(nb::self * nb::self, "Compose two rigid body transformations.")
@@ -599,9 +618,9 @@ inline void makeTypes(nb::module_& m) {
     )
     .doc() =
     "SE3 class for representing a 3D rigid body transformation "
-    "using a quaternion and a translation vector. This is outfitted "
-    "with some basic functionality, but mostly intended for storage "
-    "and converting between types.";
+    "using a quaternion and a translation vector.\n\n"
+    "This is outfitted with some basic functionality, but is mostly "
+    "intended for storage and converting between types.";
 }
 
 } // namespace evalio

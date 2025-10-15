@@ -14,7 +14,6 @@ def s(t: float) -> Stamp:
 
 def test_already_aligned():
     traj = Trajectory(
-        metadata={},
         stamps=[s(0), s(1), s(2)],
         poses=[ID, ID, ID],
     )
@@ -28,13 +27,11 @@ def test_already_aligned():
 
 def test_subsample_first():
     traj1 = Trajectory(
-        metadata={},
         stamps=[s(i) for i in range(10)],
         poses=[ID for _ in range(10)],
     )
 
     traj2 = Trajectory(
-        metadata={},
         stamps=[s(i) for i in range(0, 10, 2)],
         poses=[ID for _ in range(0, 10, 2)],
     )
@@ -56,13 +53,11 @@ def test_subsample_first():
 def test_overstep():
     r = list(range(1, 11))
     traj1 = Trajectory(
-        metadata={},
         stamps=[s(i - 0.1) for i in r],
         poses=[ID for _ in r],
     )
 
     traj2 = Trajectory(
-        metadata={},
         stamps=[s(i) for i in r],
         poses=[ID for _ in r],
     )
@@ -84,7 +79,6 @@ def test_overstep():
 def testalign_poses():
     np.random.seed(0)
     gt = Trajectory(
-        metadata={},
         stamps=[s(i) for i in range(10)],
         poses=[rand_se3() for _ in range(10)],
     )
@@ -92,7 +86,6 @@ def testalign_poses():
     offset = rand_se3()
 
     traj2 = Trajectory(
-        metadata={},
         stamps=[s(i) for i in range(10)],
         poses=[offset * pose for pose in gt.poses],
     )

@@ -1,23 +1,25 @@
 import os
-from enum import Enum, StrEnum, auto
+from enum import StrEnum
 from itertools import islice
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Sequence, Union
+from typing import Iterable, Iterator, Optional, Sequence, Union, cast
 
-from evalio.types import (
+from evalio._cpp.types import (  # type: ignore
     SE3,
     ImuMeasurement,
     ImuParams,
     LidarMeasurement,
     LidarParams,
-    Trajectory,
 )
-from evalio.utils import print_warning
+
+from evalio.types import GroundTruth, Trajectory
+
+from evalio.utils import print_warning, pascal_to_snake
 
 Measurement = Union[ImuMeasurement, LidarMeasurement]
 
-_data_dir = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
-_warned = False
+_DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
+_WARNED = False
 
 
 class DatasetIterator(Iterable[Measurement]):
@@ -33,7 +35,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over IMU measurements.
 
         Yields:
-            Iterator[ImuMeasurement]: Iterator of IMU measurements.
+            Iterator of IMU measurements.
         """
         ...
 
@@ -41,7 +43,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over Lidar measurements.
 
         Yields:
-            Iterator[LidarMeasurement]: Iterator of Lidar measurements.
+            Iterator of Lidar measurements.
         """
         ...
 
@@ -49,7 +51,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Main interface for iterating over all measurements.
 
         Yields:
-            Iterator[Measurement]: Iterator of all measurements (IMU and Lidar).
+            Iterator of all measurements (IMU and Lidar).
         """
 
         ...
@@ -59,7 +61,7 @@ class DatasetIterator(Iterable[Measurement]):
         """Number of lidar scans.
 
         Returns:
-            int: Number of lidar scans.
+            Number of lidar scans.
         """
         ...
 
@@ -77,7 +79,7 @@ class Dataset(StrEnum):
         Provides an iterator over the dataset's measurements.
 
         Returns:
-            DatasetIterator: An iterator that yields measurements from the dataset.
+            An iterator that yields measurements from the dataset.
         """
         ...
 
@@ -87,7 +89,7 @@ class Dataset(StrEnum):
         Retrieves the raw ground truth trajectory, as represented in the ground truth frame.
 
         Returns:
-            Trajectory: The raw ground truth trajectory data.
+            The raw ground truth trajectory data.
         """
         ...
 
@@ -96,7 +98,7 @@ class Dataset(StrEnum):
         """Returns the transformation from IMU to Lidar frame.
 
         Returns:
-            SE3: Transformation from IMU to Lidar frame.
+            Transformation from IMU to Lidar frame.
         """
         ...
 
@@ -104,7 +106,7 @@ class Dataset(StrEnum):
         """Retrieves the transformation from IMU to ground truth frame.
 
         Returns:
-            SE3: Transformation from IMU to ground truth frame.
+            Transformation from IMU to ground truth frame.
         """
         ...
 
@@ -112,7 +114,7 @@ class Dataset(StrEnum):
         """Specifies the parameters of the IMU.
 
         Returns:
-            ImuParams: Parameters of the IMU.
+            Parameters of the IMU.
         """
         ...
 
@@ -120,7 +122,7 @@ class Dataset(StrEnum):
         """Specifies the parameters of the Lidar.
 
         Returns:
-            LidarParams: Parameters of the Lidar.
+            Parameters of the Lidar.
         """
         ...
 
@@ -130,7 +132,7 @@ class Dataset(StrEnum):
         If a returned type is a Path, it will be checked as is. If it is a string, it will be prepended with [folder][evalio.datasets.Dataset.folder].
 
         Returns:
-            list[str]: _description_
+            List of files required to run this dataset.
         """
         ...
 
@@ -140,7 +142,7 @@ class Dataset(StrEnum):
         """Webpage with the dataset information.
 
         Returns:
-            str: URL of the dataset webpage.
+            URL of the dataset webpage.
         """
         return "-"
 
@@ -148,7 +150,7 @@ class Dataset(StrEnum):
         """Environment where the dataset was collected.
 
         Returns:
-            str: Environment where the dataset was collected.
+            Environment where the dataset was collected.
         """
         return "-"
 
@@ -156,7 +158,7 @@ class Dataset(StrEnum):
         """Vehicle used to collect the dataset.
 
         Returns:
-            str: Vehicle used to collect the dataset.
+            Vehicle used to collect the dataset.
         """
         return "-"
 
@@ -164,7 +166,7 @@ class Dataset(StrEnum):
         """Hardcoded number of lidar scans in the dataset, rather than computing by loading all the data (slow).
 
         Returns:
-            Optional[int]: Number of lidar scans in the dataset. None if not available.
+            Number of lidar scans in the dataset. None if not available.
         """
         return None
 
@@ -186,7 +188,7 @@ class Dataset(StrEnum):
         This is the name that will be used when parsing directly from a string. Currently is automatically generated from the class name, but can be overridden.
 
         Returns:
-            str: _description_
+            Name of the dataset.
         """
         return pascal_to_snake(cls.__name__)
 
@@ -195,7 +197,7 @@ class Dataset(StrEnum):
         """Verify if the dataset is downloaded.
 
         Returns:
-            bool: True if the dataset is downloaded, False otherwise.
+            True if the dataset is downloaded, False otherwise.
         """
         self._warn_default_dir()
         for f in self.files():
@@ -208,11 +210,11 @@ class Dataset(StrEnum):
 
         return True
 
-    def ground_truth(self) -> Trajectory:
+    def ground_truth(self) -> Trajectory[GroundTruth]:
         """Get the ground truth trajectory in the **IMU** frame, rather than the ground truth frame as returned in [ground_truth_raw][evalio.datasets.Dataset.ground_truth_raw].
 
         Returns:
-            Trajectory: The ground truth trajectory in the IMU frame.
+            The ground truth trajectory in the IMU frame.
         """
         gt_traj = self.ground_truth_raw()
         gt_T_imu = self.imu_T_gt().inverse()
@@ -221,6 +223,9 @@ class Dataset(StrEnum):
         for i in range(len(gt_traj)):
             gt_o_T_gt_i = gt_traj.poses[i]
             gt_traj.poses[i] = gt_o_T_gt_i * gt_T_imu
+
+        gt_traj = cast(Trajectory[GroundTruth], gt_traj)
+        gt_traj.metadata = GroundTruth(sequence=self.full_name)
 
         return gt_traj
 
@@ -233,12 +238,12 @@ class Dataset(StrEnum):
 
     @classmethod
     def _warn_default_dir(cls):
-        global _data_dir, _warned
-        if not _warned and _data_dir == Path("./evalio_data"):
+        global _DATA_DIR, _WARNED
+        if not _WARNED and _DATA_DIR == Path("./evalio_data"):
             print_warning(
                 "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
             )
-            _warned = True
+            _WARNED = True
 
     # ------------------------- Helpers that leverage from the iterator ------------------------- #
 
@@ -248,7 +253,7 @@ class Dataset(StrEnum):
         If quick_len is available, it will be used. Otherwise, it will load the entire dataset to get the length.
 
         Returns:
-            int: Number of lidar scans.
+            Number of lidar scans.
         """
         if (length := self.quick_len()) is not None:
             return length
@@ -260,7 +265,7 @@ class Dataset(StrEnum):
         """Main interface for iterating over measurements of all types.
 
         Returns:
-            Iterator[Measurement]: Iterator of all measurements (IMU and Lidar).
+            Iterator of all measurements (IMU and Lidar).
         """
         self._fail_not_downloaded()
         return self.data_iter().__iter__()
@@ -269,7 +274,7 @@ class Dataset(StrEnum):
         """Iterate over just IMU measurements.
 
         Returns:
-            Iterable[ImuMeasurement]: Iterator of IMU measurements.
+            Iterator of IMU measurements.
         """
         self._fail_not_downloaded()
         return self.data_iter().imu_iter()
@@ -278,7 +283,7 @@ class Dataset(StrEnum):
         """Iterate over just Lidar measurements.
 
         Returns:
-            Iterable[LidarMeasurement]: Iterator of Lidar measurements.
+            Iterator of Lidar measurements.
         """
         self._fail_not_downloaded()
         return self.data_iter().lidar_iter()
@@ -292,7 +297,7 @@ class Dataset(StrEnum):
             idx (int, optional): Index of measurement to get. Defaults to 0.
 
         Returns:
-            LidarMeasurement: The Lidar measurement at the given index.
+            The Lidar measurement at the given index.
         """
         return next(islice(self.lidar(), idx, idx + 1))
 
@@ -305,7 +310,7 @@ class Dataset(StrEnum):
             idx (int, optional): Index of measurement to get. Defaults to 0.
 
         Returns:
-            ImuMeasurement: The IMU measurement at the given index.
+            The IMU measurement at the given index.
         """
         return next(islice(self.imu(), idx, idx + 1))
 
@@ -318,7 +323,7 @@ class Dataset(StrEnum):
         """Name of the sequence, in snake case.
 
         Returns:
-            str: Name of the sequence.
+            Name of the sequence.
         """
         return self.value
 
@@ -329,7 +334,7 @@ class Dataset(StrEnum):
         Example: "dataset_name/sequence_name"
 
         Returns:
-            str: Full name of the dataset.
+            Full name of the dataset.
         """
         return f"{self.dataset_name()}/{self.seq_name}"
 
@@ -338,7 +343,7 @@ class Dataset(StrEnum):
         """All sequences in the dataset.
 
         Returns:
-            list[Dataset]: List of all sequences in the dataset.
+            List of all sequences in the dataset.
         """
         return list(cls.__members__.values())
 
@@ -347,54 +352,22 @@ class Dataset(StrEnum):
         """The folder in the global dataset directory where this dataset is stored.
 
         Returns:
-            Path: Path to the dataset folder.
+            Path to the dataset folder.
         """
-        global _data_dir
-        return _data_dir / self.full_name
+        global _DATA_DIR
+        return _DATA_DIR / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
         """Shows the size of the dataset on disk, in GB.
 
         Returns:
-            Optional[float]: Size of the dataset on disk, in GB. None if the dataset is not downloaded.
+            Size of the dataset on disk, in GB. None if the dataset is not downloaded.
         """
 
         if not self.is_downloaded():
             return None
         else:
             return sum(f.stat().st_size for f in self.folder.glob("**/*")) / 1e9
-
-
-# For converting dataset names to snake case
-class CharKinds(Enum):
-    LOWER = auto()
-    UPPER = auto()
-    DIGIT = auto()
-    OTHER = auto()
-
-    @staticmethod
-    def from_char(char: str):
-        if char.islower():
-            return CharKinds.LOWER
-        if char.isupper():
-            return CharKinds.UPPER
-        if char.isdigit():
-            return CharKinds.DIGIT
-        return CharKinds.OTHER
-
-
-def pascal_to_snake(identifier: str) -> str:
-    # Only split when going from lower to something else
-    splits: list[int] = []
-    last_kind = CharKinds.from_char(identifier[0])
-    for i, char in enumerate(identifier[1:], start=1):
-        kind = CharKinds.from_char(char)
-        if last_kind == CharKinds.LOWER and kind != CharKinds.LOWER:
-            splits.append(i)
-        last_kind = kind
-
-    parts = [identifier[i:j] for i, j in zip([0] + splits, splits + [None])]
-    return "_".join(parts).lower()
 
 
 # ------------------------- Helpers ------------------------- #
@@ -404,16 +377,16 @@ def set_data_dir(directory: Path):
     Args:
         directory (Path): Directory
     """
-    global _data_dir, _warned
-    _data_dir = directory
-    _warned = True
+    global _DATA_DIR, _WARNED
+    _DATA_DIR = directory
+    _WARNED = True
 
 
 def get_data_dir() -> Path:
-    """Get the global data directory. This will be used to store the downloaded data.
+    """Get the global data directory. This is where downloaded data is stored.
 
     Returns:
-        Path: Directory where datasets are stored.
+        Directory where datasets are stored.
     """
-    global _data_dir
-    return _data_dir
+    global _DATA_DIR
+    return _DATA_DIR

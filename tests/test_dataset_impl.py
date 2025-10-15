@@ -1,13 +1,12 @@
 import pytest
-from evalio.cli.parser import DatasetBuilder
-from evalio.datasets import Dataset
+from evalio import datasets as ds
 
-datasets = DatasetBuilder.all_datasets().values()
+datasets = ds.all_datasets().values()
 
 
 # Test to ensure all datasets implement the required attributes
 @pytest.mark.parametrize("dataset", datasets)
-def test_impl(dataset: type[Dataset]):
+def test_impl(dataset: type[ds.Dataset]):
     attrs = [
         "data_iter",
         "ground_truth_raw",
@@ -20,6 +19,6 @@ def test_impl(dataset: type[Dataset]):
     ]
 
     for a in attrs:
-        assert getattr(dataset, a) != getattr(Dataset, a), (
+        assert getattr(dataset, a) != getattr(ds.Dataset, a), (
             f"{dataset} should implement {a}"
         )

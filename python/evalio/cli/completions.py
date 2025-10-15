@@ -1,20 +1,13 @@
-import itertools
 from typing import Annotated, Optional, TypeAlias
 
 import typer
 from rapidfuzz.process import extractOne
 from rich.console import Console
-
-from .parser import DatasetBuilder, PipelineBuilder
+from evalio import datasets as ds, pipelines as pl
 
 err_console = Console(stderr=True)
 
-all_sequences_names = list(
-    itertools.chain.from_iterable(
-        [seq.full_name for seq in d.sequences()] + [f"{d.dataset_name()}/*"]
-        for d in DatasetBuilder.all_datasets().values()
-    )
-)
+all_sequences_names = list(ds.all_sequences().keys())
 
 
 # ------------------------- Completions ------------------------- #
@@ -48,7 +41,7 @@ def validate_datasets(datasets: list[str]) -> list[str]:
     return datasets
 
 
-valid_pipelines = list(PipelineBuilder.all_pipelines().keys())
+valid_pipelines = list(pl.all_pipelines().keys())
 
 
 def complete_pipeline(incomplete: str, ctx: typer.Context):

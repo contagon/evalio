@@ -456,6 +456,18 @@ struct SE3 {
   bool operator!=(const SE3& other) const {
     return !(*this == other);
   }
+
+  // Helpers for stats computations
+  static std::pair<double, double> error(const SE3& a, const SE3& b) {
+    auto delta = a.inverse() * b;
+    double rot_err = delta.rot.log().norm() * (180.0 / M_PI);
+    double trans_err = (delta.trans).norm();
+    return {rot_err, trans_err};
+  }
+
+  static double distance(const SE3& a, const SE3& b) {
+    return (a.trans - b.trans).norm();
+  }
 };
 
 } // namespace evalio

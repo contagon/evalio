@@ -4,9 +4,16 @@ For more information about the pipelines included in evalio, see the [included p
     options:
         members:
             - Pipeline
-
-::: evalio.pipelines
-    options:
-        show_root_toc_entry: false
-        filters:
-            - "!Pipeline"
+            - CTICP
+            - KissICP
+            - GenZICP
+            - LOAM
+            - LioSAM
+            - MadICP
+            - PipelineNotFound
+            - UnusedPipelineParam
+            - InvalidPipelineParamType
+            - all_pipelines
+            - get_pipeline
+            - register_pipeline
+            - validate_params

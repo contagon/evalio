@@ -4,14 +4,20 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from evalio.cli.parser import DatasetBuilder
-from evalio.datasets.base import Dataset
-from evalio.types import SE3, ImuMeasurement, LidarMeasurement, Stamp, Trajectory
+import evalio.datasets as ds
+from evalio.types import (
+    SE3,
+    GroundTruth,
+    ImuMeasurement,
+    LidarMeasurement,
+    Stamp,
+    Trajectory,
+)
 from utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
 data_dir = Path("tests/data")
-dataset_classes = DatasetBuilder.all_datasets()
+dataset_classes = ds.all_datasets()
 datasets = [
     cls.sequences()[0]
     for cls in dataset_classes.values()
@@ -24,7 +30,7 @@ datasets = [
 
 
 @pytest.mark.parametrize("dataset", datasets)
-def test_load_imu(dataset: Dataset):
+def test_load_imu(dataset: ds.Dataset):
     imu = dataset.get_one_imu()
     with open(data_dir / f"imu_{dataset.dataset_name()}.pkl", "rb") as f:
         imu_cached: ImuMeasurement = pickle.load(f)
@@ -35,7 +41,7 @@ def test_load_imu(dataset: Dataset):
 
 
 @pytest.mark.parametrize("dataset", datasets)
-def test_load_lidar(dataset: Dataset):
+def test_load_lidar(dataset: ds.Dataset):
     lidar = dataset.get_one_lidar()
     with open(data_dir / f"lidar_{dataset.dataset_name()}.pkl", "rb") as f:
         lidar_cached: LidarMeasurement = pickle.load(f)
@@ -66,16 +72,16 @@ class StampStyle(Enum):
                 return f"{stamp.sec}, {stamp.nsec}"
 
 
-def fake_groundtruth() -> Trajectory:
+def fake_groundtruth() -> Trajectory[GroundTruth]:
     stamps = [
         Stamp.from_nsec(i + np.random.randint(-500, 500))
         for i in range(1_000, 10_000, 1_000)
     ]
     poses = [rand_se3() for _ in range(len(stamps))]
-    return Trajectory(metadata={}, stamps=stamps, poses=poses)
+    return Trajectory(stamps=stamps, poses=poses, metadata=GroundTruth(sequence="fake"))
 
 
-def serialize_gt(gt: Trajectory, style: StampStyle) -> list[str]:
+def serialize_gt(gt: Trajectory[GroundTruth], style: StampStyle) -> list[str]:
     def serialize_se3(se3: SE3) -> str:
         return f"{se3.trans[0]}, {se3.trans[1]}, {se3.trans[2]}, {se3.rot.qx}, {se3.rot.qy}, {se3.rot.qz}, {se3.rot.qw}"
 

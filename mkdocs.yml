@@ -69,7 +69,7 @@ plugins:
   search:
     lang: en
 
-  # autogenerate evalio ls pages
+  # autogenerate evalio ls & cli pages
   gen-files:
     scripts:
       - docs/included.py
@@ -81,9 +81,7 @@ plugins:
     handlers:
       python:
         options:
-          # TODO: May want to remove this once all docs are added
-          # show_if_no_docstring: true # show everything
-          show_source: false # don't show source code
+          show_source: true # don't show source code
           separate_signature: true # show the signature in a separate section
           show_signature_annotations: true # include types
           signature_crossrefs: true # show cross-references in the signature
@@ -95,6 +93,11 @@ plugins:
           # show_labels: false
           # show_category_heading: true
           docstring_style: google
+          summary:
+            attributes: true
+            functions: true
+            classes: true
+            modules: false
 
 markdown_extensions:
   # misc
@@ -122,6 +125,7 @@ extra_javascript:
   # https://squidfunk.github.io/mkdocs-material/reference/data-tables/#sortable-tables-docsjavascriptstablesortjs
   - javascripts/tablesort.js
   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  # latex
   - javascripts/katex.js
   - https://unpkg.com/katex@0/dist/katex.min.js
   - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js

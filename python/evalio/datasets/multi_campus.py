@@ -79,7 +79,7 @@ class MultiCampus(Dataset):
     def ground_truth_raw(self) -> Trajectory:
         return Trajectory.from_csv(
             self.folder / "pose_inW.csv",
-            ["num", "t", "x", "y", "z", "qx", "qy", "qz", "qw"],
+            ["num", "sec", "x", "y", "z", "qx", "qy", "qz", "qw"],
             skip_lines=1,
         )
 
@@ -295,7 +295,7 @@ class MultiCampus(Dataset):
             "tuhh_night_09": "1xr5dTBydbjIhE42hNdELklruuhxgYkld",
         }[self.seq_name]
 
-        import gdown  # type: ignore
+        import gdown
 
         print(f"Downloading to {self.folder}...")
         self.folder.mkdir(parents=True, exist_ok=True)

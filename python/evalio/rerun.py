@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
+from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
@@ -7,12 +8,20 @@ import numpy as np
 import typer
 from numpy.typing import NDArray
 
-from evalio.cli.parser import PipelineBuilder
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-from evalio.stats import check_overstep
-from evalio.types import SE3, LidarMeasurement, LidarParams, Point, Stamp, Trajectory
+from evalio.types import (
+    SE3,
+    GroundTruth,
+    LidarMeasurement,
+    LidarParams,
+    Metadata,
+    Point,
+    Stamp,
+    Trajectory,
+)
 from evalio.utils import print_warning
+from evalio._cpp.helpers import closest  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -74,12 +83,13 @@ try:
     )
 
     class RerunVis:  # type: ignore
-        def __init__(self, args: VisArgs):
+        def __init__(self, args: VisArgs, pipeline_names: list[str]):
             self.args = args
 
             # To be set during new_recording
             self.lidar_params: Optional[LidarParams] = None
-            self.gt: Optional[Trajectory] = None
+            self.gt: Optional[Trajectory[GroundTruth]] = None
+            self.pipeline_names = pipeline_names
 
             # To be found during log
             self.gt_o_T_imu_o: Optional[SE3] = None
@@ -108,15 +118,13 @@ try:
                 + [skybox_light_rgb(dir) for dir in directions]
             )
 
-        def _blueprint(self, pipelines: list[PipelineBuilder]) -> rr.BlueprintLike:
+        def _blueprint(self) -> rrb.BlueprintLike:
             # Eventually we'll be able to glob these, but for now, just take in the names beforehand
             # https://github.com/rerun-io/rerun/issues/6673
             # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
             overrides: OverrideType = {
-                f"{p.name}/imu": [
-                    rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)
-                ]
-                for p in pipelines
+                f"{n}/imu": [rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)]
+                for n in self.pipeline_names
             }
 
             if self.args.image:
@@ -130,7 +138,7 @@ try:
             else:
                 return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
 
-        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
+        def new_dataset(self, dataset: Dataset):
             if not self.args.show:
                 return
 
@@ -141,7 +149,7 @@ try:
             }
             self.rec = rr.RecordingStream(**self.recording_params)
             self.rec.connect_grpc()
-            self.rec.send_blueprint(self._blueprint(pipelines))
+            self.rec.send_blueprint(self._blueprint())
 
             self.gt = dataset.ground_truth()
             self.lidar_params = dataset.lidar_params()
@@ -204,7 +212,11 @@ try:
                     gt_index = 0
                     while self.gt.stamps[gt_index] < data.stamp:
                         gt_index += 1
-                    if check_overstep(self.gt.stamps, data.stamp, gt_index):
+                    if not closest(
+                        data.stamp,
+                        self.gt.stamps[gt_index - 1],
+                        self.gt.stamps[gt_index],
+                    ):
                         gt_index -= 1
                     gt_o_T_imu_0 = self.gt.poses[gt_index]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
@@ -328,9 +340,11 @@ try:
         """
         ...
 
+    M = TypeVar("M", bound=Metadata | None)
+
     @overload
     def convert(
-        obj: Trajectory,
+        obj: Trajectory[M],
         color: Optional[tuple[int, int, int] | tuple[float, float, float]] = None,
     ) -> rr.Points3D:
         """Convert a Trajectory a rerun Points3D.
@@ -373,7 +387,7 @@ try:
             ValueError: If the object is not an implemented type for conversion.
 
         Returns:
-            rr.Transform3D | rr.Points3D: Rerun type.
+            Rerun type.
         """
         # If we have an empty list, assume it's a point cloud with no points
         if isinstance(obj, list) and len(obj) == 0:  # type: ignore
@@ -453,11 +467,11 @@ try:
 except Exception:
 
     class RerunVis:
-        def __init__(self, args: VisArgs) -> None:
+        def __init__(self, args: VisArgs, pipeline_names: list[str]) -> None:
             if args.show:
                 print_warning("Rerun not found, visualization disabled")
 
-        def new_recording(self, dataset: Dataset, pipelines: list[PipelineBuilder]):
+        def new_dataset(self, dataset: Dataset):
             pass
 
         def log(
