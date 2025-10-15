@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-from evalio.stats import closest
 from evalio.types import (
     SE3,
     GroundTruth,
@@ -22,6 +21,7 @@ from evalio.types import (
     Trajectory,
 )
 from evalio.utils import print_warning
+from evalio._cpp.helpers import closest  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors

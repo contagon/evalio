@@ -11,8 +11,6 @@ from rich.console import Console
 from rich import box
 
 from evalio import types as ty, stats
-
-import numpy as np
 import typer
 
 import distinctipy
@@ -82,28 +80,34 @@ def eval_dataset(
     results: list[dict[str, Any]] = []
     for index, traj in enumerate(all_trajs):
         r: dict[str, Any] = {}
+
+        # compute hertz here before aligning
         hz = None
         if traj.metadata.total_elapsed is not None:
             hz = len(traj) / traj.metadata.total_elapsed
 
-        # add metrics
-        gt_aligned = Trajectory(
-            stamps=[ty.Stamp(s) for s in gt_og.stamps],
-            poses=[ty.SE3(p) for p in gt_og.poses],
-        )
-        stats.align(traj, gt_aligned, in_place=True)
-        if length is not None and len(traj) > length:
-            traj.stamps = traj.stamps[:length]
-            traj.poses = traj.poses[:length]
-            gt_aligned.stamps = gt_aligned.stamps[:length]
-            gt_aligned.poses = gt_aligned.poses[:length]
+        if len(traj) > 0:
+            # align to ground truth, copying ground truth by hand
+            gt_aligned = Trajectory(
+                stamps=[ty.Stamp(s) for s in gt_og.stamps],
+                poses=[ty.SE3(p) for p in gt_og.poses],
+            )
+            stats.align(traj, gt_aligned, in_place=True)
 
-        for w in windows:
-            rte = stats.rte(traj, gt_aligned, w).summarize(metric)
-            r.update({f"RTEt_{w.name()}": rte.trans, f"RTEr_{w.name()}": rte.rot})
+            # shrink to specified length
+            if length is not None and len(traj) > length:
+                traj.stamps = traj.stamps[:length]
+                traj.poses = traj.poses[:length]
+                gt_aligned.stamps = gt_aligned.stamps[:length]
+                gt_aligned.poses = gt_aligned.poses[:length]
 
-        ate = stats.ate(traj, gt_aligned).summarize(metric)
-        r.update({"ATEt": ate.trans, "ATEr": ate.rot})
+            # add metrics
+            for w in windows:
+                rte = stats.rte(traj, gt_aligned, w).summarize(metric)
+                r.update({f"RTEt_{w.name()}": rte.trans, f"RTEr_{w.name()}": rte.rot})
+
+            ate = stats.ate(traj, gt_aligned).summarize(metric)
+            r.update({"ATEt": ate.trans, "ATEr": ate.rot})
 
         # add metadata
         r |= traj.metadata.to_dict()
@@ -127,8 +131,34 @@ def eval_dataset(
     return results
 
 
-def _contains_dir(directory: Path) -> bool:
-    return any(directory.is_dir() for directory in directory.glob("*"))
+def evaluate(
+    directories: list[Path],
+    windows: list[stats.WindowKind],
+    metric: stats.MetricKind = stats.MetricKind.sse,
+    length: Optional[int] = None,
+    visualize: bool = False,
+) -> list[dict[str, Any]]:
+    # Collect all bottom level directories
+    bottom_level_dirs: list[Path] = []
+    for directory in directories:
+        for subdir in directory.glob("**/"):
+            if not _contains_dir(subdir):
+                bottom_level_dirs.append(subdir)
+
+    # Compute them all in parallel
+    results = Parallel(n_jobs=-2)(
+        delayed(eval_dataset)(
+            d,
+            visualize,
+            windows,
+            metric,
+            length,
+        )
+        for d in bottom_level_dirs
+    )
+    results = [r for r in results if r is not None]
+
+    return list(itertools.chain.from_iterable(results))
 
 
 def evaluate(
@@ -290,11 +320,9 @@ def evaluate_typer(
     if filter_str is None:
         filter_method = lambda r: True  # noqa: E731
     else:
-        filter_method = lambda r: eval(  # noqa: E731
-            filter_str,
-            {"__builtins__": None},
-            {"np": np, **r},
-        )
+        from asteval import Interpreter
+
+        filter_method = lambda r: Interpreter(user_symbols=r).eval(filter_str)
 
     original_filter = filter_method
     if only_complete:
