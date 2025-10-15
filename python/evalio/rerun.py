@@ -21,6 +21,7 @@ from evalio.types import (
     Trajectory,
 )
 from evalio.utils import print_warning
+from evalio._cpp.helpers import closest  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
