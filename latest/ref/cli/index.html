@@ -1039,6 +1039,7 @@
 <p><strong>Options</strong>:</p>
 <ul>
 <li><code>-D, --data-dir PATH</code>: Directory to store downloaded datasets.</li>
+<li><code>-M, --module TEXT</code>: Custom module to load (for custom datasets or pipelines). Can be used multiple times.</li>
 <li><code>-V, --version</code>: Show version and exit.</li>
 <li><code>--install-completion</code>: Install completion for the current shell.</li>
 <li><code>--show-completion</code>: Show completion for the current shell, to copy it or customize the installation.</li>
@@ -1125,6 +1126,7 @@
 <li><code>-l, --length INTEGER</code>: Number of scans to process for each dataset</li>
 <li><code>-v, --visualize</code>: Visualize the results via rerun</li>
 <li><code>-s, --show PARSE</code>: Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.</li>
+<li><code>--rerun-failed</code>: Rerun failed experiments. If not set, will skip previously failed experiments.</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="evalio-stats"><code>evalio stats</code></h2>
@@ -1139,9 +1141,17 @@
 <p><strong>Options</strong>:</p>
 <ul>
 <li><code>-v, --visualize</code>: Visualize results.</li>
-<li><code>-s, --sort TEXT</code>: Sort results by the name of a column.  [default: RTEt]</li>
-<li><code>-w, --window INTEGER</code>: Window size for RTE. Defaults to 100 time-steps.  [default: 200]</li>
-<li><code>-m, --metric [mean|median|sse]</code>: Metric to use for ATE/RTE computation. Defaults to sse.  [default: sse]</li>
+<li><code>-S, --sort TEXT</code>: Sort results by the name of a column. Defaults to RTEt.</li>
+<li><code>-r, --reverse</code>: Reverse the sorting order. Defaults to False.</li>
+<li><code>-f, --filter TEXT</code>: Python expressions to filter results rows. &#x27;True&#x27; rows will be kept. Example: --filter &#x27;RTEt &lt; 0.5&#x27;</li>
+<li><code>--only-complete</code>: Only show results for trajectories that completed.</li>
+<li><code>--only-failed</code>: Only show results for trajectories that failed.</li>
+<li><code>-h, --hide TEXT</code>: Columns to hide, may be repeated.</li>
+<li><code>-s, --show TEXT</code>: Columns to force show, may be repeated.</li>
+<li><code>--print-columns</code>: Print the names of all available columns.</li>
+<li><code>--w-meters FLOAT</code>: Window size in meters for RTE computation. May be repeated. Defaults to 30m.</li>
+<li><code>--w-seconds FLOAT</code>: Window size in seconds for RTE computation. May be repeated. Defaults to none.</li>
+<li><code>--metric [mean|median|sse]</code>: Metric to use for ATE/RTE computation. Defaults to sse.  [default: sse]</li>
 <li><code>-l, --length INTEGER</code>: Specify subset of trajectory to evaluate.</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
