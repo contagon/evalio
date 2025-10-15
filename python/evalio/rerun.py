@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 
 from evalio.datasets import Dataset
 from evalio.pipelines import Pipeline
-from evalio.stats import closest
 from evalio.types import (
     SE3,
     GroundTruth,
