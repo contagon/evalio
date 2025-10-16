@@ -5,7 +5,9 @@
 # import evalio
 # from evalio.datasets import set_data_dir
 from cyclopts import App
+from cyclopts.completion import detect_shell
 from evalio.datasets import NewerCollege2020
+from .completions import spec
 
 # import typer apps
 # from .dataset_manager import app as app_dl
@@ -16,32 +18,34 @@ from evalio.datasets import NewerCollege2020
 app = App(
     help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
     help_on_error=True,
+    # help_formatter=spec,
     # rich_markup_mode="rich",
     # no_args_is_help=True,
     # pretty_exceptions_enable=False,
 )
 app.register_install_completion_command(add_to_startup=False)  # type: ignore
 
+app["--help"].group = "Admin"
+app["--version"].group = "Admin"
+app["--install-completion"].group = "Admin"
+
 app.command("evalio.cli.ls:ls")
 app.command("evalio.cli.dataset_manager:dl")
 app.command("evalio.cli.dataset_manager:rm")
 app.command("evalio.cli.dataset_manager:filter")
 
+app.command("evalio.cli.stats:evaluate_cli", name="stats")
 
-@app.command
+
+@app.command(name="--show-completion", group="Admin")
 def print_completion():
     """
     Print shell completion script.
     """
-    print(app.generate_completion(shell="zsh"))
-
-
-@app.command
-def test(dataset: NewerCollege2020):
-    """
-    Test command to verify CLI is working.
-    """
-    print(f"Dataset: {dataset.name}")
+    comp = app.generate_completion()
+    if detect_shell() == "zsh":
+        comp += "compdef _evalio evalio"
+    print(comp)
 
 
 # app.add_typer(app_dl)

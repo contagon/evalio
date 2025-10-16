@@ -1,23 +1,20 @@
 from pathlib import Path
 from typing import Annotated, Any, Callable, Optional, cast
 
-from evalio.types.base import Trajectory
 import polars as pl
 import itertools
 
+from evalio import types as ty, stats
 from evalio.utils import print_warning
 from rich.table import Table
 from rich.console import Console
 from rich import box
 
-from evalio import types as ty, stats
-import typer
-
 import distinctipy
 
 from joblib import Parallel, delayed
-
-app = typer.Typer()
+from cyclopts import Group, Parameter
+from .completions import spec
 
 
 def eval_dataset(
@@ -88,7 +85,7 @@ def eval_dataset(
 
         if len(traj) > 0:
             # align to ground truth, copying ground truth by hand
-            gt_aligned = Trajectory(
+            gt_aligned = ty.Trajectory(
                 stamps=[ty.Stamp(s) for s in gt_og.stamps],
                 poses=[ty.SE3(p) for p in gt_og.poses],
             )
@@ -131,34 +128,8 @@ def eval_dataset(
     return results
 
 
-def evaluate(
-    directories: list[Path],
-    windows: list[stats.WindowKind],
-    metric: stats.MetricKind = stats.MetricKind.sse,
-    length: Optional[int] = None,
-    visualize: bool = False,
-) -> list[dict[str, Any]]:
-    # Collect all bottom level directories
-    bottom_level_dirs: list[Path] = []
-    for directory in directories:
-        for subdir in directory.glob("**/"):
-            if not _contains_dir(subdir):
-                bottom_level_dirs.append(subdir)
-
-    # Compute them all in parallel
-    results = Parallel(n_jobs=-2)(
-        delayed(eval_dataset)(
-            d,
-            visualize,
-            windows,
-            metric,
-            length,
-        )
-        for d in bottom_level_dirs
-    )
-    results = [r for r in results if r is not None]
-
-    return list(itertools.chain.from_iterable(results))
+def _contains_dir(directory: Path) -> bool:
+    return any(directory.is_dir() for directory in directory.glob("*"))
 
 
 def evaluate(
@@ -191,127 +162,68 @@ def evaluate(
     return list(itertools.chain.from_iterable(results))
 
 
-@app.command("stats", no_args_is_help=True)
-def evaluate_typer(
-    directories: Annotated[
-        list[Path], typer.Argument(help="Directory of results to evaluate.")
-    ],
-    visualize: Annotated[
-        bool, typer.Option("--visualize", "-v", help="Visualize results.")
-    ] = False,
+og = Group("Output", help_formatter=spec)
+fg = Group("Filtering", help_formatter=spec)
+mg = Group("Metric", help_formatter=spec)
+
+
+def Param(
+    alias: Optional[str] = None,
+    group: Optional[Group] = None,
+    *,
+    name: Optional[str] = None,
+    show_default: bool = False,
+    short: bool = True,
+) -> Parameter:
+    return Parameter(
+        name=name, group=group, alias=alias, negative="", show_default=show_default
+    )
+
+
+def evaluate_cli(
+    directories: list[Path],
+    /,
+    visualize: bool = False,
     # output options
-    sort: Annotated[
-        Optional[str],
-        typer.Option(
-            "-S",
-            "--sort",
-            help="Sort results by the name of a column. Defaults to RTEt.",
-            rich_help_panel="Output options",
-        ),
-    ] = None,
-    reverse: Annotated[
-        bool,
-        typer.Option(
-            "--reverse",
-            "-r",
-            help="Reverse the sorting order. Defaults to False.",
-            rich_help_panel="Output options",
-        ),
-    ] = False,
+    # sort: Annotated[Optional[str], sort_param] = None,
     # filtering options
-    filter_str: Annotated[
-        Optional[str],
-        typer.Option(
-            "-f",
-            "--filter",
-            help="Python expressions to filter results rows. 'True' rows will be kept. Example: --filter 'RTEt < 0.5'",
-            rich_help_panel="Filtering options",
-        ),
-    ] = None,
-    only_complete: Annotated[
-        bool,
-        typer.Option(
-            "--only-complete",
-            help="Only show results for trajectories that completed.",
-            rich_help_panel="Filtering options",
-        ),
-    ] = False,
-    only_failed: Annotated[
-        bool,
-        typer.Option(
-            "--only-failed",
-            help="Only show results for trajectories that failed.",
-            rich_help_panel="Filtering options",
-        ),
-    ] = False,
-    hide_columns: Annotated[
-        Optional[list[str]],
-        typer.Option(
-            "-h",
-            "--hide",
-            help="Columns to hide, may be repeated.",
-            rich_help_panel="Output options",
-        ),
-    ] = None,
-    show_columns: Annotated[
-        Optional[list[str]],
-        typer.Option(
-            "-s",
-            "--show",
-            help="Columns to force show, may be repeated.",
-            rich_help_panel="Output options",
-        ),
-    ] = None,
-    print_columns: Annotated[
-        bool,
-        typer.Option(
-            "--print-columns",
-            help="Print the names of all available columns.",
-            rich_help_panel="Output options",
-        ),
-    ] = False,
+    filter_str: Annotated[Optional[str], Param("-f", fg)] = None,
+    only_complete: Annotated[bool, Param(group=fg)] = False,
+    only_failed: Annotated[bool, Param(group=fg)] = False,
+    # output options
+    sort: Annotated[Optional[str], Param("-S", og)] = None,
+    reverse: Annotated[bool, Param("-r", og)] = False,
+    hide_columns: Annotated[Optional[list[str]], Param("-h", og)] = None,
+    show_columns: Annotated[Optional[list[str]], Param("-s", og)] = None,
+    print_columns: Annotated[bool, Param(group=og)] = False,
     # metric options
-    w_meters: Annotated[
-        Optional[list[float]],
-        typer.Option(
-            "--w-meters",
-            help="Window size in meters for RTE computation. May be repeated. Defaults to 30m.",
-            rich_help_panel="Metric options",
-        ),
-    ] = None,
-    w_seconds: Annotated[
-        Optional[list[float]],
-        typer.Option(
-            "--w-seconds",
-            help="Window size in seconds for RTE computation. May be repeated. Defaults to none.",
-            rich_help_panel="Metric options",
-        ),
-    ] = None,
-    metric: Annotated[
-        stats.MetricKind,
-        typer.Option(
-            "--metric",
-            help="Metric to use for ATE/RTE computation. Defaults to sse.",
-            rich_help_panel="Metric options",
-        ),
-    ] = stats.MetricKind.sse,
-    length: Annotated[
-        Optional[int],
-        typer.Option(
-            "-l",
-            "--length",
-            help="Specify subset of trajectory to evaluate.",
-            rich_help_panel="Metric options",
-        ),
-    ] = None,
+    w_meters: Annotated[Optional[list[float]], Param(group=mg)] = None,
+    w_seconds: Annotated[Optional[list[float]], Param(group=mg)] = None,
+    metric: Annotated[stats.MetricKind, Param("-m", mg)] = stats.MetricKind.sse,
+    length: Annotated[Optional[int], Param("-l", mg)] = None,
 ) -> None:
-    """
-    Evaluate the results of experiments.
+    """Evaluate experiment results and display statistics in a formatted table.
+
+    Args:
+        directories (list[Path]): List of directories containing experiment results.
+        visualize (bool, optional): If True, visualize results. Defaults to False.
+        sort (str, optional): Name of the column to sort results by. Defaults to RTEt for the first window.
+        reverse (bool, optional): If True, reverse the sorting order. Defaults to False.
+        filter_str (str, optional): Python expression to filter result rows. Example: 'RTEt < 0.5'.
+        only_complete (bool, optional): If True, only show results for completed trajectories.
+        only_failed (bool, optional): If True, only show results for failed trajectories.
+        hide_columns (list[str], optional): List of columns to hide from output.
+        show_columns (list[str], optional): List of columns to force show in output.
+        print_columns (bool, optional): If True, print the names of all available columns and exit.
+        w_meters (list[float], optional): Window sizes in meters for RTE computation. Defaults to [30.0].
+        w_seconds (list[float], optional): Window sizes in seconds for RTE computation.
+        metric (stats.MetricKind, optional): Metric to use for ATE/RTE computation. Defaults to stats.MetricKind.sse.
+        length (int, optional): Specify subset of trajectory to evaluate.
     """
     # ------------------------- Process all inputs ------------------------- #
     # Parse some of the options
     if only_complete and only_failed:
-        raise typer.BadParameter(
+        raise ValueError(
             "Can only use one of --only-complete, --only-incomplete, or --only-failed."
         )
 

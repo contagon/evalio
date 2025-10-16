@@ -30,9 +30,7 @@ def confirm_check() -> bool:
     return response == "y"
 
 
-def parse_datasets(
-    datasets: DatasetArg,
-) -> list[ds.Dataset]:
+def parse_datasets(datasets: DatasetArg) -> list[ds.Dataset]:
     """
     Parse datasets from command line argument
     """
@@ -81,11 +79,7 @@ def dl(datasets: DatasetArg, /) -> None:
         print(f"---------- Finished {dataset} ----------")
 
 
-def rm(
-    datasets: DatasetArg,
-    /,
-    confirm: ForceAnnotation = False,
-):
+def rm(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
     """
     Remove dataset(s)
 
@@ -213,11 +207,7 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
     bag_temp.rmdir()
 
 
-def filter(
-    datasets: DatasetArg,
-    /,
-    confirm: ForceAnnotation = False,
-):
+def filter(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
     """
     Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.
 
