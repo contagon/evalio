@@ -1,6 +1,8 @@
 import multiprocessing
 from pathlib import Path
-from evalio.cli.completions import DatasetOpt, PipelineOpt
+from cyclopts import Group, Parameter, ValidationError
+from cyclopts.validators import all_or_none
+from evalio.cli.completions import Sequences, Pipelines, Param
 from evalio.types.base import Trajectory
 from evalio.utils import print_warning
 from tqdm.rich import tqdm
@@ -13,105 +15,43 @@ from evalio.rerun import RerunVis, VisArgs
 
 from rich import print
 from typing import Optional, Annotated
-import typer
 
 from time import time
 
-
-app = typer.Typer()
-
-
-# def save_config(
-#     pipelines: Sequence[PipelineBuilder],
-#     datasets: Sequence[DatasetBuilder],
-#     output: Path,
-# ):
-#     # If it's just a file, don't save the entire config file
-#     if output.suffix == ".csv":
-#         return
-
-#     print(f"Saving config to {output}")
-
-#     output.mkdir(parents=True, exist_ok=True)
-#     path = output / "config.yaml"
-
-#     out = dict()
-#     out["datasets"] = [d.as_dict() for d in datasets]
-#     out["pipelines"] = [p.as_dict() for p in pipelines]
-
-#     with open(path, "w") as f:
-#         yaml.dump(out, f)
+cg = Group("Config")
+mg = Group("Manual")
+og = Group("Options")
 
 
-@app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
 def run_from_cli(
     # Config file
-    config: Annotated[
-        Optional[Path],
-        typer.Option(
-            "-c",
-            "--config",
-            help="Config file to load from",
-            rich_help_panel="From config",
-            show_default=False,
-        ),
-    ] = None,
+    config: Annotated[Optional[Path], Param("-c", cg)] = None,
     # Manual options
-    in_datasets: DatasetOpt = None,
-    in_pipelines: PipelineOpt = None,
-    in_out: Annotated[
-        Optional[Path],
-        typer.Option(
-            "-o",
-            "--output",
-            help="Output directory to save results",
-            rich_help_panel="Manual options",
-            show_default=False,
-        ),
-    ] = None,
+    in_datasets: Annotated[Optional[list[Sequences]], Param("-d", mg)] = None,
+    in_pipelines: Annotated[Optional[list[Pipelines]], Param("-p", mg)] = None,
+    in_out: Annotated[Optional[Path], Param("-o", mg)] = None,
     # misc options
-    length: Annotated[
-        Optional[int],
-        typer.Option(
-            "-l",
-            "--length",
-            help="Number of scans to process for each dataset",
-            rich_help_panel="Manual options",
-            show_default=False,
-        ),
-    ] = None,
-    visualize: Annotated[
-        bool,
-        typer.Option(
-            "-v",
-            "--visualize",
-            help="Visualize the results via rerun",
-            show_default=False,
-        ),
-    ] = False,
-    show: Annotated[
-        Optional[VisArgs],
-        typer.Option(
-            "-s",
-            "--show",
-            help="Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.",
-            show_default=False,
-            parser=VisArgs.parse,
-        ),
-    ] = None,
-    rerun_failed: Annotated[
-        bool,
-        typer.Option(
-            "--rerun-failed",
-            help="Rerun failed experiments. If not set, will skip previously failed experiments.",
-            show_default=False,
-        ),
-    ] = False,
+    length: Annotated[Optional[int], Param("-l", mg)] = None,
+    visualize: Annotated[bool, Param("-v", og)] = False,
+    # TODO: I don't like how this was parsed
+    # show: Annotated[Optional[VisArgs], Param("-s", mg)] = None,
+    rerun_failed: Annotated[bool, Param(group=og)] = False,
 ):
+    """Run lidar-inertial odometry experiments.
+
+    Args:
+        config (Path): Path to the config file.
+        in_datasets (Dataset): Input datasets.
+        in_pipelines (Pipeline): Input pipelines.
+        in_out (Path): Output directory to save results.
+        length (int): Number of scans to process for each dataset.
+        visualize (bool): Visualize the results via rerun.
+        show (Optional[VisArgs]): Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.
+        rerun_failed (bool): Rerun failed experiments. If not set, will skip previously failed experiments.
+    """
+
     if (in_pipelines or in_datasets or length) and config:
-        raise typer.BadParameter(
-            "Cannot specify both config and manual options", param_hint="run"
-        )
+        raise ValueError("Cannot specify both config and manual options")
 
     # ------------------------- Parse Config file ------------------------- #
     if config is not None:
@@ -128,13 +68,9 @@ def run_from_cli(
             params = yaml.load(f, Loader=Loader)
 
         if "datasets" not in params:
-            raise typer.BadParameter(
-                "No datasets specified in config", param_hint="run"
-            )
+            raise ValueError("No datasets specified in config")
         if "pipelines" not in params:
-            raise typer.BadParameter(
-                "No pipelines specified in config", param_hint="run"
-            )
+            raise ValueError("No pipelines specified in config")
 
         datasets = ds.parse_config(params.get("datasets", None))
         pipelines = pl.parse_config(params.get("pipelines", None))
@@ -148,13 +84,9 @@ def run_from_cli(
     # ------------------------- Parse manual options ------------------------- #
     else:
         if in_pipelines is None:
-            raise typer.BadParameter(
-                "Must specify at least one pipeline", param_hint="run"
-            )
+            raise ValueError("Must specify at least one pipeline")
         if in_datasets is None:
-            raise typer.BadParameter(
-                "Must specify at least one dataset", param_hint="run"
-            )
+            raise ValidationError(msg="Must specify at least one dataset")
 
         if length is not None:
             temp_datasets: list[ds.DatasetConfig] = [
@@ -175,19 +107,12 @@ def run_from_cli(
     # ------------------------- Miscellaneous ------------------------- #
     # error out if either is wrong
     if isinstance(datasets, ds.DatasetConfigError):
-        raise typer.BadParameter(
-            f"Error in datasets config: {datasets}", param_hint="run"
-        )
+        raise ValueError(f"Error in datasets config: {datasets}")
     if isinstance(pipelines, pl.PipelineConfigError):
-        raise typer.BadParameter(
-            f"Error in pipelines config: {pipelines}", param_hint="run"
-        )
+        raise ValueError(f"Error in pipelines config: {pipelines}")
 
     if out.suffix == ".csv" and (len(pipelines) > 1 or len(datasets) > 1):
-        raise typer.BadParameter(
-            "Output must be a directory when running multiple experiments",
-            param_hint="run",
-        )
+        raise ValueError("Output must be a directory when running multiple experiments")
 
     print(
         f"Running {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"

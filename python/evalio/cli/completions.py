@@ -1,13 +1,13 @@
 from inspect import isclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, TypeAlias, Literal
+from typing import TYPE_CHECKING, Annotated, Optional, TypeAlias, Literal
 
-from cyclopts import Parameter
-from cyclopts.help import DefaultFormatter, ColumnSpec, HelpEntry, TableSpec
+from cyclopts import Group, Parameter
+from cyclopts.help import DefaultFormatter, ColumnSpec, HelpEntry, PanelSpec, TableSpec
 from evalio import datasets as ds, pipelines as pl
 
 from enum import Enum
-
+from rich.console import Console, ConsoleOptions
 from typing import Any, Union, get_args, get_origin
 
 
@@ -75,35 +75,52 @@ def render_type(type_: Any) -> str:
     return get_hint_name(type_) if type_ else ""
 
 
+def columns(
+    console: Console, options: ConsoleOptions, entries: list[HelpEntry]
+) -> list[ColumnSpec]:
+    columns: list[ColumnSpec] = []
+
+    if any(e.required for e in entries):
+        columns.append(
+            ColumnSpec(
+                renderer=lambda e: "*" if e.required else " ",  # type: ignore
+                header="",
+                width=2,
+                style="red bold",
+            )
+        )
+
+    columns.extend(
+        [
+            ColumnSpec(
+                renderer=names_long,
+                style="cyan",
+            ),
+            ColumnSpec(
+                renderer=names_short,
+                style="green",
+                max_width=30,
+            ),
+            ColumnSpec(
+                renderer=lambda e: render_type(e.type),  # type: ignore
+                style="yellow",
+                justify="center",
+            ),
+            ColumnSpec(
+                renderer="description",  # Use attribute name
+                overflow="fold",
+            ),
+        ]
+    )
+
+    return columns
+
+
 # Create custom columns
 spec = DefaultFormatter(
     table_spec=TableSpec(show_header=False),
-    column_specs=(
-        ColumnSpec(
-            renderer=lambda e: "*" if e.required else " ",  # type: ignore
-            header="",
-            width=2,
-            style="red bold",
-        ),
-        ColumnSpec(
-            renderer=names_long,
-            style="cyan",
-        ),
-        ColumnSpec(
-            renderer=names_short,
-            style="green",
-            max_width=30,
-        ),
-        ColumnSpec(
-            renderer=lambda e: render_type(e.type),  # type: ignore
-            style="yellow",
-            justify="center",
-        ),
-        ColumnSpec(
-            renderer="description",  # Use attribute name
-            overflow="fold",
-        ),
-    ),
+    column_specs=columns,  # type: ignore
+    panel_spec=PanelSpec(border_style="bright_black"),
 )
 
 
@@ -122,7 +139,28 @@ else:
     Pipelines = Literal[tuple(pl.all_pipelines().keys())]
 
 # TODO: Converter / Validator / no show
-# TODO: Open a bug report, show_choices=False removes choices from completions
-# TODO: Doesn't allow completing multiples of the same choice
 DatasetArg: TypeAlias = Annotated[list[Sequences], Parameter()]
 PipelineArg: TypeAlias = Annotated[list[Pipelines], Parameter()]
+
+# TODO: Path's don't autocomplete
+# TODO: --no-negative shows up in completions when inherited
+
+
+def Param(
+    alias: Optional[str] = None,
+    group: Optional[Group] = None,
+    **kwargs: dict[str, Any],
+) -> Parameter:
+    """Helper to create a Parameter with custom defaults.
+
+    Args:
+        alias (Optional[str], optional): _description_. Defaults to None.
+        group (Optional[Group], optional): _description_. Defaults to None.
+        name (Optional[str], optional): _description_. Defaults to None.
+        show_default (bool, optional): _description_. Defaults to False.
+        short (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        Parameter: _description_
+    """
+    return Parameter(group=group, alias=alias, negative="", **kwargs)  # type: ignore

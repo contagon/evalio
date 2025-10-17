@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
-import typer
 from numpy.typing import NDArray
 
 from evalio.datasets import Dataset

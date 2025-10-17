@@ -13,8 +13,8 @@ from rich import box
 import distinctipy
 
 from joblib import Parallel, delayed
-from cyclopts import Group, Parameter
-from .completions import spec
+from cyclopts import Group
+from .completions import Param
 
 
 def eval_dataset(
@@ -162,28 +162,16 @@ def evaluate(
     return list(itertools.chain.from_iterable(results))
 
 
-og = Group("Output", help_formatter=spec)
-fg = Group("Filtering", help_formatter=spec)
-mg = Group("Metric", help_formatter=spec)
-
-
-def Param(
-    alias: Optional[str] = None,
-    group: Optional[Group] = None,
-    *,
-    name: Optional[str] = None,
-    show_default: bool = False,
-    short: bool = True,
-) -> Parameter:
-    return Parameter(
-        name=name, group=group, alias=alias, negative="", show_default=show_default
-    )
+og = Group("Output")
+fg = Group("Filtering")
+mg = Group("Metric")
 
 
 def evaluate_cli(
     directories: list[Path],
     /,
-    visualize: bool = False,
+    *,
+    visualize: Annotated[bool, Param("-v", og)] = False,
     # output options
     # sort: Annotated[Optional[str], sort_param] = None,
     # filtering options
