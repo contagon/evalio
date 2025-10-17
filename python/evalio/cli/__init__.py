@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 from cyclopts import App, Group, Parameter
 from cyclopts.completion import detect_shell
-from .completions import spec
+from .completions import Param, spec
 
 # import typer apps
 # from .dataset_manager import app as app_dl
@@ -18,8 +18,8 @@ from .completions import spec
 
 app = App(
     help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
-    help_on_error=True,
     help_formatter=spec,
+    help_on_error=True,
     default_parameter=Parameter(negative="", show_default=False),
     # group="TESTING",
     group_parameters="Options",
@@ -55,11 +55,14 @@ def print_completion():
     print(comp)
 
 
+gg = Group("Global Options", sort_key=-1)
+
+
 @app.meta.default
 def global_options(
     *tokens: Annotated[str, Parameter(show=False, allow_leading_hyphen=True)],
-    module: Annotated[Optional[list[str]], Parameter(alias="-M")] = None,
-    data_dir: Annotated[Optional[Path], Parameter(alias="-D")] = None,
+    module: Annotated[Optional[list[str]], Param("-M", gg)] = None,
+    data_dir: Annotated[Optional[Path], Param("-D", gg)] = None,
 ):
     """_summary_
 
@@ -67,7 +70,6 @@ def global_options(
         module (list[str]): Custom module to import. Can be repeated.
         data_dir (Optional[Path]): Directory to store downloaded datasets.
     """
-
     if module is not None:
         from evalio import _register_custom_modules
 
@@ -79,9 +81,10 @@ def global_options(
 
         set_data_dir(data_dir)
 
+    app(tokens)
 
-# TODO: Disabling this is weird! Breaks help output
-# app.meta()
+
+app.meta()
 
 
 # def version_callback(value: bool):
@@ -97,5 +100,6 @@ __all__ = [
     "app",
 ]
 
-if __name__ == "__main__":
-    app()
+# if __name__ == "__main__":
+#     print("here!")
+#     app.meta()
