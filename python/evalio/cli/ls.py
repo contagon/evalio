@@ -118,11 +118,11 @@ def ls(
             "Info": [],
         }
         for d in to_include:
-            all_info["Name"].append(d.dataset_name())
-            links_str = d.url()
-            if not show_hyperlinks:
-                links_str = f"[link={links_str}]link[/link]"
-            all_info["Info"].append(links_str)
+            if show_hyperlinks:
+                all_info["Name"].append(d.dataset_name())
+                all_info["Info"].append(d.url())
+            else:
+                all_info["Name"].append(f"[link={d.url()}]{d.dataset_name()}[/link]")
 
             size = [d(s).size_on_disk() for s in d.sequences()]
             env = [d(s).environment() for s in d.sequences()]
@@ -192,7 +192,8 @@ def ls(
         table.add_column("Vehicle", justify="center", **col_opts)
         table.add_column("IMU", justify="center", **col_opts)
         table.add_column("LiDAR", justify="center", **col_opts)
-        table.add_column("Info", justify="center", **col_opts)
+        if show_hyperlinks:
+            table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
@@ -230,11 +231,11 @@ def ls(
             "Version": [],
         }
         for p in to_include:
-            all_info["Name"].append(p.name())
-            links_str = p.url()
-            if not show_hyperlinks:
-                links_str = f"[link={links_str}]link[/link]"
-            all_info["Info"].append(links_str)
+            if show_hyperlinks:
+                all_info["Name"].append(p.name())
+                all_info["Info"].append(p.url())
+            else:
+                all_info["Name"].append(f"[link={p.url()}]{p.name()}[/link]")
             all_info["Version"].append(p.version())
 
             if not quiet:
@@ -261,7 +262,8 @@ def ls(
         if not quiet:
             table.add_column("Params", justify="right", **col_opts)
             table.add_column("Default", justify="left", **col_opts)
-        table.add_column("Info", justify="center", **col_opts)
+        if show_hyperlinks:
+            table.add_column("Info", justify="center", **col_opts)
 
         for i in range(len(all_info["Name"])):
             row_info = [all_info[c.header][i] for c in table.columns]  # type: ignore
