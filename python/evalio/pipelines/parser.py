@@ -176,9 +176,16 @@ def validate_params(
     return None
 
 
+def make_interpreter() -> Interpreter:
+    i = Interpreter()
+    # Augment with a few extra numpy functions
+    i.symtable["geomspace"] = np.geomspace  # type: ignore
+    return i
+
+
 def eval_str_sweep(val: str) -> list[Any]:
     """Evaluate python string to list of Params"""
-    interp = Interpreter().eval(val, raise_errors=True)
+    interp = make_interpreter().eval(val, raise_errors=True)
 
     # Handle numpy to builtin type conversion
     if isinstance(interp, np.ndarray):
@@ -246,7 +253,7 @@ def parse_config(
                     # If the eval failed
                     except Exception as _:
                         return InvalidPipelineConfig(
-                            f"Sweep value for '{k}' is evaluable by python: '{val}'"
+                            f"Sweep value for '{k}' is not evaluable by python: '{val}'"
                         )
 
             return _sweep(sweep, name, pipe, params)
