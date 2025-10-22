@@ -38,9 +38,11 @@ pipelines:
   - name: kiss_tweaked
     pipeline: kiss
     deskew: true
-    # Some of these datasets need smaller voxel sizes
+    # Perform a parameter sweep over other parameters
     sweep:
       voxel_size: [0.1, 0.5, 1.0]
+      # Can also eval python code to create sweep (including numpy functionality)
+      initial_threshold: linspace(0.5, 2.0, 4)
 ```
 
 A few notes,
@@ -48,7 +50,8 @@ A few notes,
 - In the dataset section, a bare item `- hilti_2022/basement_2` is shorthand for `- name: hilti_2022/basement_2`.
 - Similarly for pipelines, a bare item `- kiss` is shorthand for `- pipeline: kiss`.
 - If a pipeline name is not set, it defaults to the pipeline name.
-- The `sweep` section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to `name__parameter_value`.
+- The `sweep` section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to `name__parameter-value`.
+- `sweep` values can also be python code snippets that will be evaluated to generate the list of values for larger and more complex sweeps. This includes usage of functions in `math` and `numpy`.
 
 The config file can be run with,
 ```bash
