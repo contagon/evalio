@@ -1010,16 +1010,19 @@ Also available are the <code>-l/--length</code> which will set a maximum length 
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kiss_tweaked</span>
 </span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nt">pipeline</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kiss</span>
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">deskew</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="c1"># Some of these datasets need smaller voxel sizes</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="c1"># Perform a parameter sweep over other parameters</span>
 </span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="nt">sweep</span><span class="p">:</span>
 </span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">      </span><span class="nt">voxel_size</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">      </span><span class="c1"># Can also eval python code to create sweep (including numpy functionality)</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">      </span><span class="nt">initial_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linspace(0.5, 2.0, 4)</span>
 </span></code></pre></div></p>
 <p>A few notes,
 - For datasets, a wildcard <code>*</code> can be used to run on all sequences in that dataset.
 - In the dataset section, a bare item <code>- hilti_2022/basement_2</code> is shorthand for <code>- name: hilti_2022/basement_2</code>.
 - Similarly for pipelines, a bare item <code>- kiss</code> is shorthand for <code>- pipeline: kiss</code>.
 - If a pipeline name is not set, it defaults to the pipeline name.
-- The <code>sweep</code> section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to <code>name__parameter_value</code>.</p>
+- The <code>sweep</code> section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to <code>name__parameter-value</code>.
+- <code>sweep</code> values can also be python code snippets that will be evaluated to generate the list of values for larger and more complex sweeps. This includes usage of a subset of functions in <code>math</code> and <code>numpy</code>.</p>
 <p>The config file can be run with,
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>evalio<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml
 </span></code></pre></div>

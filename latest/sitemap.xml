@@ -2,66 +2,66 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>http://contagon.github.io/evalio/latest/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/install/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/quickstart/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/examples/data_loading/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/examples/dataset/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/examples/evaluation/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/examples/odometry/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/examples/pipeline/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/included/datasets/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/included/pipelines/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/cli/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/datasets/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/pipelines/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/rerun/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/stats/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
     <url>
          <loc>http://contagon.github.io/evalio/latest/ref/types/</loc>
-         <lastmod>2025-10-15</lastmod>
+         <lastmod>2025-10-22</lastmod>
     </url>
 </urlset>
