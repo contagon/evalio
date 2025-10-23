@@ -2,7 +2,6 @@
 
 #include <deque>
 #include <memory>
-#include <stdexcept>
 
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -54,10 +53,6 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    return to_se3(current_estimated_pose) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     return features_to_points(
       transform_features(map_features(), current_estimated_pose)
@@ -97,7 +92,7 @@ public:
         std::make_pair(loam::Pose3d::Identity(), scan_features)
       );
       // Initialize the odometry frame pose
-      current_estimated_pose = loam::Pose3d::Identity();
+      this->push_back_estimate(mm.stamp, evalio::SE3::identity());
       // Return the initial scan features
       return features_to_points(scan_features);
     }
@@ -125,6 +120,8 @@ public:
       }
       // Update the Odometry frame pose
       current_estimated_pose = current_estimated_pose.compose(map_T_scan);
+      const auto pose_ev = to_se3(current_estimated_pose) * lidar_T_imu_;
+      this->push_back_estimate(mm.stamp, pose_ev);
       // Return the points associated with the used features
       return features_to_points(scan_features);
     }

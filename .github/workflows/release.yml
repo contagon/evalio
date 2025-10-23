@@ -91,7 +91,6 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     env:
-      UV_NO_EDITABLE: true
       VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -50,8 +50,13 @@ public:
   }
 
   // Getters
-  virtual const SE3 pose() = 0;
   virtual const std::map<std::string, std::vector<Point>> map() = 0;
+
+  virtual const std::vector<std::tuple<Stamp, SE3>> recent_estimates() {
+    std::vector<std::tuple<Stamp, SE3>> copy = recent_poses_;
+    recent_poses_.clear();
+    return copy;
+  }
 
   // Setters
   virtual void set_imu_params(ImuParams params) = 0;
@@ -65,6 +70,14 @@ public:
   virtual void add_imu(ImuMeasurement mm) = 0;
   virtual std::map<std::string, std::vector<Point>>
   add_lidar(LidarMeasurement mm) = 0;
+
+protected:
+  void push_back_estimate(Stamp stamp, SE3 pose) {
+    recent_poses_.emplace_back(stamp, pose);
+  }
+
+private:
+  std::vector<std::tuple<Stamp, SE3>> recent_poses_;
 };
 
 } // namespace evalio

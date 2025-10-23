@@ -352,7 +352,6 @@ def run_single(
         elif isinstance(data, ty.LidarMeasurement):  # type: ignore
             start = time()
             features = pipe.add_lidar(data)
-            pose = pipe.pose()
             time_running += time() - start
 
             time_total += time_running
@@ -360,8 +359,10 @@ def run_single(
                 time_max = time_running
             time_running = 0.0
 
-            traj.append(data.stamp, pose)
-            vis.log(data, features, pose, pipe)
+            # TODO: Split up pose and map visualizing
+            for stamp, pose in pipe.recent_estimates():
+                traj.append(stamp, pose)
+                vis.log(data, features, pose, pipe)
 
             loop.update()
             if loop.n >= exp.sequence_length:

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <stdexcept>
 
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -64,11 +63,6 @@ public:
   );
 
   // Getters
-  const evalio::SE3 pose() override {
-    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    return to_evalio_se3(pose);
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
     std::vector<evalio::Point> evalio_map;
@@ -119,6 +113,11 @@ public:
     for (auto point : used_points) {
       result.push_back(to_evalio_point(point));
     }
+
+    // Save the estimate
+    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
+    this->push_back_estimate(mm.stamp, to_evalio_se3(pose));
+
     return {{"point", result}};
   }
 

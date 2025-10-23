@@ -2,7 +2,6 @@
 
 #include <Eigen/Geometry>
 #include <memory>
-#include <stdexcept>
 #include <thread>
 
 #include "evalio/pipeline.h"
@@ -59,10 +58,6 @@ public:
   );
 
   // Getters
-  const evalio::SE3 pose() override {
-    return to_evalio_se3(mad_icp_->currentPose()) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     auto leaves = mad_icp_->modelLeaves();
     std::vector<evalio::Point> output_points;
@@ -139,6 +134,10 @@ public:
 
     // Run through pipeline
     mad_icp_->compute(mm.stamp.to_sec(), points);
+
+    // Save the current estimate
+    const auto pose = to_evalio_se3(mad_icp_->currentPose()) * lidar_T_imu_;
+    this->push_back_estimate(mm.stamp, pose);
 
     auto leaves = mad_icp_->currentLeaves();
     std::vector<evalio::Point> output_points;

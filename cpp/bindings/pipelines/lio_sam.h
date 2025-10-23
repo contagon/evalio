@@ -3,7 +3,6 @@
 #include <pcl/point_cloud.h>
 
 #include <map>
-#include <stdexcept>
 #include <string>
 
 #include "LIO-SAM/lio-sam.h"
@@ -98,10 +97,6 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     auto map = lio_sam_->getMap();
     std::vector<evalio::Point> evalio_map(map->size());
@@ -161,6 +156,10 @@ public:
 
     // Run through pipeline
     lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
+
+    // Save pose
+    const auto pose = to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
+    this->push_back_estimate(mm.stamp, pose);
 
     // Return features
     auto used_points = lio_sam_->getMostRecentFrame();

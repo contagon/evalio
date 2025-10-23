@@ -21,10 +21,6 @@ public:
   NB_TRAMPOLINE(Pipeline, 9);
 
   // Getters
-  const evalio::SE3 pose() override {
-    NB_OVERRIDE_PURE(pose);
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     NB_OVERRIDE_PURE(map);
   }
@@ -81,7 +77,11 @@ inline void makeBasePipeline(nb::module_& m) {
       &evalio::Pipeline::version,
       "Version of the pipeline."
     )
-    .def("pose", &evalio::Pipeline::pose, "Most recent pose estimate.")
+    .def(
+      "recent_estimates",
+      &evalio::Pipeline::recent_estimates,
+      "Most recent stamped pose estimates. Will be removed after this method is called."
+    )
     .def("map", &evalio::Pipeline::map, "Map of the environment.")
     .def(
       "initialize",

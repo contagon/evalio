@@ -196,11 +196,6 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    const auto pose = ct_icp_->Trajectory().back();
-    return to_evalio_pose(pose) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     const auto map = ct_icp_->GetLocalMap();
     std::vector<evalio::Point> ev_points;
@@ -261,6 +256,11 @@ public:
 
     // Run through pipeline
     const auto summary = ct_icp_->RegisterFrame(pc);
+
+    // Save the estimate
+    const auto pose = ct_icp_->Trajectory().back();
+    const auto ev_pose = to_evalio_pose(pose) * lidar_T_imu_;
+    this->push_back_estimate(mm.stamp, ev_pose);
 
     // Return the used points
     std::vector<evalio::Point> ev_planar_points;

@@ -46,12 +46,6 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    const auto pose =
-      !genz_icp_->poses().empty() ? genz_icp_->poses().back() : Sophus::SE3d();
-    return to_evalio_se3(pose * lidar_T_imu_);
-  }
-
   const std::map<std::string, std::vector<evalio::Point>> map() override {
     std::vector<Eigen::Vector3d> map = genz_icp_->LocalMap();
     std::vector<evalio::Point> evalio_map;
@@ -99,7 +93,12 @@ public:
     // Run through pipeline
     const auto& [planar_points, nonplanar_points] =
       genz_icp_->RegisterFrame(points, timestamps);
-    const auto lidar_T_world = genz_icp_->poses().back().inverse();
+    const auto world_T_lidar = genz_icp_->poses().back();
+    const auto lidar_T_world = world_T_lidar.inverse();
+
+    // Save the estimate
+    const auto ev_pose = to_evalio_se3(world_T_lidar * lidar_T_imu_);
+    this->push_back_estimate(mm.stamp, ev_pose);
 
     // Return the used points
     // These are all in the global frame, so we need to convert them
