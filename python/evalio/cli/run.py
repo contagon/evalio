@@ -337,7 +337,7 @@ def run_single(
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
     traj.open(exp.file)
-    vis.new_pipe(exp.name)
+    vis.new_pipe(exp.name, len(pipe.map()))
 
     time_running = 0.0
     time_max = 0.0
@@ -359,15 +359,16 @@ def run_single(
                 time_max = time_running
             time_running = 0.0
 
-            # TODO: Split up pose and map visualizing
-            for stamp, pose in pipe.recent_estimates():
-                traj.append(stamp, pose)
-                vis.log(data, features, pose, pipe)
+            vis.log_scan(data, features, pipe)
 
             loop.update()
             if loop.n >= exp.sequence_length:
                 loop.close()
                 break
+
+        for stamp, pose in pipe.recent_estimates():
+            traj.append(stamp, pose)
+            vis.log_pose(stamp, pose)
 
     loop.close()
     traj.metadata.status = ty.ExperimentStatus.Complete

@@ -157,14 +157,21 @@ try:
 
             self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
-        def new_pipe(self, pipe_name: str):
+        def new_pipe(self, pipe_name: str, feat_num: int):
             if not self.args.show:
                 return
 
             if self.imu_T_lidar is None:
-                raise ValueError(
-                    "You needed to initialize the recording before adding a pipeline!"
-                )
+                raise ValueError("You needed to add a dataset before a pipeline!")
+
+            # Define colors for this pipeline
+            # features/map colors + trajectory + scan
+            self.colors = distinctipy.get_colors(
+                feat_num + 2,
+                exclude_colors=self.used_colors,
+                rng=0,
+            )
+            self.used_colors.extend(self.colors)
 
             # First reconnect to make sure we're connected (happens b/c of multithread passing)
             self.rec = rr.RecordingStream(**self.recording_params)
@@ -176,44 +183,27 @@ try:
             self.trajectory = Trajectory(stamps=[], poses=[])
             self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
-        def log(
-            self,
-            data: LidarMeasurement,
-            features: dict[str, list[Point]],
-            pose: SE3,
-            pipe: Pipeline,
-        ):
+        def log_pose(self, stamp: Stamp, pose: SE3):
             if not self.args.show:
                 return
 
-            if self.colors is None:
-                # features/map colors + trajectory + scan
-                self.colors = distinctipy.get_colors(
-                    len(features) + 2,
-                    exclude_colors=self.used_colors,
-                    rng=0,
-                )
-                self.used_colors.extend(self.colors)
-
             if self.lidar_params is None or self.gt is None:
-                raise ValueError(
-                    "You needed to initialize the recording before stepping!"
-                )
-            if self.pn is None or self.trajectory is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
             if self.gt_o_T_imu_o is None:
-                if data.stamp < self.gt.stamps[0]:
+                if stamp < self.gt.stamps[0]:
                     pass
                 else:
                     imu_o_T_imu_0 = pose
                     # find the ground truth pose that is temporally closest to the imu pose
                     gt_index = 0
-                    while self.gt.stamps[gt_index] < data.stamp:
+                    while self.gt.stamps[gt_index] < stamp:
                         gt_index += 1
                     if not closest(
-                        data.stamp,
+                        stamp,
                         self.gt.stamps[gt_index - 1],
                         self.gt.stamps[gt_index],
                     ):
@@ -223,13 +213,29 @@ try:
                     self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
             # Always include the pose
-            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
             self.rec.log(f"{self.pn}/imu", convert(pose))
-            self.trajectory.append(data.stamp, pose)
+            self.trajectory.append(stamp, pose)
             self.rec.log(
                 f"{self.pn}/trajectory",
                 convert(self.trajectory, color=self.colors[-1]),
             )
+
+        def log_scan(
+            self,
+            data: LidarMeasurement,
+            features: dict[str, list[Point]],
+            pipe: Pipeline,
+        ):
+            if not self.args.show:
+                return
+
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
 
             # Features from the scan
             if self.args.features:
