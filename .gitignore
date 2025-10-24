@@ -29,4 +29,7 @@ data
 compile_commands.json
 
 # cloned pipelines
-cpp/bindings/pipelines-src
+cpp/bindings/pipelines-srcevalio_data/
+build/
+dist/
+results/

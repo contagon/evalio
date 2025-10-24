@@ -64,6 +64,16 @@ git switch --detach icra_2022
 git apply ../../pipelines/ct_icp.patch
 cd ..
 
+# DLIO
+if [ ! -d "direct_lidar_inertial_odometry" ]; then
+    git clone https://github.com/vectr-ucla/direct_lidar_inertial_odometry.git
+fi
+cd direct_lidar_inertial_odometry
+git stash
+git switch --detach v1.1.1
+# git apply ../../pipelines/dlio.patch  # Would need to create this patch
+cd ..
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then

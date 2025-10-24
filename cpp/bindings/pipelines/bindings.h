@@ -1,3 +1,6 @@
+#ifdef EVALIO_FAST_LIO2
+  #include "bindings/pipelines/fast_lio2.h"
+#endif
 #pragma once
 
 #include <nanobind/nanobind.h>
@@ -31,9 +34,23 @@ using namespace nb::literals;
   #include "bindings/pipelines/ct_icp.h"
 #endif
 
+#ifdef EVALIO_DLIO
+  #include "bindings/pipelines/dlio.h"
+#endif
+
 namespace evalio {
 inline void makePipelines(nb::module_& m) {
   // List all the pipelines here
+#ifdef EVALIO_FAST_LIO2
+  nb::class_<FastLIO2, evalio::Pipeline>(m, "FastLIO2")
+    .def(nb::init<>())
+    .def_static("name", &FastLIO2::name)
+    .def_static("default_params", &FastLIO2::default_params)
+    .def_static("url", &FastLIO2::url)
+    .def_static("version", &FastLIO2::version)
+    .doc() =
+    "FastLIO2: Fast LiDAR-Inertial Odometry pipeline. Placeholder C++ integration for evalio.";
+#endif
 #ifdef EVALIO_KISS_ICP
   nb::class_<KissICP, evalio::Pipeline>(m, "KissICP")
     .def(nb::init<>())
@@ -111,6 +128,20 @@ inline void makePipelines(nb::module_& m) {
     "CT-ICP LiDAR-only pipeline performs continuous-time ICP over "
     "a small window of scans to perform more accurate dewarping performance. "
     "This is the version based on the 2022-ICRA paper.";
+#endif
+
+#ifdef EVALIO_DLIO
+  nb::class_<DLIO, evalio::Pipeline>(m, "DLIO")
+    .def(nb::init<>())
+    .def_static("name", &DLIO::name)
+    .def_static("default_params", &DLIO::default_params)
+    .def_static("url", &DLIO::url)
+    .def_static("version", &DLIO::version)
+    .doc() =
+    "Direct LiDAR-Inertial Odometry (DLIO) pipeline with continuous-time "
+    "motion correction. DLIO is a lightweight LIO algorithm that fuses "
+    "LiDAR and IMU data using a novel coarse-to-fine approach for precise "
+    "motion correction and robust odometry estimation.";
 #endif
 }
 } // namespace evalio
