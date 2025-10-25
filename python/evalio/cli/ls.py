@@ -21,10 +21,10 @@ def unique(lst: list[T]) -> list[T]:
 
 
 def extract_len(d: ds.Dataset) -> str:
-    """Get the length of a dataset in a human readable format
+    """Get the temporal length of a dataset in a human readable format
 
     Args:
-        d (Dataset): Dataset to get length of
+        d (Dataset): Dataset
 
     Returns:
         Length of dataset in minutes or '-' if length is unknown
@@ -40,9 +40,9 @@ def ls(
     kind: Literal["datasets", "pipelines"],
     /,
     search: Annotated[Optional[str], Parameter(alias="-s")] = None,
-    quiet: Annotated[bool, Parameter(negative="")] = False,
-    show_hyperlinks: Annotated[bool, Parameter(negative="")] = False,
-    show: Annotated[bool, Parameter(negative="")] = True,
+    quiet: Annotated[bool, Parameter(alias="-q")] = False,
+    show_hyperlinks: bool = False,
+    show: Annotated[bool, Parameter(show=False)] = True,
 ) -> Optional[Table]:
     """
     Lists datasets and pipelines information.
