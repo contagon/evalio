@@ -192,7 +192,9 @@ def global_options(
     app(tokens)
 
 
-app.meta()
+def launch():
+    app.meta()
+
 
 __all__ = [
     "app",

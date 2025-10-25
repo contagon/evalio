@@ -37,7 +37,7 @@ requires = ["scikit-build-core>=0.8", "nanobind>=2.9.2", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
-evalio = "evalio.cli:app"
+evalio = "evalio.cli:app.meta"
 
 # -------------- Tools -------------- #
 # building
