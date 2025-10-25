@@ -13,8 +13,7 @@ from rich import box
 import distinctipy
 
 from joblib import Parallel, delayed
-from cyclopts import Group
-from .types import Param
+from cyclopts import Group, Parameter
 
 
 def eval_dataset(
@@ -162,51 +161,55 @@ def evaluate(
     return list(itertools.chain.from_iterable(results))
 
 
-og = Group("Output", sort_key=1)
-fg = Group("Filtering", sort_key=2)
-mg = Group("Metric", sort_key=3)
+fg = Group("Filtering", sort_key=1)
+mg = Group("Metric", sort_key=2)
+og = Group("Output", sort_key=3)
+
+Ann = Annotated
+Opt = Optional
+Par = Parameter
 
 
 def evaluate_cli(
     directories: list[Path],
     /,
     *,
-    visualize: Annotated[bool, Param("-v", og)] = False,
-    # output options
-    # sort: Annotated[Optional[str], sort_param] = None,
     # filtering options
-    filter_str: Annotated[Optional[str], Param("-f", fg)] = None,
-    only_complete: Annotated[bool, Param(group=fg)] = False,
-    only_failed: Annotated[bool, Param(group=fg)] = False,
-    # output options
-    sort: Annotated[Optional[str], Param("-s", og)] = None,
-    reverse: Annotated[bool, Param("-r", og)] = False,
-    hide_columns: Annotated[Optional[list[str]], Param("-H", og)] = None,
-    show_columns: Annotated[Optional[list[str]], Param("-S", og)] = None,
-    print_columns: Annotated[bool, Param(group=og)] = False,
+    filter_str: Ann[Optional[str], Par(alias="-f", group=fg)] = None,
+    only_complete: Ann[bool, Par(group=fg)] = False,
+    only_failed: Ann[bool, Par(group=fg)] = False,
     # metric options
-    w_meters: Annotated[Optional[list[float]], Param(group=mg)] = None,
-    w_seconds: Annotated[Optional[list[float]], Param(group=mg)] = None,
-    metric: Annotated[stats.MetricKind, Param("-m", mg)] = stats.MetricKind.sse,
-    length: Annotated[Optional[int], Param("-l", mg)] = None,
+    w_meters: Ann[Optional[list[float]], Par(group=mg)] = None,
+    w_seconds: Ann[Optional[list[float]], Par(group=mg)] = None,
+    metric: Ann[stats.MetricKind, Par(alias="-m", group=mg)] = stats.MetricKind.sse,
+    length: Ann[Optional[int], Par(alias="-l", group=mg)] = None,
+    # output options
+    sort: Ann[Optional[str], Par(alias="-s", group=og)] = None,
+    reverse: Ann[bool, Par(alias="-r", group=og)] = False,
+    hide_columns: Ann[
+        Optional[list[str]], Par(alias="-H", group=og, negative="")
+    ] = None,
+    show_columns: Ann[Optional[list[str]], Par(alias="-S", group=og)] = None,
+    visualize: Ann[bool, Par(alias="-v", group=og)] = False,
+    print_columns: Ann[bool, Par(group=og)] = False,
 ) -> None:
     """Evaluate experiment results and display statistics.
 
     Args:
         directories (list[Path]): List of directories containing experiment results.
-        visualize (bool, optional): Visualize resulting trajectories in rerun.
-        sort (str, optional): Name of the column to sort results by. Defaults to RTEt for the first window.
-        reverse (bool, optional): Reverse the sorting order.
         filter_str (str, optional): Python expression to filter result rows. Example: 'RTEt < 0.5'.
-        only_complete (bool, optional): If True, only show results for completed trajectories.
-        only_failed (bool, optional): If True, only show results for failed trajectories.
-        hide_columns (list[str], optional): List of columns to hide from output.
-        show_columns (list[str], optional): List of columns to force show in output.
-        print_columns (bool, optional): Print the names of all available columns and exit.
-        w_meters (list[float], optional): Add window size in meters for RTE computation. Defaults to [30.0].
-        w_seconds (list[float], optional): Add window sizes in seconds for RTE computation.
+        only_complete (bool, optional): Only show results for completed trajectories.
+        only_failed (bool, optional): Only show results for failed trajectories.
+        w_meters (list[float], optional): Window size in meters for RTE. May be repeated. Defaults to [30.0].
+        w_seconds (list[float], optional): Window size in seconds for RTE. May be repeated.
         metric (stats.MetricKind, optional): Metric to use for ATE/RTE computation. Defaults to sse.
         length (int, optional): Specify subset of trajectory to evaluate.
+        sort (str, optional): Name of the column to sort results by. Defaults to first RTEt.
+        reverse (bool, optional): Reverse the sorting order.
+        hide_columns (list[str], optional): Columns to hide from output. May be repeated.
+        show_columns (list[str], optional): Columns to force show in output. May be repeated.
+        visualize (bool, optional): Visualize resulting trajectories in rerun.
+        print_columns (bool, optional): Print the names of all available columns and exit.
     """
     # ------------------------- Process all inputs ------------------------- #
     # Parse some of the options

@@ -55,7 +55,7 @@ def run_from_cli(
     # Manual options
     datasets: Ann[Opt[list[DataSequence]], Par(alias="-d", group=mg)] = None,
     pipelines: Ann[Opt[list[Pipeline]], Par(alias="-p", group=mg)] = None,
-    in_out: Ann[Opt[Path], Par(alias="-o", group=mg)] = None,
+    out: Ann[Opt[Path], Par(alias="-o", group=mg)] = None,
     length: Ann[Opt[int], Par(alias="-l", group=mg)] = None,
     # misc options
     rerun_failed: Ann[bool, Param(group=og)] = False,
@@ -73,9 +73,9 @@ def run_from_cli(
 
     Args:
         config (Path): Path to the config file.
-        datasets (Dataset): Input datasets.
-        pipelines (Pipeline): Input pipelines.
-        in_out (Path): Output directory to save results.
+        datasets (Dataset): Input datasets. May be repeated.
+        pipelines (Pipeline): Input pipelines. May be repeated.
+        out (Path): Output directory to save results.
         length (int): Number of scans to process for each dataset.
         visualize (list[VisOptions]): Visualization options. If just '-v', will show trajectory. Add more via '-v misf' (m: map, i: image, s: scan, f: features).
         rerun_failed (bool): Rerun failed experiments. By default, failed experiments are skipped.
@@ -129,11 +129,11 @@ def run_from_cli(
         run_pipelines = pl.parse_config(pipelines)
         run_datasets = ds.parse_config(temp_datasets)
 
-        if in_out is None:
+        if out is None:
             print_warning("Output directory not set. Defaulting to './evalio_results'")
             run_out = Path("./evalio_results")
         else:
-            run_out = in_out
+            run_out = out
 
     # ------------------------- Miscellaneous ------------------------- #
     # error out if either is wrong
