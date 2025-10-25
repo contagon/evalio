@@ -2,7 +2,7 @@ import multiprocessing
 from pathlib import Path
 from cyclopts import Group, Token, ValidationError
 from cyclopts import Parameter
-from evalio.cli.types import DataSequence, Pipeline, Param
+from evalio.cli.types import DataSequence, Pipeline
 from evalio.types import Trajectory
 from evalio.utils import print_warning
 from tqdm.rich import tqdm
@@ -58,7 +58,7 @@ def run_from_cli(
     out: Ann[Opt[Path], Par(alias="-o", group=mg)] = None,
     length: Ann[Opt[int], Par(alias="-l", group=mg)] = None,
     # misc options
-    rerun_failed: Ann[bool, Param(group=og)] = False,
+    rerun_failed: Ann[bool, Par(group=og)] = False,
     visualize: Ann[
         Opt[list[VisStr]],
         Par(

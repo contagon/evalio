@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated, cast, TypeAlias
 
 from cyclopts import Parameter
 from rosbags.interfaces import Connection, ConnectionExtRosbag2
@@ -14,7 +14,10 @@ from rosbags.typesys import Stores, get_typestore
 import evalio.datasets as ds
 from evalio.utils import print_warning
 
-from .types import DatasetArg
+from .types import DataSequence, Pipeline
+
+DatasetArg: TypeAlias = Annotated[list[DataSequence], Parameter()]
+PipelineArg: TypeAlias = Annotated[list[Pipeline], Parameter()]
 
 ForceAnnotation = Annotated[
     bool, Parameter(name=["--yes", "-y"], negative="", show_default=False)

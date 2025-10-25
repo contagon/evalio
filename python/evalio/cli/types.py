@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING, Annotated, Any, Optional, TypeAlias, Literal
+from typing import TYPE_CHECKING, Literal
 
-from cyclopts import Group, Parameter
 from evalio import datasets as ds, pipelines as pl
 
 # ------------------------- Type aliases ------------------------- #
@@ -18,25 +17,3 @@ else:
     Pipeline = Literal[tuple(pl.all_pipelines().keys())]
 
 # TODO: Converter / Validator / no show
-DatasetArg: TypeAlias = Annotated[list[DataSequence], Parameter()]
-PipelineArg: TypeAlias = Annotated[list[Pipeline], Parameter()]
-
-
-def Param(
-    alias: Optional[str] = None,
-    group: Optional[Group] = None,
-    **kwargs: dict[str, Any],
-) -> Parameter:
-    """Helper to create a Parameter with custom defaults.
-
-    Args:
-        alias (Optional[str], optional): _description_. Defaults to None.
-        group (Optional[Group], optional): _description_. Defaults to None.
-        name (Optional[str], optional): _description_. Defaults to None.
-        show_default (bool, optional): _description_. Defaults to False.
-        short (bool, optional): _description_. Defaults to True.
-
-    Returns:
-        Parameter: _description_
-    """
-    return Parameter(group=group, alias=alias, **kwargs)  # type: ignore
