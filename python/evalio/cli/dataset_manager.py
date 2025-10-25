@@ -14,10 +14,11 @@ from rosbags.typesys import Stores, get_typestore
 import evalio.datasets as ds
 from evalio.utils import print_warning
 
-from .types import DataSequence, Pipeline
+from .types import DataSeq, data_sequence_converter
 
-DatasetArg: TypeAlias = Annotated[list[DataSequence], Parameter()]
-PipelineArg: TypeAlias = Annotated[list[Pipeline], Parameter()]
+DatasetArg: TypeAlias = Annotated[
+    list[DataSeq], Parameter(converter=data_sequence_converter)
+]
 
 ForceAnnotation = Annotated[
     bool, Parameter(name=["--yes", "-y"], negative="", show_default=False)
@@ -39,6 +40,7 @@ def parse_datasets(datasets: DatasetArg) -> list[ds.Dataset]:
     """
     # parse all datasets
     valid_datasets = ds.parse_config(datasets)
+    # NOTE: Should this never fail since we pre-validate before this
     if isinstance(valid_datasets, ds.DatasetConfigError):
         print_warning(f"Error parsing datasets: {valid_datasets}")
         return []

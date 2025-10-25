@@ -149,6 +149,8 @@ def show_completion():
     # zsh needs an extra line
     if detect_shell() == "zsh":
         comp += "compdef _evalio evalio"
+        # Fix wildcard completions
+        comp = comp.replace("/*", "/\\*")
     print(comp)
 
 

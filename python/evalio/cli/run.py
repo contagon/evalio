@@ -2,7 +2,12 @@ import multiprocessing
 from pathlib import Path
 from cyclopts import Group, Token, ValidationError
 from cyclopts import Parameter
-from evalio.cli.types import DataSequence, Pipeline
+from evalio.cli.types import (
+    DataSeq,
+    Pipeline,
+    data_sequence_converter,
+    pipeline_converter,
+)
 from evalio.types import Trajectory
 from evalio.utils import print_warning
 from tqdm.rich import tqdm
@@ -42,6 +47,8 @@ def vis_convert(type_: type, tokens: Sequence[Token]) -> Optional[list[str]]:
 Ann = Annotated
 Opt = Optional
 Par = Parameter
+pc = pipeline_converter
+dc = data_sequence_converter
 
 # groups
 cg = Group("Config", sort_key=0)
@@ -50,11 +57,12 @@ og = Group("Misc", sort_key=2)
 
 
 def run_from_cli(
+    *,
     # Config file
     config: Ann[Opt[Path], Par(alias="-c", group=cg)] = None,
     # Manual options
-    datasets: Ann[Opt[list[DataSequence]], Par(alias="-d", group=mg)] = None,
-    pipelines: Ann[Opt[list[Pipeline]], Par(alias="-p", group=mg)] = None,
+    datasets: Ann[Opt[list[DataSeq]], Par(alias="-d", group=mg, converter=dc)] = None,
+    pipelines: Ann[Opt[list[Pipeline]], Par(alias="-p", group=mg, converter=pc)] = None,
     out: Ann[Opt[Path], Par(alias="-o", group=mg)] = None,
     length: Ann[Opt[int], Par(alias="-l", group=mg)] = None,
     # misc options
@@ -141,6 +149,16 @@ def run_from_cli(
         raise ValueError(f"Error in datasets config: {run_datasets}")
     if isinstance(run_pipelines, pl.PipelineConfigError):
         raise ValueError(f"Error in pipelines config: {run_pipelines}")
+
+    # parse all of the lengths
+    run_datasets = [
+        (s, len(s) if length is None else min(len(s), length))
+        for s, length in run_datasets
+    ]
+
+    # make sure all datasets are downloaded
+    for d, _ in run_datasets:
+        d._fail_not_downloaded()
 
     if run_out.suffix == ".csv" and (len(run_pipelines) > 1 or len(run_datasets) > 1):
         raise ValueError("Output must be a directory when running multiple experiments")

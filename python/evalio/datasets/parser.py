@@ -2,7 +2,7 @@ import importlib
 from inspect import isclass
 import itertools
 from types import ModuleType
-from typing import Callable, NotRequired, Optional, Sequence, TypedDict, cast
+from typing import NotRequired, Optional, Sequence, TypedDict, cast
 
 from evalio import datasets
 from evalio.datasets.base import Dataset
@@ -137,7 +137,7 @@ class DatasetConfig(TypedDict):
 
 def parse_config(
     d: str | DatasetConfig | Sequence[str | DatasetConfig],
-) -> list[tuple[Dataset, int]] | DatasetConfigError:
+) -> list[tuple[Dataset, int | None]] | DatasetConfigError:
     name: Optional[str] = None
     length: Optional[int] = None
     # If given a list of values
@@ -146,7 +146,7 @@ def parse_config(
         for r in results:
             if isinstance(r, DatasetConfigError):
                 return r
-        results = cast(list[list[tuple[Dataset, int]]], results)
+        results = cast(list[list[tuple[Dataset, int | None]]], results)
         return list(itertools.chain.from_iterable(results))
 
     # If it's a single config
@@ -162,18 +162,14 @@ def parse_config(
     if name is None:  # type: ignore
         return InvalidDatasetConfig("Missing 'name' in dataset config")
 
-    length_lambda: Callable[[Dataset], int] = (
-        lambda s: len(s) if length is None else min(len(s), length)
-    )
-
     if name[-2:] == "/*":
         ds_name, _ = name.split("/")
         ds = get_dataset(ds_name)
         if isinstance(ds, DatasetNotFound):
             return ds
-        return [(s, length_lambda(s)) for s in ds.sequences()]
+        return [(s, length) for s in ds.sequences()]
 
     ds = get_sequence(name)
     if isinstance(ds, SequenceNotFound):
         return ds
-    return [(ds, length_lambda(ds))]
+    return [(ds, length)]
