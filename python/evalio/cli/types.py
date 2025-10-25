@@ -5,8 +5,8 @@ from evalio import datasets as ds, pipelines as pl
 
 # ------------------------- Type aliases ------------------------- #
 if TYPE_CHECKING:
-    Sequences = str
-    Pipelines = str
+    DataSequence = str
+    Pipeline = str
 else:
     # TODO: Add star option to these literals
     # It keeps escaping funny!
@@ -14,12 +14,12 @@ else:
     # datasets = []
     # datasets.extend([d + "/" + "\x5c" + "*" for d in ds.all_datasets().keys()])
     # print(datasets)
-    Sequences = Literal[tuple(datasets)]
-    Pipelines = Literal[tuple(pl.all_pipelines().keys())]
+    DataSequence = Literal[tuple(datasets)]
+    Pipeline = Literal[tuple(pl.all_pipelines().keys())]
 
 # TODO: Converter / Validator / no show
-DatasetArg: TypeAlias = Annotated[list[Sequences], Parameter()]
-PipelineArg: TypeAlias = Annotated[list[Pipelines], Parameter()]
+DatasetArg: TypeAlias = Annotated[list[DataSequence], Parameter()]
+PipelineArg: TypeAlias = Annotated[list[Pipeline], Parameter()]
 
 
 def Param(
