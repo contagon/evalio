@@ -14,7 +14,7 @@ import distinctipy
 
 from joblib import Parallel, delayed
 from cyclopts import Group
-from .completions import Param
+from .types import Param
 
 
 def eval_dataset(

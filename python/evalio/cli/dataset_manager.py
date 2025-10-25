@@ -14,7 +14,7 @@ from rosbags.typesys import Stores, get_typestore
 import evalio.datasets as ds
 from evalio.utils import print_warning
 
-from .completions import DatasetArg
+from .types import DatasetArg
 
 ForceAnnotation = Annotated[
     bool, Parameter(name=["--yes", "-y"], negative="", show_default=False)

@@ -2,7 +2,7 @@ import multiprocessing
 from pathlib import Path
 from cyclopts import Group, Token, ValidationError
 from cyclopts import Parameter as Par
-from evalio.cli.completions import Sequences, Pipelines, Param
+from evalio.cli.types import Sequences, Pipelines, Param
 from evalio.types.base import Trajectory
 from evalio.utils import print_warning
 from tqdm.rich import tqdm
