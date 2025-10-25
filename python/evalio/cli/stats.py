@@ -162,9 +162,9 @@ def evaluate(
     return list(itertools.chain.from_iterable(results))
 
 
-og = Group("Output")
-fg = Group("Filtering")
-mg = Group("Metric")
+og = Group("Output", sort_key=1)
+fg = Group("Filtering", sort_key=2)
+mg = Group("Metric", sort_key=3)
 
 
 def evaluate_cli(
@@ -179,10 +179,10 @@ def evaluate_cli(
     only_complete: Annotated[bool, Param(group=fg)] = False,
     only_failed: Annotated[bool, Param(group=fg)] = False,
     # output options
-    sort: Annotated[Optional[str], Param("-S", og)] = None,
+    sort: Annotated[Optional[str], Param("-s", og)] = None,
     reverse: Annotated[bool, Param("-r", og)] = False,
-    hide_columns: Annotated[Optional[list[str]], Param("-h", og)] = None,
-    show_columns: Annotated[Optional[list[str]], Param("-s", og)] = None,
+    hide_columns: Annotated[Optional[list[str]], Param("-H", og)] = None,
+    show_columns: Annotated[Optional[list[str]], Param("-S", og)] = None,
     print_columns: Annotated[bool, Param(group=og)] = False,
     # metric options
     w_meters: Annotated[Optional[list[float]], Param(group=mg)] = None,
@@ -190,30 +190,28 @@ def evaluate_cli(
     metric: Annotated[stats.MetricKind, Param("-m", mg)] = stats.MetricKind.sse,
     length: Annotated[Optional[int], Param("-l", mg)] = None,
 ) -> None:
-    """Evaluate experiment results and display statistics in a formatted table.
+    """Evaluate experiment results and display statistics.
 
     Args:
         directories (list[Path]): List of directories containing experiment results.
-        visualize (bool, optional): If True, visualize results. Defaults to False.
+        visualize (bool, optional): Visualize resulting trajectories in rerun.
         sort (str, optional): Name of the column to sort results by. Defaults to RTEt for the first window.
-        reverse (bool, optional): If True, reverse the sorting order. Defaults to False.
+        reverse (bool, optional): Reverse the sorting order.
         filter_str (str, optional): Python expression to filter result rows. Example: 'RTEt < 0.5'.
         only_complete (bool, optional): If True, only show results for completed trajectories.
         only_failed (bool, optional): If True, only show results for failed trajectories.
         hide_columns (list[str], optional): List of columns to hide from output.
         show_columns (list[str], optional): List of columns to force show in output.
-        print_columns (bool, optional): If True, print the names of all available columns and exit.
-        w_meters (list[float], optional): Window sizes in meters for RTE computation. Defaults to [30.0].
-        w_seconds (list[float], optional): Window sizes in seconds for RTE computation.
-        metric (stats.MetricKind, optional): Metric to use for ATE/RTE computation. Defaults to stats.MetricKind.sse.
+        print_columns (bool, optional): Print the names of all available columns and exit.
+        w_meters (list[float], optional): Add window size in meters for RTE computation. Defaults to [30.0].
+        w_seconds (list[float], optional): Add window sizes in seconds for RTE computation.
+        metric (stats.MetricKind, optional): Metric to use for ATE/RTE computation. Defaults to sse.
         length (int, optional): Specify subset of trajectory to evaluate.
     """
     # ------------------------- Process all inputs ------------------------- #
     # Parse some of the options
     if only_complete and only_failed:
-        raise ValueError(
-            "Can only use one of --only-complete, --only-incomplete, or --only-failed."
-        )
+        raise ValueError("Can only use one of --only-complete and --only-failed.")
 
     # Parse the filtering options
     filter_method: Callable[[dict[str, Any]], bool]

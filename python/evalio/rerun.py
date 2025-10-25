@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
 from typing_extensions import TypeVar
 from uuid import UUID, uuid4
@@ -45,31 +45,11 @@ GT_COLOR = (
 )  # Color for ground truth in rerun
 
 
-@dataclass
-class VisArgs:
-    show: bool
-    map: bool = False
-    image: bool = False
-    scan: bool = False
-    features: bool = False
-
-    @staticmethod
-    def parse(opts: str) -> "VisArgs":
-        out = VisArgs(show=True)
-        for o in opts:
-            match o:
-                case "m":
-                    out.map = True
-                case "i":
-                    out.image = True
-                case "s":
-                    out.scan = True
-                case "f":
-                    out.features = True
-                case _:
-                    raise typer.BadParameter(f"Unknown visualization option {o}")
-
-        return out
+class VisOptions(Enum):
+    map = "m"
+    image = "i"
+    scan = "s"
+    features = "f"
 
 
 try:
@@ -82,7 +62,7 @@ try:
     )
 
     class RerunVis:  # type: ignore
-        def __init__(self, args: VisArgs, pipeline_names: list[str]):
+        def __init__(self, args: Optional[list[VisOptions]], pipeline_names: list[str]):
             self.args = args
 
             # To be set during new_recording
@@ -126,7 +106,7 @@ try:
                 for n in self.pipeline_names
             }
 
-            if self.args.image:
+            if self.args is not None and VisOptions.image in self.args:
                 return rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
@@ -138,7 +118,7 @@ try:
                 return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
 
         def new_dataset(self, dataset: Dataset):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             self.recording_params: RerunArgs = {
@@ -157,7 +137,7 @@ try:
             self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
         def new_pipe(self, pipe_name: str):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             if self.imu_T_lidar is None:
@@ -182,7 +162,7 @@ try:
             pose: SE3,
             pipe: Pipeline,
         ):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             if self.colors is None:
@@ -231,7 +211,7 @@ try:
             )
 
             # Features from the scan
-            if self.args.features:
+            if VisOptions.features in self.args:
                 if len(features) > 0:
                     for (k, p), c in zip(features.items(), self.colors):
                         self.rec.log(
@@ -240,19 +220,19 @@ try:
                         )
 
             # Include the current map
-            if self.args.map:
+            if VisOptions.map in self.args:
                 for (k, p), c in zip(pipe.map().items(), self.colors):
                     self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
 
             # Include the original point cloud
-            if self.args.scan:
+            if VisOptions.scan in self.args:
                 self.rec.log(
                     f"{self.pn}/imu/lidar/scan",
                     convert(data, color=self.colors[-2], radii=0.08),
                 )
 
             # Include the intensity image
-            if self.args.image:
+            if VisOptions.image in self.args:
                 intensity = np.array([d.intensity for d in data.points])
                 # row major order
                 image = intensity.reshape(
@@ -466,8 +446,10 @@ try:
 except Exception:
 
     class RerunVis:
-        def __init__(self, args: VisArgs, pipeline_names: list[str]) -> None:
-            if args.show:
+        def __init__(
+            self, args: Optional[list[VisOptions]], pipeline_names: list[str]
+        ) -> None:
+            if args is not None:
                 print_warning("Rerun not found, visualization disabled")
 
         def new_dataset(self, dataset: Dataset):

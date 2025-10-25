@@ -71,7 +71,6 @@ def render_type(type_: Any) -> str:
     elif isclass(type_) and issubclass(type_, Enum):
         return "|".join(e.name for e in type_)
 
-    print(type_)
     return get_hint_name(type_) if type_ else ""
 
 
@@ -163,4 +162,4 @@ def Param(
     Returns:
         Parameter: _description_
     """
-    return Parameter(group=group, alias=alias, negative="", **kwargs)  # type: ignore
+    return Parameter(group=group, alias=alias, **kwargs)  # type: ignore

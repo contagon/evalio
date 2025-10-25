@@ -209,7 +209,7 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
 
 def filter(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
     """
-    Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.
+    Filter rosbag dataset(s) to only include lidar and imu data.
 
     Args:
         datasets (str): The dataset(s) to filter.

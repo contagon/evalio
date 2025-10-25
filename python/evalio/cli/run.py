@@ -1,7 +1,7 @@
 import multiprocessing
 from pathlib import Path
-from cyclopts import Group, Parameter, ValidationError
-from cyclopts.validators import all_or_none
+from cyclopts import Group, Token, ValidationError
+from cyclopts import Parameter as Par
 from evalio.cli.completions import Sequences, Pipelines, Param
 from evalio.types.base import Trajectory
 from evalio.utils import print_warning
@@ -9,33 +9,67 @@ from tqdm.rich import tqdm
 import yaml
 
 from evalio import datasets as ds, pipelines as pl, types as ty
-from evalio.rerun import RerunVis, VisArgs
+from evalio.rerun import RerunVis, VisOptions
 
 # from .stats import evaluate
 
 from rich import print
-from typing import Optional, Annotated
+from typing import TYPE_CHECKING, Literal, Optional, Sequence
+from typing import Annotated as Ann
+from typing import Optional as Opt
 
 from time import time
 
-cg = Group("Config")
-mg = Group("Manual")
-og = Group("Options")
+cg = Group("Config", sort_key=0)
+mg = Group("Manual", sort_key=1)
+og = Group("Options", sort_key=2)
+
+
+if TYPE_CHECKING:
+    VisStr = str
+else:
+    # Use literal instead of enum for cyclopts to parse as value instead of name
+    VisStr = Literal[(tuple(v.value for v in VisOptions))]
+
+
+def vis_convert(type_: type, tokens: Sequence[Token]) -> Optional[list[str]]:
+    out: list[str] = []
+    options = [v.value for v in VisOptions]
+    for t in tokens:
+        if t.value in options:
+            out.append(t.value)
+        elif len(t.value) > 1:
+            for c in t.value:
+                if c in options:
+                    out.append(c)
+
+    return out
 
 
 def run_from_cli(
     # Config file
-    config: Annotated[Optional[Path], Param("-c", cg)] = None,
+    config: Ann[Opt[Path], Par(alias="-c", group=cg)] = None,
     # Manual options
-    in_datasets: Annotated[Optional[list[Sequences]], Param("-d", mg)] = None,
-    in_pipelines: Annotated[Optional[list[Pipelines]], Param("-p", mg)] = None,
-    in_out: Annotated[Optional[Path], Param("-o", mg)] = None,
+    in_datasets: Ann[
+        Opt[list[Sequences]], Par(name="datasets", alias="-d", group=mg)
+    ] = None,
+    in_pipelines: Ann[
+        Opt[list[Pipelines]], Par(name="pipelines", alias="-p", group=mg)
+    ] = None,
+    in_out: Ann[Opt[Path], Par(name="output", alias="-o", group=mg)] = None,
     # misc options
-    length: Annotated[Optional[int], Param("-l", mg)] = None,
-    visualize: Annotated[bool, Param("-v", og)] = False,
-    # TODO: I don't like how this was parsed
-    # show: Annotated[Optional[VisArgs], Param("-s", mg)] = None,
-    rerun_failed: Annotated[bool, Param(group=og)] = False,
+    length: Ann[Opt[int], Par(alias="-l", group=mg)] = None,
+    visualize: Ann[
+        Opt[list[VisStr]],
+        Par(
+            alias="-s",
+            group=mg,
+            accepts_keys=False,
+            consume_multiple=True,
+            converter=vis_convert,
+        ),
+    ] = None,
+    rerun_failed: Ann[bool, Param(group=og)] = False,
 ):
     """Run lidar-inertial odometry experiments.
 
@@ -45,9 +79,8 @@ def run_from_cli(
         in_pipelines (Pipeline): Input pipelines.
         in_out (Path): Output directory to save results.
         length (int): Number of scans to process for each dataset.
-        visualize (bool): Visualize the results via rerun.
-        show (Optional[VisArgs]): Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.
         rerun_failed (bool): Rerun failed experiments. If not set, will skip previously failed experiments.
+        visualize (list[VisOptions]): Visualization options. If just '-v', will show trajectory. Add more via '-v misf' (m: map, i: image, s: scan, f: features).
     """
 
     if (in_pipelines or in_datasets or length) and config:
@@ -128,10 +161,10 @@ def run_from_cli(
     print(f"Output will be saved to {out}\n")
 
     # Go through visualization options
-    if show is None:
-        vis_args = VisArgs(show=visualize)
-    else:
-        vis_args = show
+    vis_args = None
+    if visualize is not None:
+        vis_args = [VisOptions(v) for v in visualize]
+
     vis = RerunVis(vis_args, [p[0] for p in pipelines])
 
     # save_config(pipelines, datasets, out)

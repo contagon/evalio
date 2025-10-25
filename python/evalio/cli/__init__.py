@@ -16,35 +16,39 @@ from .completions import Param, spec
 # from .run import app as app_run
 # from .stats import app as app_stats
 
+og = Group("Misc", sort_key=0)
+cg = Group("Commands", sort_key=1)
+gg = Group("Global Options", sort_key=100)
+
 app = App(
     help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
     help_formatter=spec,
     help_on_error=True,
-    default_parameter=Parameter(negative="", show_default=False),
+    default_parameter=Parameter(negative=""),
     # group="TESTING",
-    group_parameters="Options",
-    group_commands=Group("Commands", sort_key=1),
+    # group_parameters="Options",
+    # group_commands=cg,
+    version_flags=[],
 )
 app.register_install_completion_command(add_to_startup=True)  # type: ignore
 
-og = Group("Options", sort_key=0)
-
-app["--help"].group = og
-app["--version"].group = og
+app["--help"].group = gg
 app["--install-completion"].group = og
 
 app.command("evalio.cli.ls:ls")
-
 app.command("evalio.cli.dataset_manager:dl")
 app.command("evalio.cli.dataset_manager:rm")
 app.command("evalio.cli.dataset_manager:filter")
-
 app.command("evalio.cli.stats:evaluate_cli", name="stats")
-
 app.command("evalio.cli.run:run_from_cli", name="run")
 
+for c in app:
+    if c in ["--help", "-h"]:
+        continue
+    app[c]["--help"].group = gg
 
-@app.command(name="--show-completion", group="Options")
+
+@app.command(name="--show-completion", group=og)
 def print_completion():
     """
     Print shell completion script.
@@ -55,7 +59,14 @@ def print_completion():
     print(comp)
 
 
-gg = Group("Global Options", sort_key=-1)
+@app.command(name="--version", alias="-V", group=og)
+def version():
+    """
+    Show version and exit.
+    """
+    import evalio
+
+    print(evalio.__version__)
 
 
 @app.meta.default
