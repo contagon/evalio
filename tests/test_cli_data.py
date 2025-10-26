@@ -81,12 +81,12 @@ def test_rm_done(capsys: pytest.CaptureFixture[str]) -> None:
     rm(["fake_data/downloaded"])
 
     captured = capsys.readouterr()
-    expected = """
+    expected = f"""
 Will remove:
   fake_data/downloaded
 
 ---------- Beginning fake_data/downloaded ----------
-Removing from /mnt/datasets/evalio/fake_data/downloaded
+Removing from {ds.get_data_dir()}/fake_data/downloaded
 ---------- Finished fake_data/downloaded ----------
 """
     assert captured.out.strip() == expected.strip()
@@ -96,12 +96,12 @@ def test_rm_not_done(capsys: pytest.CaptureFixture[str]) -> None:
     rm(["fake_data/not_downloaded"])
 
     captured = capsys.readouterr()
-    expected = """
+    expected = f"""
 Will remove:
   fake_data/not_downloaded
 
 ---------- Beginning fake_data/not_downloaded ----------
-Removing from /mnt/datasets/evalio/fake_data/not_downloaded
+Removing from {ds.get_data_dir()}/fake_data/not_downloaded
 ---------- Finished fake_data/not_downloaded ----------
 """
     assert captured.out.strip() == expected.strip()
