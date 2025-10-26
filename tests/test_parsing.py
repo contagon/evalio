@@ -12,10 +12,10 @@ name = seq.full_name
 # fmt: off
 DATASETS: list[tuple[str | DatasetConfig | Sequence[str | DatasetConfig], DatasetConfigError | list[tuple[ds.Dataset, int]]]] = [
     # good ones
-    (name, [(seq, len(seq))]),
-    ({"name": name}, [(seq, len(seq))]),
+    (name, [(seq, None)]),
+    ({"name": name}, [(seq, None)]),
     ({"name": name, "length": 100}, [(seq, 100)]),
-    ({"name": f"{seq.dataset_name()}/*"}, [(s, len(s)) for s in seq.sequences()]),
+    ({"name": f"{seq.dataset_name()}/*"}, [(s, None) for s in seq.sequences()]),
     # bad ones
     ("newer_college_2020/bad", ds.SequenceNotFound("newer_college_2020/bad")),
     ("newer_college_123/*", ds.DatasetNotFound(name="newer_college_123")),

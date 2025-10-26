@@ -64,7 +64,7 @@ def dl(datasets: DatasetArg) -> None:
         return
 
     # download each dataset
-    print("Will download: ")
+    print("Will download:")
     for dataset in to_download:
         print(f"  {dataset}")
     print()
@@ -99,7 +99,7 @@ def rm(
     # parse all datasets
     to_remove = parse_datasets(datasets)
 
-    print("Will remove: ")
+    print("Will remove:")
     for dataset in to_remove:
         print(f"  {dataset}")
     print()
