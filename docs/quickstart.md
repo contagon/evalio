@@ -118,9 +118,12 @@ pipelines:
   - name: kiss_tweaked
     pipeline: kiss
     deskew: true
-    # Some of these datasets need smaller voxel sizes
+    # Perform a parameter sweep over other parameters
     sweep:
       voxel_size: [0.1, 0.5, 1.0]
+      # Can also eval python code to create sweep (including numpy functionality)
+      initial_threshold: linspace(0.5, 2.0, 4)
+
       
 ```
 This can then be run via

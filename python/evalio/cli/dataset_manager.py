@@ -70,7 +70,7 @@ def dl(datasets: DatasetArg, /) -> None:
         return
 
     # download each dataset
-    print("Will download: ")
+    print("Will download:")
     for dataset in to_download:
         print(f"  {dataset}")
     print()
@@ -100,7 +100,7 @@ def rm(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
             print("Aborting")
             return
 
-    print("Will remove: ")
+    print("Will remove:")
     for dataset in to_remove:
         print(f"  {dataset}")
     print()
