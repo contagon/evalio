@@ -2,7 +2,7 @@ from enum import auto
 from pathlib import Path
 from typing import Sequence
 from evalio.cli.dataset_manager import dl, rm
-from evalio import datasets as ds
+from evalio import datasets as ds, types as ty
 
 import pytest
 
@@ -23,9 +23,36 @@ class FakeData(ds.Dataset):
     def download(self) -> None:
         return
 
+    # To finish impl
+    def data_iter(self) -> ds.DatasetIterator:
+        return ds.RawDataIter(iter([]), iter([]), 0)
+
+    def imu_T_lidar(self) -> ty.SE3:
+        return ty.SE3.identity()
+
+    def imu_T_gt(self) -> ty.SE3:
+        return ty.SE3.identity()
+
+    def imu_params(self) -> ty.ImuParams:
+        return ty.ImuParams()
+
+    def lidar_params(self) -> ty.LidarParams:
+        return ty.LidarParams(
+            num_rows=16, num_columns=64, min_range=0.0, max_range=100.0
+        )
+
+    def ground_truth_raw(self) -> ty.Trajectory:
+        return ty.Trajectory()
+
+    @staticmethod
+    def url() -> str:
+        return "fake"
+
+
+ds.register_dataset(FakeData)
+
 
 def test_dl_done(capsys: pytest.CaptureFixture[str]) -> None:
-    ds.register_dataset(FakeData)
     dl(["fake_data/downloaded"])
 
     captured = capsys.readouterr()
@@ -37,7 +64,6 @@ Nothing to download, finishing
 
 
 def test_dl_not_done(capsys: pytest.CaptureFixture[str]) -> None:
-    ds.register_dataset(FakeData)
     dl(["fake_data/not_downloaded"])
 
     captured = capsys.readouterr()
@@ -52,7 +78,6 @@ Will download:
 
 
 def test_rm_done(capsys: pytest.CaptureFixture[str]) -> None:
-    ds.register_dataset(FakeData)
     rm(["fake_data/downloaded"])
 
     captured = capsys.readouterr()
@@ -68,7 +93,6 @@ Removing from /mnt/datasets/evalio/fake_data/downloaded
 
 
 def test_rm_not_done(capsys: pytest.CaptureFixture[str]) -> None:
-    ds.register_dataset(FakeData)
     rm(["fake_data/not_downloaded"])
 
     captured = capsys.readouterr()
