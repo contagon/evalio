@@ -1,0 +1,83 @@
+from enum import auto
+from pathlib import Path
+from typing import Sequence
+from evalio.cli.dataset_manager import dl, rm
+from evalio import datasets as ds
+
+import pytest
+
+
+class FakeData(ds.Dataset):
+    not_downloaded = auto()
+    downloaded = auto()
+
+    def is_downloaded(self) -> bool:
+        if self == FakeData.not_downloaded:
+            return False
+        else:
+            return True
+
+    def files(self) -> Sequence[str | Path]:
+        return []
+
+    def download(self) -> None:
+        return
+
+
+def test_dl_done(capsys: pytest.CaptureFixture[str]) -> None:
+    ds.register_dataset(FakeData)
+    dl(["fake_data/downloaded"])
+
+    captured = capsys.readouterr()
+    expected = """
+Skipping download for fake_data/downloaded, already exists
+Nothing to download, finishing
+    """
+    assert captured.out.strip() == expected.strip()
+
+
+def test_dl_not_done(capsys: pytest.CaptureFixture[str]) -> None:
+    ds.register_dataset(FakeData)
+    dl(["fake_data/not_downloaded"])
+
+    captured = capsys.readouterr()
+    expected = """
+Will download:
+  fake_data/not_downloaded
+
+---------- Beginning fake_data/not_downloaded ----------
+---------- Finished fake_data/not_downloaded ----------
+"""
+    assert captured.out.strip() == expected.strip()
+
+
+def test_rm_done(capsys: pytest.CaptureFixture[str]) -> None:
+    ds.register_dataset(FakeData)
+    rm(["fake_data/downloaded"])
+
+    captured = capsys.readouterr()
+    expected = """
+Will remove:
+  fake_data/downloaded
+
+---------- Beginning fake_data/downloaded ----------
+Removing from /mnt/datasets/evalio/fake_data/downloaded
+---------- Finished fake_data/downloaded ----------
+"""
+    assert captured.out.strip() == expected.strip()
+
+
+def test_rm_not_done(capsys: pytest.CaptureFixture[str]) -> None:
+    ds.register_dataset(FakeData)
+    rm(["fake_data/not_downloaded"])
+
+    captured = capsys.readouterr()
+    expected = """
+Will remove:
+  fake_data/not_downloaded
+
+---------- Beginning fake_data/not_downloaded ----------
+Removing from /mnt/datasets/evalio/fake_data/not_downloaded
+---------- Finished fake_data/not_downloaded ----------
+"""
+    assert captured.out.strip() == expected.strip()
