@@ -21,9 +21,9 @@ else:
 # This is really a validator, but I want to shortcut the built-in Literal validation
 def data_sequence_converter(type_: type, value: Sequence[Token]) -> list[str]:
     for v in value:
-        if v.value not in all_sequences:
+        if v.value not in ds.all_sequences():
             # closest, score, _idx
-            out = extractOne(v.value, all_sequences)
+            out = extractOne(v.value, ds.all_sequences().keys())
             if out is None or out[1] < 80:
                 msg = v.value
             else:
@@ -39,9 +39,9 @@ def data_sequence_converter(type_: type, value: Sequence[Token]) -> list[str]:
 
 def pipeline_converter(type_: type, value: Sequence[Token]) -> list[str]:
     for v in value:
-        if v.value not in all_pipelines:
+        if v.value not in pl.all_pipelines():
             # closest, score, _idx
-            out = extractOne(v.value, all_pipelines)
+            out = extractOne(v.value, pl.all_pipelines().keys())
             if out is None or out[1] < 80:
                 msg = v.value
             else:
