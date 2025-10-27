@@ -150,27 +150,18 @@ def run_from_cli(
     if isinstance(run_pipelines, pl.PipelineConfigError):
         raise ValueError(f"Error in pipelines config: {run_pipelines}")
 
+    # make sure all datasets are downloaded
+    for d, _ in run_datasets:
+        d._fail_not_downloaded()
+
     # parse all of the lengths
     run_datasets = [
         (s, len(s) if length is None else min(len(s), length))
         for s, length in run_datasets
     ]
 
-    # make sure all datasets are downloaded
-    for d, _ in run_datasets:
-        d._fail_not_downloaded()
-
     if run_out.suffix == ".csv" and (len(run_pipelines) > 1 or len(run_datasets) > 1):
         raise ValueError("Output must be a directory when running multiple experiments")
-
-    # make sure all datasets are downloaded
-    for d, _ in datasets:
-        d._fail_not_downloaded()
-
-    # parse all of the lengths
-    datasets = [
-        (s, len(s) if length is None else min(len(s), length)) for s, length in datasets
-    ]
 
     print(
         f"Running {plural(len(run_datasets), 'dataset')} => {plural(len(run_pipelines) * len(run_datasets), 'experiment')}"
