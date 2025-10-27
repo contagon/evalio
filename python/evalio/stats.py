@@ -345,7 +345,6 @@ def rte(
             window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[end_idx])
             window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[end_idx])
 
-
     elif isinstance(window, WindowMeters):
         # Compute deltas for all of ground truth poses
         dist = np.zeros(len_gt)

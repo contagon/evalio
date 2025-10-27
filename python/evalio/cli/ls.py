@@ -1,15 +1,12 @@
-from enum import StrEnum, auto
 from typing import Annotated, Literal, Optional, TypeVar, TypedDict
 
-import typer
+from cyclopts import Parameter
 from rapidfuzz.process import extract_iter
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
 from evalio import datasets as ds, pipelines as pl
-
-app = typer.Typer()
 
 T = TypeVar("T")
 
@@ -24,10 +21,10 @@ def unique(lst: list[T]) -> list[T]:
 
 
 def extract_len(d: ds.Dataset) -> str:
-    """Get the length of a dataset in a human readable format
+    """Get the temporal length of a dataset in a human readable format
 
     Args:
-        d (Dataset): Dataset to get length of
+        d (Dataset): Dataset
 
     Returns:
         Length of dataset in minutes or '-' if length is unknown
@@ -39,54 +36,31 @@ def extract_len(d: ds.Dataset) -> str:
         return f"{length / d.lidar_params().rate / 60:.1f}min".rjust(7)
 
 
-class Kind(StrEnum):
-    datasets = auto()
-    pipelines = auto()
-
-
-@app.command(no_args_is_help=True)
 def ls(
-    kind: Annotated[
-        Kind, typer.Argument(help="The kind of object to list", show_default=False)
-    ],
-    search: Annotated[
-        Optional[str],
-        typer.Option(
-            "--search",
-            "-s",
-            help="Fuzzy search for a pipeline or dataset by name",
-            show_default=False,
-        ),
-    ] = None,
-    quiet: Annotated[
-        bool,
-        typer.Option(
-            "--quiet",
-            "-q",
-            help="Output less verbose information",
-        ),
-    ] = False,
-    show_hyperlinks: Annotated[
-        bool,
-        typer.Option(
-            "--show-hyperlinks",
-            help="Output full links. For terminals that don't support hyperlinks (OSC 8).",
-        ),
-    ] = False,
-    show: Annotated[
-        bool,
-        typer.Option(
-            hidden=True,
-        ),
-    ] = True,
+    kind: Literal["datasets", "pipelines"],
+    /,
+    search: Annotated[Optional[str], Parameter(alias="-s")] = None,
+    quiet: Annotated[bool, Parameter(alias="-q")] = False,
+    show_hyperlinks: bool = False,
+    show: Annotated[bool, Parameter(show=False)] = True,
 ) -> Optional[Table]:
     """
-    List dataset and pipeline information
+    Lists datasets and pipelines information.
+
+    Args:
+        kind (Kind): The kind of object to list.
+        search (Optional[str], optional): Fuzzy search for a pipeline or dataset by name.
+        quiet (bool, optional): Output less verbose information.
+        show_hyperlinks (bool, optional): Output full links. For terminals that don't support hyperlinks (OSC 8).
+        show (bool, optional): Whether to display the table in the console.
+
+    Returns:
+        Optional[Table]: A rich Table object containing the listed information, or None if no results are found.
     """
     ColOpts = TypedDict("ColOpts", {"vertical": Literal["top", "middle", "bottom"]})
     col_opts: ColOpts = {"vertical": "middle"}
 
-    if kind == Kind.datasets:
+    if kind == "datasets":
         # Search for datasets using rapidfuzz
         # TODO: Make it search through sequences as well?
         all_datasets = list(ds.all_datasets().values())
@@ -204,7 +178,7 @@ def ls(
 
         return table
 
-    if kind == Kind.pipelines:
+    if kind == "pipelines":
         # Search for pipelines using rapidfuzz
         # TODO: Make it search through parameters as well?
         all_pipelines = list(pl.all_pipelines().values())
