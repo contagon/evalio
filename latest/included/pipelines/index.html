@@ -895,18 +895,11 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;">liosam</td>
-<td style="text-align: center;">0.1.0</td>
-<td style="text-align: right;">downsampleRate<br>edgeFeatureMinValidNum<br>edgeThreshold<br>globalMapVisualizationLeafSize<br>globalMapVisualizationPoseDensity<br>globalMapVisualizationSearchRadius<br>mappingCornerLeafSize<br>mappingProcessInterval<br>mappingSurfLeafSize<br>numberOfCores<br>odometrySurfLeafSize<br>rotation_tolerance<br>surfFeatureMinValidNum<br>surfThreshold<br>surroundingKeyframeDensity<br>surroundingKeyframeSearchRadius<br>surroundingkeyframeAddingAngleThreshold<br>surroundingkeyframeAddingDistThreshold<br>z_tolerance</td>
-<td style="text-align: left;">1<br>10<br>1.0<br>1.0<br>10.0<br>1000.0<br>0.2<br>0.15<br>0.4<br>4<br>0.4<br>1000.0<br>100<br>0.1<br>2.0<br>50.0<br>0.2<br>1.0<br>1000.0</td>
-<td style="text-align: center;"><a href="https://github.com/contagon/LIO&#8209;SAM">link</a></td>
-</tr>
-<tr>
-<td style="text-align: center;">ct</td>
-<td style="text-align: center;">0.0.1</td>
-<td style="text-align: right;">beta_constant_velocity<br>beta_location_consistency<br>beta_orientation_consistency<br>beta_small_velocity<br>ct_init_num_frames<br>distance<br>distance_error_threshold<br>estimate_normal_from_neighborhood<br>init_num_frames<br>init_sample_voxel_size<br>init_voxel_size<br>initialization<br>loss_function<br>ls_max_num_iters<br>ls_num_threads<br>ls_sigma<br>ls_tolerant_min_threshold<br>max_dist_to_plane_ct_icp<br>max_num_points_in_voxel<br>max_num_residuals<br>max_number_neighbors<br>min_distance_points<br>min_num_residuals<br>min_number_neighbors<br>motion_compensation<br>num_closest_neighbors<br>num_iters_icp<br>point_to_plane_with_distortion<br>power_planarity<br>sample_voxel_size<br>size_voxel_map<br>solver<br>threshold_orientation_norm<br>threshold_translation_norm<br>threshold_voxel_occupancy<br>voxel_neighborhood<br>voxel_size<br>weight_alpha<br>weight_neighborhood<br>weighting_scheme</td>
-<td style="text-align: left;">0.001<br>0.001<br>0.0<br>0.0<br>20<br>CT_POINT_TO_PLANE<br>5.0<br>True<br>20<br>1.0<br>0.2<br>INIT_CONSTANT_VELOCITY<br>CAUCHY<br>10<br>8<br>0.1<br>0.05<br>0.5<br>20<br>&#8209;1<br>20<br>0.1<br>100<br>20<br>CONTINUOUS<br>1<br>30<br>True<br>2.0<br>1.5<br>1.0<br>CERES<br>0.0001<br>0.001<br>1<br>1<br>0.5<br>0.9<br>0.1<br>ALL</td>
-<td style="text-align: center;"><a href="https://github.com/jedeschaud/ct_icp">link</a></td>
+<td style="text-align: center;">mad</td>
+<td style="text-align: center;">0.0.10</td>
+<td style="text-align: right;">b_max<br>b_min<br>b_ratio<br>deskew<br>num_keyframes<br>num_threads<br>p_th<br>realtime<br>rho_ker</td>
+<td style="text-align: left;">0.2<br>0.1<br>0.02<br>False<br>8<br>0<br>0.8<br>True<br>0.1</td>
+<td style="text-align: center;"><a href="https://github.com/rvp&#8209;group/mad&#8209;icp">link</a></td>
 </tr>
 <tr>
 <td style="text-align: center;">loam</td>
@@ -916,11 +909,11 @@
 <td style="text-align: center;"><a href="https://github.com/DanMcGann/loam">link</a></td>
 </tr>
 <tr>
-<td style="text-align: center;">mad</td>
-<td style="text-align: center;">0.0.10</td>
-<td style="text-align: right;">b_max<br>b_min<br>b_ratio<br>deskew<br>num_keyframes<br>num_threads<br>p_th<br>realtime<br>rho_ker</td>
-<td style="text-align: left;">0.2<br>0.1<br>0.02<br>False<br>8<br>0<br>0.8<br>True<br>0.1</td>
-<td style="text-align: center;"><a href="https://github.com/rvp&#8209;group/mad&#8209;icp">link</a></td>
+<td style="text-align: center;">kiss</td>
+<td style="text-align: center;">1.2.2</td>
+<td style="text-align: right;">convergence_criterion<br>deskew<br>initial_threshold<br>max_num_iterations<br>max_num_threads<br>max_points_per_voxel<br>min_motion_th<br>voxel_size</td>
+<td style="text-align: left;">0.0001<br>False<br>2.0<br>500<br>0<br>20<br>0.1<br>1.0</td>
+<td style="text-align: center;"><a href="https://github.com/PRBonn/kiss&#8209;icp">link</a></td>
 </tr>
 <tr>
 <td style="text-align: center;">genz</td>
@@ -930,11 +923,18 @@
 <td style="text-align: center;"><a href="https://github.com/cocel&#8209;postech/genz&#8209;icp">link</a></td>
 </tr>
 <tr>
-<td style="text-align: center;">kiss</td>
-<td style="text-align: center;">1.2.2</td>
-<td style="text-align: right;">convergence_criterion<br>deskew<br>initial_threshold<br>max_num_iterations<br>max_num_threads<br>max_points_per_voxel<br>min_motion_th<br>voxel_size</td>
-<td style="text-align: left;">0.0001<br>False<br>2.0<br>500<br>0<br>20<br>0.1<br>1.0</td>
-<td style="text-align: center;"><a href="https://github.com/PRBonn/kiss&#8209;icp">link</a></td>
+<td style="text-align: center;">ct</td>
+<td style="text-align: center;">0.0.1</td>
+<td style="text-align: right;">beta_constant_velocity<br>beta_location_consistency<br>beta_orientation_consistency<br>beta_small_velocity<br>ct_init_num_frames<br>distance<br>distance_error_threshold<br>estimate_normal_from_neighborhood<br>init_num_frames<br>init_sample_voxel_size<br>init_voxel_size<br>initialization<br>loss_function<br>ls_max_num_iters<br>ls_num_threads<br>ls_sigma<br>ls_tolerant_min_threshold<br>max_dist_to_plane_ct_icp<br>max_num_points_in_voxel<br>max_num_residuals<br>max_number_neighbors<br>min_distance_points<br>min_num_residuals<br>min_number_neighbors<br>motion_compensation<br>num_closest_neighbors<br>num_iters_icp<br>point_to_plane_with_distortion<br>power_planarity<br>sample_voxel_size<br>size_voxel_map<br>solver<br>threshold_orientation_norm<br>threshold_translation_norm<br>threshold_voxel_occupancy<br>voxel_neighborhood<br>voxel_size<br>weight_alpha<br>weight_neighborhood<br>weighting_scheme</td>
+<td style="text-align: left;">0.001<br>0.001<br>0.0<br>0.0<br>20<br>CT_POINT_TO_PLANE<br>5.0<br>True<br>20<br>1.0<br>0.2<br>INIT_CONSTANT_VELOCITY<br>CAUCHY<br>10<br>8<br>0.1<br>0.05<br>0.5<br>20<br>&#8209;1<br>20<br>0.1<br>100<br>20<br>CONTINUOUS<br>1<br>30<br>True<br>2.0<br>1.5<br>1.0<br>CERES<br>0.0001<br>0.001<br>1<br>1<br>0.5<br>0.9<br>0.1<br>ALL</td>
+<td style="text-align: center;"><a href="https://github.com/jedeschaud/ct_icp">link</a></td>
+</tr>
+<tr>
+<td style="text-align: center;">liosam</td>
+<td style="text-align: center;">0.1.0</td>
+<td style="text-align: right;">downsampleRate<br>edgeFeatureMinValidNum<br>edgeThreshold<br>globalMapVisualizationLeafSize<br>globalMapVisualizationPoseDensity<br>globalMapVisualizationSearchRadius<br>mappingCornerLeafSize<br>mappingProcessInterval<br>mappingSurfLeafSize<br>numberOfCores<br>odometrySurfLeafSize<br>rotation_tolerance<br>surfFeatureMinValidNum<br>surfThreshold<br>surroundingKeyframeDensity<br>surroundingKeyframeSearchRadius<br>surroundingkeyframeAddingAngleThreshold<br>surroundingkeyframeAddingDistThreshold<br>z_tolerance</td>
+<td style="text-align: left;">1<br>10<br>1.0<br>1.0<br>10.0<br>1000.0<br>0.2<br>0.15<br>0.4<br>4<br>0.4<br>1000.0<br>100<br>0.1<br>2.0<br>50.0<br>0.2<br>1.0<br>1000.0</td>
+<td style="text-align: center;"><a href="https://github.com/contagon/LIO&#8209;SAM">link</a></td>
 </tr>
 </tbody>
 </table>
