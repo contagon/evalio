@@ -1,4 +1,11 @@
 [project]
+name = "evalio"
+authors = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
+maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
+version = "0.4.1"
+description = "Evaluate Lidar-Inertial Odometry on public datasets"
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
     "cyclopts==4.0",
     "asteval>=1.0.6",
@@ -12,13 +19,6 @@ dependencies = [
     "rosbags>=0.10.10",
     "tqdm>=4.66",
 ]
-name = "evalio"
-authors = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
-maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
-version = "0.4.0"
-description = "Evaluate Lidar-Inertial Odometry on public datasets"
-readme = "README.md"
-requires-python = ">=3.11"
 keywords = [
     "lidar",
     "odometry",
