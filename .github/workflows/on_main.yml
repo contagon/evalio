@@ -12,6 +12,7 @@ permissions:
 jobs:
   # Release Please to create releases
   release-please:
+    name: Release Please
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -42,7 +43,7 @@ jobs:
 
   # Build all of the wheels
   build:
-    name: Build Wheels
+    name: Build
     uses: ./.github/workflows/reusable_build.yml
     secrets: inherit
     with: 
@@ -50,6 +51,7 @@ jobs:
 
   # Upload wheels if a release was created
   upload:
+    name: Upload
     needs: [build, release-please]
     runs-on: ubuntu-latest
     if: ${{ needs.release-please.outputs.release_created }}

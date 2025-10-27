@@ -19,6 +19,6 @@ jobs:
 
   # Build subset of wheels for all platforms
   build:
-    name: Build Wheels
+    name: Build
     uses: ./.github/workflows/reusable_build.yml
     secrets: inherit
