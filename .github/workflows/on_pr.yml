@@ -5,16 +5,19 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # Always run checks
   checks:
     name: Checks
     uses: ./.github/workflows/reusable_checks.yml
     secrets: inherit
 
+  # Rebuild docs to make sure nothing is broken
   docs:
     name: Docs
     uses: ./.github/workflows/reusable_docs.yml
     secrets: inherit
 
+  # Build subset of wheels for all platforms
   build:
     name: Build Wheels
     uses: ./.github/workflows/reusable_build.yml
