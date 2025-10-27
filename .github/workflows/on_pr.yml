@@ -1,0 +1,21 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/reusable_checks.yml
+    secrets: inherit
+
+  docs:
+    name: Docs
+    uses: ./.github/workflows/reusable_docs.yml
+    secrets: inherit
+
+  build:
+    name: Build Wheels
+    uses: ./.github/workflows/reusable_build.yml
+    secrets: inherit
