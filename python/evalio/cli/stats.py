@@ -296,7 +296,9 @@ def evaluate_typer(
     else:
         from asteval import Interpreter
 
-        filter_method = lambda r: Interpreter(user_symbols=r).eval(filter_str)
+        filter_method = lambda r: Interpreter(user_symbols=r).eval(
+            filter_str, raise_errors=True
+        )
 
     original_filter = filter_method
     if only_complete:

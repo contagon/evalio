@@ -6,7 +6,9 @@ from inspect import isclass
 import itertools
 from types import ModuleType
 from typing import Any, Optional, cast, Sequence
+import numpy as np
 
+from asteval import Interpreter
 from evalio import pipelines
 from evalio.pipelines import Pipeline
 from evalio.types import Param
@@ -26,7 +28,7 @@ class PipelineNotFound(CustomException):
 
 class InvalidPipelineConfig(CustomException):
     def __init__(self, config: str):
-        super().__init__(f"Invalid config: '{config}'")
+        super().__init__(f"Invalid config: {config}")
         self.config = config
 
 
@@ -128,7 +130,7 @@ register_pipeline(module=pipelines)
 
 # ------------------------- Handle yaml parsing ------------------------- #
 def _sweep(
-    sweep: dict[str, Param],
+    sweep: dict[str, list[Param]],
     name: str,
     pipe: type[Pipeline],
     params: dict[str, Param],
@@ -174,6 +176,38 @@ def validate_params(
     return None
 
 
+def make_interpreter() -> Interpreter:
+    i = Interpreter()
+    # Augment with a few extra numpy functions
+    i.symtable["geomspace"] = np.geomspace  # type: ignore
+    return i
+
+
+def eval_str_sweep(val: str) -> list[Any]:
+    """Evaluate python string to list of Params"""
+    interp = make_interpreter().eval(val, raise_errors=True)
+
+    # Handle numpy to builtin type conversion
+    if isinstance(interp, np.ndarray):
+        if np.issubdtype(interp.dtype, np.bool):  # type: ignore
+            return interp.astype(bool).tolist()
+        if np.issubdtype(interp.dtype, np.integer):  # type: ignore
+            return interp.astype(int).tolist()
+        elif np.issubdtype(interp.dtype, np.floating):  # type: ignore
+            return interp.astype(float).tolist()
+    # simple tuple to list conversion
+    elif isinstance(interp, tuple):
+        return list(interp)  # type: ignore
+    # list is already valid
+    elif isinstance(interp, list):
+        return interp  # type: ignore
+    # raise error for anything else
+    else:
+        raise ValueError(f"Sweep '{val}' does not evaluate to a list")
+
+    return []
+
+
 def parse_config(
     p: str | dict[str, Param] | Sequence[str | dict[str, Param]],
 ) -> list[tuple[str, type[Pipeline], dict[str, Param]]] | PipelineConfigError:
@@ -203,7 +237,25 @@ def parse_config(
 
         # Handle sweeps
         if "sweep" in p:
-            sweep = cast(dict[str, Param], params.pop("sweep"))
+            sweep = cast(dict[str, list[Param]], params.pop("sweep"))
+
+            # Parse any sweeps that are not lists but are evaluable python expressions
+            for k in sweep.keys():
+                val = sweep[k]
+                if not isinstance(val, list):
+                    try:
+                        sweep[k] = eval_str_sweep(val)
+                    # If the sweep failed
+                    except ValueError as _:
+                        return InvalidPipelineConfig(
+                            f"Sweep value for '{k}' not a list: '{val}'"
+                        )
+                    # If the eval failed
+                    except Exception as _:
+                        return InvalidPipelineConfig(
+                            f"Sweep value for '{k}' is not evaluable by python: '{val}'"
+                        )
+
             return _sweep(sweep, name, pipe, params)
         else:
             err = validate_params(pipe, params)
@@ -223,4 +275,4 @@ def parse_config(
         return list(itertools.chain.from_iterable(results))
 
     else:
-        return InvalidPipelineConfig(f"Invalid pipeline configuration {p}")
+        return InvalidPipelineConfig(f"Invalid pipeline configuration '{p}'")
