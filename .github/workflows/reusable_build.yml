@@ -32,7 +32,7 @@ jobs:
       - run: ./cpp/setup_pipelines.sh
         name: Clone pipelines & vcpkg
 
-      - uses: pypa/cibuildwheel@v2.23.0
+      - uses: pypa/cibuildwheel@v3.1
         name: Build wheel
         env:
           # install openmp stuff for mac
