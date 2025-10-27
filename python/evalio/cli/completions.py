@@ -26,7 +26,7 @@ def validate_datasets(datasets: list[str]) -> list[str]:
 
     for dataset in datasets:
         if dataset not in all_sequences_names:
-            closest, score, _idx = extractOne(dataset, all_sequences_names)
+            closest, score, _idx = extractOne(dataset, all_sequences_names)  # type: ignore
             if score < 80:
                 msg = dataset
             else:
@@ -58,7 +58,7 @@ def validate_pipelines(pipelines: list[str]) -> list[str]:
 
     for pipeline in pipelines:
         if pipeline not in valid_pipelines:
-            closest, score, _idx = extractOne(pipeline, valid_pipelines)
+            closest, score, _idx = extractOne(pipeline, valid_pipelines)  # type: ignore
             if score < 80:
                 msg = pipeline
             else:
