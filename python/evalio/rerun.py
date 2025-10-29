@@ -85,18 +85,20 @@ try:
     class RerunVis:  # type: ignore
         def __init__(self, args: VisArgs, pipeline_names: list[str]):
             self.args = args
-
-            # To be set during new_recording
-            self.lidar_params: Optional[LidarParams] = None
-            self.gt: Optional[Trajectory[GroundTruth]] = None
             self.pipeline_names = pipeline_names
 
-            # To be found during log
-            self.gt_o_T_imu_o: Optional[SE3] = None
-            self.trajectory: Optional[Trajectory] = None
+            # To be set during new_dataset
+            self.lidar_params: Optional[LidarParams] = None
             self.imu_T_lidar: Optional[SE3] = None
+            self.gt: Optional[Trajectory[GroundTruth]] = None
+
+            # To be set during new_pipe
+            self.trajectory: Optional[Trajectory] = None
             self.pn: Optional[str] = None
             self.colors: Optional[list[tuple[float, float, float]]] = None
+
+            # To be set during log
+            self.gt_o_T_imu_o: Optional[SE3] = None
 
             directions = np.array(
                 [
@@ -157,6 +159,12 @@ try:
 
             self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
+            # reset other variables
+            self.pn = None
+            self.gt_o_T_imu_o = None
+            self.trajectory = None
+            self.colors = None
+
         def new_pipe(self, pipe_name: str, feat_num: int):
             if not self.args.show:
                 return
@@ -178,17 +186,17 @@ try:
             self.rec.connect_grpc()
 
             self.pn = pipe_name
-            self.gt_o_T_imu_o = None
-            self.colors = None
             self.trajectory = Trajectory(stamps=[], poses=[])
             self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
+
+            self.gt_o_T_imu_o = None
 
         def log_pose(self, stamp: Stamp, pose: SE3):
             if not self.args.show:
                 return
 
             if self.lidar_params is None or self.gt is None:
-                raise ValueError("You needed to add a pipeline before stepping!")
+                raise ValueError("You needed to add a dataset before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 

@@ -359,6 +359,8 @@ def run_single(
                 time_max = time_running
             time_running = 0.0
 
+            # TODO: Need to make sure this return is actually from this scan!
+            # Maybe a buffer for the scans as well?
             vis.log_scan(data, features, pipe)
 
             loop.update()
