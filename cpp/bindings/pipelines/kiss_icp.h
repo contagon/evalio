@@ -1,39 +1,12 @@
 #pragma once
 
 #include <memory>
-#include <stdexcept>
 
+#include "evalio/convert/eigen.h"
+#include "evalio/convert/sophus.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
-
-inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
-  return {
-    .x = point[0],
-    .y = point[1],
-    .z = point[2],
-    .intensity = 0.0,
-    .t = evalio::Duration::from_sec(0),
-    .row = 0,
-    .col = 0
-  };
-}
-
-inline Eigen::Vector3d to_eigen_point(evalio::Point point) {
-  return {point.x, point.y, point.z};
-}
-
-inline evalio::SE3 to_evalio_se3(Sophus::SE3d pose) {
-  const auto t = pose.translation();
-  const auto q = pose.unit_quaternion();
-  const auto rot =
-    evalio::SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
-  return evalio::SE3(rot, t);
-}
-
-inline Sophus::SE3d to_sophus_se3(evalio::SE3 pose) {
-  return Sophus::SE3d(Sophus::SO3d(pose.rot.toEigen()), pose.trans);
-}
 
 class KissICP: public evalio::Pipeline {
 public:
@@ -66,7 +39,7 @@ public:
   // Getters
   const evalio::SE3 pose() override {
     const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    return to_evalio_se3(pose);
+    return evalio::convert<evalio::SE3>(pose);
   }
 
   const std::map<std::string, std::vector<evalio::Point>> map() override {
@@ -74,7 +47,7 @@ public:
     std::vector<evalio::Point> evalio_map;
     evalio_map.reserve(map.size());
     for (auto point : map) {
-      evalio_map.push_back(to_evalio_point(point));
+      evalio_map.push_back(evalio::convert<evalio::Point>(point));
     }
     return {{"point", evalio_map}};
   }
@@ -88,7 +61,7 @@ public:
   }
 
   void set_imu_T_lidar(evalio::SE3 T) override {
-    lidar_T_imu_ = to_sophus_se3(T).inverse();
+    lidar_T_imu_ = evalio::convert<Sophus::SE3d>(T).inverse();
   }
 
   // Doers
@@ -108,7 +81,7 @@ public:
 
     // Copy
     for (auto point : mm.points) {
-      points.push_back(to_eigen_point(point));
+      points.push_back(evalio::convert<Eigen::Vector3d>(point));
       timestamps.push_back(point.t.to_sec());
     }
 
@@ -117,7 +90,7 @@ public:
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());
     for (auto point : used_points) {
-      result.push_back(to_evalio_point(point));
+      result.push_back(evalio::convert<evalio::Point>(point));
     }
     return {{"point", result}};
   }
