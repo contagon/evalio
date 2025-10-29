@@ -1,0 +1,80 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+      
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Release Please to create releases
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
+
+  # Always run checks
+  checks:
+    name: Checks
+    uses: ./.github/workflows/reusable_checks.yml
+    secrets: inherit
+
+  # Build docs, and deploy release docs if a release was created
+  docs:
+    name: Docs
+    needs: release-please
+    uses: ./.github/workflows/reusable_docs.yml
+    secrets: inherit
+    with:
+      deploy_latest: true
+      deploy_release: ${{ needs.release-please.outputs.release_created }}
+
+  # Build all of the wheels
+  build:
+    name: Build
+    uses: ./.github/workflows/reusable_build.yml
+    secrets: inherit
+    with: 
+      CIBW_BUILD: "cp*-manylinux_x86_64 cp*-macosx_arm64"
+
+  # Upload wheels if a release was created
+  upload:
+    name: Upload
+    needs: [build, release-please]
+    runs-on: ubuntu-latest
+    if: ${{ needs.release-please.outputs.release_created }}
+    environment: 
+      name: pypi
+      url: https://pypi.org/p/evalio
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        name: Download wheels
+        with:
+          # unpacks all CIBW artifacts into dist/
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+      
+      # upload to pypi
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        name: Pypi
+
+      # upload to GitHub Release
+      - name: Github Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./dist/*

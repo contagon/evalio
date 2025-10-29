@@ -1,0 +1,67 @@
+name: "Build and deploy docs"
+
+on:
+  workflow_call:
+    inputs:
+      deploy_latest:
+        required: false
+        type: boolean
+        default: false
+      deploy_release:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    env:
+      UV_NO_EDITABLE: true
+      VCPKG_BINARY_SOURCES: ${{ vars.VCPKG_BINARY_SOURCES }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+      # only required until R2 supports CRC64NVME checksums
+      # https://community.cloudflare.com/t/an-error-occurred-internalerror-when-calling-the-putobject-operation/764905/11
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      # Setup C++ dependencies
+      - run: ./cpp/setup_pipelines.sh
+        name: Clone pipelines & vcpkg
+
+      # Setup Python dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install the project
+        run: uv sync --dev --verbose
+
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     detached: true
+
+      # Setup git
+      - name: Configure Git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      # Deploy latest tag
+      - name: Deploy docs
+        if: ${{ inputs.deploy_latest }}
+        run: uv run mike deploy --push --update-aliases latest
+
+      # Deploy release tag
+      - name: Get version
+        if: ${{ inputs.deploy_release }}
+        run: echo "EVALIO_VERSION=$(uv run python -c 'import evalio; print(evalio.__version__)')" >> "$GITHUB_ENV"
+      
+      - name: Deploy docs
+        if: ${{ inputs.deploy_release }}
+        run: uv run mike deploy --push --update-aliases $EVALIO_VERSION stable

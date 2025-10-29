@@ -189,6 +189,15 @@ def run_from_cli(
             param_hint="run",
         )
 
+    # make sure all datasets are downloaded
+    for d, _ in datasets:
+        d._fail_not_downloaded()
+
+    # parse all of the lengths
+    datasets = [
+        (s, len(s) if length is None else min(len(s), length)) for s, length in datasets
+    ]
+
     print(
         f"Running {plural(len(datasets), 'dataset')} => {plural(len(pipelines) * len(datasets), 'experiment')}"
     )
