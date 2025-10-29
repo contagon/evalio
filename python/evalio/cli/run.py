@@ -373,13 +373,14 @@ def run_single(
             vis.log_scan(data, features, pipe)
 
             loop.update()
-            if loop.n >= exp.sequence_length:
-                loop.close()
-                break
 
         for stamp, pose in pipe.recent_estimates():
             traj.append(stamp, pose)
             vis.log_pose(stamp, pose)
+
+        if loop.n >= exp.sequence_length:
+            loop.close()
+            break
 
     loop.close()
     traj.metadata.status = ty.ExperimentStatus.Complete

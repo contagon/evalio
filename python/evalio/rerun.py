@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
+from typing import Any, Literal, Optional, TypedDict, cast, overload
 from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
@@ -488,14 +488,16 @@ except Exception:
         def new_dataset(self, dataset: Dataset):
             pass
 
-        def log(
-            self,
-            data: LidarMeasurement,
-            features: Sequence[Point],
-            pose: SE3,
-            pipe: Pipeline,
-        ):
+        def new_pipe(self, pipe_name: str):
             pass
 
-        def new_pipe(self, pipe_name: str):
+        def log_pose(self, stamp: Stamp, pose: SE3):
+            pass
+
+        def log_scan(
+            self,
+            data: LidarMeasurement,
+            features: dict[str, list[Point]],
+            pipe: Pipeline,
+        ):
             pass
