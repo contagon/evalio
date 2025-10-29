@@ -159,7 +159,7 @@ public:
 
     // Save pose
     const auto pose = to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
-    this->push_back_estimate(mm.stamp, pose);
+    this->save_estimate(mm.stamp, pose);
 
     // Return features
     auto used_points = lio_sam_->getMostRecentFrame();

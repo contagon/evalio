@@ -63,7 +63,7 @@ public:
   );
 
   // Getters
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
+  const evalio::Map map() override {
     std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
     std::vector<evalio::Point> evalio_map;
     evalio_map.reserve(map.size());
@@ -92,8 +92,7 @@ public:
 
   void add_imu(evalio::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  void add_lidar(evalio::LidarMeasurement mm) override {
     // Set everything up
     std::vector<Eigen::Vector3d> points;
     points.reserve(mm.points.size());
@@ -108,17 +107,18 @@ public:
 
     // Run through pipeline
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
+
+    // Save the estimate
+    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
+    this->save(mm.stamp, to_evalio_se3(pose));
+
+    // Save used points if visualizing
     std::vector<evalio::Point> result;
     result.reserve(used_points.size());
     for (auto point : used_points) {
       result.push_back(to_evalio_point(point));
     }
-
-    // Save the estimate
-    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    this->push_back_estimate(mm.stamp, to_evalio_se3(pose));
-
-    return {{"point", result}};
+    this->save(mm.stamp, {{"point", result}});
   }
 
 private:

@@ -1,11 +1,9 @@
-from dataclasses import dataclass
 from typing import Any, Literal, Optional, TypedDict, cast, overload
 from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
-import typer
 from numpy.typing import NDArray
 
 from evalio.datasets import Dataset
@@ -22,6 +20,7 @@ from evalio.types import (
 )
 from evalio.utils import print_warning
 from evalio._cpp.helpers import closest  # type: ignore
+from evalio._cpp.types import VisOption  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -46,33 +45,6 @@ GT_COLOR = (
 )  # Color for ground truth in rerun
 
 
-@dataclass
-class VisArgs:
-    show: bool
-    map: bool = False
-    image: bool = False
-    scan: bool = False
-    features: bool = False
-
-    @staticmethod
-    def parse(opts: str) -> "VisArgs":
-        out = VisArgs(show=True)
-        for o in opts:
-            match o:
-                case "m":
-                    out.map = True
-                case "i":
-                    out.image = True
-                case "s":
-                    out.scan = True
-                case "f":
-                    out.features = True
-                case _:
-                    raise typer.BadParameter(f"Unknown visualization option {o}")
-
-        return out
-
-
 try:
     import rerun as rr
     import rerun.blueprint as rrb
@@ -83,7 +55,7 @@ try:
     )
 
     class RerunVis:  # type: ignore
-        def __init__(self, args: VisArgs, pipeline_names: list[str]):
+        def __init__(self, args: Optional[set[VisOption]], pipeline_names: list[str]):
             self.args = args
             self.pipeline_names = pipeline_names
 
@@ -129,7 +101,7 @@ try:
                 for n in self.pipeline_names
             }
 
-            if self.args.image:
+            if self.args is not None and VisOption.IMAGE in self.args:
                 return rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
@@ -141,7 +113,7 @@ try:
                 return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
 
         def new_dataset(self, dataset: Dataset):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             self.recording_params: RerunArgs = {
@@ -166,7 +138,7 @@ try:
             self.colors = None
 
         def new_pipe(self, pipe_name: str, feat_num: int):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             if self.imu_T_lidar is None:
@@ -191,8 +163,35 @@ try:
 
             self.gt_o_T_imu_o = None
 
+        def log_scan(self, data: LidarMeasurement):
+            if self.args is None:
+                return
+
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a dataset before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
+
+            # Include the original point cloud
+            if VisOption.SCAN in self.args:
+                self.rec.log(
+                    f"{self.pn}/imu/lidar/scan",
+                    convert(data, color=self.colors[-2], radii=0.08),
+                )
+
+            # Include the intensity image
+            if VisOption.IMAGE in self.args:
+                intensity = np.array([d.intensity for d in data.points])
+                # row major order
+                image = intensity.reshape(
+                    (self.lidar_params.num_rows, self.lidar_params.num_columns)
+                )
+                self.rec.log("image", rr.Image(image))
+
         def log_pose(self, stamp: Stamp, pose: SE3):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             if self.lidar_params is None or self.gt is None:
@@ -229,13 +228,12 @@ try:
                 convert(self.trajectory, color=self.colors[-1]),
             )
 
-        def log_scan(
+        def log_map(
             self,
-            data: LidarMeasurement,
-            features: dict[str, list[Point]],
-            pipe: Pipeline,
+            stamp: Stamp,
+            map: dict[str, NDArray[np.float64]],
         ):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             if self.lidar_params is None or self.gt is None:
@@ -243,37 +241,36 @@ try:
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
-            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
+
+            # Include the current map
+            if VisOption.MAP in self.args:
+                for (k, p), c in zip(map.items(), self.colors):
+                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
+
+        def log_features(
+            self,
+            stamp: Stamp,
+            features: dict[str, NDArray[np.float64]],
+        ):
+            if self.args is None:
+                return
+
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
 
             # Features from the scan
-            if self.args.features:
+            if VisOption.FEATURES in self.args:
                 if len(features) > 0:
                     for (k, p), c in zip(features.items(), self.colors):
                         self.rec.log(
                             f"{self.pn}/imu/lidar/{k}",
-                            convert(list(p), color=c, radii=0.12),
+                            convert(p, color=c, radii=0.12),
                         )
-
-            # Include the current map
-            if self.args.map:
-                for (k, p), c in zip(pipe.map().items(), self.colors):
-                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
-
-            # Include the original point cloud
-            if self.args.scan:
-                self.rec.log(
-                    f"{self.pn}/imu/lidar/scan",
-                    convert(data, color=self.colors[-2], radii=0.08),
-                )
-
-            # Include the intensity image
-            if self.args.image:
-                intensity = np.array([d.intensity for d in data.points])
-                # row major order
-                image = intensity.reshape(
-                    (self.lidar_params.num_rows, self.lidar_params.num_columns)
-                )
-                self.rec.log("image", rr.Image(image))
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -323,7 +320,12 @@ try:
     @overload
     def convert(
         obj: NDArray[np.float64],
-        color: Optional[Literal["z"] | NDArray[np.float64]] = None,
+        color: Optional[
+            Literal["z"]
+            | NDArray[np.float64]
+            | tuple[int, int, int]
+            | tuple[float, float, float]
+        ] = None,
         radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert an (n, 3) numpy array to a rerun Points3D.
@@ -481,8 +483,10 @@ try:
 except Exception:
 
     class RerunVis:
-        def __init__(self, args: VisArgs, pipeline_names: list[str]) -> None:
-            if args.show:
+        def __init__(
+            self, args: Optional[set[VisOption]], pipeline_names: list[str]
+        ) -> None:
+            if args is not None:
                 print_warning("Rerun not found, visualization disabled")
 
         def new_dataset(self, dataset: Dataset):
@@ -501,3 +505,6 @@ except Exception:
             pipe: Pipeline,
         ):
             pass
+
+        def is_visualizing(self) -> bool:
+            return False

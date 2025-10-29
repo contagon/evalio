@@ -98,7 +98,7 @@ public:
 
     // Save the estimate
     const auto ev_pose = to_evalio_se3(world_T_lidar * lidar_T_imu_);
-    this->push_back_estimate(mm.stamp, ev_pose);
+    this->save_estimate(mm.stamp, ev_pose);
 
     // Return the used points
     // These are all in the global frame, so we need to convert them

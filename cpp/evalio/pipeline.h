@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 #include <map>
+#include <optional>
+#include <set>
 #include <variant>
 
 #include "evalio/macros.h"
@@ -27,11 +29,17 @@
 namespace evalio {
 
 using Param = std::variant<bool, int, double, std::string>;
+using Map = std::map<std::string, std::vector<Point>>;
+using MapEigen = std::map<std::string, Eigen::MatrixX3d>;
+
+template<typename... T>
+using Stamped = std::tuple<Stamp, T...>;
 
 class PYBIND11_EXPORT Pipeline {
 public:
   virtual ~Pipeline() {}
 
+  // ------------------------- Things to override/use ------------------------- //
   // Info
   static std::string version() {
     return "0.0.0";
@@ -50,13 +58,7 @@ public:
   }
 
   // Getters
-  virtual const std::map<std::string, std::vector<Point>> map() = 0;
-
-  virtual const std::vector<std::tuple<Stamp, SE3>> recent_estimates() {
-    std::vector<std::tuple<Stamp, SE3>> copy = recent_poses_;
-    recent_poses_.clear();
-    return copy;
-  }
+  virtual const Map map() = 0;
 
   // Setters
   virtual void set_imu_params(ImuParams params) = 0;
@@ -68,16 +70,82 @@ public:
   // Doers
   virtual void initialize() = 0;
   virtual void add_imu(ImuMeasurement mm) = 0;
-  virtual std::map<std::string, std::vector<Point>>
-  add_lidar(LidarMeasurement mm) = 0;
+  virtual void add_lidar(LidarMeasurement mm) = 0;
+
+  // ------------------------- For saving results ------------------------- //
+  void save(const Stamp& stamp, const SE3& pose) {
+    saved_poses_.emplace_back(stamp, pose);
+  }
+
+  void save(const Stamp& stamp, const Map& features) {
+    // Only save if they'll be used
+    if (vis_options_ && vis_options_->contains(VisOption::FEATURES)) {
+      saved_features_.emplace_back(stamp, features);
+    }
+
+    // Use this as a hook to save the map as well
+    if (vis_options_ && vis_options_->contains(VisOption::MAP)) {
+      saved_maps_.emplace_back(stamp, map());
+    }
+  }
+
+  // ------------------------- For Internal Usage ------------------------- //
+  const std::vector<Stamped<SE3>> saved_estimates() {
+    std::vector<Stamped<SE3>> copy;
+    copy.swap(saved_poses_);
+    return copy;
+  }
+
+  const std::vector<Stamped<Map>> saved_features() {
+    std::vector<Stamped<Map>> copy;
+    copy.swap(saved_features_);
+    return copy;
+  }
+
+  const std::vector<Stamped<Map>> saved_maps() {
+    std::vector<Stamped<Map>> copy;
+    copy.swap(saved_maps_);
+    return copy;
+  }
+
+  // Save as Eigen matrices for easier use in Python
+  const std::vector<Stamped<MapEigen>> saved_features_cleaned() {
+    return clean(saved_features());
+  }
+
+  const std::vector<Stamped<MapEigen>> saved_maps_cleaned() {
+    return clean(saved_maps());
+  }
+
+  void set_visualizing(const std::optional<std::set<VisOption>>& options) {
+    vis_options_ = options;
+  }
 
 protected:
-  void push_back_estimate(Stamp stamp, SE3 pose) {
-    recent_poses_.emplace_back(stamp, pose);
+  // Helper to convert std::vector<Point> to Eigen matrices
+  static inline std::vector<Stamped<MapEigen>>
+  clean(const std::vector<Stamped<Map>>& saved) {
+    std::vector<Stamped<MapEigen>> cleaned;
+    for (const auto& [stamp, original] : saved) {
+      MapEigen eigen;
+      for (const auto& [key, points] : original) {
+        Eigen::MatrixX3d mat(points.size(), 3);
+        for (size_t i = 0; i < points.size(); ++i) {
+          mat.row(i) = Eigen::Vector3d(points[i].x, points[i].y, points[i].z);
+        }
+        eigen[key] = mat;
+      }
+
+      cleaned.emplace_back(stamp, eigen);
+    }
+    return cleaned;
   }
 
 private:
-  std::vector<std::tuple<Stamp, SE3>> recent_poses_;
+  std::vector<Stamped<SE3>> saved_poses_;
+  std::vector<Stamped<Map>> saved_features_;
+  std::vector<Stamped<Map>> saved_maps_;
+  std::optional<std::set<VisOption>> vis_options_ = std::nullopt;
 };
 
 } // namespace evalio

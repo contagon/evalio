@@ -52,8 +52,7 @@ public:
     NB_OVERRIDE_PURE(add_imu, mm);
   }
 
-  std::map<std::string, std::vector<Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  void add_lidar(evalio::LidarMeasurement mm) override {
     NB_OVERRIDE_PURE(add_lidar, mm);
   }
 }; // namespace evalio
@@ -78,9 +77,29 @@ inline void makeBasePipeline(nb::module_& m) {
       "Version of the pipeline."
     )
     .def(
-      "recent_estimates",
-      &evalio::Pipeline::recent_estimates,
+      "saved_estimates",
+      &evalio::Pipeline::saved_estimates,
       "Most recent stamped pose estimates. Will be removed after this method is called."
+    )
+    .def(
+      "saved_features",
+      &evalio::Pipeline::saved_features,
+      "Most recent stamped feature scans. Will be removed after this method is called."
+    )
+    .def(
+      "saved_maps",
+      &evalio::Pipeline::saved_maps,
+      "Most recent stamped maps. Will be removed after this method is called."
+    )
+    .def(
+      "saved_features_cleaned",
+      &evalio::Pipeline::saved_features_cleaned,
+      "Most recent stamped feature scans as Eigen matrices. Will be removed after this method is called."
+    )
+    .def(
+      "saved_maps_cleaned",
+      &evalio::Pipeline::saved_maps_cleaned,
+      "Most recent stamped maps as Eigen matrices. Will be removed after this method is called."
     )
     .def("map", &evalio::Pipeline::map, "Map of the environment.")
     .def(
@@ -125,6 +144,33 @@ inline void makeBasePipeline(nb::module_& m) {
       &evalio::Pipeline::set_imu_T_lidar,
       "T"_a,
       "Set the transformation from IMU to LiDAR frame."
+    )
+    .def(
+      "set_visualizing",
+      &evalio::Pipeline::set_visualizing,
+      "visualize"_a,
+      nb::sig(
+        "def set_visualizing(self, arg: typing.Optional[typing.Set[evalio._cpp.types.VisOption]]) -> None"
+      ),
+      "Enable or disable visualization."
+    )
+    .def(
+      "save",
+      nb::overload_cast<const evalio::Stamp&, const evalio::SE3&>(
+        &evalio::Pipeline::save
+      ),
+      "stamp"_a,
+      "pose"_a,
+      "Save the current pose estimate at the given timestamp."
+    )
+    .def(
+      "save",
+      nb::overload_cast<const evalio::Stamp&, const evalio::Map&>(
+        &evalio::Pipeline::save
+      ),
+      "stamp"_a,
+      "features"_a,
+      "Save the current feature map at the given timestamp."
     )
     .doc() =
     "Base class for all pipelines. This class defines the interface "

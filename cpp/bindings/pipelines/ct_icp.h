@@ -260,7 +260,7 @@ public:
     // Save the estimate
     const auto pose = ct_icp_->Trajectory().back();
     const auto ev_pose = to_evalio_pose(pose) * lidar_T_imu_;
-    this->push_back_estimate(mm.stamp, ev_pose);
+    this->save_estimate(mm.stamp, ev_pose);
 
     // Return the used points
     std::vector<evalio::Point> ev_planar_points;
