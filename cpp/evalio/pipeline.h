@@ -59,6 +59,7 @@ public:
     throw std::runtime_error("Not implemented");
   }
 
+  // Should be implemented with EVALIO_SETUP_PARAMS
   static std::map<std::string, Param> default_params() {
     throw std::runtime_error("Not implemented");
   }
@@ -70,6 +71,7 @@ public:
   virtual void set_imu_params(ImuParams params) = 0;
   virtual void set_lidar_params(LidarParams params) = 0;
   virtual void set_imu_T_lidar(SE3 T) = 0;
+  // Should be implemented with EVALIO_SETUP_PARAMS
   virtual std::map<std::string, Param>
   set_params(std::map<std::string, Param> params) = 0;
 
@@ -86,12 +88,12 @@ public:
 
   template<typename T>
   void save(const Stamp& stamp, const std::map<std::string, T>& features) {
-    // Only save if they'll be used
+    // Only convert & save if they'll be visualized
     if (vis_options_ && vis_options_->contains(VisOption::FEATURES)) {
       saved_features_.emplace_back(stamp, convert_map(features));
     }
 
-    // Use this as a hook to save the map as well
+    // Only query the map if it'll be visualized
     if (vis_options_ && vis_options_->contains(VisOption::MAP)) {
       saved_maps_.emplace_back(stamp, map());
     }
