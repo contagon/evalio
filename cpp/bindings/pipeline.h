@@ -148,10 +148,7 @@ inline void makeBasePipeline(nb::module_& m) {
     .def(
       "set_visualizing",
       &evalio::Pipeline::set_visualizing,
-      "visualize"_a,
-      nb::sig(
-        "def set_visualizing(self, arg: typing.Optional[typing.Set[evalio._cpp.types.VisOption]]) -> None"
-      ),
+      "visualize"_a.none(),
       "Enable or disable visualization."
     )
     .def(
