@@ -73,26 +73,16 @@ public:
 
   std::map<std::string, std::vector<evalio::Point>>
   add_lidar(evalio::LidarMeasurement mm) override {
-    // Set everything up
-    std::vector<Eigen::Vector3d> points;
-    points.reserve(mm.points.size());
-    std::vector<double> timestamps;
-    timestamps.reserve(mm.points.size());
-
-    // Copy
-    for (auto point : mm.points) {
-      points.push_back(evalio::convert<Eigen::Vector3d>(point));
-      timestamps.push_back(point.t.to_sec());
-    }
+    // Convert inputs
+    std::vector<Eigen::Vector3d> points =
+      evalio::convert<Eigen::Vector3d>(mm.points);
+    std::vector<double> timestamps = evalio::convert<double>(mm.points);
 
     // Run through pipeline
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
-    std::vector<evalio::Point> result;
-    result.reserve(used_points.size());
-    for (auto point : used_points) {
-      result.push_back(evalio::convert<evalio::Point>(point));
-    }
-    return {{"point", result}};
+
+    // Convert outputs
+    return {{"point", evalio::convert<evalio::Point>(used_points)}};
   }
 
 private:
