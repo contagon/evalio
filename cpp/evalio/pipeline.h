@@ -89,12 +89,14 @@ public:
   template<typename T>
   void save(const Stamp& stamp, const std::map<std::string, T>& features) {
     // Only convert & save if they'll be visualized
-    if (vis_options_ && vis_options_->contains(VisOption::FEATURES)) {
+    if (vis_options_
+        && vis_options_->find(VisOption::FEATURES) != vis_options_->end()) {
       saved_features_.emplace_back(stamp, convert_map(features));
     }
 
     // Only query the map if it'll be visualized
-    if (vis_options_ && vis_options_->contains(VisOption::MAP)) {
+    if (vis_options_
+        && vis_options_->find(VisOption::MAP) != vis_options_->end()) {
       saved_maps_.emplace_back(stamp, map());
     }
   }
