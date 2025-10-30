@@ -13,40 +13,51 @@ namespace evalio {
 template<typename Out, typename In>
 inline Out convert(const In& in) = delete;
 
+/// @brief Convert evalio::Point to timestamps as doubles.
+template<>
+inline double convert(const evalio::Point& in) {
+  return in.t.to_sec();
+}
+
 /// @brief Convert a container of In to a container of Out using convert<Out>(in).
-template<
-  template<class...> class OutCont,
-  class Out,
-  template<class...> class InCont,
-  class In>
-inline OutCont<Out> convert(const InCont<In>& in) {
-  OutCont<Out> out;
+///
+/// Assumes the following are defined:
+/// - In::size().
+/// - In is iterable with range-based for loops.
+/// - Out is default-constructible.
+/// - Out::value_type.
+/// - Out::reserve(size_t).
+/// - Out::push_back(Out::value_type).
+/// - convert<Out::value_type, In::value_type>(In::value_type).
+
+template<class Out, class In>
+inline Out convert_iter(const In& in) {
+  Out out;
   out.reserve(in.size());
   for (const auto& item : in) {
-    out.push_back(convert<Out, In>(item));
+    out.push_back(
+      convert<typename Out::value_type, typename In::value_type>(item)
+    );
   }
   return out;
 }
 
 /// @brief Convert a map of arbitrary containers to a map of std::vector<evalio::Point>.
 ///
-/// Useful for converting to final evalio map types.
-/// NOTE: Dict<In = std::vector<Point>> = std::map<std::string, In>
-// TODO: This is a bit confusing... for other versions of convert, we have to specify output when calling, for this one we specify the input type...
-template<template<class...> class InCont, class In>
+/// Useful for converting to final evalio map types. Unlike other convert functions,
+/// this one only requires the input type to be specified.
+/// Assumes the following are defined:
+/// - In::size().
+/// - In is iterable with range-based for loops.
+/// - convert<evalio::Point, In::value_type>(In::value_type).
+template<class In>
 inline std::map<std::string, std::vector<evalio::Point>>
-convert(const std::map<std::string, InCont<In>>& in) {
+convert_map(const std::map<std::string, In>& in) {
   std::map<std::string, std::vector<evalio::Point>> out;
   for (const auto& [key, val] : in) {
-    out[key] = convert<std::vector, evalio::Point>(val);
+    out[key] = convert_iter<std::vector<evalio::Point>>(val);
   }
   return out;
-}
-
-/// @brief Convert evalio::Point to timestamps as doubles.
-template<>
-inline double convert(const evalio::Point& in) {
-  return in.t.to_sec();
 }
 
 } // namespace evalio

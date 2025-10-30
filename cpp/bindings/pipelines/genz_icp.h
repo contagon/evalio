@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "evalio/convert/base.h"
 #include "evalio/convert/eigen.h"
 #include "evalio/convert/sophus.h"
 #include "evalio/pipeline.h"
@@ -58,8 +59,9 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    std::vector<Eigen::Vector3d> map = genz_icp_->LocalMap();
-    return {{"point", ev::convert<std::vector, ev::Point>(map)}};
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
+      {{"map", genz_icp_->LocalMap()}}
+    );
   }
 
   // Setters
@@ -85,8 +87,8 @@ public:
   std::map<std::string, std::vector<ev::Point>>
   add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
-    auto points = ev::convert<std::vector, Eigen::Vector3d>(mm.points);
-    auto timestamps = ev::convert<std::vector, double>(mm.points);
+    auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
+    auto timestamps = ev::convert_iter<std::vector<double>>(mm.points);
 
     // Run through pipeline
     auto [planar, nonplanar] = genz_icp_->RegisterFrame(points, timestamps);
@@ -107,7 +109,7 @@ public:
     );
 
     // Return the used points
-    return ev::convert<std::vector, Eigen::Vector3d>(
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
       {{"planar", planar}, {"nonplanar", nonplanar}}
     );
   }

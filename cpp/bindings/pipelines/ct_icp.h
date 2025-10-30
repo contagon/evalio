@@ -5,6 +5,7 @@
 
 #include "ct_icp/odometry.hpp"
 #include "ct_icp/types.hpp"
+#include "evalio/convert/base.h"
 #include "evalio/convert/eigen.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -209,10 +210,8 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    // TODO: Need to be able to handle custom allocators here
-    return ev::convert<std::vector, Eigen::Vector3d>(
-      {} // {{"planar", ct_icp_->GetLocalMap()}}
-    );
+    auto map = ct_icp_->GetLocalMap();
+    return ev::convert_map<decltype(map)>({{"planar", map}});
   }
 
   // Setters
@@ -237,8 +236,7 @@ public:
   std::map<std::string, std::vector<ev::Point>>
   add_lidar(ev::LidarMeasurement mm) override {
     // Convert
-    std::vector<ct_icp::Point3D> pc =
-      ev::convert<std::vector, ct_icp::Point3D>(mm.points);
+    auto pc = ev::convert_iter<std::vector<ct_icp::Point3D>>(mm.points);
 
     // Normalize timestamps to [0, 1]
     const auto& [min, max] = std::minmax_element(
@@ -265,7 +263,7 @@ public:
     scan_idx_++;
 
     // Return the used points
-    return ev::convert<std::vector, ct_icp::Point3D>(
+    return ev::convert_map<std::vector<ct_icp::Point3D>>(
       {{"planar", summary.keypoints}}
     );
   }

@@ -66,7 +66,7 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert<std::vector, Eigen::Vector3d>(
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
       {{"planar", mad_icp_->modelLeaves()}}
     );
   }
@@ -128,13 +128,13 @@ public:
     );
 
     // Copy
-    auto points = ev::convert<std::vector, Eigen::Vector3d>(mm.points);
+    auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
 
     // Run through pipeline
     mad_icp_->compute(mm.stamp.to_sec(), points);
 
     // Return current leaves
-    return ev::convert<std::vector, Eigen::Vector3d>(
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
       {{"planar", mad_icp_->currentLeaves()}}
     );
   }

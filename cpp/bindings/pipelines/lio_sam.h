@@ -122,7 +122,7 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert<pcl::PointCloud, lio_sam::PointType>(
+    return ev::convert_map<pcl::PointCloud<lio_sam::PointType>>(
       {{"point", *lio_sam_->getMap()}}
     );
   }
@@ -162,7 +162,7 @@ public:
   add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
     auto cloud =
-      ev::convert<pcl::PointCloud, lio_sam::PointXYZIRT>(mm.points)
+      ev::convert_iter<pcl::PointCloud<lio_sam::PointXYZIRT>>(mm.points)
         // NOTE: This likely causes a copy, see if we can avoid that later
         .makeShared();
 
@@ -170,7 +170,7 @@ public:
     lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
 
     // Return features
-    return ev::convert<pcl::PointCloud, lio_sam::PointType>(
+    return ev::convert_map<pcl::PointCloud<lio_sam::PointType>>(
       {{"point", *lio_sam_->getMostRecentFrame()}}
     );
   }

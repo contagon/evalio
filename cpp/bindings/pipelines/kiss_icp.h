@@ -45,7 +45,7 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert<std::vector, Eigen::Vector3d>(
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
       {{"point", kiss_icp_->LocalMap()}}
     );
   }
@@ -72,14 +72,16 @@ public:
   std::map<std::string, std::vector<ev::Point>>
   add_lidar(ev::LidarMeasurement mm) override {
     // Convert inputs
-    auto points = ev::convert<std::vector, Eigen::Vector3d>(mm.points);
-    auto timestamps = ev::convert<std::vector, double>(mm.points);
+    auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
+    auto timestamps = ev::convert_iter<std::vector<double>>(mm.points);
 
     // Run through pipeline
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
 
     // Convert outputs
-    return ev::convert<std::vector, Eigen::Vector3d>({{"point", used_points}});
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
+      {{"point", used_points}}
+    );
   }
 
 private:
