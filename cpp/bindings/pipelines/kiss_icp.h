@@ -8,7 +8,9 @@
 #include "evalio/types.h"
 #include "kiss_icp/pipeline/KissICP.hpp"
 
-class KissICP: public evalio::Pipeline {
+namespace ev = evalio;
+
+class KissICP: public ev::Pipeline {
 public:
   KissICP() : config_() {}
 
@@ -37,31 +39,31 @@ public:
   );
 
   // Getters
-  const evalio::SE3 pose() override {
+  const ev::SE3 pose() override {
     const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    return evalio::convert<evalio::SE3>(pose);
+    return ev::convert<ev::SE3>(pose);
   }
 
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
+  const std::map<std::string, std::vector<ev::Point>> map() override {
     std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
-    std::vector<evalio::Point> evalio_map;
+    std::vector<ev::Point> evalio_map;
     evalio_map.reserve(map.size());
     for (auto point : map) {
-      evalio_map.push_back(evalio::convert<evalio::Point>(point));
+      evalio_map.push_back(ev::convert<ev::Point>(point));
     }
     return {{"point", evalio_map}};
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {}
+  void set_imu_params(ev::ImuParams params) override {}
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     config_.max_range = params.max_range;
     config_.min_range = params.min_range;
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
-    lidar_T_imu_ = evalio::convert<Sophus::SE3d>(T).inverse();
+  void set_imu_T_lidar(ev::SE3 T) override {
+    lidar_T_imu_ = ev::convert<Sophus::SE3d>(T).inverse();
   }
 
   // Doers
@@ -69,20 +71,19 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<ev::Point>>
+  add_lidar(ev::LidarMeasurement mm) override {
     // Convert inputs
-    std::vector<Eigen::Vector3d> points =
-      evalio::convert<Eigen::Vector3d>(mm.points);
-    std::vector<double> timestamps = evalio::convert<double>(mm.points);
+    auto points = ev::convert<std::vector, Eigen::Vector3d>(mm.points);
+    auto timestamps = ev::convert<std::vector, double>(mm.points);
 
     // Run through pipeline
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
 
     // Convert outputs
-    return {{"point", evalio::convert<evalio::Point>(used_points)}};
+    return {{"point", ev::convert<std::vector, ev::Point>(used_points)}};
   }
 
 private:

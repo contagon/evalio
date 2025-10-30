@@ -1,25 +1,27 @@
 // Helper module for converting between the various library types.
 #pragma once
 
-#include <vector>
-
 #include "evalio/types.h"
 
 namespace evalio {
 
 /// @brief Generic conversion function between types.
 ///
-/// Specializations may be imported from other files or defined by the user.
+/// Overloads and specializations may be imported from other files or defined by the user.
 template<typename Out, typename In>
 inline Out convert(const In& in) = delete;
 
-/// @brief Convert a vector of In to a vector of Out using convert<Out>(In).
-template<typename Out, typename In>
-inline std::vector<Out> convert(const std::vector<In>& in) {
-  std::vector<Out> out;
+/// @brief Convert a container of In to a container of Out using convert<Out>(in).
+template<
+  template<class...> class OutCont,
+  class Out,
+  template<class...> class InCont,
+  class In>
+inline OutCont<Out> convert(const InCont<In>& in) {
+  OutCont<Out> out;
   out.reserve(in.size());
   for (const auto& item : in) {
-    out.push_back(convert<Out>(item));
+    out.push_back(convert<Out, In>(item));
   }
   return out;
 }

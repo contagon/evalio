@@ -3,13 +3,14 @@
 #include <algorithm>
 #include <memory>
 
-#include "evalio/convert/eigen.h"
 #include "evalio/convert/sophus.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 #include "genz_icp/pipeline/GenZICP.hpp"
 
-class GenZICP: public evalio::Pipeline {
+namespace ev = evalio;
+
+class GenZICP: public ev::Pipeline {
 public:
   GenZICP() : config_() {}
 
@@ -49,33 +50,28 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
+  const ev::SE3 pose() override {
     const auto pose =
       !genz_icp_->poses().empty() ? genz_icp_->poses().back() : Sophus::SE3d();
-    return evalio::convert<evalio::SE3>(pose * lidar_T_imu_);
+    return ev::convert<ev::SE3>(pose * lidar_T_imu_);
   }
 
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
+  const std::map<std::string, std::vector<ev::Point>> map() override {
     std::vector<Eigen::Vector3d> map = genz_icp_->LocalMap();
-    std::vector<evalio::Point> evalio_map;
-    evalio_map.reserve(map.size());
-    for (auto point : map) {
-      evalio_map.push_back(evalio::convert<evalio::Point>(point));
-    }
-    return {{"point", evalio_map}};
+    return {{"point", ev::convert<std::vector, ev::Point>(map)}};
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {}
+  void set_imu_params(ev::ImuParams params) override {}
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     config_.min_range = params.min_range;
     config_.max_range = params.max_range;
     config_.map_cleanup_radius = params.max_range;
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
-    lidar_T_imu_ = evalio::convert<Sophus::SE3d>(T).inverse();
+  void set_imu_T_lidar(ev::SE3 T) override {
+    lidar_T_imu_ = ev::convert<Sophus::SE3d>(T).inverse();
   }
 
   // Doers
@@ -83,37 +79,36 @@ public:
     genz_icp_ = std::make_unique<genz_icp::pipeline::GenZICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  std::map<std::string, std::vector<ev::Point>>
+  add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
-    auto points = evalio::convert<Eigen::Vector3d>(mm.points);
-    auto timestamps = evalio::convert<double>(mm.points);
+    auto points = ev::convert<std::vector, Eigen::Vector3d>(mm.points);
+    auto timestamps = ev::convert<std::vector, double>(mm.points);
 
     // Run through pipeline
-    auto [planar_points, nonplanar_points] =
-      genz_icp_->RegisterFrame(points, timestamps);
+    auto [planar, nonplanar] = genz_icp_->RegisterFrame(points, timestamps);
     auto lidar_T_world = genz_icp_->poses().back().inverse();
 
     // These are all in the global frame, so we need to convert them
     std::transform(
-      planar_points.begin(),
-      planar_points.end(),
-      planar_points.begin(),
+      planar.begin(),
+      planar.end(),
+      planar.begin(),
       [&](auto point) { return lidar_T_imu_ * point; }
     );
     std::transform(
-      nonplanar_points.begin(),
-      nonplanar_points.end(),
-      nonplanar_points.begin(),
+      nonplanar.begin(),
+      nonplanar.end(),
+      nonplanar.begin(),
       [&](auto point) { return lidar_T_imu_ * point; }
     );
 
     // Return the used points
     return {
-      {"nonplanar", evalio::convert<evalio::Point>(nonplanar_points)},
-      {"planar", evalio::convert<evalio::Point>(planar_points)}
+      {"nonplanar", ev::convert<std::vector, ev::Point>(nonplanar)},
+      {"planar", ev::convert<std::vector, ev::Point>(planar)}
     };
   }
 
