@@ -11,7 +11,17 @@ namespace evalio {
 ///
 /// Overloads and specializations may be imported from other files or defined by the user.
 template<typename Out, typename In>
-inline Out convert(const In& in) = delete;
+inline Out convert(const In& in) {
+  // Allow identity conversions by default
+  if constexpr (std::is_same_v<Out, In>) {
+    return in;
+  } else {
+    static_assert(
+      sizeof(Out) == 0,
+      "No conversion defined between the specified types."
+    );
+  }
+}
 
 /// @brief Convert evalio::Point to timestamps as doubles.
 template<>
@@ -29,7 +39,6 @@ inline double convert(const evalio::Point& in) {
 /// - Out::reserve(size_t).
 /// - Out::push_back(Out::value_type).
 /// - convert<Out::value_type, In::value_type>(In::value_type).
-
 template<class Out, class In>
 inline Out convert_iter(const In& in) {
   Out out;

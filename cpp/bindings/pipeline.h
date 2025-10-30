@@ -157,7 +157,7 @@ inline void makeBasePipeline(nb::module_& m) {
     .def(
       "save",
       nb::overload_cast<const evalio::Stamp&, const evalio::SE3&>(
-        &evalio::Pipeline::save
+        &evalio::Pipeline::save<const evalio::SE3&>
       ),
       "stamp"_a,
       "pose"_a,
@@ -166,7 +166,7 @@ inline void makeBasePipeline(nb::module_& m) {
     .def(
       "save",
       nb::overload_cast<const evalio::Stamp&, const evalio::Map&>(
-        &evalio::Pipeline::save
+        &evalio::Pipeline::save<std::vector<evalio::Point>>
       ),
       "stamp"_a,
       "features"_a,
