@@ -96,13 +96,13 @@ public:
       planar.begin(),
       planar.end(),
       planar.begin(),
-      [&](auto point) { return lidar_T_imu_ * point; }
+      [&](auto point) { return lidar_T_world * point; }
     );
     std::transform(
       nonplanar.begin(),
       nonplanar.end(),
       nonplanar.begin(),
-      [&](auto point) { return lidar_T_imu_ * point; }
+      [&](auto point) { return lidar_T_world * point; }
     );
 
     // Save the used points
