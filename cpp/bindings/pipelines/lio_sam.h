@@ -35,14 +35,14 @@ inline Point convert(const lio_sam::PointType& in) {
 
 template<>
 inline lio_sam::PointXYZIRT convert(const ev::Point& in) {
-  return lio_sam::PointXYZIRT {
-    .x = static_cast<float>(in.x),
-    .y = static_cast<float>(in.y),
-    .z = static_cast<float>(in.z),
-    .intensity = static_cast<float>(in.intensity),
-    .ring = static_cast<uint16_t>(in.row),
-    .time = static_cast<float>(in.t.to_sec()),
-  };
+  lio_sam::PointXYZIRT out;
+  out.x = static_cast<float>(in.x);
+  out.y = static_cast<float>(in.y);
+  out.z = static_cast<float>(in.z);
+  out.intensity = static_cast<float>(in.intensity);
+  out.ring = static_cast<uint16_t>(in.row);
+  out.time = static_cast<float>(in.t.to_sec());
+  return out;
 }
 
 // IMU conversions
