@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "evalio/convert/eigen.h"
 #include "evalio/convert/sophus.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
@@ -106,10 +107,9 @@ public:
     );
 
     // Return the used points
-    return {
-      {"nonplanar", ev::convert<std::vector, ev::Point>(nonplanar)},
-      {"planar", ev::convert<std::vector, ev::Point>(planar)}
-    };
+    return ev::convert<std::vector, Eigen::Vector3d>(
+      {{"planar", planar}, {"nonplanar", nonplanar}}
+    );
   }
 
 private:

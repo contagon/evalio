@@ -45,13 +45,9 @@ public:
   }
 
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    std::vector<Eigen::Vector3d> map = kiss_icp_->LocalMap();
-    std::vector<ev::Point> evalio_map;
-    evalio_map.reserve(map.size());
-    for (auto point : map) {
-      evalio_map.push_back(ev::convert<ev::Point>(point));
-    }
-    return {{"point", evalio_map}};
+    return ev::convert<std::vector, Eigen::Vector3d>(
+      {{"point", kiss_icp_->LocalMap()}}
+    );
   }
 
   // Setters
@@ -83,7 +79,7 @@ public:
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
 
     // Convert outputs
-    return {{"point", ev::convert<std::vector, ev::Point>(used_points)}};
+    return ev::convert<std::vector, Eigen::Vector3d>({{"point", used_points}});
   }
 
 private:

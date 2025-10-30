@@ -1,6 +1,8 @@
 // Helper module for converting between the various library types.
 #pragma once
 
+#include <map>
+
 #include "evalio/types.h"
 
 namespace evalio {
@@ -22,6 +24,21 @@ inline OutCont<Out> convert(const InCont<In>& in) {
   out.reserve(in.size());
   for (const auto& item : in) {
     out.push_back(convert<Out, In>(item));
+  }
+  return out;
+}
+
+/// @brief Convert a map of arbitrary containers to a map of std::vector<evalio::Point>.
+///
+/// Useful for converting to final evalio map types.
+/// NOTE: Dict<In = std::vector<Point>> = std::map<std::string, In>
+// TODO: This is a bit confusing... for other versions of convert, we have to specify output when calling, for this one we specify the input type...
+template<template<class...> class InCont, class In>
+inline std::map<std::string, std::vector<evalio::Point>>
+convert(const std::map<std::string, InCont<In>>& in) {
+  std::map<std::string, std::vector<evalio::Point>> out;
+  for (const auto& [key, val] : in) {
+    out[key] = convert<std::vector, evalio::Point>(val);
   }
   return out;
 }
