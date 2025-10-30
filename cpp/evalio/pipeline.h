@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "evalio/convert/base.h"
+#include "evalio/convert/eigen.h"
 #include "evalio/macros.h"
 #include "evalio/types.h"
 
@@ -29,10 +30,14 @@
 
 namespace evalio {
 
+/// @brief A variant type for parameters.
 using Param = std::variant<bool, int, double, std::string>;
-using Map = std::map<std::string, std::vector<Point>>;
-using MapEigen = std::map<std::string, Eigen::MatrixX3d>;
 
+/// @brief A map from string keys to containers of points.
+template<typename T = std::vector<Point>>
+using Map = std::map<std::string, T>;
+
+/// @brief A tuple of a timestamp and arbitrary other types.
 template<typename... T>
 using Stamped = std::tuple<Stamp, T...>;
 
@@ -59,7 +64,7 @@ public:
   }
 
   // Getters
-  virtual const Map map() = 0;
+  virtual const Map<> map() = 0;
 
   // Setters
   virtual void set_imu_params(ImuParams params) = 0;
@@ -99,24 +104,24 @@ public:
     return copy;
   }
 
-  const std::vector<Stamped<Map>> saved_features() {
-    std::vector<Stamped<Map>> copy;
+  const std::vector<Stamped<Map<>>> saved_features() {
+    std::vector<Stamped<Map<>>> copy;
     copy.swap(saved_features_);
     return copy;
   }
 
-  const std::vector<Stamped<Map>> saved_maps() {
-    std::vector<Stamped<Map>> copy;
+  const std::vector<Stamped<Map<>>> saved_maps() {
+    std::vector<Stamped<Map<>>> copy;
     copy.swap(saved_maps_);
     return copy;
   }
 
   // Save as Eigen matrices for easier use in Python
-  const std::vector<Stamped<MapEigen>> saved_features_cleaned() {
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_features_cleaned() {
     return clean(saved_features());
   }
 
-  const std::vector<Stamped<MapEigen>> saved_maps_cleaned() {
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_maps_cleaned() {
     return clean(saved_maps());
   }
 
@@ -126,19 +131,16 @@ public:
 
 protected:
   // Helper to convert std::vector<Point> to Eigen matrices
-  static inline std::vector<Stamped<MapEigen>>
-  clean(const std::vector<Stamped<Map>>& saved) {
-    std::vector<Stamped<MapEigen>> cleaned;
+  static inline std::vector<Stamped<Map<Eigen::MatrixX3d>>>
+  clean(const std::vector<Stamped<Map<>>>& saved) {
+    std::vector<Stamped<Map<Eigen::MatrixX3d>>> cleaned;
+    // Iterate over stamps
     for (const auto& [stamp, original] : saved) {
-      MapEigen eigen;
+      // Iterate over map entries
+      Map<Eigen::MatrixX3d> eigen;
       for (const auto& [key, points] : original) {
-        Eigen::MatrixX3d mat(points.size(), 3);
-        for (size_t i = 0; i < points.size(); ++i) {
-          mat.row(i) = Eigen::Vector3d(points[i].x, points[i].y, points[i].z);
-        }
-        eigen[key] = mat;
+        eigen[key] = convert(points);
       }
-
       cleaned.emplace_back(stamp, eigen);
     }
     return cleaned;
@@ -146,8 +148,8 @@ protected:
 
 private:
   std::vector<Stamped<SE3>> saved_poses_;
-  std::vector<Stamped<Map>> saved_features_;
-  std::vector<Stamped<Map>> saved_maps_;
+  std::vector<Stamped<Map<>>> saved_features_;
+  std::vector<Stamped<Map<>>> saved_maps_;
   std::optional<std::set<VisOption>> vis_options_ = std::nullopt;
 };
 
