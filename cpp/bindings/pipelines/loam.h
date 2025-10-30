@@ -3,11 +3,21 @@
 #include <deque>
 #include <memory>
 
+#include "evalio/convert/eigen.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 #include "loam/loam.h"
 
-class LOAM: public evalio::Pipeline {
+namespace ev = evalio;
+
+namespace evalio {
+template<>
+inline ev::SE3 convert(const loam::Pose3d& from) {
+  return ev::SE3(ev::SO3::fromEigen(from.rotation), from.translation);
+}
+} // namespace evalio
+
+class LOAM: public ev::Pipeline {
 public:
   LOAM() {}
 
@@ -53,16 +63,16 @@ public:
   // clang-format on
 
   // Getters
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
+  const std::map<std::string, std::vector<ev::Point>> map() override {
     return features_to_points(
       transform_features(map_features(), current_estimated_pose)
     );
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {}
+  void set_imu_params(ev::ImuParams params) override {}
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     loam_lidar_params_ = std::make_unique<loam::LidarParams>(
       params.num_rows,
       params.num_columns,
@@ -71,17 +81,16 @@ public:
     );
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
+  void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
   }
 
   // Doers
   void initialize() override {}
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Handle Edge case of the first scan
     if (past_k_scans_.size() == 0) {
       // Extract Features from the first scan
@@ -92,9 +101,9 @@ public:
         std::make_pair(loam::Pose3d::Identity(), scan_features)
       );
       // Initialize the odometry frame pose
-      this->save_estimate(mm.stamp, evalio::SE3::identity());
+      this->save(mm.stamp, evalio::SE3::identity() * lidar_T_imu_);
       // Return the initial scan features
-      return features_to_points(scan_features);
+      this->save(mm.stamp, features_to_points(scan_features));
     }
     // Default case for all iterations except the first
     else {
@@ -120,10 +129,11 @@ public:
       }
       // Update the Odometry frame pose
       current_estimated_pose = current_estimated_pose.compose(map_T_scan);
-      const auto pose_ev = to_se3(current_estimated_pose) * lidar_T_imu_;
-      this->save_estimate(mm.stamp, pose_ev);
+      const auto pose_ev =
+        ev::convert<ev::SE3>(current_estimated_pose) * lidar_T_imu_;
+      this->save(mm.stamp, pose_ev);
       // Return the points associated with the used features
-      return features_to_points(scan_features);
+      this->save(mm.stamp, features_to_points(scan_features));
     }
   }
 
@@ -139,28 +149,18 @@ private:
 
   /// @brief The last k scans (features points only) and their respective
   /// odometry measurements
-  std::deque<std::pair<loam::Pose3d, loam::LoamFeatures<evalio::Point>>>
+  std::deque<std::pair<loam::Pose3d, loam::LoamFeatures<ev::Point>>>
     past_k_scans_;
   ///  @brief The current pose estimate in the odometry frame {odom_T_lidar}
   loam::Pose3d current_estimated_pose {loam::Pose3d::Identity()};
   /// @brief The transform from lidar to IMU
-  evalio::SE3 lidar_T_imu_ {evalio::SE3::identity()};
+  ev::SE3 lidar_T_imu_ {ev::SE3::identity()};
 
 private:
-  /// @brief Converts a loam SE(3) pose type to a evalio SE(3) pose type
-  inline evalio::SE3 to_se3(loam::Pose3d pose) {
-    return evalio::SE3(evalio::SO3::fromEigen(pose.rotation), pose.translation);
-  }
-
-  /// @brief Converts evalio point to eigen
-  inline Eigen::Vector3d to_eigen_point(evalio::Point point) {
-    return {point.x, point.y, point.z};
-  }
-
   /// @brief Transforms a evalio point from its source frame to a target frame
-  inline evalio::Point
-  transform_point(evalio::Point src_pt, loam::Pose3d target_T_source) {
-    auto tgt_pt = target_T_source.act(to_eigen_point(src_pt));
+  inline ev::Point
+  transform_point(ev::Point src_pt, loam::Pose3d target_T_source) {
+    auto tgt_pt = target_T_source.act(ev::convert<Eigen::Vector3d>(src_pt));
     return {
       tgt_pt(0),
       tgt_pt(1),
@@ -175,17 +175,17 @@ private:
 
   /// @brief Helper to aggregate all features (edge + planar) into a single
   /// container
-  std::map<std::string, std::vector<evalio::Point>>
-  features_to_points(const loam::LoamFeatures<evalio::Point> features) {
+  std::map<std::string, std::vector<ev::Point>>
+  features_to_points(const loam::LoamFeatures<ev::Point> features) {
     return {{"planar", features.planar_points}, {"edge", features.edge_points}};
   }
 
   /// @brief Aggregate the history of k most recent scans into a local map in
   /// the frame of the most recent registered
-  loam::LoamFeatures<evalio::Point> map_features() {
+  loam::LoamFeatures<ev::Point> map_features() {
     // Setup accumulators
     auto current_T_map = loam::Pose3d::Identity();
-    auto map_features = loam::LoamFeatures<evalio::Point>();
+    auto map_features = loam::LoamFeatures<ev::Point>();
 
     // Iterate from the most recent scan to the oldest in the stored history
     for (auto it = past_k_scans_.rbegin(); it != past_k_scans_.rend(); ++it) {
@@ -212,11 +212,11 @@ private:
   }
 
   /// @brief Transforms all features into a new frame
-  loam::LoamFeatures<evalio::Point> transform_features(
-    loam::LoamFeatures<evalio::Point> features,
+  loam::LoamFeatures<ev::Point> transform_features(
+    loam::LoamFeatures<ev::Point> features,
     loam::Pose3d target_T_source
   ) {
-    loam::LoamFeatures<evalio::Point> transformed_features;
+    loam::LoamFeatures<ev::Point> transformed_features;
     for (const auto& planar_pt : features.planar_points) {
       transformed_features.planar_points.push_back(
         transform_point(planar_pt, target_T_source)

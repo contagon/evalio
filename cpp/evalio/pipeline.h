@@ -6,6 +6,7 @@
 #include <set>
 #include <variant>
 
+#include "evalio/convert/base.h"
 #include "evalio/macros.h"
 #include "evalio/types.h"
 
@@ -73,14 +74,16 @@ public:
   virtual void add_lidar(LidarMeasurement mm) = 0;
 
   // ------------------------- For saving results ------------------------- //
-  void save(const Stamp& stamp, const SE3& pose) {
-    saved_poses_.emplace_back(stamp, pose);
+  template<typename T>
+  void save(const Stamp& stamp, const T& pose) {
+    saved_poses_.emplace_back(stamp, convert<SE3>(pose));
   }
 
-  void save(const Stamp& stamp, const Map& features) {
+  template<typename T>
+  void save(const Stamp& stamp, const std::map<std::string, T>& features) {
     // Only save if they'll be used
     if (vis_options_ && vis_options_->contains(VisOption::FEATURES)) {
-      saved_features_.emplace_back(stamp, features);
+      saved_features_.emplace_back(stamp, convert_map(features));
     }
 
     // Use this as a hook to save the map as well

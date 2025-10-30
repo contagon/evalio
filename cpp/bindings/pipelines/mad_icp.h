@@ -4,11 +4,14 @@
 #include <memory>
 #include <thread>
 
+#include "evalio/convert/eigen.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 
 // mad-icp stuff
 #include "odometry/pipeline.h"
+
+namespace ev = evalio;
 
 // From here
 // https://github.com/rvp-group/mad-icp/blob/main/mad_icp/configurations/mad_params.py#L31
@@ -28,7 +31,7 @@ struct MadICPConfig {
   double sensor_hz = 10.0;
 };
 
-class MadICP: public evalio::Pipeline {
+class MadICP: public ev::Pipeline {
 public:
   MadICP() {}
 
@@ -58,27 +61,22 @@ public:
   );
 
   // Getters
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
-    auto leaves = mad_icp_->modelLeaves();
-    std::vector<evalio::Point> output_points;
-    output_points.reserve(leaves.size());
-    for (auto point : leaves) {
-      output_points.push_back(to_evalio_point(point));
-    }
-
-    return {{"planar", output_points}};
+  const std::map<std::string, std::vector<ev::Point>> map() override {
+    return ev::convert_map<std::vector<Eigen::Vector3d>>(
+      {{"planar", mad_icp_->modelLeaves()}}
+    );
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {}
+  void set_imu_params(ev::ImuParams params) override {}
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     config_.max_range = params.max_range;
     config_.min_range = params.min_range;
     config_.sensor_hz = params.rate;
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
+  void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
   }
 
@@ -105,17 +103,16 @@ public:
     );
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // filter out points that are out of range
     mm.points.erase(
       // remove_if puts the elements to be removed at the end of the vector
       std::remove_if(
         mm.points.begin(),
         mm.points.end(),
-        [this](const evalio::Point& point) {
+        [this](const ev::Point& point) {
           double range = std::sqrt(
             point.x * point.x + point.y * point.y + point.z * point.z
           );
@@ -126,56 +123,25 @@ public:
     );
 
     // Copy
-    std::vector<Eigen::Vector3d> points;
-    points.reserve(mm.points.size());
-    for (auto point : mm.points) {
-      points.push_back(to_eigen_point(point));
-    }
+    auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
 
     // Run through pipeline
     mad_icp_->compute(mm.stamp.to_sec(), points);
 
     // Save the current estimate
-    const auto pose = to_evalio_se3(mad_icp_->currentPose()) * lidar_T_imu_;
-    this->save_estimate(mm.stamp, pose);
+    const auto pose =
+      ev::convert<ev::SE3>(mad_icp_->currentPose()) * lidar_T_imu_;
+    this->save(mm.stamp, pose);
 
-    auto leaves = mad_icp_->currentLeaves();
-    std::vector<evalio::Point> output_points;
-    output_points.reserve(leaves.size());
-    for (const auto& point : leaves) {
-      output_points.push_back(to_evalio_point(point));
-    }
-
-    return {{"planar", output_points}};
+    // Save current leaves
+    this->save<std::vector<Eigen::Vector3d>>(
+      mm.stamp,
+      {{"planar", mad_icp_->currentLeaves()}}
+    );
   }
 
 private:
   std::unique_ptr<mad::Pipeline> mad_icp_;
   MadICPConfig config_;
-  evalio::SE3 lidar_T_imu_ = evalio::SE3::identity();
-
-  inline evalio::Point to_evalio_point(Eigen::Vector3d point) {
-    return {
-      .x = point[0],
-      .y = point[1],
-      .z = point[2],
-      .intensity = 0.0,
-      .t = evalio::Duration::from_sec(0),
-      .row = 0,
-      .col = 0
-    };
-  }
-
-  inline Eigen::Vector3d to_eigen_point(evalio::Point point) {
-    return {point.x, point.y, point.z};
-  }
-
-  inline evalio::SE3 to_evalio_se3(Eigen::Matrix4d pose) {
-    const auto iso = Eigen::Isometry3d(pose);
-    const auto t = iso.translation();
-    const auto q = Eigen::Quaterniond(iso.linear());
-    const auto rot =
-      evalio::SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
-    return evalio::SE3(rot, t);
-  }
+  ev::SE3 lidar_T_imu_ = ev::SE3::identity();
 };
