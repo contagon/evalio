@@ -11,13 +11,13 @@ permissions:
 
 jobs:
   # Release Please to create releases
-  release-please:
+  release:
     name: Release Please
     runs-on: ubuntu-latest
     outputs:
       # fromJSON to convert string "true"/"false" to boolean - doesn't match what's in release-please docs
       # https://github.com/googleapis/release-please-action/issues/912#issuecomment-2024459449
-      release_created: ${{ steps.release.outputs.release_created }}
+      releases_created: ${{ steps.release.outputs.releases_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
@@ -36,12 +36,12 @@ jobs:
   # Build docs, and deploy release docs if a release was created
   docs:
     name: Docs
-    needs: release-please
+    needs: release
     uses: ./.github/workflows/reusable_docs.yml
     secrets: inherit
     with:
       deploy_latest: true
-      deploy_release: ${{ fromJSON(needs.release-please.outputs.release_created) }}
+      deploy_release: ${{ fromJson(needs.release.outputs.releases_created) }}
 
   # Build all of the wheels
   build:
@@ -54,9 +54,9 @@ jobs:
   # Upload wheels if a release was created
   upload:
     name: Upload
-    needs: [build, release-please]
+    needs: [build, release]
     runs-on: ubuntu-latest
-    if: ${{ fromJSON(needs.release-please.outputs.release_created) }}
+    if: ${{ fromJSON(needs.release.outputs.releases_created) }}
     environment: 
       name: pypi
       url: https://pypi.org/p/evalio
@@ -79,4 +79,4 @@ jobs:
       - name: Github Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./dist/*
+        run: gh release upload ${{ needs.release.outputs.tag_name }} ./dist/*
