@@ -118,9 +118,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<pcl::PointCloud<lio_sam::PointType>>(
-      {{"point", *lio_sam_->getMap()}}
-    );
+    return ev::make_map("map", *lio_sam_->getMap());
   }
 
   // Setters
@@ -169,10 +167,7 @@ public:
     this->save(mm.stamp, pose);
 
     // Save features
-    this->save<pcl::PointCloud<lio_sam::PointType>>(
-      mm.stamp,
-      {{"point", *lio_sam_->getMostRecentFrame()}}
-    );
+    this->save(mm.stamp, "features", *lio_sam_->getMostRecentFrame());
   }
 
 private:

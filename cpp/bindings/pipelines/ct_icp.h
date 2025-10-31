@@ -205,8 +205,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    auto map = ct_icp_->GetLocalMap();
-    return ev::convert_map<decltype(map)>({{"planar", map}});
+    return ev::make_map("planar", ct_icp_->GetLocalMap());
   }
 
   // Setters
@@ -260,10 +259,7 @@ public:
     this->save(mm.stamp, ev::convert<ev::SE3>(pose) * lidar_T_imu_);
 
     // Save the used points
-    this->save<std::vector<ct_icp::Point3D>>(
-      mm.stamp,
-      {{"planar", summary.keypoints}}
-    );
+    this->save(mm.stamp, "planar", summary.keypoints);
 
     scan_idx_++;
   }

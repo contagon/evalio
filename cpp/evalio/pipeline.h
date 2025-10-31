@@ -81,17 +81,49 @@ public:
   virtual void add_lidar(LidarMeasurement mm) = 0;
 
   // ------------------------- For saving results ------------------------- //
+  /// @brief Save an estimated pose at a given timestamp.
+  ///
+  /// This accepts any type that has an impl of convert<SE3>.
   template<typename T>
   void save(const Stamp& stamp, const T& pose) {
     saved_poses_.emplace_back(stamp, convert<SE3>(pose));
   }
 
-  template<typename T>
-  void save(const Stamp& stamp, const std::map<std::string, T>& features) {
+  /// @brief Save features and map at a given timestamp.
+  ///
+  /// This overload is mostly useful for python bindings.
+  void save(const Stamp& stamp, const Map<>& features) {
     // Only convert & save if they'll be visualized
     if (vis_options_
         && vis_options_->find(VisOption::FEATURES) != vis_options_->end()) {
-      saved_features_.emplace_back(stamp, convert_map(features));
+      saved_features_.emplace_back(stamp, features);
+    }
+
+    // Only query the map if it'll be visualized
+    if (vis_options_
+        && vis_options_->find(VisOption::MAP) != vis_options_->end()) {
+      saved_maps_.emplace_back(stamp, map());
+    }
+  }
+
+  /// @brief Save features and map at a given timestamp.
+  ///
+  /// This overload is useful for C++ usage with variadic arguments.
+  /// This allows both (a) delayed conversion of convert<std::vector<Point>, T> and
+  /// (b) a pretty API for passing them.
+  template<typename T, typename... Args>
+  void save(const Stamp& stamp, std::string&& key, T&& feat, Args&&... args) {
+    // Only convert & save if they'll be visualized
+    if (vis_options_
+        && vis_options_->find(VisOption::FEATURES) != vis_options_->end()) {
+      saved_features_.emplace_back(
+        stamp,
+        make_map(
+          std::forward<std::string>(key),
+          std::forward<T>(feat),
+          std::forward<Args>(args)...
+        )
+      );
     }
 
     // Only query the map if it'll be visualized

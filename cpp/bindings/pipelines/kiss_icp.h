@@ -40,9 +40,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"point", kiss_icp_->LocalMap()}}
-    );
+    return ev::make_map("point", kiss_icp_->LocalMap());
   }
 
   // Setters
@@ -76,10 +74,7 @@ public:
     this->save(mm.stamp, kiss_icp_->pose() * lidar_T_imu_);
 
     // Save features
-    this->save<std::vector<Eigen::Vector3d>>(
-      mm.stamp,
-      {{"point", used_points}}
-    );
+    this->save(mm.stamp, "point", used_points);
   }
 
 private:

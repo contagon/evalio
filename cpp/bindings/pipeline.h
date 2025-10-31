@@ -160,13 +160,12 @@ inline void makeBasePipeline(nb::module_& m) {
       "pose"_a,
       "Save the current pose estimate at the given timestamp."
     )
+    // Use a lambda here, as nb::overload_cast has issues finding the non-template methods
     .def(
       "save",
-      nb::overload_cast<
-        const evalio::Stamp&,
-        const evalio::Map<std::vector<evalio::Point>>&>(
-        &evalio::Pipeline::save<std::vector<evalio::Point>>
-      ),
+      [](Pipeline& self, const Stamp& stamp, const Map<>& features) {
+        self.save(stamp, features);
+      },
       "stamp"_a,
       "features"_a,
       "Save the current feature map at the given timestamp."

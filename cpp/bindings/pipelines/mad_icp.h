@@ -62,9 +62,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"planar", mad_icp_->modelLeaves()}}
-    );
+    return ev::make_map("planar", mad_icp_->modelLeaves());
   }
 
   // Setters
@@ -134,10 +132,7 @@ public:
     this->save(mm.stamp, pose);
 
     // Save current leaves
-    this->save<std::vector<Eigen::Vector3d>>(
-      mm.stamp,
-      {{"planar", mad_icp_->currentLeaves()}}
-    );
+    this->save(mm.stamp, "planar", mad_icp_->currentLeaves());
   }
 
 private:

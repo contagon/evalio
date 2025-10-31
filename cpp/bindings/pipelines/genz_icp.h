@@ -53,9 +53,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"map", genz_icp_->LocalMap()}}
-    );
+    return ev::make_map("map", genz_icp_->LocalMap());
   }
 
   // Setters
@@ -106,10 +104,7 @@ public:
     );
 
     // Save the used points
-    this->save<std::vector<Eigen::Vector3d>>(
-      mm.stamp,
-      {{"planar", planar}, {"nonplanar", nonplanar}}
-    );
+    this->save(mm.stamp, "planar", planar, "nonplanar", nonplanar);
   }
 
 private:

@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   # Release Please to create releases
-  release-please:
+  release:
     name: Release Please
     runs-on: ubuntu-latest
     outputs:
@@ -34,12 +34,12 @@ jobs:
   # Build docs, and deploy release docs if a release was created
   docs:
     name: Docs
-    needs: release-please
+    needs: release
     uses: ./.github/workflows/reusable_docs.yml
     secrets: inherit
     with:
       deploy_latest: true
-      deploy_release: ${{ needs.release-please.outputs.release_created }}
+      deploy_release: ${{ needs.release.outputs.release_created }}
 
   # Build all of the wheels
   build:
@@ -52,9 +52,9 @@ jobs:
   # Upload wheels if a release was created
   upload:
     name: Upload
-    needs: [build, release-please]
+    needs: [build, release]
     runs-on: ubuntu-latest
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release.outputs.release_created }}
     environment: 
       name: pypi
       url: https://pypi.org/p/evalio
@@ -77,4 +77,4 @@ jobs:
       - name: Github Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./dist/*
+        run: gh release upload ${{ needs.release.outputs.tag_name }} ./dist/*
