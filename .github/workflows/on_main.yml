@@ -15,6 +15,8 @@ jobs:
     name: Release Please
     runs-on: ubuntu-latest
     outputs:
+      # fromJSON to convert string "true"/"false" to boolean - doesn't match what's in release-please docs
+      # https://github.com/googleapis/release-please-action/issues/912#issuecomment-2024459449
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
@@ -39,7 +41,7 @@ jobs:
     secrets: inherit
     with:
       deploy_latest: true
-      deploy_release: ${{ needs.release-please.outputs.release_created }}
+      deploy_release: ${{ fromJSON(needs.release-please.outputs.release_created) }}
 
   # Build all of the wheels
   build:
@@ -54,7 +56,7 @@ jobs:
     name: Upload
     needs: [build, release-please]
     runs-on: ubuntu-latest
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ fromJSON(needs.release-please.outputs.release_created) }}
     environment: 
       name: pypi
       url: https://pypi.org/p/evalio
