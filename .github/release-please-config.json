@@ -6,6 +6,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "extra-files": [
+        "python/evalio/__init__.py",
         "CMakeLists.txt",
         {
           "type": "json",
