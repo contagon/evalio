@@ -492,7 +492,7 @@ except Exception:
         def new_dataset(self, dataset: Dataset):
             pass
 
-        def new_pipe(self, pipe_name: str):
+        def new_pipe(self, pipe_name: str, feat_num: int):
             pass
 
         def log_pose(self, stamp: Stamp, pose: SE3):
