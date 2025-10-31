@@ -79,4 +79,4 @@ jobs:
       - name: Github Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.release.outputs.tag_name }} ./dist/*
+        run: gh release upload -R ${{ github.repository }} ${{ needs.release.outputs.tag_name }} ./dist/*
