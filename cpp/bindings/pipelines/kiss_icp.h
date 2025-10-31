@@ -60,7 +60,7 @@ public:
     kiss_icp_ = std::make_unique<kiss_icp::pipeline::KissICP>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
   void add_lidar(ev::LidarMeasurement mm) override {
     // Convert inputs
