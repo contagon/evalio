@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/contagon/evalio/compare/v0.4.2...v0.4.3) (2025-10-31)
+
+
+### Bug Fixes
+
+* **ci:** Fix uploading assets to github releases ([5b9f49e](https://github.com/contagon/evalio/commit/5b9f49ee0576c1514775490c8bad6ec99a2c8239))
+
 ## [0.4.2](https://github.com/contagon/evalio/compare/v0.4.1...v0.4.2) (2025-10-31)
 
 
