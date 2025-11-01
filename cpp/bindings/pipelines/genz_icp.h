@@ -52,16 +52,8 @@ public:
   // clang-format on
 
   // Getters
-  const ev::SE3 pose() override {
-    const auto pose =
-      !genz_icp_->poses().empty() ? genz_icp_->poses().back() : Sophus::SE3d();
-    return ev::convert<ev::SE3>(pose * lidar_T_imu_);
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"map", genz_icp_->LocalMap()}}
-    );
+    return ev::make_map("map", genz_icp_->LocalMap());
   }
 
   // Setters
@@ -84,34 +76,35 @@ public:
 
   void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
     auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
     auto timestamps = ev::convert_iter<std::vector<double>>(mm.points);
 
     // Run through pipeline
     auto [planar, nonplanar] = genz_icp_->RegisterFrame(points, timestamps);
-    auto lidar_T_world = genz_icp_->poses().back().inverse();
+    auto world_T_lidar = genz_icp_->poses().back();
+    auto lidar_T_world = world_T_lidar.inverse();
+
+    // Save the estimate
+    this->save(mm.stamp, world_T_lidar * lidar_T_imu_);
 
     // These are all in the global frame, so we need to convert them
     std::transform(
       planar.begin(),
       planar.end(),
       planar.begin(),
-      [&](auto point) { return lidar_T_imu_ * point; }
+      [&](auto point) { return lidar_T_world * point; }
     );
     std::transform(
       nonplanar.begin(),
       nonplanar.end(),
       nonplanar.begin(),
-      [&](auto point) { return lidar_T_imu_ * point; }
+      [&](auto point) { return lidar_T_world * point; }
     );
 
-    // Return the used points
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"planar", planar}, {"nonplanar", nonplanar}}
-    );
+    // Save the used points
+    this->save(mm.stamp, "planar", planar, "nonplanar", nonplanar);
   }
 
 private:

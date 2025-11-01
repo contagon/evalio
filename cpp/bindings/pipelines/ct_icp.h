@@ -204,14 +204,8 @@ public:
   // clang-format on
 
   // Getters
-  const ev::SE3 pose() override {
-    const auto pose = ct_icp_->Trajectory().back();
-    return ev::convert<ev::SE3>(pose) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    auto map = ct_icp_->GetLocalMap();
-    return ev::convert_map<decltype(map)>({{"planar", map}});
+    return ev::make_map("planar", ct_icp_->GetLocalMap());
   }
 
   // Setters
@@ -233,8 +227,7 @@ public:
 
   void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Convert
     auto pc = ev::convert_iter<std::vector<ct_icp::Point3D>>(mm.points);
 
@@ -260,11 +253,14 @@ public:
 
     // Run through pipeline
     const auto summary = ct_icp_->RegisterFrame(pc);
-    scan_idx_++;
 
-    // Return the used points
-    return ev::convert_map<std::vector<ct_icp::Point3D>>(
-      {{"planar", summary.keypoints}}
-    );
+    // Save the estimate
+    const auto pose = ct_icp_->Trajectory().back();
+    this->save(mm.stamp, ev::convert<ev::SE3>(pose) * lidar_T_imu_);
+
+    // Save the used points
+    this->save(mm.stamp, "planar", summary.keypoints);
+
+    scan_idx_++;
   }
 };

@@ -17,7 +17,6 @@ install(TARGETS evalio EXPORT evalioConfig)
 install(EXPORT evalioConfig DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/evalio")
 
 # headers
-# TODO: Verify this is handling nested conversion files correctly
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

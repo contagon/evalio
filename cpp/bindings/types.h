@@ -2,7 +2,9 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/pair.h>
+#include <nanobind/stl/set.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -19,6 +21,13 @@ namespace evalio {
 // TODO: Check if copy/deepcopy works or not
 
 inline void makeTypes(nb::module_& m) {
+  nb::enum_<VisOption>(m, "VisOption", nb::is_flag())
+    .value("MAP", VisOption::MAP, "Visualize the map.")
+    .value("FEATURES", VisOption::FEATURES, "Visualize the features.")
+    .value("SCAN", VisOption::SCAN, "Visualize the scan.")
+    .value("IMAGE", VisOption::IMAGE, "Visualize the image.")
+    .doc() = "Visualization options for the evalio pipeline.";
+
   nb::class_<Duration>(m, "Duration")
     .def_static(
       "from_sec",

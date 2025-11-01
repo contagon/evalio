@@ -63,10 +63,6 @@ public:
   // clang-format on
 
   // Getters
-  const ev::SE3 pose() override {
-    return ev::convert<ev::SE3>(current_estimated_pose) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
     return features_to_points(
       transform_features(map_features(), current_estimated_pose)
@@ -94,8 +90,7 @@ public:
 
   void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Handle Edge case of the first scan
     if (past_k_scans_.size() == 0) {
       // Extract Features from the first scan
@@ -106,9 +101,9 @@ public:
         std::make_pair(loam::Pose3d::Identity(), scan_features)
       );
       // Initialize the odometry frame pose
-      current_estimated_pose = loam::Pose3d::Identity();
+      this->save(mm.stamp, evalio::SE3::identity() * lidar_T_imu_);
       // Return the initial scan features
-      return features_to_points(scan_features);
+      this->save(mm.stamp, features_to_points(scan_features));
     }
     // Default case for all iterations except the first
     else {
@@ -134,8 +129,11 @@ public:
       }
       // Update the Odometry frame pose
       current_estimated_pose = current_estimated_pose.compose(map_T_scan);
+      const auto pose_ev =
+        ev::convert<ev::SE3>(current_estimated_pose) * lidar_T_imu_;
+      this->save(mm.stamp, pose_ev);
       // Return the points associated with the used features
-      return features_to_points(scan_features);
+      this->save(mm.stamp, features_to_points(scan_features));
     }
   }
 
