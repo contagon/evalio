@@ -125,6 +125,7 @@ class OxfordSpires(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            rate=400.0,
             brand="Bosch",
             model="BMI085",
         )
@@ -267,16 +268,18 @@ class OxfordSpires(Dataset):
         gdown.download_folder(id=folder_id, output=str(self.folder), resume=True)
 
     def quick_len(self) -> Optional[int]:
-        # TODO: Missing some of the sequences here, need to figure out multi-folder mcap files
         return {
             "blenheim_palace_01": 4052,
             "blenheim_palace_02": 3674,
             "blenheim_palace_05": 3401,
             "bodleian_library_02": 5007,
+            "christ_church_01": 5742,
+            "christ_church_02": 5928,
             "christ_church_03": 3123,
             "christ_church_05": 8007,
             "keble_college_02": 3007,
             "keble_college_03": 2867,
+            "keble_college_04": 1814,
             "observatory_quarter_01": 2894,
             "observatory_quarter_02": 2755,
         }.get(self.seq_name)

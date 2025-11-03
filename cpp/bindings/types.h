@@ -405,6 +405,7 @@ inline void makeTypes(nb::module_& m) {
         double,
         double,
         Eigen::Vector3d,
+        double,
         std::string,
         std::string>(),
       nb::kw_only(),
@@ -415,6 +416,7 @@ inline void makeTypes(nb::module_& m) {
       "bias_init"_a = 1e-7,
       "integration"_a = 1e-7,
       "gravity"_a = Eigen::Vector3d(0, 0, 9.81),
+      "rate"_a = 100.0,
       "brand"_a = "-",
       "model"_a = "-"
     )

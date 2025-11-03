@@ -262,6 +262,7 @@ struct ImuParams {
   double bias_init = 1e-7;
   double integration = 1e-7;
   Eigen::Vector3d gravity;
+  double rate = 100.0;
   std::string brand = "-";
   std::string model = "-";
 
