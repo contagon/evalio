@@ -461,6 +461,7 @@ inline void makeTypes(nb::module_& m) {
       "Integration standard deviation."
     )
     .def_ro("gravity", &ImuParams::gravity, "Gravity vector as a 3D vector.")
+    .def_ro("rate", &ImuParams::rate, "Rate of the IMU sensor, in Hz.")
     .def_ro("brand", &ImuParams::brand, "Brand of the IMU sensor.")
     .def_ro("model", &ImuParams::model, "Model of the IMU sensor.")
     .def("__repr__", &ImuParams::toString)

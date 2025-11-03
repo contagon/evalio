@@ -283,7 +283,8 @@ struct ImuParams {
     oss << "ImuParams(gyro: " << gyro << ", accel: " << accel
         << ", gyro_bias: " << gyro_bias << ", accel_bias: " << accel_bias
         << ", bias_init: " << bias_init << ", integration: " << integration
-        << ", gravity: [" << gravity.transpose() << "])";
+        << ", gravity: [" << gravity.transpose() << "], " << "rate: " << rate
+        << ")";
     return oss.str();
   }
 };
