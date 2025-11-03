@@ -269,6 +269,7 @@ struct ImuParams {
   double bias_init = 1e-7;
   double integration = 1e-7;
   Eigen::Vector3d gravity;
+  double rate = 100.0;
   std::string brand = "-";
   std::string model = "-";
 
@@ -289,7 +290,8 @@ struct ImuParams {
     oss << "ImuParams(gyro: " << gyro << ", accel: " << accel
         << ", gyro_bias: " << gyro_bias << ", accel_bias: " << accel_bias
         << ", bias_init: " << bias_init << ", integration: " << integration
-        << ", gravity: [" << gravity.transpose() << "])";
+        << ", gravity: [" << gravity.transpose() << "], " << "rate: " << rate
+        << ")";
     return oss.str();
   }
 };

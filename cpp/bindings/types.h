@@ -414,6 +414,7 @@ inline void makeTypes(nb::module_& m) {
         double,
         double,
         Eigen::Vector3d,
+        double,
         std::string,
         std::string>(),
       nb::kw_only(),
@@ -424,6 +425,7 @@ inline void makeTypes(nb::module_& m) {
       "bias_init"_a = 1e-7,
       "integration"_a = 1e-7,
       "gravity"_a = Eigen::Vector3d(0, 0, 9.81),
+      "rate"_a = 100.0,
       "brand"_a = "-",
       "model"_a = "-"
     )
@@ -468,6 +470,7 @@ inline void makeTypes(nb::module_& m) {
       "Integration standard deviation."
     )
     .def_ro("gravity", &ImuParams::gravity, "Gravity vector as a 3D vector.")
+    .def_ro("rate", &ImuParams::rate, "Rate of the IMU sensor, in Hz.")
     .def_ro("brand", &ImuParams::brand, "Brand of the IMU sensor.")
     .def_ro("model", &ImuParams::model, "Model of the IMU sensor.")
     .def("__repr__", &ImuParams::toString)
