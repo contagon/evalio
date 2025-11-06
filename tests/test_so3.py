@@ -22,7 +22,7 @@ def test_constructor():
 
 def test_from_matrix():
     r = R.from_rotvec([0.1, 0.2, 0.3])
-    so3 = SO3.fromMat(r.as_matrix())
+    so3 = SO3.from_mat(r.as_matrix())
     is_close(r, so3)
 
 

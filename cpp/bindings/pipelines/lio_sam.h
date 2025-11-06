@@ -146,7 +146,7 @@ public:
   void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
     config_.lidar_P_imu = lidar_T_imu_.trans;
-    config_.lidar_R_imu = lidar_T_imu_.rot.toEigen();
+    config_.lidar_R_imu = lidar_T_imu_.rot.to_eigen();
   }
 
   // Doers

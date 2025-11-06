@@ -18,7 +18,7 @@ inline SE3 convert(const Sophus::SE3d& in) {
 
 template<>
 inline Sophus::SE3d convert(const SE3& in) {
-  return Sophus::SE3d(Sophus::SO3d(in.rot.toEigen()), in.trans);
+  return Sophus::SE3d(Sophus::SO3d(in.rot.to_eigen()), in.trans);
 }
 
 } // namespace evalio

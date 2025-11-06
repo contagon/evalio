@@ -39,7 +39,7 @@ def test_from_matrix():
     mat[:3, :3] = r.as_matrix()
     mat[:3, 3] = t
 
-    se3 = SE3.fromMat(mat)
+    se3 = SE3.from_mat(mat)
 
     is_close(T(r, t), se3)
 
@@ -56,7 +56,7 @@ def test_to_matrix():
     mat[:3, :3] = r.as_matrix()
     mat[:3, 3] = t
 
-    assert np.allclose(mat, se3.toMat())
+    assert np.allclose(mat, se3.to_mat())
 
 
 def test_log_exp():

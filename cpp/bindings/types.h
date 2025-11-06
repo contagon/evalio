@@ -18,7 +18,7 @@ namespace evalio {
 
 // TODO: Check if copy/deepcopy works or not
 
-inline void makeTypes(nb::module_& m) {
+inline void make_types(nb::module_& m) {
   nb::class_<Duration>(m, "Duration")
     .def_static(
       "from_sec",
@@ -49,7 +49,7 @@ inline void makeTypes(nb::module_& m) {
     )
     .def(nb::self - nb::self, "Compute the difference between two Durations")
     .def(nb::self + nb::self, "Add two Durations")
-    .def("__repr__", &Duration::toString)
+    .def("__repr__", &Duration::to_string)
     .def("__copy__", [](const Duration& self) { return Duration(self); })
     .def(
       "__deepcopy__",
@@ -115,7 +115,7 @@ inline void makeTypes(nb::module_& m) {
     )
     .def(nb::self + Duration(), "Add a Duration to a Stamp")
     .def(nb::self - Duration(), "Subtract a Duration from a Stamp")
-    .def("__repr__", &Stamp::toString)
+    .def("__repr__", &Stamp::to_string)
     .def("__copy__", [](const Stamp& self) { return Stamp(self); })
     .def(
       "__deepcopy__",
@@ -191,7 +191,7 @@ inline void makeTypes(nb::module_& m) {
       "Check for inequality",
       nb::sig("def __ne__(self, arg: object, /) -> bool")
     )
-    .def("__repr__", &Point::toString)
+    .def("__repr__", &Point::to_string)
     .def(
       "__getstate__",
       [](const Point& p) {
@@ -271,7 +271,7 @@ inline void makeTypes(nb::module_& m) {
       "Check for inequality",
       nb::sig("def __ne__(self, arg: object, /) -> bool")
     )
-    .def("__repr__", &LidarMeasurement::toString)
+    .def("__repr__", &LidarMeasurement::to_string)
     .def(
       "__getstate__",
       [](const LidarMeasurement& p) {
@@ -333,7 +333,7 @@ inline void makeTypes(nb::module_& m) {
       "Get the time between two consecutive scans as a Duration. Inverse "
       "of the rate."
     )
-    .def("__repr__", &LidarParams::toString)
+    .def("__repr__", &LidarParams::to_string)
     .doc() =
     "LidarParams is a structure for storing the parameters of a "
     "lidar sensor.";
@@ -371,7 +371,7 @@ inline void makeTypes(nb::module_& m) {
       "Check for inequality",
       nb::sig("def __ne__(self, arg: object, /) -> bool")
     )
-    .def("__repr__", &ImuMeasurement::toString)
+    .def("__repr__", &ImuMeasurement::to_string)
     .def(
       "__getstate__",
       [](const ImuMeasurement& p) {
@@ -464,7 +464,7 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("rate", &ImuParams::rate, "Rate of the IMU sensor, in Hz.")
     .def_ro("brand", &ImuParams::brand, "Brand of the IMU sensor.")
     .def_ro("model", &ImuParams::model, "Model of the IMU sensor.")
-    .def("__repr__", &ImuParams::toString)
+    .def("__repr__", &ImuParams::to_string)
     .doc() = "ImuParams is a structure for storing the parameters of an IMU";
 
   nb::class_<SO3>(m, "SO3")
@@ -482,15 +482,15 @@ inline void makeTypes(nb::module_& m) {
     .def_ro("qw", &SO3::qw, "Scalar component of the quaternion.")
     .def_static("identity", &SO3::identity, "Create an identity rotation.")
     .def_static(
-      "fromMat",
-      &SO3::fromMat,
+      "from_mat",
+      &SO3::from_mat,
       "mat"_a,
       "Create a rotation from a 3x3 rotation matrix."
     )
     .def_static("exp", &SO3::exp, "v"_a, "Create a rotation from a 3D vector.")
     .def("inverse", &SO3::inverse, "Compute the inverse of the rotation.")
     .def("log", &SO3::log, "Compute the logarithm of the rotation.")
-    .def("toMat", &SO3::toMat, "Convert the rotation to a 3x3 matrix.")
+    .def("to_mat", &SO3::to_mat, "Convert the rotation to a 3x3 matrix.")
     .def("rotate", &SO3::rotate, "v"_a, "Rotate a 3D vector by the rotation.")
     .def(nb::self * nb::self, "Compose two rotations.")
     .def(
@@ -503,7 +503,7 @@ inline void makeTypes(nb::module_& m) {
       "Check for inequality",
       nb::sig("def __ne__(self, arg: object, /) -> bool")
     )
-    .def("__repr__", &SO3::toString)
+    .def("__repr__", &SO3::to_string)
     .def("__copy__", [](const SO3& self) { return SO3(self); })
     .def(
       "__deepcopy__",
@@ -542,14 +542,14 @@ inline void makeTypes(nb::module_& m) {
     .def(nb::init<SE3>(), "other"_a, "Copy constructor for SE3.")
     .def_static("identity", &SE3::identity, "Create an identity SE3.")
     .def_static(
-      "fromMat",
-      &SE3::fromMat,
+      "from_mat",
+      &SE3::from_mat,
       "mat"_a,
       "Create a SE3 from a 4x4 transformation matrix."
     )
     .def_ro("rot", &SE3::rot, "Rotation as a SO3 object.")
     .def_ro("trans", &SE3::trans, "Translation as a 3D vector.")
-    .def("toMat", &SE3::toMat, "Convert to a 4x4 matrix.")
+    .def("to_mat", &SE3::to_mat, "Convert to a 4x4 matrix.")
     .def("inverse", &SE3::inverse, "Compute the inverse.")
     .def_static(
       "error",
@@ -579,7 +579,7 @@ inline void makeTypes(nb::module_& m) {
       "Check for inequality",
       nb::sig("def __ne__(self, arg: object, /) -> bool")
     )
-    .def("__repr__", &SE3::toString)
+    .def("__repr__", &SE3::to_string)
     .def("__copy__", [](const SE3& self) { return SE3(self); })
     .def(
       "__deepcopy__",

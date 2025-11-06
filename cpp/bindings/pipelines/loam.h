@@ -13,7 +13,7 @@ namespace ev = evalio;
 namespace evalio {
 template<>
 inline ev::SE3 convert(const loam::Pose3d& from) {
-  return ev::SE3(ev::SO3::fromEigen(from.rotation), from.translation);
+  return ev::SE3(ev::SO3::from_eigen(from.rotation), from.translation);
 }
 } // namespace evalio
 

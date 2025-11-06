@@ -88,7 +88,7 @@ class MultiCampus(Dataset):
         # The NTU sequences use the ATV platform
         # Taken from calib file at: https://mcdviral.github.io/Download.html#calibration
         if "ntu" in self.seq_name:
-            return SE3.fromMat(
+            return SE3.from_mat(
                 np.array(
                     [
                         [
@@ -116,7 +116,7 @@ class MultiCampus(Dataset):
         # The KTH and TUHH sequences use the hand-held platform
         # Taken from calib file at: https://mcdviral.github.io/Download.html#calibration
         elif "kth" in self.seq_name or "tuhh" in self.seq_name:
-            return SE3.fromMat(
+            return SE3.from_mat(
                 np.array(
                     [
                         [

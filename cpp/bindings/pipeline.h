@@ -62,7 +62,7 @@ public:
   }
 }; // namespace evalio
 
-inline void makeBasePipeline(nb::module_& m) {
+inline void make_base_pipeline(nb::module_& m) {
   nb::class_<evalio::Pipeline, PyPipeline>(m, "Pipeline")
     .def(nb::init<>(), "Construct a new pipeline.")
     .def_static("name", &evalio::Pipeline::name, "Name of the pipeline.")

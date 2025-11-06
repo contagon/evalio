@@ -65,7 +65,7 @@ class BotanicGarden(Dataset):
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
         # https://github.com/robot-pesg/BotanicGarden/blob/main/calib/extrinsics/calib_chain.yaml
-        return SE3.fromMat(
+        return SE3.from_mat(
             np.array(
                 [
                     [
