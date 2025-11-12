@@ -35,14 +35,14 @@ inline Point convert(const lio_sam::PointType& in) {
 
 template<>
 inline lio_sam::PointXYZIRT convert(const ev::Point& in) {
-  return lio_sam::PointXYZIRT {
-    .x = static_cast<float>(in.x),
-    .y = static_cast<float>(in.y),
-    .z = static_cast<float>(in.z),
-    .intensity = static_cast<float>(in.intensity),
-    .ring = static_cast<uint16_t>(in.row),
-    .time = static_cast<float>(in.t.to_sec()),
-  };
+  lio_sam::PointXYZIRT out;
+  out.x = static_cast<float>(in.x);
+  out.y = static_cast<float>(in.y);
+  out.z = static_cast<float>(in.z);
+  out.intensity = static_cast<float>(in.intensity);
+  out.ring = static_cast<uint16_t>(in.row);
+  out.time = static_cast<float>(in.t.to_sec());
+  return out;
 }
 
 // IMU conversions
@@ -117,14 +117,8 @@ public:
   // clang-format on
 
   // Getters
-  const ev::SE3 pose() override {
-    return ev::convert<ev::SE3>(lio_sam_->getPose()) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<pcl::PointCloud<lio_sam::PointType>>(
-      {{"point", *lio_sam_->getMap()}}
-    );
+    return ev::make_map("map", *lio_sam_->getMap());
   }
 
   // Setters
@@ -158,8 +152,7 @@ public:
     lio_sam_->addImuMeasurement(ev::convert<lio_sam::Imu>(mm));
   }
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
     auto cloud =
       ev::convert_iter<pcl::PointCloud<lio_sam::PointXYZIRT>>(mm.points)
@@ -169,10 +162,12 @@ public:
     // Run through pipeline
     lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
 
-    // Return features
-    return ev::convert_map<pcl::PointCloud<lio_sam::PointType>>(
-      {{"point", *lio_sam_->getMostRecentFrame()}}
-    );
+    // Save pose
+    const auto pose = ev::convert<ev::SE3>(lio_sam_->getPose()) * lidar_T_imu_;
+    this->save(mm.stamp, pose);
+
+    // Save features
+    this->save(mm.stamp, "features", *lio_sam_->getMostRecentFrame());
   }
 
 private:

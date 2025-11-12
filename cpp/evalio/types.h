@@ -8,6 +8,13 @@
 
 namespace evalio {
 
+enum VisOption {
+  MAP = 1,
+  FEATURES = 2,
+  SCAN = 3,
+  IMAGE = 4,
+};
+
 struct Duration {
   // Also tried saving this in seconds, but found we had occasional floating
   // point errors when adding/subtracting durations.

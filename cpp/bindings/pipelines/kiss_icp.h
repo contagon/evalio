@@ -39,15 +39,8 @@ public:
   );
 
   // Getters
-  const ev::SE3 pose() override {
-    const Sophus::SE3d pose = kiss_icp_->pose() * lidar_T_imu_;
-    return ev::convert<ev::SE3>(pose);
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"point", kiss_icp_->LocalMap()}}
-    );
+    return ev::make_map("point", kiss_icp_->LocalMap());
   }
 
   // Setters
@@ -69,8 +62,7 @@ public:
 
   void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Convert inputs
     auto points = ev::convert_iter<std::vector<Eigen::Vector3d>>(mm.points);
     auto timestamps = ev::convert_iter<std::vector<double>>(mm.points);
@@ -78,10 +70,11 @@ public:
     // Run through pipeline
     const auto& [_, used_points] = kiss_icp_->RegisterFrame(points, timestamps);
 
-    // Convert outputs
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"point", used_points}}
-    );
+    // Save the estimate
+    this->save(mm.stamp, kiss_icp_->pose() * lidar_T_imu_);
+
+    // Save features
+    this->save(mm.stamp, "point", used_points);
   }
 
 private:

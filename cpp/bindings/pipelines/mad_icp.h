@@ -61,14 +61,8 @@ public:
   );
 
   // Getters
-  const ev::SE3 pose() override {
-    return ev::convert<ev::SE3>(mad_icp_->currentPose()) * lidar_T_imu_;
-  }
-
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"planar", mad_icp_->modelLeaves()}}
-    );
+    return ev::make_map("planar", mad_icp_->modelLeaves());
   }
 
   // Setters
@@ -109,8 +103,7 @@ public:
 
   void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<ev::Point>>
-  add_lidar(ev::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // filter out points that are out of range
     mm.points.erase(
       // remove_if puts the elements to be removed at the end of the vector
@@ -133,10 +126,13 @@ public:
     // Run through pipeline
     mad_icp_->compute(mm.stamp.to_sec(), points);
 
-    // Return current leaves
-    return ev::convert_map<std::vector<Eigen::Vector3d>>(
-      {{"planar", mad_icp_->currentLeaves()}}
-    );
+    // Save the current estimate
+    const auto pose =
+      ev::convert<ev::SE3>(mad_icp_->currentPose()) * lidar_T_imu_;
+    this->save(mm.stamp, pose);
+
+    // Save current leaves
+    this->save(mm.stamp, "planar", mad_icp_->currentLeaves());
   }
 
 private:

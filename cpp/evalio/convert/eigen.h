@@ -26,6 +26,14 @@ inline Eigen::Vector3d convert(const Point& in) {
   return {in.x, in.y, in.z};
 }
 
+inline Eigen::MatrixX3d convert(const std::vector<Point>& in) {
+  Eigen::MatrixX3d out(in.size(), 3);
+  for (size_t i = 0; i < in.size(); ++i) {
+    out.row(i) = convert<Eigen::Vector3d>(in[i]);
+  }
+  return out;
+}
+
 // ------------------------- Poses ------------------------- //
 template<>
 inline SE3 convert(const Eigen::Isometry3d& in) {
