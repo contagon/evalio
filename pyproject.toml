@@ -2,7 +2,7 @@
 name = "evalio"
 authors = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
 maintainers = [{ name = "Easton Potokar", email = "contagon6@gmail.com" }]
-version = "0.4.1"
+version = "0.4.2"
 description = "Evaluate Lidar-Inertial Odometry on public datasets"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -15,8 +15,8 @@ dependencies = [
     "numpy",
     "polars>=1.33.1",
     "pyyaml>=6.0",
-    "rapidfuzz>=3.14.1",
-    "rosbags>=0.10.10",
+    "rapidfuzz>=3.12.2",
+    "rosbags>=0.11.0",
     "tqdm>=4.66",
 ]
 keywords = [
@@ -53,8 +53,7 @@ VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 
 [tool.cibuildwheel]
 build = ["cp*-manylinux_x86_64", "cp*-macosx_arm64"]
-skip = ["cp310-*"]
-manylinux-x86_64-image = "manylinux_2_28"
+skip = ["cp310-*", "cp3??t-*"]
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
 build-verbosity = 1
@@ -73,9 +72,6 @@ dev = [
     "types-tabulate>=0.9.0.20240106",
     "types-tqdm>=4.66.0.20240417",
     "pytest>=8.3.5",
-    "scipy>=1.15.2",
-    "scipy-stubs>=1.15.2.1",
-    "bump-my-version>=1.1.1",
     "mkdocs>=1.6.1",
     "mkdocstrings[python]>=0.29.1",
     "mkdocs-material>=9.6.11",
@@ -84,6 +80,8 @@ dev = [
     "mike>=2.1.3",
     "basedpyright>=1.31.4",
     "joblib-stubs>=1.5.2.0.20250831",
+    "scipy>=1.16.2",
+    "scipy-stubs>=1.16.2.4",
 ]
 
 [tool.ruff]
@@ -106,18 +104,3 @@ stubPath = "python/typings"
 reportPrivateUsage = "none"
 reportConstantRedefinition = "none"
 reportUnnecessaryIsInstance = "none"
-
-[tool.bumpversion]
-allow_dirty = false
-commit = true
-message = "Bump version: {current_version} → {new_version}"
-tag = true
-tag_name = "v{new_version}"
-tag_message = "Bump version: {current_version} → {new_version}"
-regex = true
-files = [
-    { filename = "CMakeLists.txt" },
-    { filename = "pyproject.toml" },
-    { filename = "python/evalio/__init__.py" },
-    { filename = "vcpkg.json" },
-]

@@ -176,7 +176,10 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
         f"Temporary bag {bag_temp} already exists, please remove it first"
     )
 
-    with Reader2(bag) as reader, Writer2(bag_temp, storage_plugin=storage) as writer:
+    with (
+        Reader2(bag) as reader,
+        Writer2(bag_temp, version=9, storage_plugin=storage) as writer,
+    ):
         # Gather all the connections (messages) that we want to keep
         conn_write: dict[int, Connection] = {}
         conn_read: list[Connection] = []

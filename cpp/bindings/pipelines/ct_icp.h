@@ -5,9 +5,45 @@
 
 #include "ct_icp/odometry.hpp"
 #include "ct_icp/types.hpp"
+#include "evalio/convert/base.h"
+#include "evalio/convert/eigen.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 
+namespace ev = evalio;
+
+// ------------------------- Handle all conversions ------------------------- //
+namespace evalio {
+template<>
+inline evalio::Point convert(const ct_icp::Point3D& from) {
+  return ev::Point {
+    .x = from.raw_pt.x(),
+    .y = from.raw_pt.y(),
+    .z = from.raw_pt.z(),
+    .intensity = 0.0,
+    .t = ev::Duration::from_nsec(0),
+    .row = 0,
+    .col = 0,
+  };
+}
+
+template<>
+inline ct_icp::Point3D convert(const evalio::Point& from) {
+  ct_icp::Point3D to;
+  to.raw_pt = Eigen::Vector3d(from.x, from.y, from.z);
+  to.pt = to.raw_pt;
+  to.alpha_timestamp = from.t.to_sec();
+  to.index_frame = 0;
+  return to;
+}
+
+template<>
+inline evalio::SE3 convert(const ct_icp::TrajectoryFrame& in) {
+  return ev::SE3(ev::SO3::fromMat(in.begin_R), in.begin_t);
+}
+} // namespace evalio
+
+// ------------------------- Actual Wrapper ------------------------- //
 // Simple enum wrapper to parse all strings -> enum options
 struct CTICPEnumParams {
   std::string motion_compensation;
@@ -91,43 +127,15 @@ struct CTICPEnumParams {
   }
 };
 
-class CTICP: public evalio::Pipeline {
+class CTICP: public ev::Pipeline {
 private:
   std::unique_ptr<ct_icp::Odometry> ct_icp_;
   ct_icp::OdometryOptions config_ =
     ct_icp::OdometryOptions::DefaultDrivingProfile();
   CTICPEnumParams enum_params_;
 
-  evalio::SE3 lidar_T_imu_ = evalio::SE3::identity();
+  ev::SE3 lidar_T_imu_ = ev::SE3::identity();
   size_t scan_idx_ = 0;
-
-  inline evalio::SE3 to_evalio_pose(const ct_icp::TrajectoryFrame& pose) const {
-    return evalio::SE3(evalio::SO3::fromMat(pose.begin_R), pose.begin_t);
-  }
-
-  inline evalio::Point to_evalio_point(const ct_icp::Point3D& point) const {
-    return evalio::Point {
-      .x = point.raw_pt.x(),
-      .y = point.raw_pt.y(),
-      .z = point.raw_pt.z(),
-      .intensity = 0.0,
-      .t = evalio::Duration::from_nsec(0),
-      .row = 0,
-      .col = 0,
-    };
-  }
-
-  inline evalio::Point to_evalio_point(const Eigen::Vector3d& point) const {
-    return evalio::Point {
-      .x = point.x(),
-      .y = point.y(),
-      .z = point.z(),
-      .intensity = 0.0,
-      .t = evalio::Duration::from_nsec(0),
-      .row = 0,
-      .col = 0,
-    };
-  }
 
 public:
   CTICP() {
@@ -196,29 +204,18 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    const auto pose = ct_icp_->Trajectory().back();
-    return to_evalio_pose(pose) * lidar_T_imu_;
-  }
-
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
-    const auto map = ct_icp_->GetLocalMap();
-    std::vector<evalio::Point> ev_points;
-    ev_points.reserve(map.size());
-    for (const auto& point : map) {
-      ev_points.push_back(to_evalio_point(point));
-    }
-    return {{"planar", std::move(ev_points)}};
+  const std::map<std::string, std::vector<ev::Point>> map() override {
+    return ev::make_map("planar", ct_icp_->GetLocalMap());
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {}
+  void set_imu_params(ev::ImuParams params) override {}
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     config_.max_distance = params.max_range;
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
+  void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
   }
 
@@ -228,49 +225,42 @@ public:
     ct_icp_ = std::make_unique<ct_icp::Odometry>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {}
+  void add_imu(ev::ImuMeasurement mm) override {}
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
-    // Set everything up
-    std::vector<ct_icp::Point3D> pc;
-    pc.reserve(mm.points.size());
+  void add_lidar(ev::LidarMeasurement mm) override {
+    // Convert
+    auto pc = ev::convert_iter<std::vector<ct_icp::Point3D>>(mm.points);
 
-    // Figure out min/max timesteps
+    // Normalize timestamps to [0, 1]
     const auto& [min, max] = std::minmax_element(
-      mm.points.cbegin(),
-      mm.points.cend(),
-      [](const evalio::Point& a, const evalio::Point& b) { return a.t < b.t; }
+      pc.cbegin(),
+      pc.cend(),
+      [](const ct_icp::Point3D& a, const ct_icp::Point3D& b) {
+        return a.alpha_timestamp < b.alpha_timestamp;
+      }
     );
 
-    const auto min_t = min->t.to_sec();
-    const auto max_t = max->t.to_sec();
-    const auto normalize = [min_t, max_t](evalio::Duration t) {
-      return (t.to_sec() - min_t) / (max_t - min_t);
+    const auto min_t = min->alpha_timestamp;
+    const auto max_t = max->alpha_timestamp;
+    const auto normalize = [min_t, max_t](double t) {
+      return (t - min_t) / (max_t - min_t);
     };
 
     // Copy
-    for (const auto& point : mm.points) {
-      ct_icp::Point3D p;
-      p.raw_pt = Eigen::Vector3d(point.x, point.y, point.z);
-      p.pt = p.raw_pt;
-      p.alpha_timestamp = normalize(point.t);
-      p.index_frame = scan_idx_;
-      pc.push_back(p);
+    for (auto& p : pc) {
+      p.alpha_timestamp = normalize(p.alpha_timestamp);
     }
 
     // Run through pipeline
     const auto summary = ct_icp_->RegisterFrame(pc);
 
-    // Return the used points
-    std::vector<evalio::Point> ev_planar_points;
-    ev_planar_points.reserve(summary.keypoints.size());
-    for (const auto& point : summary.keypoints) {
-      ev_planar_points.push_back(to_evalio_point(point));
-    }
+    // Save the estimate
+    const auto pose = ct_icp_->Trajectory().back();
+    this->save(mm.stamp, ev::convert<ev::SE3>(pose) * lidar_T_imu_);
+
+    // Save the used points
+    this->save(mm.stamp, "planar", summary.keypoints);
 
     scan_idx_++;
-
-    return {{"planar", ev_planar_points}};
   }
 };

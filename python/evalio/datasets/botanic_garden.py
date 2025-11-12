@@ -107,6 +107,7 @@ class BotanicGarden(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            rate=400.0,
             brand="Xsens",
             model="MTi-680G",
         )

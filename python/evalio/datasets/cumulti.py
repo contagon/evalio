@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 import urllib
 import urllib.request
 import zipfile
@@ -138,6 +139,7 @@ class CUMulti(Dataset):
             bias_init=1e-8,
             integration=1e-8,
             gravity=np.array([0, 0, -9.81]),
+            rate=500.0,
             brand="MicroStrain",
             model="3DM-GQ7",
         )
@@ -227,3 +229,15 @@ class CUMulti(Dataset):
             print("All data downloaded. Removing zip files...")
             for zip_file in [lidar_zip_file, imu_zip_file]:
                 os.remove(zip_file)
+
+    def quick_len(self) -> Optional[int]:
+        return {
+            "kittredge_loop_robot1": 27792,
+            "kittredge_loop_robot2": 24777,
+            "kittredge_loop_robot3": 33774,
+            "kittredge_loop_robot4": 51115,
+            "main_campus_robot1": 19998,
+            "main_campus_robot2": 22299,
+            "main_campus_robot3": 41793,
+            "main_campus_robot4": 55435,
+        }.get(self.seq_name, None)

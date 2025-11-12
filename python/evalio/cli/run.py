@@ -14,7 +14,8 @@ from tqdm.rich import tqdm
 import yaml
 
 from evalio import datasets as ds, pipelines as pl, types as ty
-from evalio.rerun import RerunVis, VisOptions
+from evalio.rerun import RerunVis
+from evalio._cpp.types import VisOption  # type: ignore
 
 from rich import print
 from typing import TYPE_CHECKING, Literal, Optional, Sequence, Annotated
@@ -25,13 +26,18 @@ if TYPE_CHECKING:
     VisStr = str
 else:
     # Use literal instead of enum for cyclopts to parse as value instead of name
-    VisStr = Literal[(tuple(v.value for v in VisOptions))]
+    VisStr = Literal[(tuple(v.__name__[0].lower() for v in VisOption))]
+
+
+def opt2vis(opt: VisStr) -> VisOption:
+    map = {v.__name__[0].lower(): v for v in VisOption}
+    return map[opt]
 
 
 def vis_convert(type_: type, tokens: Sequence[Token]) -> Optional[list[str]]:
     """Custom converter to split strings into individual characters."""
     out: list[str] = []
-    options = [v.value for v in VisOptions]
+    options = [v.__name__[0].lower() for v in VisOption]
     for t in tokens:
         if t.value in options:
             out.append(t.value)
@@ -179,7 +185,7 @@ def run_from_cli(
     # Go through visualization options
     vis_args = None
     if visualize is not None:
-        vis_args = [VisOptions(v) for v in visualize]
+        vis_args = set(opt2vis(v) for v in visualize)
 
     vis = RerunVis(vis_args, [p[0] for p in run_pipelines])
 
@@ -308,10 +314,11 @@ def run_single(
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
     pipe, dataset = output
+    pipe.set_visualizing(vis.args)
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
-    traj.open(exp.file)
-    vis.new_pipe(exp.name)
+    traj.open()
+    vis.new_pipe(exp.name, len(pipe.map()))
 
     time_running = 0.0
     time_max = 0.0
@@ -325,8 +332,7 @@ def run_single(
             time_running += time() - start
         elif isinstance(data, ty.LidarMeasurement):  # type: ignore
             start = time()
-            features = pipe.add_lidar(data)
-            pose = pipe.pose()
+            pipe.add_lidar(data)
             time_running += time() - start
 
             time_total += time_running
@@ -334,13 +340,22 @@ def run_single(
                 time_max = time_running
             time_running = 0.0
 
-            traj.append(data.stamp, pose)
-            vis.log(data, features, pose, pipe)
+            vis.log_scan(data)
 
             loop.update()
-            if loop.n >= exp.sequence_length:
-                loop.close()
-                break
+
+        # Save and visualize any new information
+        for stamp, pose in pipe.saved_estimates():
+            traj.append(stamp, pose)
+            vis.log_pose(stamp, pose)
+        for stamp, features in pipe.saved_features_matrix():
+            vis.log_features(stamp, features)
+        for stamp, map in pipe.saved_maps_matrix():
+            vis.log_map(stamp, map)
+
+        if loop.n >= exp.sequence_length:
+            loop.close()
+            break
 
     loop.close()
     traj.metadata.status = ty.ExperimentStatus.Complete

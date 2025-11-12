@@ -1,0 +1,71 @@
+name: "General checks: Lints, Tests, Docs"
+
+on:
+  workflow_call:
+
+jobs:
+  # check python formatting
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - uses: astral-sh/ruff-action@v3
+        name: Ruff
+
+  # check python typing
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --dev --verbose --all-extras
+      - name: Copy stubs into place
+        run: cp -r .venv/lib/python$(cat .python-version)/site-packages/evalio/_cpp python/evalio
+      - name: Run basedpyright
+        run: uv run basedpyright
+
+  # check cpp formatting
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout
+    - uses: jidicula/clang-format-action@v4.14.0
+      name: Clang-Format
+      with:
+        clang-format-version: '20'
+
+  # run tests on both mac and ubuntu, across all python versions
+  test:
+    runs-on: ${{ matrix.os }}
+    env:
+      UV_NO_EDITABLE: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --dev --verbose
+      - name: Run tests
+        run: uv run pytest -v

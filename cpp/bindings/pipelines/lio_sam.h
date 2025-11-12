@@ -3,53 +3,72 @@
 #include <pcl/point_cloud.h>
 
 #include <map>
-#include <stdexcept>
 #include <string>
 
 #include "LIO-SAM/lio-sam.h"
 #include "LIO-SAM/types.h"
+#include "evalio/convert/base.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 
-inline void
-to_evalio_point(evalio::Point& ev_point, const lio_sam::PointXYZIRT& ls_point) {
-  ev_point.x = ls_point.x;
-  ev_point.y = ls_point.y;
-  ev_point.z = ls_point.z;
-  ev_point.intensity = ls_point.intensity;
-  ev_point.t = evalio::Duration::from_sec(ls_point.time);
-  ev_point.row = ls_point.ring;
+namespace ev = evalio;
+
+// ------------------------- Fill out some converters for custom types ------------------------- //
+namespace evalio {
+// Point conversions
+template<>
+inline Point convert(const lio_sam::PointXYZIRT& in) {
+  return Point {
+    .x = in.x,
+    .y = in.y,
+    .z = in.z,
+    .intensity = in.intensity,
+    .t = ev::Duration::from_sec(in.time),
+    .row = static_cast<uint8_t>(in.ring)
+  };
 }
 
-inline void
-to_evalio_point(evalio::Point& ev_point, const lio_sam::PointType& ls_point) {
-  ev_point.x = ls_point.x;
-  ev_point.y = ls_point.y;
-  ev_point.z = ls_point.z;
-  ev_point.intensity = ls_point.intensity;
+template<>
+inline Point convert(const lio_sam::PointType& in) {
+  return Point {.x = in.x, .y = in.y, .z = in.z, .intensity = in.intensity};
 }
 
-inline void
-to_pcl_point(lio_sam::PointXYZIRT& ls_point, const evalio::Point& ev_point) {
-  ls_point.x = ev_point.x;
-  ls_point.y = ev_point.y;
-  ls_point.z = ev_point.z;
-  ls_point.intensity = ev_point.intensity;
-  ls_point.time = ev_point.t.to_sec();
-  ls_point.ring = ev_point.row;
+template<>
+inline lio_sam::PointXYZIRT convert(const ev::Point& in) {
+  lio_sam::PointXYZIRT out;
+  out.x = static_cast<float>(in.x);
+  out.y = static_cast<float>(in.y);
+  out.z = static_cast<float>(in.z);
+  out.intensity = static_cast<float>(in.intensity);
+  out.ring = static_cast<uint16_t>(in.row);
+  out.time = static_cast<float>(in.t.to_sec());
+  return out;
 }
 
-inline evalio::SE3 to_evalio_se3(lio_sam::Odometry pose) {
-  const auto t = pose.position;
-  const auto q = pose.orientation;
-  const auto rot =
-    evalio::SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
-  return evalio::SE3(rot, t);
+// IMU conversions
+template<>
+inline lio_sam::Imu convert(const ev::ImuMeasurement& in) {
+  return lio_sam::Imu {
+    .stamp = in.stamp.to_sec(),
+    .gyro = in.gyro,
+    .acc = in.accel
+  };
 }
 
-class LioSam: public evalio::Pipeline {
+// SE3 conversions
+template<>
+inline ev::SE3 convert(const lio_sam::Odometry& in) {
+  const auto t = in.position;
+  const auto q = in.orientation;
+  const auto rot = ev::SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
+  return ev::SE3(rot, t);
+}
+} // namespace evalio
+
+// ------------------------- The pipeline impl ------------------------- //
+class LioSam: public ev::Pipeline {
 public:
-  LioSam() : config_(), lidar_T_imu_(evalio::SE3::identity()) {}
+  LioSam() : config_(), lidar_T_imu_(ev::SE3::identity()) {}
 
   // Info
   static std::string version() {
@@ -98,21 +117,12 @@ public:
   // clang-format on
 
   // Getters
-  const evalio::SE3 pose() override {
-    return to_evalio_se3(lio_sam_->getPose()) * lidar_T_imu_;
-  }
-
-  const std::map<std::string, std::vector<evalio::Point>> map() override {
-    auto map = lio_sam_->getMap();
-    std::vector<evalio::Point> evalio_map(map->size());
-    for (std::size_t i = 0; i < map->size(); ++i) {
-      to_evalio_point(evalio_map[i], map->at(i));
-    }
-    return {{"point", evalio_map}};
+  const std::map<std::string, std::vector<ev::Point>> map() override {
+    return ev::make_map("map", *lio_sam_->getMap());
   }
 
   // Setters
-  void set_imu_params(evalio::ImuParams params) override {
+  void set_imu_params(ev::ImuParams params) override {
     config_.imuAccNoise = params.accel;
     config_.imuAccBiasN = params.accel_bias;
     config_.imuGyrNoise = params.gyro;
@@ -120,14 +130,14 @@ public:
     config_.imuGravity = params.gravity[2];
   }
 
-  void set_lidar_params(evalio::LidarParams params) override {
+  void set_lidar_params(ev::LidarParams params) override {
     config_.N_SCAN = params.num_rows;
     config_.Horizon_SCAN = params.num_columns;
     config_.lidarMaxRange = params.max_range;
     config_.lidarMinRange = params.min_range;
   }
 
-  void set_imu_T_lidar(evalio::SE3 T) override {
+  void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
     config_.lidar_P_imu = lidar_T_imu_.trans;
     config_.lidar_R_imu = lidar_T_imu_.rot.toEigen();
@@ -138,41 +148,30 @@ public:
     lio_sam_ = std::make_unique<lio_sam::LIOSAM>(config_);
   }
 
-  void add_imu(evalio::ImuMeasurement mm) override {
-    lio_sam::Imu imuMsg {
-      .stamp = mm.stamp.to_sec(),
-      .gyro = mm.gyro,
-      .acc = mm.accel
-    };
-    lio_sam_->addImuMeasurement(imuMsg);
+  void add_imu(ev::ImuMeasurement mm) override {
+    lio_sam_->addImuMeasurement(ev::convert<lio_sam::Imu>(mm));
   }
 
-  std::map<std::string, std::vector<evalio::Point>>
-  add_lidar(evalio::LidarMeasurement mm) override {
+  void add_lidar(ev::LidarMeasurement mm) override {
     // Set everything up
-    pcl::PointCloud<lio_sam::PointXYZIRT>::Ptr cloud;
-    cloud.reset(new pcl::PointCloud<lio_sam::PointXYZIRT>);
-    cloud->points.resize(mm.points.size());
-
-    // Convert to pcl
-    for (size_t i = 0; i < mm.points.size(); ++i) {
-      to_pcl_point(cloud->points[i], mm.points[i]);
-    }
+    auto cloud =
+      ev::convert_iter<pcl::PointCloud<lio_sam::PointXYZIRT>>(mm.points)
+        // NOTE: This likely causes a copy, see if we can avoid that later
+        .makeShared();
 
     // Run through pipeline
     lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
 
-    // Return features
-    auto used_points = lio_sam_->getMostRecentFrame();
-    std::vector<evalio::Point> result(used_points->points.size());
-    for (size_t i = 0; i < used_points->points.size(); ++i) {
-      to_evalio_point(result[i], used_points->points[i]);
-    }
-    return {{"point", result}};
+    // Save pose
+    const auto pose = ev::convert<ev::SE3>(lio_sam_->getPose()) * lidar_T_imu_;
+    this->save(mm.stamp, pose);
+
+    // Save features
+    this->save(mm.stamp, "features", *lio_sam_->getMostRecentFrame());
   }
 
 private:
   std::unique_ptr<lio_sam::LIOSAM> lio_sam_;
   lio_sam::LioSamParams config_;
-  evalio::SE3 lidar_T_imu_;
+  ev::SE3 lidar_T_imu_;
 };

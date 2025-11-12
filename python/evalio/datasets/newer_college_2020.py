@@ -89,6 +89,7 @@ class NewerCollege2020(Dataset):
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
+            rate=100.0,
             brand="TDK",
             model="ICM-20948",
         )
@@ -192,4 +193,5 @@ class NewerCollege2020(Dataset):
         return {
             "short_experiment": 15302,
             "long_experiment": 26560,
+            "parkland_mound": 5009,
         }.get(self.seq_name)

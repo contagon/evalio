@@ -164,6 +164,7 @@ class MultiCampus(Dataset):
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
+            rate=400.0,
             brand="VectorNav",
             model=model,
         )
