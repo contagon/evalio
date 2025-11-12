@@ -228,11 +228,7 @@ try:
                 convert(self.trajectory, color=self.colors[-1]),
             )
 
-        def log_map(
-            self,
-            stamp: Stamp,
-            map: dict[str, NDArray[np.float64]],
-        ):
+        def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
             if self.args is None:
                 return
 
@@ -248,11 +244,7 @@ try:
                 for (k, p), c in zip(map.items(), self.colors):
                     self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
 
-        def log_features(
-            self,
-            stamp: Stamp,
-            features: dict[str, NDArray[np.float64]],
-        ):
+        def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
             if self.args is None:
                 return
 
@@ -495,16 +487,14 @@ except Exception:
         def new_pipe(self, pipe_name: str, feat_num: int):
             pass
 
+        def log_scan(self, data: LidarMeasurement):
+            pass
+
         def log_pose(self, stamp: Stamp, pose: SE3):
             pass
 
-        def log_scan(
-            self,
-            data: LidarMeasurement,
-            features: dict[str, list[Point]],
-            pipe: Pipeline,
-        ):
+        def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
             pass
 
-        def is_visualizing(self) -> bool:
-            return False
+        def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
+            pass
