@@ -36,11 +36,11 @@ struct Duration {
     return nsec;
   }
 
-  std::string toString() const {
-    return "Duration(" + toStringBrief() + ")";
+  std::string to_string() const {
+    return "Duration(" + to_string_brief() + ")";
   }
 
-  std::string toStringBrief() const {
+  std::string to_string_brief() const {
     return std::to_string(to_sec());
   }
 
@@ -95,11 +95,11 @@ struct Stamp {
     return double(sec) + double(nsec) * 1e-9;
   }
 
-  std::string toString() const {
-    return "Stamp(" + toStringBrief() + ")";
+  std::string to_string() const {
+    return "Stamp(" + to_string_brief() + ")";
   }
 
-  std::string toStringBrief() const {
+  std::string to_string_brief() const {
     size_t n_zeros = 9;
     auto nsec_str = std::to_string(nsec);
     auto nsec_str_leading =
@@ -146,7 +146,7 @@ struct Point {
   uint8_t row = 0;
   uint16_t col = 0;
 
-  std::string toString() const {
+  std::string to_string() const {
     return "Point(x: " + std::to_string(x) + ", y: " + std::to_string(y)
       + ", z: " + std::to_string(z) + ", intensity: "
       + std::to_string(intensity) + ", t: " + std::to_string(t.to_sec())
@@ -173,9 +173,9 @@ struct LidarMeasurement {
   LidarMeasurement(Stamp stamp, std::vector<Point> points) :
     stamp(stamp), points(points) {}
 
-  std::string toString() const {
+  std::string to_string() const {
     std::ostringstream oss;
-    oss << "LidarMeasurement(stamp: " << stamp.toStringBrief()
+    oss << "LidarMeasurement(stamp: " << stamp.to_string_brief()
         << ", num_points: " << points.size() << ")";
     return oss.str();
   }
@@ -227,7 +227,7 @@ struct LidarParams {
   std::string brand = "-";
   std::string model = "-";
 
-  std::string toString() const {
+  std::string to_string() const {
     return "LidarParams(rows: " + std::to_string(num_rows)
       + ", cols: " + std::to_string(num_columns) + ", min_range: "
       + std::to_string(min_range) + ", max_range: " + std::to_string(max_range)
@@ -244,9 +244,9 @@ struct ImuMeasurement {
   Eigen::Vector3d gyro;
   Eigen::Vector3d accel;
 
-  std::string toString() const {
+  std::string to_string() const {
     std::ostringstream oss;
-    oss << "ImuMeasurement(stamp: " << stamp.toStringBrief() << ", gyro: ["
+    oss << "ImuMeasurement(stamp: " << stamp.to_string_brief() << ", gyro: ["
         << gyro.transpose() << "]"
         << ", accel: [" << accel.transpose() << "])";
     return oss.str();
@@ -285,7 +285,7 @@ struct ImuParams {
     return imu_params;
   }
 
-  std::string toString() const {
+  std::string to_string() const {
     std::ostringstream oss;
     oss << "ImuParams(gyro: " << gyro << ", accel: " << accel
         << ", gyro_bias: " << gyro_bias << ", accel_bias: " << accel_bias
@@ -302,11 +302,11 @@ struct SO3 {
   double qz;
   double qw;
 
-  Eigen::Quaterniond toEigen() const {
+  Eigen::Quaterniond to_eigen() const {
     return Eigen::Quaterniond(qw, qx, qy, qz);
   }
 
-  static SO3 fromEigen(const Eigen::Quaterniond& q) {
+  static SO3 from_eigen(const Eigen::Quaterniond& q) {
     return SO3 {.qx = q.x(), .qy = q.y(), .qz = q.z(), .qw = q.w()};
   }
 
@@ -314,8 +314,8 @@ struct SO3 {
     return SO3 {.qx = 0, .qy = 0, .qz = 0, .qw = 1};
   }
 
-  static SO3 fromMat(const Eigen::Matrix3d& R) {
-    return fromEigen(Eigen::Quaterniond(R));
+  static SO3 from_mat(const Eigen::Matrix3d& R) {
+    return from_eigen(Eigen::Quaterniond(R));
   }
 
   SO3 inverse() const {
@@ -323,11 +323,11 @@ struct SO3 {
   }
 
   SO3 operator*(const SO3& other) const {
-    return fromEigen(toEigen() * other.toEigen());
+    return from_eigen(to_eigen() * other.to_eigen());
   }
 
   Eigen::Vector3d rotate(const Eigen::Vector3d& v) const {
-    return toEigen() * v;
+    return to_eigen() * v;
   }
 
   static Eigen::Matrix3d hat(const Eigen::Vector3d& xi) {
@@ -339,25 +339,25 @@ struct SO3 {
   static SO3 exp(const Eigen::Vector3d& v) {
     Eigen::AngleAxisd axis(v.norm(), v.normalized());
     Eigen::Quaterniond q(axis);
-    return fromEigen(q);
+    return from_eigen(q);
   }
 
   Eigen::Vector3d log() const {
-    Eigen::Quaterniond q = toEigen();
+    Eigen::Quaterniond q = to_eigen();
     auto axis = Eigen::AngleAxisd(q);
     return axis.angle() * axis.axis();
   }
 
-  Eigen::Matrix3d toMat() const {
-    return toEigen().toRotationMatrix();
+  Eigen::Matrix3d to_mat() const {
+    return to_eigen().toRotationMatrix();
   }
 
-  std::string toString() const {
+  std::string to_string() const {
     return "SO3(x: " + std::to_string(qx) + ", y: " + std::to_string(qy)
       + ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw) + ")";
   }
 
-  std::string toStringBrief() const {
+  std::string to_string_brief() const {
     return "x: " + std::to_string(qx) + ", y: " + std::to_string(qy)
       + ", z: " + std::to_string(qz) + ", w: " + std::to_string(qw);
   }
@@ -381,13 +381,13 @@ struct SE3 {
     return SE3(SO3::identity(), Eigen::Vector3d::Zero());
   }
 
-  static SE3 fromMat(const Eigen::Matrix4d& T) {
-    return SE3(SO3::fromMat(T.block<3, 3>(0, 0)), T.block<3, 1>(0, 3));
+  static SE3 from_mat(const Eigen::Matrix4d& T) {
+    return SE3(SO3::from_mat(T.block<3, 3>(0, 0)), T.block<3, 1>(0, 3));
   }
 
-  Eigen::Matrix4d toMat() const {
+  Eigen::Matrix4d to_mat() const {
     Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-    T.block<3, 3>(0, 0) = rot.toMat();
+    T.block<3, 3>(0, 0) = rot.to_mat();
     T.block<3, 1>(0, 3) = trans;
     return T;
   }
@@ -451,9 +451,9 @@ struct SE3 {
     return SE3(rot * other.rot, rot.rotate(other.trans) + trans);
   }
 
-  std::string toString() const {
+  std::string to_string() const {
     std::ostringstream oss;
-    oss << "SE3(rot: [" << rot.toStringBrief() << "], "
+    oss << "SE3(rot: [" << rot.to_string_brief() << "], "
         << "t: [" << trans.transpose() << "])";
     return oss.str();
   }

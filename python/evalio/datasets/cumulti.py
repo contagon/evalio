@@ -114,7 +114,7 @@ class CUMulti(Dataset):
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
         # Supplied by CU-Multi Authors
-        return SE3.fromMat(
+        return SE3.from_mat(
             np.array(
                 [
                     [-1.0, 0.0, 0.0, -0.058038],

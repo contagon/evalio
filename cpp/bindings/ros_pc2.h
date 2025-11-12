@@ -468,7 +468,7 @@ inline bool closest(const Stamp& idx, const Stamp& a, const Stamp& b) {
 }
 
 // ---------------------- Create python bindings ---------------------- //
-inline void makeConversions(nb::module_& m) {
+inline void make_conversions(nb::module_& m) {
   nb::enum_<DataType>(m, "DataType")
     .value("UINT8", DataType::UINT8)
     .value("INT8", DataType::INT8)

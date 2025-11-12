@@ -86,7 +86,7 @@ class HeLiPR(Dataset):
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
         return SE3(
-            SO3.fromMat(
+            SO3.from_mat(
                 np.array(
                     [
                         [0.999715495593027, 0.0223448061210468, -0.00834490926264448],

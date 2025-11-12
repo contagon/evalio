@@ -32,7 +32,7 @@ using namespace nb::literals;
 #endif
 
 namespace evalio {
-inline void makePipelines(nb::module_& m) {
+inline void make_pipelines(nb::module_& m) {
   // List all the pipelines here
 #ifdef EVALIO_KISS_ICP
   nb::class_<KissICP, evalio::Pipeline>(m, "KissICP")
