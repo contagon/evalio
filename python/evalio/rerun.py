@@ -7,7 +7,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from evalio.datasets import Dataset
-from evalio.pipelines import Pipeline
 from evalio.types import (
     SE3,
     GroundTruth,
