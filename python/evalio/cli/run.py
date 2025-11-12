@@ -378,9 +378,9 @@ def run_single(
         for stamp, pose in pipe.saved_estimates():
             traj.append(stamp, pose)
             vis.log_pose(stamp, pose)
-        for stamp, features in pipe.saved_features_cleaned():
+        for stamp, features in pipe.saved_features_eigen():
             vis.log_features(stamp, features)
-        for stamp, map in pipe.saved_maps_cleaned():
+        for stamp, map in pipe.saved_maps_eigen():
             vis.log_map(stamp, map)
 
         if loop.n >= exp.sequence_length:

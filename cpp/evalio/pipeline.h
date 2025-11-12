@@ -153,12 +153,12 @@ public:
   }
 
   // Save as Eigen matrices for easier use in Python
-  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_features_cleaned() {
-    return clean(saved_features());
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_features_eigen() {
+    return eigen(saved_features());
   }
 
-  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_maps_cleaned() {
-    return clean(saved_maps());
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_maps_eigen() {
+    return eigen(saved_maps());
   }
 
   void set_visualizing(const std::optional<std::set<VisOption>>& options) {
@@ -168,7 +168,7 @@ public:
 protected:
   // Helper to convert std::vector<Point> to Eigen matrices
   static inline std::vector<Stamped<Map<Eigen::MatrixX3d>>>
-  clean(const std::vector<Stamped<Map<>>>& saved) {
+  eigen(const std::vector<Stamped<Map<>>>& saved) {
     std::vector<Stamped<Map<Eigen::MatrixX3d>>> cleaned;
     // Iterate over stamps
     for (const auto& [stamp, original] : saved) {
