@@ -92,14 +92,14 @@ inline void makeBasePipeline(nb::module_& m) {
       "Most recent stamped maps. Will be removed after this method is called."
     )
     .def(
-      "saved_features_eigen",
-      &evalio::Pipeline::saved_features_eigen,
-      "Most recent stamped feature scans as Eigen matrices. Will be removed after this method is called."
+      "saved_features_matrix",
+      &evalio::Pipeline::saved_features_matrix,
+      "Most recent stamped feature scans as matrices. Will be removed after this method is called."
     )
     .def(
-      "saved_maps_eigen",
-      &evalio::Pipeline::saved_maps_eigen,
-      "Most recent stamped maps as Eigen matrices. Will be removed after this method is called."
+      "saved_maps_matrix",
+      &evalio::Pipeline::saved_maps_matrix,
+      "Most recent stamped maps as matrices. Will be removed after this method is called."
     )
     .def("map", &evalio::Pipeline::map, "Map of the environment.")
     .def(

@@ -153,11 +153,11 @@ public:
   }
 
   // Save as Eigen matrices for easier use in Python
-  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_features_eigen() {
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_features_matrix() {
     return eigen(saved_features());
   }
 
-  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_maps_eigen() {
+  const std::vector<Stamped<Map<Eigen::MatrixX3d>>> saved_maps_matrix() {
     return eigen(saved_maps());
   }
 
