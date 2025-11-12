@@ -1,15 +1,12 @@
-from dataclasses import dataclass
-from typing import Any, Literal, Optional, Sequence, TypedDict, cast, overload
+from typing import Any, Literal, Optional, TypedDict, cast, overload
 from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
-import typer
 from numpy.typing import NDArray
 
 from evalio.datasets import Dataset
-from evalio.pipelines import Pipeline
 from evalio.types import (
     SE3,
     GroundTruth,
@@ -22,6 +19,7 @@ from evalio.types import (
 )
 from evalio.utils import print_warning
 from evalio._cpp.helpers import closest  # type: ignore
+from evalio._cpp.types import VisOption  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -46,33 +44,6 @@ GT_COLOR = (
 )  # Color for ground truth in rerun
 
 
-@dataclass
-class VisArgs:
-    show: bool
-    map: bool = False
-    image: bool = False
-    scan: bool = False
-    features: bool = False
-
-    @staticmethod
-    def parse(opts: str) -> "VisArgs":
-        out = VisArgs(show=True)
-        for o in opts:
-            match o:
-                case "m":
-                    out.map = True
-                case "i":
-                    out.image = True
-                case "s":
-                    out.scan = True
-                case "f":
-                    out.features = True
-                case _:
-                    raise typer.BadParameter(f"Unknown visualization option {o}")
-
-        return out
-
-
 try:
     import rerun as rr
     import rerun.blueprint as rrb
@@ -83,20 +54,22 @@ try:
     )
 
     class RerunVis:  # type: ignore
-        def __init__(self, args: VisArgs, pipeline_names: list[str]):
+        def __init__(self, args: Optional[set[VisOption]], pipeline_names: list[str]):
             self.args = args
-
-            # To be set during new_recording
-            self.lidar_params: Optional[LidarParams] = None
-            self.gt: Optional[Trajectory[GroundTruth]] = None
             self.pipeline_names = pipeline_names
 
-            # To be found during log
-            self.gt_o_T_imu_o: Optional[SE3] = None
-            self.trajectory: Optional[Trajectory] = None
+            # To be set during new_dataset
+            self.lidar_params: Optional[LidarParams] = None
             self.imu_T_lidar: Optional[SE3] = None
+            self.gt: Optional[Trajectory[GroundTruth]] = None
+
+            # To be set during new_pipe
+            self.trajectory: Optional[Trajectory] = None
             self.pn: Optional[str] = None
             self.colors: Optional[list[tuple[float, float, float]]] = None
+
+            # To be set during log
+            self.gt_o_T_imu_o: Optional[SE3] = None
 
             directions = np.array(
                 [
@@ -127,7 +100,7 @@ try:
                 for n in self.pipeline_names
             }
 
-            if self.args.image:
+            if self.args is not None and VisOption.IMAGE in self.args:
                 return rrb.Blueprint(
                     rrb.Vertical(
                         rrb.Spatial2DView(),  # image
@@ -139,7 +112,7 @@ try:
                 return rrb.Blueprint(rrb.Spatial3DView(overrides=overrides))
 
         def new_dataset(self, dataset: Dataset):
-            if not self.args.show:
+            if self.args is None:
                 return
 
             self.recording_params: RerunArgs = {
@@ -157,63 +130,86 @@ try:
 
             self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
-        def new_pipe(self, pipe_name: str):
-            if not self.args.show:
+            # reset other variables
+            self.pn = None
+            self.gt_o_T_imu_o = None
+            self.trajectory = None
+            self.colors = None
+
+        def new_pipe(self, pipe_name: str, feat_num: int):
+            if self.args is None:
                 return
 
             if self.imu_T_lidar is None:
-                raise ValueError(
-                    "You needed to initialize the recording before adding a pipeline!"
-                )
+                raise ValueError("You needed to add a dataset before a pipeline!")
+
+            # Define colors for this pipeline
+            # features/map colors + trajectory + scan
+            self.colors = distinctipy.get_colors(
+                feat_num + 2,
+                exclude_colors=self.used_colors,
+                rng=0,
+            )
+            self.used_colors.extend(self.colors)
 
             # First reconnect to make sure we're connected (happens b/c of multithread passing)
             self.rec = rr.RecordingStream(**self.recording_params)
             self.rec.connect_grpc()
 
             self.pn = pipe_name
-            self.gt_o_T_imu_o = None
-            self.colors = None
             self.trajectory = Trajectory(stamps=[], poses=[])
             self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
 
-        def log(
-            self,
-            data: LidarMeasurement,
-            features: dict[str, list[Point]],
-            pose: SE3,
-            pipe: Pipeline,
-        ):
-            if not self.args.show:
+            self.gt_o_T_imu_o = None
+
+        def log_scan(self, data: LidarMeasurement):
+            if self.args is None:
                 return
 
-            if self.colors is None:
-                # features/map colors + trajectory + scan
-                self.colors = distinctipy.get_colors(
-                    len(features) + 2,
-                    exclude_colors=self.used_colors,
-                    rng=0,
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a dataset before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
+
+            # Include the original point cloud
+            if VisOption.SCAN in self.args:
+                self.rec.log(
+                    f"{self.pn}/imu/lidar/scan",
+                    convert(data, color=self.colors[-2], radii=0.08),
                 )
-                self.used_colors.extend(self.colors)
+
+            # Include the intensity image
+            if VisOption.IMAGE in self.args:
+                intensity = np.array([d.intensity for d in data.points])
+                # row major order
+                image = intensity.reshape(
+                    (self.lidar_params.num_rows, self.lidar_params.num_columns)
+                )
+                self.rec.log("image", rr.Image(image))
+
+        def log_pose(self, stamp: Stamp, pose: SE3):
+            if self.args is None:
+                return
 
             if self.lidar_params is None or self.gt is None:
-                raise ValueError(
-                    "You needed to initialize the recording before stepping!"
-                )
-            if self.pn is None or self.trajectory is None:
+                raise ValueError("You needed to add a dataset before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
             if self.gt_o_T_imu_o is None:
-                if data.stamp < self.gt.stamps[0]:
+                if stamp < self.gt.stamps[0]:
                     pass
                 else:
                     imu_o_T_imu_0 = pose
                     # find the ground truth pose that is temporally closest to the imu pose
                     gt_index = 0
-                    while self.gt.stamps[gt_index] < data.stamp:
+                    while self.gt.stamps[gt_index] < stamp:
                         gt_index += 1
                     if not closest(
-                        data.stamp,
+                        stamp,
                         self.gt.stamps[gt_index - 1],
                         self.gt.stamps[gt_index],
                     ):
@@ -223,43 +219,49 @@ try:
                     self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
 
             # Always include the pose
-            self.rec.set_time("evalio_time", timestamp=data.stamp.to_sec())
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
             self.rec.log(f"{self.pn}/imu", convert(pose))
-            self.trajectory.append(data.stamp, pose)
+            self.trajectory.append(stamp, pose)
             self.rec.log(
                 f"{self.pn}/trajectory",
                 convert(self.trajectory, color=self.colors[-1]),
             )
 
+        def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
+            if self.args is None:
+                return
+
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
+
+            # Include the current map
+            if VisOption.MAP in self.args:
+                for (k, p), c in zip(map.items(), self.colors):
+                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
+
+        def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
+            if self.args is None:
+                return
+
+            if self.lidar_params is None or self.gt is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+            if self.pn is None or self.trajectory is None or self.colors is None:
+                raise ValueError("You needed to add a pipeline before stepping!")
+
+            self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
+
             # Features from the scan
-            if self.args.features:
+            if VisOption.FEATURES in self.args:
                 if len(features) > 0:
                     for (k, p), c in zip(features.items(), self.colors):
                         self.rec.log(
                             f"{self.pn}/imu/lidar/{k}",
-                            convert(list(p), color=c, radii=0.12),
+                            convert(p, color=c, radii=0.12),
                         )
-
-            # Include the current map
-            if self.args.map:
-                for (k, p), c in zip(pipe.map().items(), self.colors):
-                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
-
-            # Include the original point cloud
-            if self.args.scan:
-                self.rec.log(
-                    f"{self.pn}/imu/lidar/scan",
-                    convert(data, color=self.colors[-2], radii=0.08),
-                )
-
-            # Include the intensity image
-            if self.args.image:
-                intensity = np.array([d.intensity for d in data.points])
-                # row major order
-                image = intensity.reshape(
-                    (self.lidar_params.num_rows, self.lidar_params.num_columns)
-                )
-                self.rec.log("image", rr.Image(image))
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -309,7 +311,12 @@ try:
     @overload
     def convert(
         obj: NDArray[np.float64],
-        color: Optional[Literal["z"] | NDArray[np.float64]] = None,
+        color: Optional[
+            Literal["z"]
+            | NDArray[np.float64]
+            | tuple[int, int, int]
+            | tuple[float, float, float]
+        ] = None,
         radii: Optional[float] = None,
     ) -> rr.Points3D:
         """Convert an (n, 3) numpy array to a rerun Points3D.
@@ -467,21 +474,26 @@ try:
 except Exception:
 
     class RerunVis:
-        def __init__(self, args: VisArgs, pipeline_names: list[str]) -> None:
-            if args.show:
+        def __init__(
+            self, args: Optional[set[VisOption]], pipeline_names: list[str]
+        ) -> None:
+            if args is not None:
                 print_warning("Rerun not found, visualization disabled")
 
         def new_dataset(self, dataset: Dataset):
             pass
 
-        def log(
-            self,
-            data: LidarMeasurement,
-            features: Sequence[Point],
-            pose: SE3,
-            pipe: Pipeline,
-        ):
+        def new_pipe(self, pipe_name: str, feat_num: int):
             pass
 
-        def new_pipe(self, pipe_name: str):
+        def log_scan(self, data: LidarMeasurement):
+            pass
+
+        def log_pose(self, stamp: Stamp, pose: SE3):
+            pass
+
+        def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
+            pass
+
+        def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
             pass

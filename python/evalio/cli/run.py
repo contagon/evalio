@@ -1,5 +1,6 @@
 import multiprocessing
 from pathlib import Path
+from evalio._cpp.types import VisOption  # type: ignore
 from evalio.cli.completions import DatasetOpt, PipelineOpt
 from evalio.types.base import Trajectory
 from evalio.utils import print_warning
@@ -7,7 +8,7 @@ from tqdm.rich import tqdm
 import yaml
 
 from evalio import datasets as ds, pipelines as pl, types as ty
-from evalio.rerun import RerunVis, VisArgs
+from evalio.rerun import RerunVis
 
 # from .stats import evaluate
 
@@ -21,26 +22,22 @@ from time import time
 app = typer.Typer()
 
 
-# def save_config(
-#     pipelines: Sequence[PipelineBuilder],
-#     datasets: Sequence[DatasetBuilder],
-#     output: Path,
-# ):
-#     # If it's just a file, don't save the entire config file
-#     if output.suffix == ".csv":
-#         return
+def parse_vis(opts: str) -> set[VisOption]:
+    out = set[VisOption]()
+    for o in opts:
+        match o:
+            case "m":
+                out.add(VisOption.MAP)
+            case "i":
+                out.add(VisOption.IMAGE)
+            case "s":
+                out.add(VisOption.SCAN)
+            case "f":
+                out.add(VisOption.FEATURES)
+            case _:
+                raise typer.BadParameter(f"Unknown visualization option {o}")
 
-#     print(f"Saving config to {output}")
-
-#     output.mkdir(parents=True, exist_ok=True)
-#     path = output / "config.yaml"
-
-#     out = dict()
-#     out["datasets"] = [d.as_dict() for d in datasets]
-#     out["pipelines"] = [p.as_dict() for p in pipelines]
-
-#     with open(path, "w") as f:
-#         yaml.dump(out, f)
+    return out
 
 
 @app.command(no_args_is_help=True, name="run", help="Run pipelines on datasets")
@@ -90,13 +87,13 @@ def run_from_cli(
         ),
     ] = False,
     show: Annotated[
-        Optional[VisArgs],
+        Optional[set[VisOption]],
         typer.Option(
             "-s",
             "--show",
             help="Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.",
             show_default=False,
-            parser=VisArgs.parse,
+            parser=parse_vis,
         ),
     ] = None,
     rerun_failed: Annotated[
@@ -212,8 +209,12 @@ def run_from_cli(
     print(f"Output will be saved to {out}\n")
 
     # Go through visualization options
+    vis_args: Optional[set[VisOption]]
     if show is None:
-        vis_args = VisArgs(show=visualize)
+        if visualize:
+            vis_args = set()
+        else:
+            vis_args = None
     else:
         vis_args = show
     vis = RerunVis(vis_args, [p[0] for p in pipelines])
@@ -343,10 +344,11 @@ def run_single(
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
     pipe, dataset = output
+    pipe.set_visualizing(vis.args)
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
-    traj.open(exp.file)
-    vis.new_pipe(exp.name)
+    traj.open()
+    vis.new_pipe(exp.name, len(pipe.map()))
 
     time_running = 0.0
     time_max = 0.0
@@ -360,8 +362,7 @@ def run_single(
             time_running += time() - start
         elif isinstance(data, ty.LidarMeasurement):  # type: ignore
             start = time()
-            features = pipe.add_lidar(data)
-            pose = pipe.pose()
+            pipe.add_lidar(data)
             time_running += time() - start
 
             time_total += time_running
@@ -369,13 +370,22 @@ def run_single(
                 time_max = time_running
             time_running = 0.0
 
-            traj.append(data.stamp, pose)
-            vis.log(data, features, pose, pipe)
+            vis.log_scan(data)
 
             loop.update()
-            if loop.n >= exp.sequence_length:
-                loop.close()
-                break
+
+        # Save and visualize any new information
+        for stamp, pose in pipe.saved_estimates():
+            traj.append(stamp, pose)
+            vis.log_pose(stamp, pose)
+        for stamp, features in pipe.saved_features_matrix():
+            vis.log_features(stamp, features)
+        for stamp, map in pipe.saved_maps_matrix():
+            vis.log_map(stamp, map)
+
+        if loop.n >= exp.sequence_length:
+            loop.close()
+            break
 
     loop.close()
     traj.metadata.status = ty.ExperimentStatus.Complete
