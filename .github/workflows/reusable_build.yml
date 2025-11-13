@@ -8,11 +8,6 @@ on:
         type: string
         default: ""
 
-# Allow only one build deployment at a time per branch
-concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
