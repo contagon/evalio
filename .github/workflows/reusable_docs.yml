@@ -12,6 +12,11 @@ on:
         type: boolean
         default: false
 
+# Allow only one docs deployment at a time per branch/branch
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -51,6 +56,10 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+
+      # Ensure docs build docs
+      - name: Build docs
+        run: uv run mkdocs build
 
       # Deploy latest tag
       - name: Deploy docs
