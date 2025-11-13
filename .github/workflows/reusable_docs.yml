@@ -52,6 +52,10 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
+      # Build docs
+      - name: Build docs
+        run: uv run mkdocs build
+
       # Deploy latest tag
       - name: Deploy docs
         if: ${{ inputs.deploy_latest }}

@@ -1,52 +1,58 @@
 import shutil
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated, cast, TypeAlias
 
-import typer
+from cyclopts import Parameter
 from rosbags.interfaces import Connection, ConnectionExtRosbag2
-from rosbags.rosbag1 import (
-    Reader as Reader1,
-)
-from rosbags.rosbag1 import (
-    Writer as Writer1,
-)
-from rosbags.rosbag2 import (
-    Reader as Reader2,
-)
-from rosbags.rosbag2 import (
-    StoragePlugin,
-)
-from rosbags.rosbag2 import (
-    Writer as Writer2,
-)
+from rosbags.rosbag1 import Reader as Reader1
+from rosbags.rosbag1 import Writer as Writer1
+from rosbags.rosbag2 import Reader as Reader2
+from rosbags.rosbag2 import StoragePlugin
+from rosbags.rosbag2 import Writer as Writer2
 from rosbags.typesys import Stores, get_typestore
 
 import evalio.datasets as ds
 from evalio.utils import print_warning
 
-from .completions import DatasetArg
+from .types import DataSeq, data_sequence_converter
 
-app = typer.Typer()
+DatasetArg: TypeAlias = Annotated[
+    list[DataSeq], Parameter(converter=data_sequence_converter)
+]
+
+ForceAnnotation = Annotated[
+    bool, Parameter(name=["--yes", "-y"], negative="", show_default=False)
+]
 
 
-def parse_datasets(
-    datasets: DatasetArg,
-) -> list[ds.Dataset]:
+def confirm_check() -> bool:
+    """
+    Check if --confirm is used, if not ask for confirmation.
+    """
+    print("Are you sure you want to continue? This is a destructive operation. [y/N]")
+    response = input().strip().lower()
+    return response == "y"
+
+
+def parse_datasets(datasets: DatasetArg) -> list[ds.Dataset]:
     """
     Parse datasets from command line argument
     """
     # parse all datasets
     valid_datasets = ds.parse_config(datasets)
+    # NOTE: Should this never fail since we pre-validate before this
     if isinstance(valid_datasets, ds.DatasetConfigError):
         print_warning(f"Error parsing datasets: {valid_datasets}")
         return []
     return [b[0] for b in valid_datasets]
 
 
-@app.command(no_args_is_help=True)
-def dl(datasets: DatasetArg) -> None:
+def dl(datasets: DatasetArg, /) -> None:
     """
     Download datasets
+
+    Args:
+        datasets (str): The dataset(s) to download.
     """
     # parse all datasets
     valid_datasets = parse_datasets(datasets)
@@ -78,26 +84,21 @@ def dl(datasets: DatasetArg) -> None:
         print(f"---------- Finished {dataset} ----------")
 
 
-@app.command(no_args_is_help=True)
-def rm(
-    datasets: DatasetArg,
-    force: Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            "-f",
-            prompt="Are you sure you want to delete these datasets?",
-            help="Force deletion without confirmation",
-        ),
-    ] = False,
-):
+def rm(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
     """
     Remove dataset(s)
 
-    If --force is not used, will ask for confirmation.
+    Args:
+        datasets (str): The dataset(s) to remove.
+        confirm (bool): Force, do not ask for confirmation.
     """
     # parse all datasets
     to_remove = parse_datasets(datasets)
+
+    if not confirm:
+        if not confirm_check():
+            print("Aborting")
+            return
 
     print("Will remove:")
     for dataset in to_remove:
@@ -214,24 +215,21 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
     bag_temp.rmdir()
 
 
-@app.command(no_args_is_help=True)
-def filter(
-    datasets: DatasetArg,
-    force: Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            "-f",
-            prompt="Are you sure you want to filter these datasets? This is slightly experimental, please make sure the data has a copy somewhere!",
-            help="Force deletion without confirmation",
-        ),
-    ] = False,
-):
+def filter(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
     """
-    Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.
+    Filter rosbag dataset(s) to only include lidar and imu data.
+
+    Args:
+        datasets (str): The dataset(s) to filter.
+        confirm (bool): Force, do not ask for confirmation.
     """
     # parse all datasets
     valid_datasets = parse_datasets(datasets)
+
+    if not confirm:
+        if not confirm_check():
+            print("Aborting")
+            return
 
     # Check if already downloaded
     to_filter: list[ds.Dataset] = []

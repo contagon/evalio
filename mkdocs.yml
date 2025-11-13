@@ -41,6 +41,7 @@ theme:
 watch:
   - python/
   - cpp/
+  - docs/
 
 nav:
   - evalio:
@@ -69,11 +70,13 @@ plugins:
   search:
     lang: en
 
-  # autogenerate evalio ls & cli pages
+  # autogenerate evalio ls
   gen-files:
     scripts:
       - docs/included.py
-      - docs/ref/cli.py
+
+  # autogenerate cli docs
+  cyclopts:
 
   # Autogenerate docs from docstrings
   mkdocstrings:

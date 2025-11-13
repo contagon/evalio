@@ -1,12 +1,21 @@
 from typing import Optional, cast
 
 import mkdocs_gen_files
-from evalio.cli.ls import Kind, ls
+from evalio.cli.ls import ls
 from rich.table import Table
+import re
 
 
 def clean_cell(cell: str) -> str:
     """Clean a cell by removing unwanted characters."""
+    # Convert to links
+    if cell.startswith("[link"):
+        match = re.match(r"\[link=(.*?)\](.*?)\[/link\]", cell)
+        if match:
+            url, text = match.groups()
+            cell = f"[{text}]({url})"
+            return cell
+
     # Remove rich text formatting
     cell = cell.replace("[bright_black]", "").replace("[/bright_black]", "")
     # Remove line breaks
@@ -15,9 +24,6 @@ def clean_cell(cell: str) -> str:
     cell = cell.replace(" ", "&nbsp;")
     # Non line breaking hyphen
     cell = cell.replace("-", "&#8209;")
-    # Convert to links
-    if cell.startswith("http"):
-        cell = f"[link]({cell})"
 
     return cell.strip()
 
@@ -75,7 +81,7 @@ with mkdocs_gen_files.open("included/datasets.md", "w") as f:
     f.write(DATASETS)
     f.write("\n")
 
-    table = ls(Kind.datasets, show=False, show_hyperlinks=True)
+    table = ls("datasets", show=False)
     if table is not None:
         f.write(rich_table_to_markdown(table, skip_columns=["DL", "Size"]))
 
@@ -91,6 +97,6 @@ with mkdocs_gen_files.open("included/pipelines.md", "w") as f:
     f.write(PIPELINES)
     f.write("\n")
 
-    table = ls(Kind.pipelines, show=False, show_hyperlinks=True)
+    table = ls("pipelines", show=False)
     if table is not None:
         f.write(rich_table_to_markdown(table))
