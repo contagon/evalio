@@ -6,7 +6,7 @@ on:
       CIBW_BUILD:
         required: false
         type: string
-        default: "cp311-manylinux_x86_64 cp311-macosx_arm64"
+        default: ""
 
 jobs:
   build:

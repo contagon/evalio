@@ -48,8 +48,6 @@ jobs:
     name: Build
     uses: ./.github/workflows/reusable_build.yml
     secrets: inherit
-    with: 
-      CIBW_BUILD: "cp*-manylinux_x86_64 cp*-macosx_arm64"
 
   # Upload wheels if a release was created
   upload:

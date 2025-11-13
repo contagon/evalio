@@ -52,8 +52,13 @@ VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 # VCPKG_INSTALL_OPTIONS = "--debug"
 
 [tool.cibuildwheel]
-build = ["cp*-manylinux_x86_64", "cp*-macosx_arm64"]
-skip = ["cp310-*", "cp3??t-*"]
+skip = [
+    "cp3??t-*",           # skip free-threaded builds 
+    "*musllinux*",        # skip musl builds 
+    "*win32",             # skip 32-bit windows
+    "*macosx_x86_64",     # skip intel mac builds
+    "*macosx_universal2", # skip universal2 mac builds
+]
 test-requires = "pytest>=8.3.5 scipy>=1.15.2"
 test-command = "evalio ls pipelines && pytest {project}/tests"
 build-verbosity = 1
