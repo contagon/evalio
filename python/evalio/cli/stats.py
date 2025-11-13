@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Annotated, Any, Callable, Optional, cast
 
+from attr import dataclass
 import polars as pl
 import itertools
 
@@ -170,6 +171,16 @@ Opt = Optional
 Par = Parameter
 
 
+@dataclass
+class PivotSettings:
+    on: str
+    """On/column to pivot the table on. Must be specified, no default."""
+    index: str = ""
+    """Index/row to pivot the table on. Defaults to 'name'."""
+    value: str = ""
+    """Value to pivot the table on. Defaults to first RTEt column."""
+
+
 def evaluate_cli(
     directories: list[Path],
     /,
@@ -185,6 +196,7 @@ def evaluate_cli(
     length: Ann[Optional[int], Par(alias="-l", group=mg)] = None,
     # output options
     sort: Ann[Optional[str], Par(alias="-s", group=og)] = None,
+    group: Ann[str, Par(alias="-g", group=og)] = "sequence",
     reverse: Ann[bool, Par(alias="-r", group=og)] = False,
     hide_columns: Ann[
         Optional[list[str]], Par(alias="-H", group=og, negative="")
@@ -192,6 +204,7 @@ def evaluate_cli(
     show_columns: Ann[Optional[list[str]], Par(alias="-S", group=og)] = None,
     visualize: Ann[bool, Par(alias="-v", group=og)] = False,
     print_columns: Ann[bool, Par(group=og)] = False,
+    pivot: Ann[Optional[PivotSettings], Par(group=og)] = None,
 ) -> None:
     """Evaluate experiment results and display statistics.
 
@@ -205,11 +218,13 @@ def evaluate_cli(
         metric (stats.MetricKind, optional): Metric to use for ATE/RTE computation. Defaults to sse.
         length (int, optional): Specify subset of trajectory to evaluate.
         sort (str, optional): Name of the column to sort results by. Defaults to first RTEt.
+        group (str, optional): Column to group results by. Defaults to 'sequence'.
         reverse (bool, optional): Reverse the sorting order.
         hide_columns (list[str], optional): Columns to hide from output. May be repeated.
         show_columns (list[str], optional): Columns to force show in output. May be repeated.
         visualize (bool, optional): Visualize resulting trajectories in rerun.
         print_columns (bool, optional): Print the names of all available columns and exit.
+        pivot (PivotSettings, optional): Pivot the output table on specified settings.
     """
     # ------------------------- Process all inputs ------------------------- #
     # Parse some of the options
@@ -271,94 +286,133 @@ def evaluate_cli(
     # rename length for brevity
     df = df.rename({"sequence_length": "len"})
 
-    # print columns if requested
+    ## Iterate over all potential outputs
+    # ---- Printing Columns
     if print_columns:
         c.print("Available columns:")
-        for col in df.columns:
+        for col in sorted(df.columns):
             c.print(f" - {col}")
         return
 
-    # iterate through pipelines, finding unneeded columns
-    unused_columns: set[str] = set()
-    for pipeline in df["pipeline"].unique():
-        df_pipeline = df.filter(pl.col("pipeline") == pipeline)
-        unused_columns = unused_columns.union(
-            col
-            for col in df_pipeline.columns
-            if df_pipeline[col].drop_nulls().n_unique() == 1
-        )
+    # ---- Pivoting
+    elif pivot is not None:
+        index = pivot.index if pivot.index != "" else "name"
+        value = pivot.value if pivot.value != "" else f"RTEt_{windows[0].name()}"
 
-    # add in a few more that we usually shouldn't need
-    unused_columns.add("total_elapsed")
-    unused_columns.add("pipeline")
+        try:
+            df_pivot = df.pivot(
+                values=value,
+                index=index,
+                on=pivot.on,
+            )
 
-    remove_columns = [
-        col
-        for col in unused_columns
-        if col not in ["sequence", "name"]  # must keep these for later
-        and not col.startswith("RTE")  # want to keep metrics as well
-        and not col.startswith("ATE")
-    ]
+            table = Table(
+                box=box.ROUNDED,
+                highlight=True,
+            )
 
-    # forcibly hide / show some columns
-    if hide_columns is not None:
-        for col in hide_columns:
-            if col not in df.columns:
-                print_warning(f"Column {col} not found, cannot hide.")
-            else:
-                remove_columns.append(col)
+            for col in df_pivot.columns:
+                table.add_column(
+                    col,
+                    justify="right" if df_pivot[col].dtype is pl.Float64 else "left",
+                    no_wrap=True,
+                )
 
-    if show_columns is not None:
-        for col in show_columns:
-            if col not in df.columns:
-                print_warning(f"Column {col} not found, cannot show.")
-            elif col in remove_columns:
-                remove_columns.remove(col)
+            table.columns[0].header = str(table.columns[0].header) + " \\ " + pivot.on
 
-    df = df.drop(remove_columns)
+            for row in df_pivot.iter_rows():
+                table.add_row(
+                    *[f"{x:.3f}" if isinstance(x, float) else str(x) for x in row]
+                )
 
-    # rearrange for a more useful ordering (name to the left)
-    cols = df.columns
-    if "pipeline" in cols:
-        cols.insert(0, cols.pop(cols.index("pipeline")))
-    if "name" in cols:
-        cols.insert(0, cols.pop(cols.index("name")))
-    df = df.select(cols)
+            c.print(table)
+            c.print("\n")
 
-    # sort if requested
-    if sort not in df.columns:
-        print_warning(f"Column {sort} not found, cannot sort.")
+        except Exception as e:
+            print_warning(f"Error pivoting table: {e}")
+            return
+
+    # ---- Otherwise, normal table output
     else:
-        df = df.sort(sort, descending=reverse)
-
-    # ------------------------- Print ------------------------- #
-    # Print sequence by sequence
-    for sequence in sorted(df["sequence"].unique()):
-        df_sequence = df.filter(pl.col("sequence") == sequence)
-        df_sequence = df_sequence.drop("sequence")
-        if df_sequence.is_empty():
-            continue
-
-        table = Table(
-            title=f"Results for {sequence}",
-            box=box.ROUNDED,
-            highlight=True,
-            # show_lines=True,
-            # header_style="bold magenta",
-            # min_width =
-        )
-
-        for col in df_sequence.columns:
-            table.add_column(
-                col,
-                justify="right" if df_sequence[col].dtype is pl.Float64 else "left",
-                no_wrap=True,
+        # iterate through pipelines, finding unneeded columns
+        unused_columns: set[str] = set()
+        for pipeline in df["pipeline"].unique():
+            df_pipeline = df.filter(pl.col("pipeline") == pipeline)
+            unused_columns = unused_columns.union(
+                col
+                for col in df_pipeline.columns
+                if df_pipeline[col].drop_nulls().n_unique() == 1
             )
 
-        for row in df_sequence.iter_rows():
-            table.add_row(
-                *[f"{x:.3f}" if isinstance(x, float) else str(x) for x in row]
+        # add in a few more that we usually shouldn't need
+        unused_columns.add("total_elapsed")
+        unused_columns.add("pipeline")
+        unused_columns.add("max_elapsed")
+
+        remove_columns = [
+            col
+            for col in unused_columns
+            if col not in ["sequence", "name"]  # must keep these for later
+            and not col.startswith("RTE")  # want to keep metrics as well
+            and not col.startswith("ATE")
+        ]
+
+        # forcibly hide / show some columns
+        if hide_columns is not None:
+            for col in hide_columns:
+                if col not in df.columns:
+                    print_warning(f"Column {col} not found, cannot hide.")
+                else:
+                    remove_columns.append(col)
+
+        if show_columns is not None:
+            for col in show_columns:
+                if col not in df.columns:
+                    print_warning(f"Column {col} not found, cannot show.")
+                elif col in remove_columns:
+                    remove_columns.remove(col)
+
+        df = df.drop(remove_columns)
+
+        # rearrange for a more useful ordering (name to the left)
+        cols = df.columns
+        if "pipeline" in cols:
+            cols.insert(0, cols.pop(cols.index("pipeline")))
+        if "name" in cols:
+            cols.insert(0, cols.pop(cols.index("name")))
+        df = df.select(cols)
+
+        # sort if requested
+        if sort not in df.columns:
+            print_warning(f"Column {sort} not found, cannot sort.")
+        else:
+            df = df.sort(sort, descending=reverse)
+
+        # ------------------------- Print ------------------------- #
+        # Print sequence by sequence
+        for val in sorted(df[group].unique()):
+            df_sequence = df.filter(pl.col(group) == val)
+            df_sequence = df_sequence.drop(group)
+            if df_sequence.is_empty():
+                continue
+
+            table = Table(
+                title=f"{group} = {val}",
+                box=box.ROUNDED,
+                highlight=True,
             )
 
-        c.print(table)
-        c.print("\n")
+            for col in df_sequence.columns:
+                table.add_column(
+                    col,
+                    justify="right" if df_sequence[col].dtype is pl.Float64 else "left",
+                    no_wrap=True,
+                )
+
+            for row in df_sequence.iter_rows():
+                table.add_row(
+                    *[f"{x:.3f}" if isinstance(x, float) else str(x) for x in row]
+                )
+
+            c.print(table)
+            c.print("\n")
