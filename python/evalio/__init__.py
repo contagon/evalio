@@ -55,7 +55,7 @@ if "EVALIO_CUSTOM" in os.environ:
         _register_custom_modules(module_name)
 
 
-__version__ = "0.4.2"  # x-release-please-version
+__version__ = "0.5.0"  # x-release-please-version
 __all__ = [
     "_abi_tag",
     "datasets",
