@@ -114,6 +114,7 @@ mg = Group("Misc", sort_key=1)
 gg = Group("Global Options", sort_key=100)
 
 app = App(
+    name="evalio",
     help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
     help_formatter=spec,
     help_on_error=True,
@@ -122,13 +123,13 @@ app = App(
 )
 
 # Register commands
-app.register_install_completion_command(add_to_startup=True)  # type: ignore
 app.command("evalio.cli.ls:ls")
 app.command("evalio.cli.dataset_manager:dl")
 app.command("evalio.cli.dataset_manager:rm")
 app.command("evalio.cli.dataset_manager:filter")
 app.command("evalio.cli.stats:evaluate_cli", name="stats")
 app.command("evalio.cli.run:run_from_cli", name="run")
+app.register_install_completion_command(add_to_startup=True)  # type: ignore
 
 # Assign groups
 app["--install-completion"].group = mg
