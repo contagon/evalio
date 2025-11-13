@@ -10,6 +10,8 @@ jobs:
     name: Checks
     uses: ./.github/workflows/reusable_checks.yml
     secrets: inherit
+    with:
+      CIBW_BUILD: "cp311-*"
 
   # Rebuild docs to make sure nothing is broken
   docs:
