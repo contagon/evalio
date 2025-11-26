@@ -1,0 +1,74 @@
+--- a/CMakeLists.txt	2025-11-08 17:51:58.702110398 -0500
++++ b/CMakeLists.txt	2025-11-08 17:52:36.039410791 -0500
+@@ -1,7 +1,7 @@
+ cmake_minimum_required(VERSION 2.8.3)
+-project(fast_lio)
++project(fast_lio VERSION 1.0.0 LANGUAGES CXX)
+ 
+-SET(CMAKE_BUILD_TYPE "Debug")
++SET(CMAKE_BUILD_TYPE "Release")
+ 
+ ADD_COMPILE_OPTIONS(-std=c++14 )
+ ADD_COMPILE_OPTIONS(-std=c++14 )
+@@ -39,51 +39,19 @@
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
+ 
+-find_package(PythonLibs REQUIRED)
+-find_path(MATPLOTLIB_CPP_INCLUDE_DIRS "matplotlibcpp.h")
+-
+-find_package(catkin REQUIRED COMPONENTS
+-  geometry_msgs
+-  nav_msgs
+-  sensor_msgs
+-  roscpp
+-  rospy
+-  std_msgs
+-  pcl_ros
+-  tf
+-  livox_ros_driver
+-  message_generation
+-  eigen_conversions
+-)
+-
+ find_package(Eigen3 REQUIRED)
+ find_package(PCL 1.8 REQUIRED)
+ 
+-message(Eigen: ${EIGEN3_INCLUDE_DIR})
+-
+-include_directories(
+-	${catkin_INCLUDE_DIRS} 
+-  ${EIGEN3_INCLUDE_DIR}
+-  ${PCL_INCLUDE_DIRS}
+-  ${PYTHON_INCLUDE_DIRS}
+-  include)
+-
+-add_message_files(
+-  FILES
+-  Pose6D.msg
+-)
+-
+-generate_messages(
+- DEPENDENCIES
+- geometry_msgs
++# Build library
++add_library(fast_lio STATIC
++  src/laserMapping.cpp
++  include/ikd-Tree/ikd_Tree.cpp
++  src/preprocess.cpp
+ )
+ 
+-catkin_package(
+-  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs message_runtime
+-  DEPENDS EIGEN3 PCL
+-  INCLUDE_DIRS
++target_include_directories(fast_lio PUBLIC
++  ${CMAKE_CURRENT_SOURCE_DIR}/include
++  ${PCL_INCLUDE_DIRS}
+ )
+ 
+-add_executable(fastlio_mapping src/laserMapping.cpp include/ikd-Tree/ikd_Tree.cpp src/preprocess.cpp)
+-target_link_libraries(fastlio_mapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${PYTHON_LIBRARIES})
+-target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
+\ No newline at end of file
++target_link_libraries(fast_lio PUBLIC Eigen3::Eigen ${PCL_LIBRARIES})

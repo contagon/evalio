@@ -1,5 +1,10 @@
 #!/bin/bash
-# call this script from the root of evalio
+# call this script from the root of evalio OR from cpp/
+
+# Detect if we're in cpp/ or root and adjust
+if [[ $(basename $(pwd)) == "cpp" ]]; then
+    cd ..
+fi
 
 topdir=$(pwd)
 # ----------------- Pipelines ----------------- #
@@ -71,7 +76,17 @@ fi
 cd direct_lidar_inertial_odometry
 git stash
 git switch --detach v1.1.1
-# git apply ../../pipelines/dlio.patch  # Would need to create this patch
+git apply ../../pipelines/dlio.patch
+cd ..
+
+# Fast-LIO2
+if [ ! -d "FAST_LIO" ]; then
+    git clone https://github.com/hku-mars/FAST_LIO.git
+fi
+cd FAST_LIO
+git stash
+git checkout main
+git apply ../../pipelines/fast_lio2.patch
 cd ..
 
 # ------------------------- Dependencies ------------------------- #

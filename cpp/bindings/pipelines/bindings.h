@@ -1,6 +1,3 @@
-#ifdef EVALIO_FAST_LIO2
-  #include "bindings/pipelines/fast_lio2.h"
-#endif
 #pragma once
 
 #include <nanobind/nanobind.h>
@@ -36,6 +33,10 @@ using namespace nb::literals;
 
 #ifdef EVALIO_DLIO
   #include "bindings/pipelines/dlio.h"
+#endif
+
+#ifdef EVALIO_FAST_LIO2
+  #include "bindings/pipelines/fast_lio2.h"
 #endif
 
 namespace evalio {

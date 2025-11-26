@@ -28,8 +28,7 @@ data
 # for building
 compile_commands.json
 
-# cloned pipelines
-cpp/bindings/pipelines-srcevalio_data/
+evalio_data/
 build/
 dist/
 results/

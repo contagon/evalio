@@ -1,5 +1,5 @@
 from evalio._cpp.pipelines import *  # type: ignore  # noqa: F403
 
-# Import Python-only pipelines
-from .dlio import DLIO
-from .fast_lio2 import FastLIO2
+# Python-only pipelines would go here
+# NOTE: DLIO and Fast-LIO2 should be C++ pipelines, not Python
+# The Python implementations were placeholders and have been removed

@@ -42,7 +42,7 @@ evalio = "evalio.cli:app"
 [tool.scikit-build]
 minimum-version = "0.8"
 build-dir = "build/{wheel_tag}"
-sdist.include = ["cpp/bindings/pipelines-src/*"]
+sdist.include = ["cpp/bindings/pipelines-src/**"]
 
 [tool.scikit-build.cmake.define]
 EVALIO_BUILD_PYTHON = true
