@@ -215,21 +215,24 @@ public:
       return {{"point", result}};
     }
 
+    if (initial_pose_estimation_ && imu_buffer_.size() >= 2) {
+      Eigen::Quaternionf q_init = state_.q.cast<float>();
+      Eigen::Vector3f p_init = state_.p.cast<float>();
+      Eigen::Vector3f v_init = state_.v.cast<float>();
+      std::vector<double> timestamps = {scan_stamp};
+      auto frames = integrateImu(prev_scan_stamp_, q_init, p_init, v_init, timestamps);
+      if (frames.size() > 0) {
+        T_prior_ = frames.back().cast<double>();
+        propagateState();
+      }
+    } else {
+      T_prior_ = T_;
+    }
+
     if (deskew_) {
       deskewPointcloud(original_scan, scan_stamp);
     } else {
       current_scan_ = original_scan;
-      if (imu_buffer_.size() > 0 && scan_stamp > imu_buffer_.back().stamp) {
-        std::vector<double> timestamps = {scan_stamp};
-        auto frames = integrateImu(prev_scan_stamp_, lidar_pose_.q.cast<float>(), 
-                                   lidar_pose_.p.cast<float>(), 
-                                   Eigen::Vector3f::Zero(), timestamps);
-        if (frames.size() > 0) {
-          T_prior_ = frames.back().cast<double>();
-        }
-      }
-      Eigen::Matrix4f T_transform = (T_prior_ * extrinsics_.baselink2lidar).cast<float>();
-      pcl::transformPointCloud(*current_scan_, *current_scan_, T_transform);
     }
 
     voxel_grid_.setInputCloud(current_scan_);
@@ -247,16 +250,14 @@ public:
     gicp_->setInputTarget(submap_cloud_);
     
     pcl::PointCloud<PointType>::Ptr aligned(new pcl::PointCloud<PointType>);
-    gicp_->align(*aligned);
+    Eigen::Matrix4f guess = T_prior_.cast<float>();
+    gicp_->align(*aligned, guess);
     
     if (gicp_->hasConverged()) {
       T_corr_ = gicp_->getFinalTransformation().cast<double>();
       T_ = T_corr_ * T_prior_;
       
-      lidar_pose_.p = T_.block<3,1>(0,3).cast<double>();
-      Eigen::Matrix3d R = T_.block<3,3>(0,0).cast<double>();
-      lidar_pose_.q = Eigen::Quaterniond(R);
-      lidar_pose_.q.normalize();
+      propagateGICP();
       
       updateState(scan_stamp);
       
@@ -461,18 +462,73 @@ private:
     current_scan_ = deskewed;
   }
   
+  void propagateState() {
+    if (imu_buffer_.size() < 2) return;
+    
+    ImuMeas latest_imu = imu_buffer_.back();
+    double dt = latest_imu.dt;
+    if (dt <= 0) return;
+    
+    Eigen::Quaterniond qhat = state_.q;
+    
+    Eigen::Vector3d world_accel = qhat.toRotationMatrix() * (latest_imu.lin_accel - state_.ba);
+    
+    state_.p += state_.v * dt + 0.5 * dt * dt * (world_accel - gravity_);
+    state_.v += (world_accel - gravity_) * dt;
+    
+    Eigen::Vector3d omega = latest_imu.ang_vel - state_.bg;
+    Eigen::Quaterniond dq;
+    dq.w() = 0.5 * dt * (-qhat.x() * omega[0] - qhat.y() * omega[1] - qhat.z() * omega[2]);
+    dq.x() = 0.5 * dt * (qhat.w() * omega[0] + qhat.y() * omega[2] - qhat.z() * omega[1]);
+    dq.y() = 0.5 * dt * (qhat.w() * omega[1] - qhat.x() * omega[2] + qhat.z() * omega[0]);
+    dq.z() = 0.5 * dt * (qhat.w() * omega[2] + qhat.x() * omega[1] - qhat.y() * omega[0]);
+    
+    state_.q.w() += dq.w();
+    state_.q.x() += dq.x();
+    state_.q.y() += dq.y();
+    state_.q.z() += dq.z();
+    state_.q.normalize();
+  }
+  
+  void propagateGICP() {
+    lidar_pose_.p = T_.block<3,1>(0,3);
+    
+    Eigen::Matrix3d rotSO3 = T_.block<3,3>(0,0);
+    Eigen::Quaterniond q(rotSO3);
+    
+    double norm = std::sqrt(q.w()*q.w() + q.x()*q.x() + q.y()*q.y() + q.z()*q.z());
+    if (norm > 1e-10) {
+      q.w() /= norm;
+      q.x() /= norm;
+      q.y() /= norm;
+      q.z() /= norm;
+    }
+    lidar_pose_.q = q;
+  }
+  
   void updateState(double scan_stamp) {
     double dt = scan_stamp - prev_scan_stamp_;
     if (dt <= 0) dt = 0.1;
     
-    Eigen::Quaterniond qe = state_.q.conjugate() * lidar_pose_.q;
+    Eigen::Vector3d pin = lidar_pose_.p;
+    Eigen::Quaterniond qin = lidar_pose_.q;
+    Eigen::Quaterniond qhat = state_.q;
+    
+    Eigen::Quaterniond qe = qhat.conjugate() * qin;
+    
+    double sgn = 1.0;
     if (qe.w() < 0) {
-      qe.w() = -qe.w();
-      qe.vec() = -qe.vec();
+      sgn = -1.0;
     }
     
-    Eigen::Vector3d err = lidar_pose_.p - state_.p;
-    Eigen::Vector3d err_body = state_.q.conjugate().toRotationMatrix() * err;
+    Eigen::Quaterniond qcorr;
+    qcorr.w() = 1.0 - std::abs(qe.w());
+    qcorr.vec() = sgn * qe.vec();
+    qcorr = qhat * qcorr;
+    qcorr.normalize();
+    
+    Eigen::Vector3d err = pin - state_.p;
+    Eigen::Vector3d err_body = qhat.conjugate().toRotationMatrix() * err;
     
     double geo_Kp = 1.0;
     double geo_Kv = 1.0;
@@ -483,19 +539,20 @@ private:
     double gbias_max = 0.01;
     
     state_.ba -= dt * geo_Kab * err_body;
-    state_.ba = state_.ba.cwiseMax(Eigen::Vector3d(-abias_max, -abias_max, -abias_max))
-                       .cwiseMin(Eigen::Vector3d(abias_max, abias_max, abias_max));
+    state_.ba = state_.ba.array().min(abias_max).max(-abias_max);
     
-    state_.bg -= dt * geo_Kgb * Eigen::Vector3d(qe.w()*qe.x(), qe.w()*qe.y(), qe.w()*qe.z());
-    state_.bg = state_.bg.cwiseMax(Eigen::Vector3d(-gbias_max, -gbias_max, -gbias_max))
-                       .cwiseMin(Eigen::Vector3d(gbias_max, gbias_max, gbias_max));
+    state_.bg[0] -= dt * geo_Kgb * qe.w() * qe.x();
+    state_.bg[1] -= dt * geo_Kgb * qe.w() * qe.y();
+    state_.bg[2] -= dt * geo_Kgb * qe.w() * qe.z();
+    state_.bg = state_.bg.array().min(gbias_max).max(-gbias_max);
     
     state_.p += dt * geo_Kp * err;
     state_.v += dt * geo_Kv * err;
     
-    Eigen::Quaterniond qcorr = state_.q * qe;
     state_.q.w() += dt * geo_Kq * (qcorr.w() - state_.q.w());
-    state_.q.vec() += dt * geo_Kq * (qcorr.vec() - state_.q.vec());
+    state_.q.x() += dt * geo_Kq * (qcorr.x() - state_.q.x());
+    state_.q.y() += dt * geo_Kq * (qcorr.y() - state_.q.y());
+    state_.q.z() += dt * geo_Kq * (qcorr.z() - state_.q.z());
     state_.q.normalize();
   }
   
@@ -549,6 +606,7 @@ private:
     
     submap_cloud_ = filtered;
     gicp_->setInputTarget(submap_cloud_);
+    gicp_->calculateTargetCovariances();
   }
   
   State state_;

@@ -98,7 +98,8 @@ find_pipeline_optional(genz-icp genz_icp GENZ_ICP)
 find_pipeline_optional(mad-icp mad_icp MAD_ICP)
 find_pipeline_optional(ct_icp ct_icp CT_ICP)
 find_pipeline(direct_lidar_inertial_odometry dlio EVALIO_DLIO)
-find_pipeline_optional(FAST_LIO fast_lio2 FAST_LIO2)
+find_pipeline_optional(FAST_LIO fast_lio2 EVALIO_FAST_LIO2)
+list(APPEND DEF EVALIO_FAST_LIO2=1.0.0)
 
 # ------------------------- Make Python Bindings ------------------------- #
 find_package(
