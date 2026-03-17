@@ -304,41 +304,21 @@ inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
 }
 
 // point cloud loader where rows come in consistently a near-random order
-// once we see a row again we assume that we've switched to the next column
 // used for 128-beam boreas dataset
+// map_row_to_idx is a map from channel/row idx to the order it appears in the return
 inline void
-fill_col_by_seen(LidarMeasurement& mm, std::vector<int>& row_order) {
-  auto first_row = mm.points[0].row;
-  auto num_rows = row_order.size();
-  auto func_col = [&num_rows, &first_row, &row_order](
+fill_col_by_map(LidarMeasurement& mm, std::vector<int>& map_row_to_idx) {
+  auto func_col = [&map_row_to_idx](
                     uint16_t& col,
                     const uint16_t& prev_col,
                     const uint8_t& prev_row,
                     const uint8_t& curr_row
-                  ) {
-    static auto seen_rows = [&num_rows, &first_row]() {
-      std::vector<bool> s(num_rows, false);
-      // start with the first row as it'll be skipped in _fill_col
-      s[first_row] = true;
-      return s;
-    }();
-
-    // If this point has already been seen, we must be on the next column
-    if (seen_rows[curr_row]) {
-      auto ptr = std::find(row_order.begin(), row_order.end(), curr_row);
-      if (ptr == row_order.end()) {
-        throw std::runtime_error("Current row not found in row order");
-      }
-      auto idx = std::distance(row_order.begin(), ptr);
-      std::fill(seen_rows.begin(), seen_rows.end(), false);
-      for (int i = 0; i <= idx; i++) {
-        seen_rows[row_order[i]] = true;
-      }
-
+                  ) mutable {
+    // If the rank of the current row is less than or equal to the max rank seen
+    // in the current column, we must have wrapped around to the next column.
+    if (map_row_to_idx[curr_row] < map_row_to_idx[prev_row]) {
       col = prev_col + 1;
     } else {
-      seen_rows[curr_row] = true;
-
       col = prev_col;
     }
   };
@@ -417,7 +397,7 @@ inline LidarMeasurement helipr_bin_to_evalio(
       point.col = prev_col + 1;
     }
     if (point.row >= params.num_rows || point.col >= params.num_columns) {
-      std::cout << "HeLiPR point out of bounds\npoint.row: " << +point.row
+      std::cout << "Boreas point out of bounds\npoint.row: " << +point.row
                 << " point.col: " << point.col << std::endl;
       throw -1;
     }
@@ -427,6 +407,39 @@ inline LidarMeasurement helipr_bin_to_evalio(
     mm.points[point.row * params.num_columns + point.col] = point;
   }
   file.close();
+
+  return mm;
+}
+
+// Load boreas data into evalio
+// Alternatively can use numpy, but this is faster for converting to evalio types afterwards
+// https://github.com/utiasASRL/pyboreas/blob/a0cd0fb5a453ebe8a0939e226ce55073bc8a578a/pyboreas/utils/utils.py#L17-L27
+inline LidarMeasurement boreas_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params,
+  std::vector<int>& map_row_to_idx
+) {
+  LidarMeasurement mm(stamp);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float holder = 0.0;
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.t = Duration::from_sec(holder);
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.row = static_cast<uint16_t>(holder);
+    // clang-format on
+  }
+  file.close();
+
+  fill_col_by_map(mm, map_row_to_idx);
+  reorder_points(mm, params.num_rows, params.num_columns);
 
   return mm;
 }
@@ -580,7 +593,7 @@ inline void make_conversions(nb::module_& m) {
   // botanic garden velodyne reordering
   m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
   // boreas column major reordering
-  m.def("fill_col_by_seen", &fill_col_by_seen);
+  m.def("fill_col_by_map", &fill_col_by_map);
 
   m.def("parse_csv_line", &parse_csv_line);
   m.def("closest", &closest);

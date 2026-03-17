@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from evalio._cpp.helpers import fill_col_by_seen, reorder_points  # type: ignore
+from evalio._cpp.helpers import fill_col_by_map, reorder_points  # type: ignore
 from evalio.datasets.loaders import RawDataIter
 from evalio.types import (
     SE3,
@@ -40,7 +40,7 @@ from .base import Dataset, DatasetIterator
 #         prev_idx = idx
 
 #     idx += 1
-COL_ORDER = [
+MAP_IDX_TO_ROW = [
     4,
     53,
     102,
@@ -170,6 +170,9 @@ COL_ORDER = [
     26,
     75,
 ]
+MAP_ROW_TO_IDX = [-1] * 128
+for i, row in enumerate(MAP_IDX_TO_ROW):
+    MAP_ROW_TO_IDX[row] = i
 
 
 def _load_boreas_bin(path: Path, params: LidarParams) -> LidarMeasurement:
@@ -181,6 +184,7 @@ def _load_boreas_bin(path: Path, params: LidarParams) -> LidarMeasurement:
     Source: https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md
     https://github.com/utiasASRL/pyboreas/blob/a0cd0fb5a453ebe8a0939e226ce55073bc8a578a/pyboreas/utils/utils.py#L17-L27
     """
+
     stamp = Stamp.from_nsec(
         int(path.stem) * 1000
     )  # timestamps are in microseconds, convert to nanoseconds
@@ -195,33 +199,8 @@ def _load_boreas_bin(path: Path, params: LidarParams) -> LidarMeasurement:
 
     mm = LidarMeasurement(stamp, points)
 
-    fill_col_by_seen(mm, params.num_rows)
-    print("filled")
-    # mm = reorder_points(mm, params.num_rows, params.num_columns)
-    print("reordered")
-
-    prev_col = 0
-    prev_idx = 0
-    idx = 0
-    points = mm.points
-    while True:
-        if points[idx].col != prev_col:
-            print(f"col {prev_col} has {idx - prev_idx} points")
-
-            if idx - prev_idx == 128:
-                print("all rows seen, stopping")
-                cols = [p.row for p in points[prev_idx:idx]]
-                print(cols)
-                quit()
-
-            prev_col = points[idx].col
-            prev_idx = idx
-
-        idx += 1
-
-    for p in mm.points[-1000:]:
-        print(p)
-    quit()
+    fill_col_by_map(mm, MAP_ROW_TO_IDX)
+    reorder_points(mm, params.num_rows, params.num_columns)
 
     return mm
 
@@ -407,7 +386,8 @@ class Boreas(Dataset):
         # TODO: Need to verify this as well
         return LidarParams(
             num_rows=128,
-            num_columns=1800,
+            # This is approximate, I never saw values greater than this
+            num_columns=1880,
             min_range=0.4,
             max_range=300.0,
             rate=10.0,
