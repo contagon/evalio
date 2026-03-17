@@ -170,14 +170,14 @@ class Boreas(Dataset):
         """
         path = self.folder / "applanix" / "gps_post_process.csv"
 
-        stamps = np.loadtxt(
-            path, usecols=0, dtype=np.float64, delimiter=",", skiprows=1
-        )
+        stamps = np.loadtxt(path, usecols=0, delimiter=",", skiprows=1)
         stamps = [Stamp.from_sec(x) for x in stamps]
 
         all_xyz = np.loadtxt(path, usecols=(1, 2, 3), delimiter=",", skiprows=1)
         all_rpy = np.loadtxt(path, usecols=(7, 8, 9), delimiter=",", skiprows=1)
-        all_R = [SO3.from_ypr(yaw, pitch, roll) for roll, pitch, yaw in all_rpy]
+        # The official implementation has negatives for all of the individual rot matrices
+        # https://github.com/utiasASRL/pyboreas/blob/14be1c090d91f6e7e958fcca8545775038a455ce/pyboreas/utils/utils.py#L30-L48
+        all_R = [SO3.from_ypr(-y, -p, -r) for r, p, y in all_rpy]
         poses = [SE3(R, xyz) for R, xyz in zip(all_R, all_xyz)]
 
         return Trajectory(stamps=stamps, poses=poses)
@@ -186,16 +186,16 @@ class Boreas(Dataset):
     def imu_T_lidar(self) -> SE3:
         # T_applanix_lidar: transformation from Applanix (IMU) frame to Velodyne lidar frame.
         # Source: s3://boreas/boreas-2020-11-26-13-58/calib/T_applanix_lidar.txt
+        # fmt: off
         return SE3.from_mat(
-            np.array(
-                [
-                    [7.360555651493132512e-01, -6.769211217083995757e-01, 0.0, 0.0],
-                    [6.769211217083995757e-01, 7.360555651493132512e-01, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.13],
-                    [0.0, 0.0, 0.0, 1.0],
-                ]
-            )
+            np.array([
+                    [7.360555651493132512e-01, -6.769211217083995757e-01, 0.000000000000000000e+00, 0.000000000000000000e+00],
+                    [6.769211217083995757e-01, 7.360555651493132512e-01, 0.000000000000000000e+00, 0.000000000000000000e+00],
+                    [0.000000000000000000e+00, 0.000000000000000000e+00, 1.000000000000000000e+00, 1.300000000000000044e-01],
+                    [0.000000000000000000e+00, 0.000000000000000000e+00, 0.000000000000000000e+00, 1.000000000000000000e+00]
+            ])
         )
+        # fmt: on
 
     def imu_T_gt(self) -> SE3:
         # Ground truth is in the Applanix (IMU) frame
@@ -224,13 +224,12 @@ class Boreas(Dataset):
     def lidar_params(self) -> LidarParams:
         # Velodyne Alpha-Prime (VLS-128)
         # 128 channels, 10 Hz, range up to 300 m (10% reflectivity)
-        # Source: https://velodynelidar.com/products/alpha-prime/
+        # Source: https://data.ouster.io/downloads/datasheets/velodyne/63-9679_Rev-B_DATASHEET_ALPHA-PRIME_web.pdf
         # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
-        # TODO: Need to verify this as well
         return LidarParams(
             num_rows=128,
             # This is approximate, I never saw values greater than this
-            num_columns=1880,
+            num_columns=2000,
             min_range=0.4,
             max_range=300.0,
             rate=10.0,
@@ -258,11 +257,14 @@ class Boreas(Dataset):
             "lidar",
         ]
 
+    def is_downloaded(self) -> bool:
+        return True
+
     def download(self):
         from subprocess import Popen, PIPE, run
         from tqdm import tqdm
         import sys
-        # TODO: This is experimental; not sure if should use aws cli or boto3 to download from S3
+        # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 
         seq = self.seq_name.replace("_", "-")
@@ -302,7 +304,7 @@ class Boreas(Dataset):
                 "--include",
                 "applanix/imu_raw.csv",
                 "--include",
-                "applanix/gps_post_process.csv",
+                "applanix/*",
                 "--include",
                 "lidar/*",
             ],
@@ -310,6 +312,7 @@ class Boreas(Dataset):
             universal_newlines=True,
         )
         for stdout_line in iter(popen.stdout.readline, ""):  # type: ignore
+            print(stdout_line, end="")
             loop.update(1)
 
     def quick_len(self) -> Optional[int]:
