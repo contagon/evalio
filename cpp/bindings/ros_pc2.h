@@ -276,33 +276,6 @@ inline void fill_col_col_major(LidarMeasurement& mm) {
   _fill_col(mm, func_col);
 }
 
-// point cloud loader where rows come in in 0, 8, 1, 9, ... order
-// used for 16-beam botanic garden dataset with Velodyne VLP-16
-inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
-  auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
-    if (row_idx < 8) {
-      return row_idx * 2;
-    } else {
-      return (row_idx - 8) * 2 + 1;
-    }
-  };
-
-  auto func_col = [&func_row_idx_to_row_seq](
-                    uint16_t& col,
-                    const uint16_t& prev_col,
-                    const uint8_t& prev_row,
-                    const uint8_t& curr_row
-                  ) {
-    if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
-      col = prev_col + 1;
-    } else {
-      col = prev_col;
-    }
-  };
-
-  _fill_col(mm, func_col);
-}
-
 // point cloud loader where rows come in consistently a near-random order
 // used for 128-beam boreas dataset
 // map_row_to_idx is a map from channel/row idx to the order it appears in the return
@@ -588,15 +561,14 @@ inline void make_conversions(nb::module_& m) {
 
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);
+  // Custom column filling for datasets with unique row ordering (e.g. boreas, botanic)
+  m.def("fill_col_by_map", &fill_col_by_map);
   m.def("reorder_points", &reorder_points);
   m.def("shift_point_stamps", &shift_point_stamps);
 
   // load custom bin format for helipr
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
-  // botanic garden velodyne reordering
-  m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
-  // boreas column major reordering
-  m.def("fill_col_by_map", &fill_col_by_map);
+  // load bin format for boreas
   m.def("boreas_bin_to_evalio", &boreas_bin_to_evalio);
 
   m.def("parse_csv_line", &parse_csv_line);
