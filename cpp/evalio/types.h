@@ -314,6 +314,22 @@ struct SO3 {
     return SO3 {.qx = 0, .qy = 0, .qz = 0, .qw = 1};
   }
 
+  static SO3 from_rpy(double roll, double pitch, double yaw) {
+    Eigen::AngleAxisd roll_aa(roll, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitch_aa(pitch, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yaw_aa(yaw, Eigen::Vector3d::UnitZ());
+    Eigen::Quaterniond q = yaw_aa * pitch_aa * roll_aa;
+    return from_eigen(q);
+  }
+
+  static SO3 from_ypr(double yaw, double pitch, double roll) {
+    Eigen::AngleAxisd roll_aa(roll, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitch_aa(pitch, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yaw_aa(yaw, Eigen::Vector3d::UnitZ());
+    Eigen::Quaterniond q = roll_aa * pitch_aa * yaw_aa;
+    return from_eigen(q);
+  }
+
   static SO3 from_mat(const Eigen::Matrix3d& R) {
     return from_eigen(Eigen::Quaterniond(R));
   }

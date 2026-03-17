@@ -20,6 +20,20 @@ def test_constructor():
     is_close(r, so3)
 
 
+def test_from_rpy():
+    roll, pitch, yaw = 0.1, 0.2, 0.3
+    so3 = SO3.from_rpy(roll=roll, pitch=pitch, yaw=yaw)
+    r = R.from_euler("zyx", [roll, pitch, yaw])
+    is_close(r, so3)
+
+
+def test_from_ypr():
+    yaw, pitch, roll = 0.1, 0.2, 0.3
+    so3 = SO3.from_ypr(yaw=yaw, pitch=pitch, roll=roll)
+    r = R.from_euler("xyz", [roll, pitch, yaw])
+    is_close(r, so3)
+
+
 def test_from_matrix():
     r = R.from_rotvec([0.1, 0.2, 0.3])
     so3 = SO3.from_mat(r.as_matrix())

@@ -496,6 +496,22 @@ inline void make_types(nb::module_& m) {
       "mat"_a,
       "Create a rotation from a 3x3 rotation matrix."
     )
+    .def_static(
+      "from_rpy",
+      &SO3::from_rpy,
+      "roll"_a,
+      "pitch"_a,
+      "yaw"_a,
+      "Create a rotation from roll, pitch, and yaw angles. Computes R_z(yaw) * R_y(pitch) * R_x(roll). Note, the order of the angles is roll, pitch, yaw."
+    )
+    .def_static(
+      "from_ypr",
+      &SO3::from_ypr,
+      "yaw"_a,
+      "pitch"_a,
+      "roll"_a,
+      "Create a rotation from yaw, pitch, and roll angles. Computes R_x(roll) * R_y(pitch) * R_z(yaw). Note, the order of the angles is yaw, pitch, roll."
+    )
     .def_static("exp", &SO3::exp, "v"_a, "Create a rotation from a 3D vector.")
     .def("inverse", &SO3::inverse, "Compute the inverse of the rotation.")
     .def("log", &SO3::log, "Compute the logarithm of the rotation.")
