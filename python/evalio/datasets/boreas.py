@@ -251,14 +251,12 @@ class Boreas(Dataset):
     # ------------------------- For downloading ------------------------- #
     def files(self) -> Sequence[str | Path]:
         # TODO: This returns true if only a single lidar file is downloaded
+        # Override is_downloaded once we have quick_len implemented
         return [
             "applanix/imu_raw.csv",
             "applanix/gps_post_process.csv",
             "lidar",
         ]
-
-    def is_downloaded(self) -> bool:
-        return True
 
     def download(self):
         from subprocess import Popen, PIPE, run
@@ -289,7 +287,7 @@ class Boreas(Dataset):
         # Find the AWS cli installed in the same environment as evalio
         aws = Path(sys.prefix) / "bin" / "aws"
 
-        loop = tqdm(total=count, desc="Downloading Boreas data", unit="file")
+        loop = tqdm(total=count, desc="Downloading", unit="file")
         popen = Popen(
             [
                 str(aws),
@@ -304,7 +302,7 @@ class Boreas(Dataset):
                 "--include",
                 "applanix/imu_raw.csv",
                 "--include",
-                "applanix/*",
+                "applanix/gps_post_process.csv",
                 "--include",
                 "lidar/*",
             ],
@@ -312,7 +310,6 @@ class Boreas(Dataset):
             universal_newlines=True,
         )
         for stdout_line in iter(popen.stdout.readline, ""):  # type: ignore
-            print(stdout_line, end="")
             loop.update(1)
 
     def quick_len(self) -> Optional[int]:
