@@ -429,12 +429,15 @@ inline LidarMeasurement boreas_bin_to_evalio(
     // clang-format off
     Point point;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
-    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.t = Duration::from_sec(holder);
     file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.row = static_cast<uint16_t>(holder);
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.t = Duration::from_sec(holder);
     // clang-format on
+    mm.points.push_back(point);
   }
   file.close();
 
@@ -594,6 +597,7 @@ inline void make_conversions(nb::module_& m) {
   m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
   // boreas column major reordering
   m.def("fill_col_by_map", &fill_col_by_map);
+  m.def("boreas_bin_to_evalio", &boreas_bin_to_evalio);
 
   m.def("parse_csv_line", &parse_csv_line);
   m.def("closest", &closest);

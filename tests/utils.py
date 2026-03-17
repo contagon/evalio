@@ -44,6 +44,9 @@ def rand_se3():
 def check_lidar_eq(exp: LidarMeasurement, got: LidarMeasurement):
     if got != exp:
         assert got.stamp == exp.stamp, f"stamps do not match {exp.stamp} != {got.stamp}"
+        assert len(got.points) == len(exp.points), (
+            f"number of points do not match {len(exp.points)} != {len(got.points)}"
+        )
         for i, (got_pt, exp_pt) in enumerate(zip(got.points, exp.points)):
             assert got_pt == exp_pt, f"p{i}, {got_pt} != {exp_pt}"
 

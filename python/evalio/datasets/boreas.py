@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from evalio._cpp.helpers import fill_col_by_map, reorder_points  # type: ignore
+from evalio._cpp.helpers import boreas_bin_to_evalio  # type: ignore
 from evalio.datasets.loaders import RawDataIter
 from evalio.types import (
     SE3,
@@ -13,9 +13,6 @@ from evalio.types import (
     ImuParams,
     LidarParams,
     Trajectory,
-    Duration,
-    LidarMeasurement,
-    Point,
     Stamp,
 )
 
@@ -40,169 +37,12 @@ from .base import Dataset, DatasetIterator
 #         prev_idx = idx
 
 #     idx += 1
-MAP_IDX_TO_ROW = [
-    4,
-    53,
-    102,
-    23,
-    64,
-    113,
-    34,
-    83,
-    12,
-    61,
-    110,
-    31,
-    72,
-    121,
-    42,
-    91,
-    36,
-    85,
-    6,
-    55,
-    96,
-    17,
-    66,
-    115,
-    44,
-    93,
-    14,
-    63,
-    104,
-    25,
-    74,
-    123,
-    68,
-    117,
-    38,
-    87,
-    0,
-    49,
-    98,
-    19,
-    76,
-    125,
-    46,
-    95,
-    8,
-    57,
-    106,
-    27,
-    100,
-    21,
-    70,
-    119,
-    32,
-    81,
-    2,
-    51,
-    108,
-    29,
-    78,
-    127,
-    40,
-    89,
-    10,
-    59,
-    20,
-    69,
-    118,
-    39,
-    80,
-    1,
-    50,
-    99,
-    28,
-    77,
-    126,
-    47,
-    88,
-    9,
-    58,
-    107,
-    52,
-    101,
-    22,
-    71,
-    112,
-    33,
-    82,
-    3,
-    60,
-    109,
-    30,
-    79,
-    120,
-    41,
-    90,
-    11,
-    84,
-    5,
-    54,
-    103,
-    16,
-    65,
-    114,
-    35,
-    92,
-    13,
-    62,
-    111,
-    24,
-    73,
-    122,
-    43,
-    116,
-    37,
-    86,
-    7,
-    48,
-    97,
-    18,
-    67,
-    124,
-    45,
-    94,
-    15,
-    56,
-    105,
-    26,
-    75,
-]
+# fmt: off
+MAP_IDX_TO_ROW = [4,53,102,23,64,113,34,83,12,61,110,31,72,121,42,91,36,85,6,55,96,17,66,115,44,93,14,63,104,25,74,123,68,117,38,87,0,49,98,19,76,125,46,95,8,57,106,27,100,21,70,119,32,81,2,51,108,29,78,127,40,89,10,59,20,69,118,39,80,1,50,99,28,77,126,47,88,9,58,107,52,101,22,71,112,33,82,3,60,109,30,79,120,41,90,11,84,5,54,103,16,65,114,35,92,13,62,111,24,73,122,43,116,37,86,7,48,97,18,67,124,45,94,15,56,105,26,75,]
 MAP_ROW_TO_IDX = [-1] * 128
 for i, row in enumerate(MAP_IDX_TO_ROW):
     MAP_ROW_TO_IDX[row] = i
-
-
-def _load_boreas_bin(path: Path, params: LidarParams) -> LidarMeasurement:
-    """Load a Boreas Velodyne .bin point cloud file.
-
-    Binary format: float32[N, 6] where columns are [x, y, z, intensity, ring, t].
-    't' is offset in microseconds from the start of the scan.
-
-    Source: https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md
-    https://github.com/utiasASRL/pyboreas/blob/a0cd0fb5a453ebe8a0939e226ce55073bc8a578a/pyboreas/utils/utils.py#L17-L27
-    """
-
-    stamp = Stamp.from_nsec(
-        int(path.stem) * 1000
-    )  # timestamps are in microseconds, convert to nanoseconds
-
-    # dtype MUST be float32 to load this properly!
-    points = np.fromfile(path, dtype=np.float32).reshape((-1, 6))
-    # TODO: I think this conversion is slow
-    points = [
-        Point(x=x, y=y, z=z, intensity=i, row=row, t=Duration.from_sec(t))
-        for x, y, z, i, row, t in points
-    ]
-
-    mm = LidarMeasurement(stamp, points)
-
-    fill_col_by_map(mm, MAP_ROW_TO_IDX)
-    reorder_points(mm, params.num_rows, params.num_columns)
-
-    return mm
+# fmt: on
 
 
 class Boreas(Dataset):
@@ -306,7 +146,10 @@ class Boreas(Dataset):
 
         def lidar_iter():
             for lidar_file in lidar_files:
-                yield _load_boreas_bin(lidar_file, params)
+                stamp = Stamp.from_nsec(int(lidar_file.stem) * 1000)
+                yield boreas_bin_to_evalio(
+                    str(lidar_file), stamp, params, MAP_ROW_TO_IDX
+                )
 
         return RawDataIter(
             lidar_iter(),
