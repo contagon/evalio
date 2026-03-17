@@ -2,7 +2,8 @@ from .base import Dataset, DatasetIterator, get_data_dir, set_data_dir
 from .loaders import RawDataIter, RosbagIter
 
 from .boreas import Boreas
-from .boreas_rt import BoreasRt
+
+# from .boreas_rt import BoreasRt
 from .botanic_garden import BotanicGarden
 from .cumulti import CUMulti
 from .enwide import EnWide
@@ -50,7 +51,6 @@ __all__ = [
     "DatasetConfig",
     # datasets
     "Boreas",
-    "BoreasRt",
     "BotanicGarden",
     "CUMulti",
     "EnWide",

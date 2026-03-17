@@ -25,6 +25,23 @@ wheels = [
 ]
 
 [[package]]
+name = "awscli"
+version = "1.44.58"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+    { name = "colorama" },
+    { name = "docutils" },
+    { name = "pyyaml" },
+    { name = "rsa" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/85/64/c1789eab13958852950685ca580ef138238d7f846afb0ea2face9715c974/awscli-1.44.58.tar.gz", hash = "sha256:12e7dbb895e01de4af9e3bd1ca6a628ef9398c6583d4e02633c280c440736a7f", size = 1884281, upload-time = "2026-03-13T19:32:11.934Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/ce/3b43c9940dee050a57cce5dc9901d0a5f480291f51d53f048c5590aa54d7/awscli-1.44.58-py3-none-any.whl", hash = "sha256:2f1e427be0b792aa6f9fcc552c0ece2e250d53555c7cb531a0f9726ba2137305", size = 4622328, upload-time = "2026-03-13T19:32:08.019Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -251,11 +268,21 @@ wheels = [
 ]
 
 [[package]]
+name = "docutils"
+version = "0.19"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/5c/330ea8d383eb2ce973df34d1239b3b21e91cd8c865d21ff82902d952f91f/docutils-0.19.tar.gz", hash = "sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6", size = 2056383, upload-time = "2022-07-05T20:17:31.045Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/93/69/e391bd51bc08ed9141ecd899a0ddb61ab6465309f1eb470905c0c8868081/docutils-0.19-py3-none-any.whl", hash = "sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc", size = 570472, upload-time = "2022-07-05T20:17:26.388Z" },
+]
+
+[[package]]
 name = "evalio"
 version = "0.4.2"
 source = { editable = "." }
 dependencies = [
     { name = "asteval" },
+    { name = "awscli" },
     { name = "boto3" },
     { name = "distinctipy" },
     { name = "gdown" },
@@ -298,6 +325,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "asteval", specifier = ">=1.0.6" },
+    { name = "awscli", specifier = ">=1.44.58" },
     { name = "boto3", specifier = ">=1.26.0" },
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "gdown", specifier = ">=5.2.0" },
@@ -1103,6 +1131,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyasn1"
+version = "0.6.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/b6/6e630dff89739fcd427e3f72b3d905ce0acb85a45d4ec3e2678718a3487f/pyasn1-0.6.2.tar.gz", hash = "sha256:9b59a2b25ba7e4f8197db7686c09fb33e658b98339fadb826e9512629017833b", size = 146586, upload-time = "2026-01-16T18:04:18.534Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/b5/a96872e5184f354da9c84ae119971a0a4c221fe9b27a4d94bd43f2596727/pyasn1-0.6.2-py3-none-any.whl", hash = "sha256:1eb26d860996a18e9b6ed05e7aae0e9fc21619fcee6af91cca9bad4fbea224bf", size = 83371, upload-time = "2026-01-16T18:04:17.174Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1385,6 +1422,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f3/2f/b6d11cc9fac4003b284e2c152b5c34ca5b6d26caf5f6979118e2d588a0d7/rosbags-0.11.0.tar.gz", hash = "sha256:e73bbe79a15d7f539653375278ffca6c48e56b5c2ada4a4531de0b17737cbc46", size = 254438, upload-time = "2025-10-15T09:49:54.453Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/75/b66d992a87539cd9e0070bca6ba49694b9258a4f9bc905d0576354d7864a/rosbags-0.11.0-py3-none-any.whl", hash = "sha256:2ce27d8dc37f554f10bf5962f665331ce16f43aba304c6c233eb15fab05b61ab", size = 137920, upload-time = "2025-10-15T09:49:50.329Z" },
+]
+
+[[package]]
+name = "rsa"
+version = "4.7.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyasn1" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/db/b5/475c45a58650b0580421746504b680cd2db4e81bc941e94ca53785250269/rsa-4.7.2.tar.gz", hash = "sha256:9d689e6ca1b3038bc82bf8d23e944b6b6037bc02301a574935b2dd946e0353b9", size = 39711, upload-time = "2021-02-24T10:55:05.846Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e9/93/0c0f002031f18b53af7a6166103c02b9c0667be528944137cc954ec921b3/rsa-4.7.2-py3-none-any.whl", hash = "sha256:78f9a9bf4e7be0c5ded4583326e7461e3a3c5aae24073648b4bdfa797d78c9d2", size = 34505, upload-time = "2021-02-24T10:55:03.55Z" },
 ]
 
 [[package]]
