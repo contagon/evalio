@@ -414,6 +414,16 @@ inline LidarMeasurement boreas_bin_to_evalio(
   }
   file.close();
 
+  // Stamp is taken from middle of scan, so shift so the smallest point stamp is at 0
+  auto oldest = std::min_element(
+    mm.points.begin(),
+    mm.points.end(),
+    [](const Point& a, const Point& b) { return a.t < b.t; }
+  );
+  auto shift = -oldest->t;
+  shift_point_stamps(mm, shift);
+  mm.stamp = mm.stamp + shift;
+
   fill_col_by_map(mm, map_row_to_idx);
   reorder_points(mm, params.num_rows, params.num_columns);
 

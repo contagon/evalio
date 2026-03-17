@@ -64,6 +64,10 @@ struct Duration {
     return Duration::from_nsec(nsec - other.nsec);
   }
 
+  Duration operator-() const {
+    return Duration::from_nsec(-nsec);
+  }
+
   Duration operator+(const Duration& other) const {
     return Duration::from_nsec(nsec + other.nsec);
   }

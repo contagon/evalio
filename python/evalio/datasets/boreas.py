@@ -223,7 +223,7 @@ class Boreas(Dataset):
 
     def lidar_params(self) -> LidarParams:
         # Velodyne Alpha-Prime (VLS-128)
-        # 128 channels, 10 Hz, range up to 300 m (10% reflectivity)
+        # 128 channels, 10 Hz, range up to 245 m (10% reflectivity)
         # Source: https://data.ouster.io/downloads/datasheets/velodyne/63-9679_Rev-B_DATASHEET_ALPHA-PRIME_web.pdf
         # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
         return LidarParams(
@@ -231,7 +231,7 @@ class Boreas(Dataset):
             # This is approximate, I never saw values greater than this
             num_columns=2000,
             min_range=0.4,
-            max_range=300.0,
+            max_range=245.0,
             rate=10.0,
             brand="Velodyne",
             model="VLS-128",
