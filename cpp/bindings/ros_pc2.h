@@ -277,6 +277,7 @@ inline void fill_col_col_major(LidarMeasurement& mm) {
 }
 
 // point cloud loader where rows come in in 0, 8, 1, 9, ... order
+// used for 16-beam botanic garden dataset with Velodyne VLP-16
 inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
   auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
     if (row_idx < 8) {
@@ -295,6 +296,49 @@ inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
     if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
       col = prev_col + 1;
     } else {
+      col = prev_col;
+    }
+  };
+
+  _fill_col(mm, func_col);
+}
+
+// point cloud loader where rows come in consistently a near-random order
+// once we see a row again we assume that we've switched to the next column
+// used for 128-beam boreas dataset
+inline void
+fill_col_by_seen(LidarMeasurement& mm, std::vector<int>& row_order) {
+  auto first_row = mm.points[0].row;
+  auto num_rows = row_order.size();
+  auto func_col = [&num_rows, &first_row, &row_order](
+                    uint16_t& col,
+                    const uint16_t& prev_col,
+                    const uint8_t& prev_row,
+                    const uint8_t& curr_row
+                  ) {
+    static auto seen_rows = [&num_rows, &first_row]() {
+      std::vector<bool> s(num_rows, false);
+      // start with the first row as it'll be skipped in _fill_col
+      s[first_row] = true;
+      return s;
+    }();
+
+    // If this point has already been seen, we must be on the next column
+    if (seen_rows[curr_row]) {
+      auto ptr = std::find(row_order.begin(), row_order.end(), curr_row);
+      if (ptr == row_order.end()) {
+        throw std::runtime_error("Current row not found in row order");
+      }
+      auto idx = std::distance(row_order.begin(), ptr);
+      std::fill(seen_rows.begin(), seen_rows.end(), false);
+      for (int i = 0; i <= idx; i++) {
+        seen_rows[row_order[i]] = true;
+      }
+
+      col = prev_col + 1;
+    } else {
+      seen_rows[curr_row] = true;
+
       col = prev_col;
     }
   };
@@ -535,6 +579,8 @@ inline void make_conversions(nb::module_& m) {
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
   // botanic garden velodyne reordering
   m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
+  // boreas column major reordering
+  m.def("fill_col_by_seen", &fill_col_by_seen);
 
   m.def("parse_csv_line", &parse_csv_line);
   m.def("closest", &closest);
