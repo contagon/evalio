@@ -146,12 +146,13 @@ class BoreasRT(Dataset):
         # Silicon Sensing DMU41 MEMS IMU — higher-grade MEMS IMU used in the newer Boreas RT sequences.
         # Specs taken from the table 2 in their paper
         # https://arxiv.org/pdf/2602.16870
-        # TODO: Request Tushar's help to extract this info
         return ImuParams(
-            gyro=1.0e-3,  # rad/s/sqrt(Hz) — conservative estimate
-            accel=1.0e-2,  # m/s^2/sqrt(Hz) — conservative estimate
-            gyro_bias=1.0e-4,  # rad/s^2/sqrt(Hz)
-            accel_bias=1.0e-3,  # m/s^3/sqrt(Hz)
+            # 0.02 deg/sqrt(hr) * pi / 180 * 1 / sqrt(3600)
+            gyro=0.000333333333333,  # datasheet
+            # 0.05 m/s/sqrt(hr) * 1 / sqrt(3600)
+            accel=0.000833333333333,  # datasheet
+            gyro_bias=0.000003,  # eyeballed
+            accel_bias=0.000008,  # eyeballed
             bias_init=1e-6,
             integration=1e-6,
             gravity=np.array([0, 0, -9.81]),
