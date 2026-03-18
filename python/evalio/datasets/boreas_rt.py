@@ -157,8 +157,8 @@ class BoreasRT(Dataset):
             integration=1e-6,
             gravity=np.array([0, 0, -9.81]),
             rate=200.0,
-            brand="Applanix",
-            model="POS LV",
+            brand="SS",
+            model="DMU41",
         )
 
     def lidar_params(self) -> LidarParams:
@@ -190,12 +190,21 @@ class BoreasRT(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> Sequence[str | Path]:
-        # TODO: This returns true if only a single lidar file is downloaded
         return [
             "imu/dmu_imu.csv",
             "applanix/gps_post_process.csv",
             "lidar",
         ]
+
+    def is_downloaded(self) -> bool:
+        if not super().is_downloaded():
+            return False
+
+        num = self.quick_len()
+        if num is None:
+            return False
+
+        return sum(1 for _ in (self.folder / "lidar").glob("*.bin")) >= num
 
     def download(self):
         from subprocess import Popen, PIPE, run
@@ -252,5 +261,34 @@ class BoreasRT(Dataset):
             loop.update(1)
 
     def quick_len(self) -> Optional[int]:
-        # TODO
-        return None
+        match self:
+            case self.farm_2025_07_18_14_55:
+                return 8161
+            case self.skyway_2024_12_04_12_08:
+                return 5699
+            case self.skyway_2024_12_04_12_34:
+                return 5562
+            case self.farm_2025_07_18_15_30:
+                return 8479
+            case self.tunnel_2024_12_04_14_50:
+                return 1740
+            case self.glen_2025_02_15_17_19:
+                return 11092
+            case self.glen_2025_01_08_11_22:
+                return 9516
+            case self.glen_2024_12_03_12_54:
+                return 9480
+            case self.industrial_2024_12_05_14_12:
+                return 6375
+            case self.tunnel_2024_12_04_14_28:
+                return 2744
+            case self.skyway_2024_12_04_11_45:
+                return 5629
+            case self.farm_2025_08_13_09_01:
+                return 10771
+            case self.industrial_2024_12_23_16_44:
+                return 8977
+            case self.industrial_2024_12_23_16_27:
+                return 9167
+            case self.tunnel_2024_12_04_15_19:
+                return 2180
