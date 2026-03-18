@@ -430,6 +430,46 @@ inline LidarMeasurement boreas_bin_to_evalio(
   return mm;
 }
 
+// Load fomo data into evalio
+// Alternatively can use numpy, but this is faster for converting to evalio types afterwards
+// https://github.com/norlab-ulaval/fomo-sdk/blob/78406b485c561e079134d46fad62506ff20c688c/fomo_sdk/lidar/utils.py#L139-L166
+inline LidarMeasurement fomo_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params,
+  std::vector<int>& map_row_to_idx
+) {
+  LidarMeasurement mm(stamp);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float fholder = 0.0;
+  uint16_t u16holder = 0;
+  uint64_t u64holder = 0;
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.x = fholder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.y = fholder;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.z = fholder;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.intensity = fholder;
+    file.read(reinterpret_cast<char *>(&u16holder), sizeof(uint16_t)); point.row = u16holder;
+    // Filename stamp is from the start of scan, subtract it off of all of them
+    // The stored stamp is the absolute time in microseconds
+    file.read(reinterpret_cast<char *>(&u64holder), sizeof(uint64_t)); point.t = Stamp::from_nsec(u64holder * 1000) - stamp;
+    // clang-format on
+    mm.points.push_back(point);
+  }
+  file.close();
+
+  fill_col_by_map(mm, map_row_to_idx);
+  reorder_points(mm, params.num_rows, params.num_columns);
+
+  return mm;
+}
+
 /// Parse a CSV line into an SE3 object. The idx map should contain the indices
 /// of the required fields: "qw", "qx", "qy", "qz", "x", "y", "z".
 inline std::pair<Stamp, SE3> parse_csv_line(
@@ -580,6 +620,8 @@ inline void make_conversions(nb::module_& m) {
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
   // load bin format for boreas
   m.def("boreas_bin_to_evalio", &boreas_bin_to_evalio);
+  // load bin format for fomo
+  m.def("fomo_bin_to_evalio", &fomo_bin_to_evalio);
 
   m.def("parse_csv_line", &parse_csv_line);
   m.def("closest", &closest);

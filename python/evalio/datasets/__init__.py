@@ -7,6 +7,7 @@ from .boreas_rt import BoreasRT
 from .botanic_garden import BotanicGarden
 from .cumulti import CUMulti
 from .enwide import EnWide
+from .fomo import Fomo
 from .helipr import HeLiPR
 from .hilti_2022 import Hilti2022
 from .multi_campus import MultiCampus
@@ -55,6 +56,7 @@ __all__ = [
     "BotanicGarden",
     "CUMulti",
     "EnWide",
+    "Fomo",
     "HeLiPR",
     "Hilti2022",
     "NewerCollege2020",
