@@ -9,7 +9,6 @@ requires-python = ">=3.11"
 dependencies = [
     "asteval>=1.0.6",
     "awscli>=1.44.58",
-    "boto3>=1.26.0",
     "distinctipy>=1.3.4",
     "gdown>=5.2.0",
     "joblib>=1.5.2",
