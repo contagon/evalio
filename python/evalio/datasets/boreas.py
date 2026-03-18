@@ -18,25 +18,6 @@ from evalio.types import (
 
 from .base import Dataset, DatasetIterator
 
-# Snippet for determining order
-# prev_col = 0
-# prev_idx = 0
-# idx = 0
-# points = mm.points
-# while True:
-#     if points[idx].col != prev_col:
-#         print(f"col {prev_col} has {idx - prev_idx} points")
-
-#         if idx - prev_idx == 128:
-#             print("all rows seen, stopping")
-#             cols = [p.row for p in points[prev_idx:idx]]
-#             print(cols)
-#             quit()
-
-#         prev_col = points[idx].col
-#         prev_idx = idx
-
-#     idx += 1
 # fmt: off
 MAP_IDX_TO_ROW = [4,53,102,23,64,113,34,83,12,61,110,31,72,121,42,91,36,85,6,55,96,17,66,115,44,93,14,63,104,25,74,123,68,117,38,87,0,49,98,19,76,125,46,95,8,57,106,27,100,21,70,119,32,81,2,51,108,29,78,127,40,89,10,59,20,69,118,39,80,1,50,99,28,77,126,47,88,9,58,107,52,101,22,71,112,33,82,3,60,109,30,79,120,41,90,11,84,5,54,103,16,65,114,35,92,13,62,111,24,73,122,43,116,37,86,7,48,97,18,67,124,45,94,15,56,105,26,75,]
 MAP_ROW_TO_IDX = [-1] * 128
@@ -52,10 +33,11 @@ class Boreas(Dataset):
     Velodyne Alpha-Prime 128-beam lidar and an Applanix POS LV IMU. Ground truth is
     from the Applanix post-processed solution.
 
-    We use the odometry benchmark splits (odom_train + odom_test).
-
     We treat the base/IMU frame as the Applanix frame, which is ENU with x-right, y-forward, z-up.
     (raw IMU data is actually x-backward, y-left, z-down, but we apply the necessary reordering in data_iter).
+
+    We recommend NOT using this dataset for IMU fusion, as the IMU data is already preprocessed with gravity removed and may have other unknown processing steps.
+    Additionally, the model of IMU is unknown and the noise parameters are not well documented, so it may be difficult to use for IMU fusion.
 
     Data can be browsed here, but does require an amazon account:
     https://s3.console.aws.amazon.com/s3/buckets/boreas/
@@ -63,53 +45,41 @@ class Boreas(Dataset):
 
     # odom_train sequences (31 sequences)
     # Source: https://github.com/utiasASRL/pyboreas/blob/master/pyboreas/data/splits.py
-    boreas_2020_11_26_13_58 = auto()
-    boreas_2020_12_01_13_26 = auto()
-    boreas_2021_01_15_12_17 = auto()
-    boreas_2021_01_19_15_08 = auto()
-    boreas_2021_01_26_10_59 = auto()
-    boreas_2021_02_02_14_07 = auto()
-    boreas_2021_02_09_12_55 = auto()
-    boreas_2021_03_02_13_38 = auto()
-    boreas_2021_03_09_14_23 = auto()
-    boreas_2021_03_23_12_43 = auto()
-    boreas_2021_04_08_12_44 = auto()
-    boreas_2021_04_13_14_49 = auto()
-    boreas_2021_04_20_14_11 = auto()
-    boreas_2021_04_27_13_45 = auto()
-    boreas_2021_05_13_16_22 = auto()
-    boreas_2021_06_01_14_13 = auto()
-    boreas_2021_06_03_11_34 = auto()
-    boreas_2021_06_17_17_52 = auto()
-    boreas_2021_06_29_18_05 = auto()
-    boreas_2021_07_20_17_33 = auto()
-    boreas_2021_07_27_14_43 = auto()
-    boreas_2021_08_05_13_34 = auto()
-    boreas_2021_09_07_09_35 = auto()
-    boreas_2021_09_14_20_00 = auto()
-    boreas_2021_09_28_15_45 = auto()
-    boreas_2021_10_05_15_35 = auto()
-    boreas_2021_10_26_12_51 = auto()
-    boreas_2021_11_06_18_55 = auto()
-    boreas_2021_11_14_11_58 = auto()
-    boreas_2021_11_20_16_19 = auto()
-    boreas_2021_11_23_14_27 = auto()
+    # This is the main odometry sample they recommend
+    glen_2021_09_02_11_42 = auto()
 
-    # odom_test sequences (13 sequences)
-    # These don't have ground truth so we don't include them
-    # boreas_2020_12_04_14_00 = auto()
-    # boreas_2021_01_26_11_22 = auto()
-    # boreas_2021_02_09_13_25 = auto()
-    # boreas_2021_03_09_14_56 = auto()
-    # boreas_2021_04_13_15_35 = auto()
-    # boreas_2021_05_13_17_23 = auto()
-    # boreas_2021_06_17_18_46 = auto()
-    # boreas_2021_07_27_15_31 = auto()
-    # boreas_2021_08_05_14_14 = auto()
-    # boreas_2021_09_14_20_28 = auto()
-    # boreas_2021_10_05_16_13 = auto()
-    # boreas_2021_10_26_13_28 = auto()
-    # boreas_2021_11_28_09_18 = auto()
+    # These are the rest of the sequences in the odom_train split
+    # They are probably mostly similar to the above, so we disable most for simplicity
+    glen_2020_11_26_13_58 = auto()
+    # glen_2020_12_01_13_26 = auto()
+    # glen_2020_12_18_13_44 = auto()
+    # glen_2021_01_15_12_17 = auto()
+    # glen_2021_01_19_15_08 = auto()
+    # glen_2021_01_26_11_22 = auto()
+    # glen_2021_02_02_14_07 = auto()
+    # glen_2021_03_02_13_38 = auto()
+    glen_2021_03_23_12_43 = auto()
+    # glen_2021_03_30_14_23 = auto()
+    # glen_2021_04_08_12_44 = auto()
+    # glen_2021_04_13_14_49 = auto()
+    # glen_2021_04_15_18_55 = auto()
+    # glen_2021_04_20_14_11 = auto()
+    # glen_2021_04_29_15_55 = auto()
+    # glen_2021_05_06_13_19 = auto()
+    # glen_2021_05_13_16_11 = auto()
+    # glen_2021_06_03_16_00 = auto()
+    # glen_2021_06_17_17_52 = auto()
+    glen_2021_07_20_17_33 = auto()
+    # glen_2021_07_27_14_43 = auto()
+    # glen_2021_08_05_13_34 = auto()
+    # glen_2021_09_07_09_35 = auto()
+    # glen_2021_09_14_20_00 = auto()
+    # glen_2021_10_15_12_35 = auto()
+    # glen_2021_10_22_11_36 = auto()
+    # glen_2021_11_02_11_16 = auto()
+    # glen_2021_11_14_09_47 = auto()
+    # glen_2021_11_16_14_10 = auto()
+    # glen_2021_11_23_14_27 = auto()
 
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
@@ -122,7 +92,7 @@ class Boreas(Dataset):
         # IMU frame: x-backward, y-left, z-down (body frame)
         # Applanix frame: x-right, y-forward, z-up (ENU frame)
         # We permute as needed
-        # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
+        # Source: https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md
         # https://github.com/utiasASRL/pyboreas/issues/44
         #
         # Additionally, gravity is already removed from the raw IMU data, so we'll set that to 0 later
@@ -203,14 +173,14 @@ class Boreas(Dataset):
 
     def imu_params(self) -> ImuParams:
         # Applanix POS LV (SPAN) — tactical-grade MEMS IMU integrated in the Applanix system.
-        # Noise values are estimates from the Boreas dataset paper and Applanix datasheet.
-        # Source: https://www.applanix.com/downloads/products/specs/POS-LV-Specifications.pdf
-        # TODO: Verify these parameters, they seem wrong...
+        # There is no info on IMU specs, so we just use conservative estimates based on typical tactical-grade MEMS IMUs. It has IMU-42 in below spec
+        # Source: https://assets.ctfassets.net/9k5dj5b59lqq/1Rk6xUsM94XQFXfjtdHrGE/ae8163104c040819678bbb1f63ed7be3/022520-034C-PO_LV_USL_0525_LR_1.pdf
+        # https://github.com/utiasASRL/pyboreas/issues/53
         return ImuParams(
-            gyro=1.0e-3,  # rad/s/sqrt(Hz) — conservative estimate
-            accel=1.0e-2,  # m/s^2/sqrt(Hz) — conservative estimate
-            gyro_bias=1.0e-4,  # rad/s^2/sqrt(Hz)
-            accel_bias=1.0e-3,  # m/s^3/sqrt(Hz)
+            gyro=1.0e-4,  # rad/s/sqrt(Hz) — conservative estimate
+            accel=1.0e-3,  # m/s^2/sqrt(Hz) — conservative estimate
+            gyro_bias=1.0e-5,  # rad/s^2/sqrt(Hz)
+            accel_bias=1.0e-4,  # m/s^3/sqrt(Hz)
             bias_init=1e-6,
             integration=1e-6,
             gravity=np.array(
@@ -218,14 +188,14 @@ class Boreas(Dataset):
             ),  # Gravity is already removed from the raw IMU data
             rate=200.0,
             brand="Applanix",
-            model="POS LV",
+            model="IMU-42",
         )
 
     def lidar_params(self) -> LidarParams:
         # Velodyne Alpha-Prime (VLS-128)
         # 128 channels, 10 Hz, range up to 245 m (10% reflectivity)
         # Source: https://data.ouster.io/downloads/datasheets/velodyne/63-9679_Rev-B_DATASHEET_ALPHA-PRIME_web.pdf
-        # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
+        # Source: https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md
         return LidarParams(
             num_rows=128,
             # This is approximate, I never saw values greater than this
@@ -265,7 +235,7 @@ class Boreas(Dataset):
         # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 
-        seq = self.seq_name.replace("_", "-")
+        seq = "boreas-" + self.seq_name.replace("_", "-").split("-", 1)[1]
 
         # Figure out how many total files they are
         output = run(

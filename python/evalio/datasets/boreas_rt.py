@@ -26,25 +26,32 @@ class BoreasRT(Dataset):
     Collected with the same Velodyne Alpha-Prime 128-beam lidar as the original Boreas
     dataset but adds a Silicon Sensing DMU41 MEMS IMU for higher-fidelity inertial data.
     Ground truth is from the Applanix post-processed solution.
+
+    NOTE: The IMU data has a handful of issues, namely:
+        1) Occasional dropouts noted in their paper
+        2) Not time-synchronized, but manually time-synced after the fact
     """
 
     # odom_test_rt sequences (15 sequences)
     # Source: https://github.com/utiasASRL/pyboreas/blob/master/pyboreas/data/splits.py
-    boreas_2024_12_03_12_54 = auto()
-    boreas_2024_12_10_12_42 = auto()
-    boreas_2025_01_14_11_45 = auto()
-    boreas_2025_01_21_13_56 = auto()
-    boreas_2025_01_28_11_31 = auto()
-    boreas_2025_02_04_12_57 = auto()
-    boreas_2025_02_11_14_51 = auto()
-    boreas_2025_03_04_11_37 = auto()
-    boreas_2025_03_11_11_27 = auto()
-    boreas_2025_03_25_11_54 = auto()
-    boreas_2025_04_08_11_32 = auto()
-    boreas_2025_04_15_11_37 = auto()
-    boreas_2025_04_22_11_19 = auto()
-    boreas_2025_05_13_12_10 = auto()
-    boreas_2025_08_13_09_01 = auto()
+    glen_2024_12_03_12_54 = auto()  # suburbs (glen shields) mapping + odometry
+    glen_2025_01_08_11_22 = auto()  # suburbs (glen shields) odometry
+    glen_2025_02_15_17_19 = auto()  # suburbs (glen shields) odometry
+    industrial_2024_12_05_14_12 = auto()  # industrial mapping + odometry
+    industrial_2024_12_23_16_27 = auto()  # industrial odometry
+    industrial_2024_12_23_16_44 = auto()  # industrial odometry
+    skyway_2024_12_04_11_45 = auto()  # skyway mapping + odometry
+    skyway_2024_12_04_12_08 = auto()  # skyway odometry
+    skyway_2024_12_04_12_34 = auto()  # skyway odometry
+    tunnel_2024_12_04_14_28 = auto()  # tunnel east mapping + odometry
+    tunnel_2024_12_04_14_50 = auto()  # tunnel east odometry
+    tunnel_2024_12_04_15_19 = auto()  # tunnel east odometry
+    farm_2025_07_18_14_55 = auto()  # farm mapping + odometry
+    farm_2025_07_18_15_30 = auto()  # farm odometry
+    farm_2025_08_13_09_01 = auto()  # farm odometry
+
+    # There are more sequences, but these should be sufficient?
+    # If requested we can add the other ~45 sequences, but they should be mostly identical to these
 
     # ------------------------- For loading data ------------------------- #
     def data_iter(self) -> DatasetIterator:
@@ -52,25 +59,15 @@ class BoreasRT(Dataset):
 
         # Load IMU data
         # Format: GPSTime,angvel_z,angvel_y,angvel_x,accelz,accely,accelx
-        #
-        # Timestamps are GPS time in seconds (float).
-        # IMU frame: x-backward, y-left, z-down (body frame)
-        # Applanix frame: x-right, y-forward, z-up (ENU frame)
-        # We permute as needed
-        # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
-        # https://github.com/utiasASRL/pyboreas/issues/44
-        #
-        # Additionally, gravity is already removed from the raw IMU data, so we'll set that to 0 later
-        # https://github.com/utiasASRL/pyboreas/issues/24
         imu_file = self.folder / "imu" / "dmu_imu.csv"
         imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
         imu_data = [
             ImuMeasurement(
-                stamp=Stamp.from_sec(s),
-                gyro=np.array([-wy, -wx, wz]),  # reorder to x,y,z
-                accel=np.array([-ay, -ax, az]),  # reorder to x,y,z
+                stamp=Stamp.from_nsec(row[0]),
+                gyro=row[1:4],
+                accel=row[4:7],
             )
-            for s, wz, wy, wx, az, ay, ax in imu_raw
+            for row in imu_raw
         ]
 
         # Setup lidar files
@@ -148,10 +145,10 @@ class BoreasRT(Dataset):
         return self.imu_T_gt() * self.lidar_T_gt().inverse()
 
     def imu_params(self) -> ImuParams:
-        # Applanix POS LV (SPAN) — tactical-grade MEMS IMU integrated in the Applanix system.
-        # Noise values are estimates from the Boreas dataset paper and Applanix datasheet.
-        # Source: https://www.applanix.com/downloads/products/specs/POS-LV-Specifications.pdf
-        # TODO: Verify these parameters, they seem wrong...
+        # Silicon Sensing DMU41 MEMS IMU — higher-grade MEMS IMU used in the newer Boreas RT sequences.
+        # Specs taken from the table 2 in their paper
+        # https://arxiv.org/pdf/2602.16870
+        # TODO: Request Tushar's help to extract this info
         return ImuParams(
             gyro=1.0e-3,  # rad/s/sqrt(Hz) — conservative estimate
             accel=1.0e-2,  # m/s^2/sqrt(Hz) — conservative estimate
@@ -159,9 +156,7 @@ class BoreasRT(Dataset):
             accel_bias=1.0e-3,  # m/s^3/sqrt(Hz)
             bias_init=1e-6,
             integration=1e-6,
-            gravity=np.array(
-                [0, 0, 0]
-            ),  # Gravity is already removed from the raw IMU data
+            gravity=np.array([0, 0, -9.81]),
             rate=200.0,
             brand="Applanix",
             model="POS LV",
@@ -171,7 +166,7 @@ class BoreasRT(Dataset):
         # Velodyne Alpha-Prime (VLS-128)
         # 128 channels, 10 Hz, range up to 245 m (10% reflectivity)
         # Source: https://data.ouster.io/downloads/datasheets/velodyne/63-9679_Rev-B_DATASHEET_ALPHA-PRIME_web.pdf
-        # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
+        # Source: https://github.com/utiasASRL/pyboreas/blob/master/DATA_RT_REFERENCE.md
         return LidarParams(
             num_rows=128,
             # This is approximate, I never saw values greater than this
@@ -186,7 +181,7 @@ class BoreasRT(Dataset):
     # ------------------------- dataset info ------------------------- #
     @staticmethod
     def url() -> str:
-        return "https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md"
+        return "https://github.com/utiasASRL/pyboreas/blob/master/DATA_RT_REFERENCE.md"
 
     def environment(self) -> str:
         return "Urban Driving"
@@ -210,7 +205,7 @@ class BoreasRT(Dataset):
         # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 
-        seq = self.seq_name.replace("_", "-")
+        seq = "boreas-" + self.seq_name.replace("_", "-").split("-", 1)[1]
 
         # Figure out how many total files they are
         output = run(
