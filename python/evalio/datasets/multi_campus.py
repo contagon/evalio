@@ -156,11 +156,14 @@ class MultiCampus(Dataset):
         else:
             model = "VN-200"
 
+        # Some of these values aren't in the datasheet
+        # We insert Fomo calibrated values for them
+        # The ones in the datasheet match very well with FOMO calibrated values, so we are confident in the accuracy
         return ImuParams(
-            gyro=0.000061087,  # VectorNav Datasheet
-            accel=0.00137,  # VectorNav Datasheet
-            gyro_bias=0.000061087,
-            accel_bias=0.000137,
+            gyro=0.00617,  # Eyeballed. FOMO calibration was smaller than the bias value!
+            accel=0.001,  # From FOMO calibration
+            gyro_bias=0.000061087,  # VectorNav Datasheet
+            accel_bias=0.0000142711518858,  # VectorNav Datasheet
             bias_init=1e-7,
             integration=1e-7,
             gravity=np.array([0, 0, -9.81]),
