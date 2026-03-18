@@ -167,7 +167,7 @@ class Fomo(Dataset):
             max_range=240.0,
             rate=10.0,
             brand="Robosense",
-            model="Ruby Plus",
+            model="Ruby+",
         )
 
     # ------------------------- dataset info ------------------------- #
