@@ -235,12 +235,15 @@ class Boreas(Dataset):
         # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 
+        # Find the AWS cli installed in the same environment as evalio
+        aws = Path(sys.prefix) / "bin" / "aws"
+
         seq = "boreas-" + self.seq_name.replace("_", "-").split("-", 1)[1]
 
         # Figure out how many total files they are
         output = run(
             [
-                "aws",
+                str(aws),
                 "s3",
                 "ls",
                 "--no-sign-request",
@@ -253,9 +256,6 @@ class Boreas(Dataset):
         # get the last few lines of aws CLI output to show total file count and size
         count = int(output.stdout.splitlines()[-2].split(":")[1].strip())
         count += 2
-
-        # Find the AWS cli installed in the same environment as evalio
-        aws = Path(sys.prefix) / "bin" / "aws"
 
         loop = tqdm(total=count, desc="Downloading", unit="file")
         popen = Popen(
