@@ -266,6 +266,7 @@ struct ImuMeasurement {
 };
 
 struct ImuParams {
+  // These are all sigmas, not variances
   double gyro = 1e-5;
   double accel = 1e-5;
   double gyro_bias = 1e-6;

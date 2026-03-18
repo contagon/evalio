@@ -109,9 +109,7 @@ class Boreas(Dataset):
         ]
 
         # Setup lidar files
-        # Lidar timestamps are in microseconds, and we convert to nanoseconds for consistency with the rest of evalio.
         lidar_files = sorted(list(lidar_path.glob("*.bin")))
-        lidar_stamps = [Stamp.from_nsec(int(f.stem) * 1000) for f in lidar_files]
         params = self.lidar_params()
 
         def lidar_iter():
@@ -124,7 +122,7 @@ class Boreas(Dataset):
         return RawDataIter(
             lidar_iter(),
             iter(imu_data),
-            len(lidar_stamps),
+            len(lidar_files),
         )
 
     def ground_truth_raw(self) -> Trajectory:
