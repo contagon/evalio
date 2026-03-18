@@ -218,13 +218,21 @@ class Boreas(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> Sequence[str | Path]:
-        # TODO: This returns true if only a single lidar file is downloaded
-        # Override is_downloaded once we have quick_len implemented
         return [
             "applanix/imu_raw.csv",
             "applanix/gps_post_process.csv",
             "lidar",
         ]
+
+    def is_downloaded(self) -> bool:
+        if not super().is_downloaded():
+            return False
+
+        num = self.quick_len()
+        if num is None:
+            return False
+
+        return sum(1 for _ in (self.folder / "lidar").glob("*.bin")) >= num
 
     def download(self):
         from subprocess import Popen, PIPE, run
@@ -281,5 +289,12 @@ class Boreas(Dataset):
             loop.update(1)
 
     def quick_len(self) -> Optional[int]:
-        # TODO
-        return None
+        match self:
+            case self.glen_2021_09_02_11_42:
+                return 9967
+            case self.glen_2020_11_26_13_58:
+                return 9984
+            case self.glen_2021_03_23_12_43:
+                return 9664
+            case self.glen_2021_07_20_17_33:
+                return 10843
