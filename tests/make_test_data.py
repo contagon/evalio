@@ -16,9 +16,15 @@ data_dir.mkdir(parents=True, exist_ok=True)
 
 # Make actual data
 for d in datasets:
-    # load lidar
-    lidar = d.get_one_lidar()
-    imu = d.get_one_imu()
-    # cache them
-    pickle.dump(imu, open(data_dir / f"imu_{d.dataset_name()}.pkl", "wb"))
-    pickle.dump(lidar, open(data_dir / f"lidar_{d.dataset_name()}.pkl", "wb"))
+    imu_file = data_dir / f"imu_{d.dataset_name()}.pkl"
+    lidar_file = data_dir / f"lidar_{d.dataset_name()}.pkl"
+
+    if not imu_file.exists():
+        print(f"Extracting IMU data for {d.dataset_name()}...")
+        imu = d.get_one_imu()
+        pickle.dump(imu, open(data_dir / f"imu_{d.dataset_name()}.pkl", "wb"))
+
+    if not lidar_file.exists():
+        print(f"Extracting LiDAR data for {d.dataset_name()}...")
+        lidar = d.get_one_lidar()
+        pickle.dump(lidar, open(data_dir / f"lidar_{d.dataset_name()}.pkl", "wb"))

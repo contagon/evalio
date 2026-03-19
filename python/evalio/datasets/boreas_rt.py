@@ -60,14 +60,19 @@ class BoreasRT(Dataset):
         # Load IMU data
         # Format: GPSTime,angvel_z,angvel_y,angvel_x,accelz,accely,accelx
         imu_file = self.folder / "imu" / "dmu_imu.csv"
-        imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
+        imu_stamps = np.loadtxt(
+            imu_file, usecols=0, dtype=np.int64, delimiter=",", skiprows=1
+        )  # skip header
+        imu_raw = np.loadtxt(
+            imu_file, usecols=(1, 2, 3, 4, 5, 6), delimiter=",", skiprows=1
+        )  # skip header
         imu_data = [
             ImuMeasurement(
-                stamp=Stamp.from_nsec(row[0]),
-                gyro=row[1:4],
-                accel=row[4:7],
+                stamp=Stamp.from_nsec(s),
+                gyro=row[0:3],
+                accel=row[3:6],
             )
-            for row in imu_raw
+            for s, row in zip(imu_stamps, imu_raw)
         ]
 
         # Setup lidar files
