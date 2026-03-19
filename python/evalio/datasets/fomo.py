@@ -101,7 +101,7 @@ class Fomo(Dataset):
         return Trajectory(
             poses=[SE3(p.rot, p.trans - init_position) for p in traj_utm.poses],
             stamps=traj_utm.stamps,
-        )
+        ).smooth_orientation(forward="y", z="up")
 
     # ------------------------- For loading params ------------------------- #
     def lidar_T_cam(self) -> SE3:
