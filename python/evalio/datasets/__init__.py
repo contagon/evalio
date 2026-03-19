@@ -1,6 +1,9 @@
 from .base import Dataset, DatasetIterator, get_data_dir, set_data_dir
 from .loaders import RawDataIter, RosbagIter
 
+from .boreas import Boreas
+
+from .boreas_rt import BoreasRT
 from .botanic_garden import BotanicGarden
 from .cumulti import CUMulti
 from .enwide import EnWide
@@ -47,6 +50,8 @@ __all__ = [
     "DatasetConfigError",
     "DatasetConfig",
     # datasets
+    "Boreas",
+    "BoreasRT",
     "BotanicGarden",
     "CUMulti",
     "EnWide",

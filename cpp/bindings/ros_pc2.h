@@ -276,23 +276,20 @@ inline void fill_col_col_major(LidarMeasurement& mm) {
   _fill_col(mm, func_col);
 }
 
-// point cloud loader where rows come in in 0, 8, 1, 9, ... order
-inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
-  auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
-    if (row_idx < 8) {
-      return row_idx * 2;
-    } else {
-      return (row_idx - 8) * 2 + 1;
-    }
-  };
-
-  auto func_col = [&func_row_idx_to_row_seq](
+// point cloud loader where rows come in consistently a near-random order
+// used for 128-beam boreas dataset
+// map_row_to_idx is a map from channel/row idx to the order it appears in the return
+inline void
+fill_col_by_map(LidarMeasurement& mm, std::vector<int>& map_row_to_idx) {
+  auto func_col = [&map_row_to_idx](
                     uint16_t& col,
                     const uint16_t& prev_col,
                     const uint8_t& prev_row,
                     const uint8_t& curr_row
-                  ) {
-    if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
+                  ) mutable {
+    // If the rank of the current row is less than or equal to the max rank seen
+    // in the current column, we must have wrapped around to the next column.
+    if (map_row_to_idx[curr_row] < map_row_to_idx[prev_row]) {
       col = prev_col + 1;
     } else {
       col = prev_col;
@@ -373,7 +370,7 @@ inline LidarMeasurement helipr_bin_to_evalio(
       point.col = prev_col + 1;
     }
     if (point.row >= params.num_rows || point.col >= params.num_columns) {
-      std::cout << "HeLiPR point out of bounds\npoint.row: " << +point.row
+      std::cout << "Boreas point out of bounds\npoint.row: " << +point.row
                 << " point.col: " << point.col << std::endl;
       throw -1;
     }
@@ -383,6 +380,52 @@ inline LidarMeasurement helipr_bin_to_evalio(
     mm.points[point.row * params.num_columns + point.col] = point;
   }
   file.close();
+
+  return mm;
+}
+
+// Load boreas data into evalio
+// Alternatively can use numpy, but this is faster for converting to evalio types afterwards
+// https://github.com/utiasASRL/pyboreas/blob/a0cd0fb5a453ebe8a0939e226ce55073bc8a578a/pyboreas/utils/utils.py#L17-L27
+inline LidarMeasurement boreas_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params,
+  std::vector<int>& map_row_to_idx
+) {
+  LidarMeasurement mm(stamp);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float holder = 0.0;
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.row = static_cast<uint16_t>(holder);
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.t = Duration::from_sec(holder);
+    // clang-format on
+    mm.points.push_back(point);
+  }
+  file.close();
+
+  // Stamp is taken from middle of scan, so shift so the smallest point stamp is at 0
+  auto oldest = std::min_element(
+    mm.points.begin(),
+    mm.points.end(),
+    [](const Point& a, const Point& b) { return a.t < b.t; }
+  );
+  auto shift = -oldest->t;
+  shift_point_stamps(mm, shift);
+  mm.stamp = mm.stamp + shift;
+
+  fill_col_by_map(mm, map_row_to_idx);
+  reorder_points(mm, params.num_rows, params.num_columns);
 
   return mm;
 }
@@ -528,13 +571,15 @@ inline void make_conversions(nb::module_& m) {
 
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);
+  // Custom column filling for datasets with unique row ordering (e.g. boreas, botanic)
+  m.def("fill_col_by_map", &fill_col_by_map);
   m.def("reorder_points", &reorder_points);
   m.def("shift_point_stamps", &shift_point_stamps);
 
   // load custom bin format for helipr
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
-  // botanic garden velodyne reordering
-  m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
+  // load bin format for boreas
+  m.def("boreas_bin_to_evalio", &boreas_bin_to_evalio);
 
   m.def("parse_csv_line", &parse_csv_line);
   m.def("closest", &closest);

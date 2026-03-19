@@ -64,6 +64,10 @@ struct Duration {
     return Duration::from_nsec(nsec - other.nsec);
   }
 
+  Duration operator-() const {
+    return Duration::from_nsec(-nsec);
+  }
+
   Duration operator+(const Duration& other) const {
     return Duration::from_nsec(nsec + other.nsec);
   }
@@ -262,6 +266,7 @@ struct ImuMeasurement {
 };
 
 struct ImuParams {
+  // These are all sigmas, not variances
   double gyro = 1e-5;
   double accel = 1e-5;
   double gyro_bias = 1e-6;
@@ -312,6 +317,22 @@ struct SO3 {
 
   static SO3 identity() {
     return SO3 {.qx = 0, .qy = 0, .qz = 0, .qw = 1};
+  }
+
+  static SO3 from_rpy(double roll, double pitch, double yaw) {
+    Eigen::AngleAxisd roll_aa(roll, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitch_aa(pitch, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yaw_aa(yaw, Eigen::Vector3d::UnitZ());
+    Eigen::Quaterniond q = yaw_aa * pitch_aa * roll_aa;
+    return from_eigen(q);
+  }
+
+  static SO3 from_ypr(double yaw, double pitch, double roll) {
+    Eigen::AngleAxisd roll_aa(roll, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitch_aa(pitch, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yaw_aa(yaw, Eigen::Vector3d::UnitZ());
+    Eigen::Quaterniond q = roll_aa * pitch_aa * yaw_aa;
+    return from_eigen(q);
   }
 
   static SO3 from_mat(const Eigen::Matrix3d& R) {
