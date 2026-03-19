@@ -26,7 +26,7 @@ for i, row in enumerate(MAP_IDX_TO_ROW):
 # fmt: on
 
 
-class Fomo(Dataset):
+class FoMo(Dataset):
     """The FoMo dataset is a multi-season collection designed to support research on robust algorithms for robot autonomy under adverse conditions.
 
     Data was collected in the same location across 12 deployments spanning two seasons (March and August 2025), with each deployment containing six trajectories of varying lengths. The dataset includes synchronized data from a Robosense Ruby Plus lidar, an Applanix POS LV IMU, and ground truth trajectories provided in TUM format. The FoMo dataset is ideal for evaluating the performance of algorithms under challenging conditions such as snow, rain, and fog, making it a valuable resource for researchers working on robust perception and localization for autonomous vehicles.
@@ -157,8 +157,6 @@ class Fomo(Dataset):
     def lidar_params(self) -> LidarParams:
         # Robosense Ruby Plus
         # 128 channels, 10 Hz, range up to 245 m (10% reflectivity)
-        # Source: https://data.ouster.io/downloads/datasheets/velodyne/63-9679_Rev-B_DATASHEET_ALPHA-PRIME_web.pdf
-        # Source: https://github.com/utiasASRL/pyboreas/DATA_REFERENCE.md
         return LidarParams(
             num_rows=128,
             # This is approximate, I never saw values greater than this
@@ -171,9 +169,13 @@ class Fomo(Dataset):
         )
 
     # ------------------------- dataset info ------------------------- #
+    @classmethod
+    def dataset_name(cls) -> str:
+        return "fomo"
+
     @staticmethod
     def url() -> str:
-        return "https://github.com/utiasASRL/pyboreas/blob/master/DATA_REFERENCE.md"
+        return "https://fomo.norlab.ulaval.ca/"
 
     def environment(self) -> str:
         return "Off-road"
@@ -183,12 +185,21 @@ class Fomo(Dataset):
 
     # ------------------------- For downloading ------------------------- #
     def files(self) -> Sequence[str | Path]:
-        # TODO: This returns true if only a single lidar file is downloaded
         return [
             "vectornav.csv",
             "gt.txt",
             "robosense",
         ]
+
+    def is_downloaded(self) -> bool:
+        if not super().is_downloaded():
+            return False
+
+        num = self.quick_len()
+        if num is None:
+            return False
+
+        return sum(1 for _ in (self.folder / "robosense").glob("*.bin")) >= num
 
     def download(self):
         from subprocess import Popen, PIPE, run
@@ -203,29 +214,29 @@ class Fomo(Dataset):
         # We drop a little info in the names, so we'll have to enumerate things here
         s3_bucket: str
         match self:
-            case Fomo.blue_25_03:
+            case self.blue_25_03:
                 s3_bucket = "2025-03-10/blue_2025-03-10-16-59"
-            case Fomo.green_25_03:
+            case self.green_25_03:
                 s3_bucket = "2025-03-10/green_2025-03-14-08-48"
-            case Fomo.magenta_25_03:
+            case self.magenta_25_03:
                 s3_bucket = "2025-03-10/magenta_2025-03-14-10-27"
-            case Fomo.orange_25_03:
+            case self.orange_25_03:
                 s3_bucket = "2025-03-10/orange_2025-03-14-09-07"
-            case Fomo.red_25_03:
+            case self.red_25_03:
                 s3_bucket = "2025-03-10/red_2025-03-10-16-53"
-            case Fomo.yellow_25_03:
+            case self.yellow_25_03:
                 s3_bucket = "2025-03-10/yellow_2025-03-10-17-22"
-            case Fomo.blue_25_08:
+            case self.blue_25_08:
                 s3_bucket = "2025-08-20/blue_2025-08-20-11-25"
-            case Fomo.green_25_08:
+            case self.green_25_08:
                 s3_bucket = "2025-08-20/green_2025-08-20-11-39"
-            case Fomo.magenta_25_08:
+            case self.magenta_25_08:
                 s3_bucket = "2025-08-20/magenta_2025-08-20-12-41"
-            case Fomo.orange_25_08:
+            case self.orange_25_08:
                 s3_bucket = "2025-08-20/orange_2025-08-20-13-17"
-            case Fomo.red_25_08:
+            case self.red_25_08:
                 s3_bucket = "2025-08-20/red_2025-08-20-10-42"
-            case Fomo.yellow_25_08:
+            case self.yellow_25_08:
                 s3_bucket = "2025-08-20/yellow_2025-08-20-10-54"
 
         # Figure out how many total files they are
@@ -241,6 +252,9 @@ class Fomo(Dataset):
             capture_output=True,
             text=True,
         )
+        if output.returncode != 0:
+            error_msg = output.stderr.strip() if output.stderr else "unknown error"
+            raise RuntimeError(f"AWS CLI 's3 ls' command failed: {error_msg}")
 
         # get the last few lines of aws CLI output to show total file count and size
         count = int(output.stdout.splitlines()[-2].split(":")[1].strip())
@@ -272,5 +286,28 @@ class Fomo(Dataset):
             loop.update(1)
 
     def quick_len(self) -> Optional[int]:
-        # TODO
-        return None
+        match self:
+            case self.magenta_25_03:
+                return 7248
+            case self.yellow_25_08:
+                return 12883
+            case self.orange_25_08:
+                return 16813
+            case self.blue_25_03:
+                return 5751
+            case self.green_25_08:
+                return 8185
+            case self.orange_25_03:
+                return 23543
+            case self.yellow_25_03:
+                return 19737
+            case self.magenta_25_08:
+                return 7202
+            case self.red_25_03:
+                return 2108
+            case self.red_25_08:
+                return 1934
+            case self.green_25_03:
+                return 4563
+            case self.blue_25_08:
+                return 3497

@@ -280,7 +280,7 @@ inline void fill_col_col_major(LidarMeasurement& mm) {
 // used for 128-beam boreas dataset
 // map_row_to_idx is a map from channel/row idx to the order it appears in the return
 inline void
-fill_col_by_map(LidarMeasurement& mm, std::vector<int>& map_row_to_idx) {
+fill_col_by_map(LidarMeasurement& mm, const std::vector<int>& map_row_to_idx) {
   auto func_col = [&map_row_to_idx](
                     uint16_t& col,
                     const uint16_t& prev_col,
@@ -370,7 +370,7 @@ inline LidarMeasurement helipr_bin_to_evalio(
       point.col = prev_col + 1;
     }
     if (point.row >= params.num_rows || point.col >= params.num_columns) {
-      std::cout << "Boreas point out of bounds\npoint.row: " << +point.row
+      std::cout << "Helipr point out of bounds\npoint.row: " << +point.row
                 << " point.col: " << point.col << std::endl;
       throw -1;
     }
