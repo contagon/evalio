@@ -238,12 +238,21 @@ class Trajectory(Generic[M]):
 
         fields = {name: i for i, name in enumerate(fieldnames)}
 
+        scientific_time = None
+
         with open(path) as f:
             csvfile = filter(lambda row: row[0] != "#", f)
             for i, line in enumerate(csvfile):
                 if i < skip_lines:
                     continue
-                stamp, pose = parse_csv_line(line, delimiter, fields)
+                if scientific_time is None:
+                    scientific_time = (
+                        "sec" in fields
+                        and "nsec" not in fields
+                        and line.split(delimiter)[fields["sec"]].lower().find("e") != -1
+                    )
+
+                stamp, pose = parse_csv_line(line, delimiter, fields, scientific_time)
 
                 poses.append(pose)
                 stamps.append(stamp)
