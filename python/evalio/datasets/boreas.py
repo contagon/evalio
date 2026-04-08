@@ -98,14 +98,19 @@ class Boreas(Dataset):
         # Additionally, gravity is already removed from the raw IMU data, so we'll set that to 0 later
         # https://github.com/utiasASRL/pyboreas/issues/24
         imu_file = self.folder / "applanix" / "imu_raw.csv"
-        imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
+        imu_stamps = np.loadtxt(
+            imu_file, usecols=0, delimiter=",", skiprows=1, dtype=str
+        )
+        imu_raw = np.loadtxt(
+            imu_file, delimiter=",", skiprows=1, usecols=(1, 2, 3, 4, 5, 6)
+        )  # skip header
         imu_data = [
             ImuMeasurement(
-                stamp=Stamp.from_sec(s),
+                stamp=Stamp.from_sec(s, False),
                 gyro=np.array([-wy, -wx, wz]),  # reorder to x,y,z
                 accel=np.array([-ay, -ax, az]),  # reorder to x,y,z
             )
-            for s, wz, wy, wx, az, ay, ax in imu_raw
+            for s, (wz, wy, wx, az, ay, ax) in zip(imu_stamps, imu_raw)
         ]
 
         # Setup lidar files
@@ -138,8 +143,8 @@ class Boreas(Dataset):
         """
         path = self.folder / "applanix" / "gps_post_process.csv"
 
-        stamps = np.loadtxt(path, usecols=0, delimiter=",", skiprows=1)
-        stamps = [Stamp.from_sec(x) for x in stamps]
+        stamps = np.loadtxt(path, usecols=0, delimiter=",", skiprows=1, dtype=str)
+        stamps = [Stamp.from_sec(x, False) for x in stamps]
 
         all_xyz = np.loadtxt(path, usecols=(1, 2, 3), delimiter=",", skiprows=1)
         all_rpy = np.loadtxt(path, usecols=(7, 8, 9), delimiter=",", skiprows=1)

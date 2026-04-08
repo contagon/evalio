@@ -48,7 +48,31 @@ def check_lidar_eq(exp: LidarMeasurement, got: LidarMeasurement):
             f"number of points do not match {len(exp.points)} != {len(got.points)}"
         )
         for i, (got_pt, exp_pt) in enumerate(zip(got.points, exp.points)):
-            assert got_pt == exp_pt, f"p{i}, {got_pt} != {exp_pt}"
+            if got_pt != exp_pt:
+                assert got_pt.x == exp_pt.x, (
+                    f"p{i} x does not match {exp_pt.x} != {got_pt.x}"
+                )
+                assert got_pt.y == exp_pt.y, (
+                    f"p{i} y does not match {exp_pt.y} != {got_pt.y}"
+                )
+                assert got_pt.z == exp_pt.z, (
+                    f"p{i} z does not match {exp_pt.z} != {got_pt.z}"
+                )
+                assert got_pt.intensity == exp_pt.intensity, (
+                    f"p{i} intensity does not match {exp_pt.intensity} != {got_pt.intensity}"
+                )
+                assert got_pt.t == exp_pt.t, (
+                    f"p{i} time does not match {exp_pt.t} != {got_pt.t}"
+                )
+                assert got_pt.range == exp_pt.range, (
+                    f"p{i} range does not match {exp_pt.range} != {got_pt.range}"
+                )
+                assert got_pt.col == exp_pt.col, (
+                    f"p{i} col does not match {exp_pt.col} != {got_pt.col}"
+                )
+                assert got_pt.row == exp_pt.row, (
+                    f"p{i} row does not match {exp_pt.row} != {got_pt.row}"
+                )
 
 
 def point_to_bytes(point: Point) -> bytes:

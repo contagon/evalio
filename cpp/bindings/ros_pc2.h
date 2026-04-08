@@ -475,7 +475,8 @@ inline LidarMeasurement fomo_bin_to_evalio(
 inline std::pair<Stamp, SE3> parse_csv_line(
   const std::string& s,
   const char delimiter,
-  const std::map<std::string, int>& idx
+  const std::map<std::string, int>& idx,
+  bool scientific = false
 ) {
   std::stringstream ss(s);
   std::string item;
@@ -506,28 +507,9 @@ inline std::pair<Stamp, SE3> parse_csv_line(
     };
   }
 
-  // If only sec is given, split it into sec/nsec
   else if (idx.count("sec")) {
-    // Find decimal place
     std::string sec_str = elems[idx.at("sec")];
-    size_t dot_pos = sec_str.find('.');
-    if (dot_pos == std::string::npos) {
-      throw std::runtime_error("Failed to find decimal in sec field.");
-    }
-
-    // extract sec
-    uint32_t sec_part = std::stoul(sec_str.substr(0, dot_pos));
-
-    // extract & pad nsec
-    std::string nsec_str = sec_str.substr(dot_pos + 1);
-    if (nsec_str.size() > 9) {
-      throw std::runtime_error("Too many digits in fractional part of sec.");
-    } else if (nsec_str.size() < 9) {
-      nsec_str += std::string(9 - nsec_str.size(), '0');
-    }
-    uint32_t nsec_part = std::stoul(nsec_str);
-
-    stamp = Stamp {.sec = sec_part, .nsec = nsec_part};
+    stamp = Stamp::from_sec(sec_str, scientific);
   }
 
   // If only nsec is given
@@ -623,7 +605,14 @@ inline void make_conversions(nb::module_& m) {
   // load bin format for fomo
   m.def("fomo_bin_to_evalio", &fomo_bin_to_evalio);
 
-  m.def("parse_csv_line", &parse_csv_line);
+  m.def(
+    "parse_csv_line",
+    &parse_csv_line,
+    "line"_a,
+    "delimiter"_a,
+    "idx"_a,
+    "scientific"_a = false
+  );
   m.def("closest", &closest);
 }
 

@@ -4,6 +4,7 @@
 #include <Eigen/Geometry>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 namespace evalio {
@@ -77,11 +78,44 @@ struct Stamp {
   uint32_t sec;
   uint32_t nsec;
 
+  static Stamp
+  from_sec(std::string sec_str, std::optional<bool> scientific = std::nullopt) {
+    // Figure out if it's in scientific notation
+    if (!scientific.has_value()) {
+      scientific = sec_str.find('e') != std::string::npos
+        || sec_str.find('E') != std::string::npos;
+    }
+
+    // If it's in scientific notation, best we can do is usual stod conversion
+    if (scientific.value()) {
+      double sec = std::stod(sec_str);
+      return from_sec(sec);
+    }
+
+    // Otherwise we can do a more precise conversion by splitting into sec/nsec
+    size_t dot_pos = sec_str.find('.');
+    if (dot_pos == std::string::npos) {
+      throw std::runtime_error("Failed to find decimal in sec field.");
+    }
+
+    // extract sec
+    uint32_t sec_part = std::stoul(sec_str.substr(0, dot_pos));
+
+    // extract & pad nsec
+    std::string nsec_str = sec_str.substr(dot_pos + 1);
+    if (nsec_str.size() > 9) {
+      throw std::runtime_error("Too many digits in fractional part of sec.");
+    } else if (nsec_str.size() < 9) {
+      nsec_str += std::string(9 - nsec_str.size(), '0');
+    }
+    uint32_t nsec_part = std::stoul(nsec_str);
+
+    return Stamp {.sec = sec_part, .nsec = nsec_part};
+  }
+
   static Stamp from_sec(double sec) {
-    return Stamp {
-      .sec = uint32_t(sec),
-      .nsec = uint32_t((sec - uint32_t(sec)) * 1e9)
-    };
+    auto total_nsec = std::llround(sec * 1e9);
+    return Stamp::from_nsec(static_cast<uint64_t>(total_nsec));
   }
 
   static Stamp from_nsec(uint64_t nsec) {
