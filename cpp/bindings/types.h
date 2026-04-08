@@ -92,9 +92,16 @@ inline void make_types(nb::module_& m) {
     .def(nb::init<Stamp>(), "other"_a, "Copy constructor for Stamp.")
     .def_static(
       "from_sec",
-      &Stamp::from_sec,
+      nb::overload_cast<double>(&Stamp::from_sec),
       "sec"_a,
       "Create a Stamp from seconds"
+    )
+    .def_static(
+      "from_sec",
+      nb::overload_cast<std::string, std::optional<bool>>(&Stamp::from_sec),
+      "sec"_a,
+      "scientific"_a = std::nullopt,
+      "Create a Stamp from a string. If scientific is None, will auto-detect if is in scientific notation."
     )
     .def_static(
       "from_nsec",

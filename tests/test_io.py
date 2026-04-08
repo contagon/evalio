@@ -128,3 +128,14 @@ def test_csv_line():
 
     assert stamp == ty.Stamp.from_nsec(1670403901143296798)
     assert pose == exp_pose
+
+    # Try one with scientific time
+    fields = ["sec", "x", "y", "z", "qx", "qy", "qz", "qw"]
+    fields = {v: i for i, v in enumerate(fields)}
+    line = "1.670403901143296e+09,0.04846940144357503,-0.03130991015433452,-0.01876146196188756,-0.9998805501718303,0.005631361428549012,0.0033964292086203895,0.013987044904833533"
+    stamp, pose = parse_csv_line(line, ",", fields, scientific=True)
+
+    # NOTE: This is inexact due to floating point precision
+    # Ideally nothing saves this way (but enwide does unfortunately)
+    assert stamp == ty.Stamp(sec=1670403901, nsec=143296000)
+    assert pose == exp_pose
