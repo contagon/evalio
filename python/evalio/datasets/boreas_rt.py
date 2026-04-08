@@ -234,6 +234,10 @@ class BoreasRT(Dataset):
             capture_output=True,
             text=True,
         )
+        if output.returncode != 0:
+            error_msg = output.stderr.strip() if output.stderr else "unknown error"
+            raise RuntimeError(f"AWS CLI 's3 ls' command failed: {error_msg}")
+
         # get the last few lines of aws CLI output to show total file count and size
         count = int(output.stdout.splitlines()[-2].split(":")[1].strip())
         count += 2

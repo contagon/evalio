@@ -2,6 +2,7 @@
 
 #include <pcl/point_cloud.h>
 
+#include <iostream>
 #include <map>
 #include <string>
 
@@ -149,10 +150,16 @@ public:
   }
 
   void add_imu(ev::ImuMeasurement mm) override {
+    std::cout << "EV: Adding IMU measurement at time " << mm.stamp.to_sec()
+              << std::endl;
     lio_sam_->addImuMeasurement(ev::convert<lio_sam::Imu>(mm));
+    std::cout << "EV: Finished adding IMU measurement at time "
+              << mm.stamp.to_sec() << std::endl;
   }
 
   void add_lidar(ev::LidarMeasurement mm) override {
+    std::cout << "EV: Adding lidar measurement at time " << mm.stamp.to_sec()
+              << std::endl;
     // Set everything up
     auto cloud =
       ev::convert_iter<pcl::PointCloud<lio_sam::PointXYZIRT>>(mm.points)
@@ -160,14 +167,21 @@ public:
         .makeShared();
 
     // Run through pipeline
+    std::cout << "EV: Adding lidar measurement" << std::endl;
     lio_sam_->addLidarMeasurement(mm.stamp.to_sec(), cloud);
+    std::cout << "EV: Finished adding lidar measurement" << std::endl;
 
     // Save pose
-    const auto pose = ev::convert<ev::SE3>(lio_sam_->getPose()) * lidar_T_imu_;
-    this->save(mm.stamp, pose);
+    // std::cout << "EV: Getting pose from LIO-SAM" << std::endl;
+    // const auto pose = ev::convert<ev::SE3>(lio_sam_->getPose()) * lidar_T_imu_;
+    // std::cout << "EV: Pose: " << pose.to_string() << std::endl;
+    // this->save(mm.stamp, pose);
+    // std::cout << "EV: Pose saved" << std::endl;
 
     // Save features
-    this->save(mm.stamp, "features", *lio_sam_->getMostRecentFrame());
+    // std::cout << "EV: Getting most recent frame from LIO-SAM" << std::endl;
+    // this->save(mm.stamp, "features", *lio_sam_->getMostRecentFrame());
+    // std::cout << "EV: Most recent frame saved" << std::endl;
   }
 
 private:

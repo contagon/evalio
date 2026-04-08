@@ -164,11 +164,11 @@ struct Stamp {
   }
 
   Stamp operator-(const Duration& other) const {
-    return Stamp::from_nsec(to_nsec() - other.nsec);
+    return Stamp::from_nsec(static_cast<int64_t>(to_nsec()) - other.nsec);
   }
 
   Stamp operator+(const Duration& other) const {
-    return Stamp::from_nsec(to_nsec() + other.nsec);
+    return Stamp::from_nsec(static_cast<int64_t>(to_nsec()) + other.nsec);
   }
 
   Duration operator-(const Stamp& other) const {
