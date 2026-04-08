@@ -112,13 +112,17 @@ diff --git a/include/dlio/dlio.h b/include/dlio/dlio.h
 index 47386ff..0416918 100644
 --- a/include/dlio/dlio.h
 +++ b/include/dlio/dlio.h
-@@ -31,7 +31,6 @@
+@@ -31,7 +31,10 @@
  #include <stdlib.h>
  #include <string>
  #include <sys/times.h>
 -#include <sys/vtimes.h>
  #include <thread>
++#ifdef __APPLE__
++#include <malloc/malloc.h>
++#else
  #include <malloc.h>
++#endif
  
 @@ -44,16 +43,6 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
      return out.str();
@@ -169,7 +173,33 @@ index 47386ff..0416918 100644
 +  };
  }
  
- POINT_CLOUD_REGISTER_POINT_STRUCT(dlio::Point,
+POINT_CLOUD_REGISTER_POINT_STRUCT(dlio::Point,
+diff --git a/include/nano_gicp/nanoflann_adaptor.h b/include/nano_gicp/nanoflann_adaptor.h
+index 2c6732b..d88de52 100644
+--- a/include/nano_gicp/nanoflann_adaptor.h
++++ b/include/nano_gicp/nanoflann_adaptor.h
+@@ -49,7 +49,7 @@
+ #include <pcl/point_types.h>
+ #include <pcl/kdtree/kdtree_flann.h>
+ 
+-#include "nano_gicp/nanoflann.h"
++#include <nanoflann.hpp>
+ 
+ namespace nanoflann
+ {
+@@ -86,7 +86,7 @@ protected:
+ 
+-  nanoflann::SearchParams _params;
++  nanoflann::SearchParameters _params;
+ 
+   struct PointCloud_Adaptor
+   {
+@@ -159,7 +159,7 @@ int KdTreeFLANN<PointT>::radiusSearch(const PointT &point, double radius,
+-  static std::vector<std::pair<int, float> > indices_dist;
++  static std::vector<nanoflann::ResultItem<int, float>> indices_dist;
+   indices_dist.reserve( 128 );
+ 
+   RadiusResultSet<float, int> resultSet(radius, indices_dist);
 diff --git a/include/dlio/odom.h b/include/dlio/odom.h
 index c79ebd7..2c91f67 100644
 --- a/include/dlio/odom.h
