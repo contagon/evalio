@@ -59,14 +59,17 @@ class FoMo(Dataset):
         # Load IMU data
         # Format: time,wx,wy,wz,ax,ay,az
         imu_file = self.folder / "vectornav.csv"
+        imu_stamps = np.loadtxt(
+            imu_file, delimiter=",", skiprows=1, usecols=0, dtype=np.int64
+        )
         imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
         imu_data = [
             ImuMeasurement(
-                stamp=Stamp.from_sec(row[0]),
+                stamp=Stamp.from_nsec(s),
                 gyro=row[1:4],
                 accel=row[4:7],
             )
-            for row in imu_raw
+            for s, row in zip(imu_stamps, imu_raw)
         ]
 
         # Setup lidar files
