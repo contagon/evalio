@@ -63,12 +63,14 @@ class BoreasRT(Dataset):
         imu_stamps = np.loadtxt(
             imu_file, usecols=0, delimiter=",", skiprows=1, dtype=np.int64
         )
-        imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
+        imu_raw = np.loadtxt(
+            imu_file, delimiter=",", skiprows=1, usecols=(1, 2, 3, 4, 5, 6)
+        )  # skip header
         imu_data = [
             ImuMeasurement(
                 stamp=Stamp.from_nsec(s),
-                gyro=row[1:4],
-                accel=row[4:7],
+                gyro=row[0:3],
+                accel=row[3:6],
             )
             for s, row in zip(imu_stamps, imu_raw)
         ]

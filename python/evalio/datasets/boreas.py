@@ -101,14 +101,16 @@ class Boreas(Dataset):
         imu_stamps = np.loadtxt(
             imu_file, usecols=0, delimiter=",", skiprows=1, dtype=str
         )
-        imu_raw = np.loadtxt(imu_file, delimiter=",", skiprows=1)  # skip header
+        imu_raw = np.loadtxt(
+            imu_file, delimiter=",", skiprows=1, usecols=(1, 2, 3, 4, 5, 6)
+        )  # skip header
         imu_data = [
             ImuMeasurement(
                 stamp=Stamp.from_sec(s, False),
                 gyro=np.array([-wy, -wx, wz]),  # reorder to x,y,z
                 accel=np.array([-ay, -ax, az]),  # reorder to x,y,z
             )
-            for s, (_, wz, wy, wx, az, ay, ax) in zip(imu_stamps, imu_raw)
+            for s, (wz, wy, wx, az, ay, ax) in zip(imu_stamps, imu_raw)
         ]
 
         # Setup lidar files
