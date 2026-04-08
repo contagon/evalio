@@ -173,7 +173,7 @@ index 47386ff..0416918 100644
 +  };
  }
  
-POINT_CLOUD_REGISTER_POINT_STRUCT(dlio::Point,
+ POINT_CLOUD_REGISTER_POINT_STRUCT(dlio::Point,
 diff --git a/include/nano_gicp/nanoflann_adaptor.h b/include/nano_gicp/nanoflann_adaptor.h
 index 2c6732b..d88de52 100644
 --- a/include/nano_gicp/nanoflann_adaptor.h
@@ -187,14 +187,14 @@ index 2c6732b..d88de52 100644
  
  namespace nanoflann
  {
-@@ -86,7 +86,7 @@ protected:
+@@ -86,5 +86,5 @@ protected:
  
 -  nanoflann::SearchParams _params;
 +  nanoflann::SearchParameters _params;
  
    struct PointCloud_Adaptor
    {
-@@ -159,7 +159,7 @@ int KdTreeFLANN<PointT>::radiusSearch(const PointT &point, double radius,
+@@ -159,4 +159,4 @@ int KdTreeFLANN<PointT>::radiusSearch(const PointT &point, double radius,
 -  static std::vector<std::pair<int, float> > indices_dist;
 +  static std::vector<nanoflann::ResultItem<int, float>> indices_dist;
    indices_dist.reserve( 128 );
