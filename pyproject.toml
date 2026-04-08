@@ -31,10 +31,10 @@ keywords = [
 license = { file = "LICENSE.txt" }
 
 [project.optional-dependencies]
-vis = ["rerun-sdk>=0.25"]
+vis = ["rerun-sdk>=0.31"]
 
 [build-system]
-requires = ["scikit-build-core>=0.8", "nanobind>=2.9.2", "numpy"]
+requires = ["scikit-build-core>=0.12", "nanobind>=2.12", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
@@ -43,7 +43,7 @@ evalio = "evalio.cli:app"
 # -------------- Tools -------------- #
 # building
 [tool.scikit-build]
-minimum-version = "0.8"
+minimum-version = "0.12"
 build-dir = "build/{wheel_tag}"
 sdist.include = ["cpp/bindings/pipelines-src/*"]
 
@@ -82,7 +82,7 @@ dev = [
     "mkdocstrings[python]>=0.29.1",
     "mkdocs-material>=9.6.11",
     "mkdocs-gen-files>=0.5.0",
-    "nanobind>=2.9.2",
+    "nanobind>=2.12",
     "mike>=2.1.3",
     "basedpyright>=1.31.4",
     "joblib-stubs>=1.5.2.0.20250831",
