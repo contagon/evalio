@@ -77,54 +77,55 @@ public:
     return "https://github.com/vectr-ucla/direct_lidar_inertial_odometry";
   }
 
+  // Defaults as found in cfg/params.yaml in the DLIO repo
   // clang-format off
   EVALIO_SETUP_PARAMS(
-    (bool, verbose, true, config_.verbose),
+    (bool, verbose, false, config_.verbose),
 
     (bool, deskew, true, config_.deskew),
     (double, gravity, 9.80665, config_.gravity),
-    (bool, time_offset, false, config_.time_offset),
+    (bool, time_offset, true, config_.time_offset),
 
-    (double, keyframe_thresh_dist, 0.1, config_.keyframe_thresh_dist),
-    (double, keyframe_thresh_rot, 1.0, config_.keyframe_thresh_rot),
+    (double, keyframe_thresh_dist, 1.0, config_.keyframe_thresh_dist),
+    (double, keyframe_thresh_rot, 45.0, config_.keyframe_thresh_rot),
 
     (int, submap_knn, 10, config_.submap_knn),
     (int, submap_kcv, 10, config_.submap_kcv),
     (int, submap_kcc, 10, config_.submap_kcc),
 
-    (bool, densemap_filtered, true, config_.densemap_filtered),
-    (bool, wait_until_move, false, config_.wait_until_move),
+    (bool, densemap_filtered, false, config_.densemap_filtered),
+    (bool, wait_until_move, true, config_.wait_until_move),
 
     (double, crop_size, 1.0, config_.crop_size),
 
     (bool, vf_use, true, config_.vf_use),
-    (double, vf_res, 0.05, config_.vf_res),
+    (double, vf_res, 0.25, config_.vf_res),
 
     (bool, adaptive_params, true, config_.adaptive_params),
 
     (bool, calibrate_gyro, true, config_.calibrate_gyro),
     (bool, calibrate_accel, true, config_.calibrate_accel),
     (double, imu_calib_time, 3.0, config_.imu_calib_time),
-    (int, imu_buffer_size, 2000, config_.imu_buffer_size),
+    (int, imu_buffer_size, 5000, config_.imu_buffer_size),
 
     (bool, gravity_align, true, config_.gravity_align),
     (bool, imu_calibrate, true, config_.imu_calibrate),
 
-    (int, gicp_min_num_points, 100, config_.gicp_min_num_points),
-    (int, gicp_k_correspondences, 20, config_.gicp_k_correspondences),
-    (double, gicp_max_corr_dist, 10000.0, config_.gicp_max_corr_dist),
-    (int, gicp_max_iter, 64, config_.gicp_max_iter),
-    (double, gicp_transformation_ep, 0.0005, config_.gicp_transformation_ep),
-    (double, gicp_rotation_ep, 0.0005, config_.gicp_rotation_ep),
+    (int, gicp_min_num_points, 64, config_.gicp_min_num_points),
+    (int, gicp_k_correspondences, 16, config_.gicp_k_correspondences),
+    (double, gicp_max_corr_dist, 0.5, config_.gicp_max_corr_dist),
+    (int, gicp_max_iter, 32, config_.gicp_max_iter),
+    (double, gicp_transformation_ep, 0.01, config_.gicp_transformation_ep),
+    (double, gicp_rotation_ep, 0.01, config_.gicp_rotation_ep),
     (double, gicp_init_lambda_factor, 1e-9, config_.gicp_init_lambda_factor),
 
-    (double, geo_Kp, 1.0, config_.geo_Kp),
-    (double, geo_Kv, 1.0, config_.geo_Kv),
-    (double, geo_Kq, 1.0, config_.geo_Kq),
-    (double, geo_Kab, 1.0, config_.geo_Kab),
+    (double, geo_Kp, 4.5, config_.geo_Kp),
+    (double, geo_Kv, 11.25, config_.geo_Kv),
+    (double, geo_Kq, 4.0, config_.geo_Kq),
+    (double, geo_Kab, 2.25, config_.geo_Kab),
     (double, geo_Kgb, 1.0, config_.geo_Kgb),
-    (double, geo_abias_max, 1.0, config_.geo_abias_max),
-    (double, geo_gbias_max, 1.0, config_.geo_gbias_max)
+    (double, geo_abias_max, 5.0, config_.geo_abias_max),
+    (double, geo_gbias_max, 0.5, config_.geo_gbias_max)
   );
   // clang-format on
 
