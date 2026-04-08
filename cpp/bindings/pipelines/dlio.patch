@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 91e47a0..4aa2bdf 100644
+index 91e47a0..e3e2ba0 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -11,10 +11,11 @@
@@ -66,13 +66,15 @@ index 91e47a0..4aa2bdf 100644
  
  # Not all machines have <cpuid.h> available
  set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-@@ -91,29 +49,24 @@ endif()
- add_library(nanoflann STATIC
-   src/nano_gicp/nanoflann.cc
- )
+@@ -88,32 +46,23 @@ if(HAS_CPUID)
+ endif()
+ 
+ # NanoFLANN
+-add_library(nanoflann STATIC
+-  src/nano_gicp/nanoflann.cc
+-)
 -target_link_libraries(nanoflann ${PCL_LIBRARIES})
-+target_link_libraries(nanoflann PUBLIC ${PCL_LIBRARIES})
-+target_include_directories(nanoflann PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
++find_package(nanoflann CONFIG REQUIRED)
  
  # NanoGICP
  add_library(nano_gicp STATIC
@@ -80,7 +82,7 @@ index 91e47a0..4aa2bdf 100644
    src/nano_gicp/nano_gicp.cc
  )
 -target_link_libraries(nano_gicp ${PCL_LIBRARIES} ${OpenMP_LIBS} nanoflann)
-+target_link_libraries(nano_gicp PUBLIC ${PCL_LIBRARIES} ${OpenMP_LIBS} nanoflann)
++target_link_libraries(nano_gicp PUBLIC ${PCL_LIBRARIES} ${OpenMP_LIBS} nanoflann::nanoflann)
 +target_include_directories(nano_gicp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
  
  # Odometry Node
@@ -107,10 +109,18 @@ index 91e47a0..4aa2bdf 100644
 +# target_compile_options(dlio_map_node PRIVATE ${OpenMP_FLAGS})
 +# target_link_libraries(dlio_map_node ${PCL_LIBRARIES} ${OpenMP_LIBS} Threads::Threads)
 diff --git a/include/dlio/dlio.h b/include/dlio/dlio.h
-index 47386ff..0bda740 100644
+index 47386ff..0416918 100644
 --- a/include/dlio/dlio.h
 +++ b/include/dlio/dlio.h
-@@ -44,16 +44,6 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
+@@ -31,7 +31,6 @@
+ #include <stdlib.h>
+ #include <string>
+ #include <sys/times.h>
+-#include <sys/vtimes.h>
+ #include <thread>
+ #include <malloc.h>
+ 
+@@ -44,16 +43,6 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
      return out.str();
  }
  
@@ -127,7 +137,7 @@ index 47386ff..0bda740 100644
  // BOOST
  #include <boost/format.hpp>
  #include <boost/circular_buffer.hpp>
-@@ -69,14 +59,9 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
+@@ -69,14 +58,9 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
  #include <pcl/io/pcd_io.h>
  #include <pcl/surface/concave_hull.h>
  #include <pcl/surface/convex_hull.h>
@@ -142,7 +152,7 @@ index 47386ff..0bda740 100644
  
  namespace dlio {
    enum class SensorType { OUSTER, VELODYNE, HESAI, LIVOX, UNKNOWN };
-@@ -84,7 +69,7 @@ namespace dlio {
+@@ -84,7 +68,7 @@ namespace dlio {
    class OdomNode;
    class MapNode;
  
@@ -151,7 +161,7 @@ index 47386ff..0bda740 100644
      Point(): data{0.f, 0.f, 0.f, 1.f} {}
  
      PCL_ADD_POINT4D;
-@@ -96,7 +81,7 @@ namespace dlio {
+@@ -96,7 +80,7 @@ namespace dlio {
                         // (Livox) absolute timestamp in (seconds * 10e9)
      };
      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
