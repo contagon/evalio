@@ -1,105 +1,55 @@
-evalio comes with a small number of built-in pipelines, but is designed to be extensible.
-You can add custom pipelines in either Python or C++ (via nanobind).
+evalio comes with a small number of built-in pipelines, but is made to be easily extensible. Custom pipelines can be created in C++ with nanobind, or in Python. See [evalio-example](https://github.com/contagon/evalio-example) for some examples of building C++ pipelines as well as custom python pipelines.
 
-For end-to-end examples, see [evalio-example](https://github.com/contagon/evalio-example).
+To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` to the module where your pipeline is defined.
 
-## Loading custom pipelines
-
-evalio discovers custom pipelines from Python modules and auto-registers every `Pipeline`
-subclass found in those modules.
-
-- Set `EVALIO_CUSTOM` to one or more comma-separated module names.
-- Import `evalio` (or run any `evalio` CLI command).
-- evalio imports each module and registers matching pipelines.
-
-```bash
-EVALIO_CUSTOM=my_module,another.module evalio ls pipelines
-```
-
-You can also register explicitly in Python:
-
-```python
-import evalio.pipelines as pl
-import my_module
-
-pl.register_pipeline(module=my_module)
-```
-
-## Implementing a pipeline
-
-Create a subclass of `Pipeline` and implement the required interface:
+To create a pipeline, simply inherit from the `Pipeline` class,
 
 === "Python"
 
     ```python
     from evalio.pipelines import Pipeline
     from evalio.types import (
-        Param,
         SE3,
         Point,
         ImuParams,
         LidarParams,
         ImuMeasurement,
         LidarMeasurement,
-        Stamp,
     )
 
-
     class MyPipeline(Pipeline):
+        def __init__(self):
+            super().__init__()
+
+        # Info
         @staticmethod
-        def name() -> str:
-            return "my_pipeline"
-
+        def version() -> str: ...
         @staticmethod
-        def version() -> str:
-            return "0.1.0"
-
+        def url() -> str: ...
         @staticmethod
-        def url() -> str:
-            return "https://example.com/my_pipeline"
-
+        def name() -> str: ...
         @staticmethod
-        def default_params() -> dict[str, Param]:
-            return {
-                "max_iters": 8,
-                "use_deskew": True,
-                "voxel_size": 0.2,
-                "mode": "fast",
-            }
+        def default_params() -> dict[str, bool | int | float | str]: ...;
 
-        def map(self) -> dict[str, list[Point]]:
-            return {"map": []}
+        # Getters
+        def pose(self) -> SE3: ...
+        def map(self) -> list[Point]: ...
 
-        def set_imu_params(self, params: ImuParams) -> None:
-            ...
+        # Setters
+        def set_imu_params(self, params: ImuParams): ...
+        def set_lidar_params(self, params: LidarParams): ...
+        def set_imu_T_lidar(self, T: SE3): ...
+        def set_params(self, params: dict[str, bool | int | float | str]): ...
 
-        def set_lidar_params(self, params: LidarParams) -> None:
-            ...
-
-        def set_imu_T_lidar(self, T: SE3) -> None:
-            ...
-
-        def set_params(self, params: dict[str, Param]) -> dict[str, Param]:
-            # Return any unused keys from params
-            return {}
-
-        def initialize(self) -> None:
-            ...
-
-        def add_imu(self, mm: ImuMeasurement) -> None:
-            ...
-
-        def add_lidar(self, mm: LidarMeasurement) -> None:
-            # Save pose estimate for this stamp
-            self.save(mm.stamp, SE3())
-
-            # Optional: save feature groups for visualization
-            self.save(mm.stamp, {"corners": [], "planes": []})
+        # Doers
+        def initialize(self): ...
+        def add_imu(self, mm: ImuMeasurement): ...
+        def add_lidar(self, mm: LidarMeasurement) -> list[Point]: ...
     ```
 
 === "C++"
 
-    ```c++
+    ``` c++
     #include "evalio/pipeline.h"
     #include "evalio/types.h"
 
@@ -112,72 +62,72 @@ Create a subclass of `Pipeline` and implement the required interface:
 
     class MyPipeline : public evalio::Pipeline {
     public:
+        MyPipeline() : evalio::Pipeline() {}
+
         // Info
         static std::string version() { ... }
         static std::string url() { ... }
         static std::string name() { ... }
-        static std::map<std::string, evalio::Param> default_params() { ... }
-
-        // Getter
-        const evalio::Map<> map() override { ... }
+        static std::map<std::string, Param> default_params() { ... };
+        
+        // Getters
+        const SE3 pose() { ... };
+        const std::vector<Point> map() { ... };
 
         // Setters
-        void set_imu_params(evalio::ImuParams params) override { ... }
-        void set_lidar_params(evalio::LidarParams params) override { ... }
-        void set_imu_T_lidar(evalio::SE3 T) override { ... }
-        std::map<std::string, evalio::Param>
-        set_params(std::map<std::string, evalio::Param> params) override {
-            return {};
-        }
+        void set_imu_params(ImuParams params) { ... };
+        void set_lidar_params(LidarParams params) { ... };
+        void set_imu_T_lidar(SE3 T) { ... };
+        void set_params(std::map<std::string, Param>) { ... };
 
         // Doers
-        void initialize() override { ... }
-        void add_imu(evalio::ImuMeasurement mm) override { ... }
-        void add_lidar(evalio::LidarMeasurement mm) override {
-            save(mm.stamp, evalio::SE3{});
-            save(mm.stamp, "corners", std::vector<evalio::Point>{});
-        }
-    };
+        void initialize() { ... };
+        void add_imu(ImuMeasurement mm) { ... };
+        std::vector<Point> add_lidar(LidarMeasurement mm) { ... };
+    }
     ```
 
-## Interface notes
+We'll cover each section of methods in turn.
 
-- `name()` and `default_params()` are required and should be stable.
-- `version()` and `url()` are optional but strongly recommended.
-- `default_params()` drives config parsing and type-checking. Config values must match the
-  exact Python/C++ types in these defaults.
-- `set_params(...)` should apply known parameters and return any unused ones.
-- `add_lidar(...)` does not return features. Use `save(...)` to publish results instead.
+## Info
 
-## Saving outputs during execution
+The first four methods are all static methods that provide information about the pipeline. `version`, `url`, and `name` are all self-explanatory. `default_params` is a static method that returns a dictionary of the default parameters for the pipeline. This is used to verify parameters before they are passed in, as well as ensure a consistent output for each run.
 
-Use `save(...)` inside your processing methods to emit outputs:
+## Getters
 
-- `save(stamp, pose)` stores an estimated pose.
-- `save(stamp, features_map)` stores named feature groups for visualization.
-- In C++, `save(stamp, "key", points, "key2", points2, ...)` is also available.
-- `map()` returns your current map representation and is used when map visualization is enabled.
+The next two methods are getters for the pose and map. The pose is the most up-to-date estimate for the IMU and is polled after each lidar measurement is passed in. 
 
-Saved values are read by evalio internally through `saved_estimates()`, `saved_features()`,
-and `saved_maps()`.
+The map current map/submap/etc and is only used for visualization purposes.
 
-## C++ binding and build
+## Setters
 
-For C++ pipelines, expose your type with nanobind so Python can import it.
+These are to set both dataset specific parameters and pipeline specific parameters. The dataset specific parameters are `imu_params`, `lidar_params`, and `imu_T_lidar`. These are all set before the pipeline is run.
 
+The pipeline specific parameters are set using `set_params`, which takes in a dictionary of parameters. This is used to set any parameters that are specific to the pipeline, such as the number of iterations or the convergence threshold. `default_params` is updated with any parameters and passed at the start of each run.
+
+## Doers
+Arguably the most important part. 
+
+`initialize` is called right after all parameters are set. Think of it as a delayed constructor.
+
+`add_imu` is called for each IMU measurement. This is where the IMU data is processed and used to update the pose.
+
+`add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. It returns a list of features were extracted from the scan and are used for visualization.
+
+## C++ Building
+
+If done in C++, you will need to build the pipeline as a shared library. This is done by a nanobind wrapper, which can be defined at the bottom of your file as follows,
 ```c++
 NB_MODULE(_core, m) {
   m.doc() = "Custom evalio pipeline example";
 
-  nb::module_ evalio_mod = nb::module_::import_("evalio");
-  auto evalio_pipe = evalio_mod.attr("pipelines").attr("Pipeline");
+  nb::module_ evalio = nb::module_::import_("evalio");
 
   // Only have to override the static methods here
   // All the others will be automatically inherited from the base class
-  nb::class_<MyCppPipeline, evalio::Pipeline>(m, "MyCppPipeline", evalio_pipe)
+  nb::class_<MyCppPipeline, evalio::Pipeline>(m, "MyCppPipeline")
       .def(nb::init<>())
       .def_static("name", &MyCppPipeline::name)
-      .def_static("version", &MyCppPipeline::version)
       .def_static("url", &MyCppPipeline::url)
       .def_static("default_params", &MyCppPipeline::default_params);
 }
@@ -189,11 +139,10 @@ We recommend then setting everything up to be built with [`scikit-build-core`](h
 
     In order for nanobind to share types between the `evalio` shared object and your custom pipeline, they will have to be compiled with the same version of `libstdc++`. This [pybind PR](https://github.com/pybind/pybind11/pull/5439) discusses this in more detail.
 
-    The "abi_tag" used in your version of evalio can be gotten using `evalio._abi_tag`, or by running `python -c "import evalio; print(evalio._abi_tag)"`. To make sure it matches your nanobind module's, add this to your `NB_MODULE` definition:
-     
+    The "abi_tag" used in your version of evalio can be gotten using `evalio._abi_tag()`, or by running `python -c "import evalio; print(evalio._abi_tag())`". To make sure it matches your nanobind module's, add this to your `NB_MODULE` definition:
+    
     ```c++
     m.def("abi_tag", []() { return nb::detail::abi_tag(); });
     ```
 
-Pipelines are typically small wrappers around existing code, exposing a common evalio interface.
-Once your pipeline is published, feel free to open a PR to add it to evalio's built-in list.
+That's all there is to it! Pipelines should be fairly easy to implement and are usually just a simple wrapper around your existing code to provide a common interface. Once your pipeline is open-source/published/etc, feel free to make a PR to add it to evalio. This both improves the visibility of your work and of evalio.
