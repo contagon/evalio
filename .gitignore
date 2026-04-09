@@ -30,3 +30,6 @@ compile_commands.json
 
 # cloned pipelines
 cpp/bindings/pipelines-src
+
+# beads
+.beads/
