@@ -64,7 +64,14 @@ git switch --detach icra_2022
 git apply ../../pipelines/ct_icp.patch
 cd ..
 
-# FORM
+if [ ! -d "direct_lidar_inertial_odometry" ]; then
+    git clone https://github.com/contagon/direct_lidar_inertial_odometry.git
+fi
+cd direct_lidar_inertial_odometry
+git stash
+git checkout master
+cd ..
+
 if [ ! -d "form" ]; then
     git clone https://github.com/rpl-cmu/form.git
 fi

@@ -200,7 +200,8 @@ try:
 
             # Find transform between ground truth and imu origins
             if self.gt_o_T_imu_o is None:
-                if stamp < self.gt.stamps[0]:
+                # If we haven't hit ground truth data or the pose isn't being updated, wait
+                if stamp < self.gt.stamps[0] or pose == SE3.identity():
                     pass
                 else:
                     imu_o_T_imu_0 = pose

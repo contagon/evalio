@@ -66,13 +66,14 @@ set(RESULTS "") # for printing results
 
 message("################### Searching for pipelines ###################")
 # find_pipeline(directory              target_name       definition_name)
-find_pipeline(kiss-icp/cpp/kiss_icp  kiss_icp_pipeline  EVALIO_KISS_ICP)
-find_pipeline(LIO-SAM                lio_sam            EVALIO_LIO_SAM)
-find_pipeline(loam                   loam               EVALIO_LOAM)
-find_pipeline(genz-icp/cpp/genz_icp  genz_icp::pipeline EVALIO_GENZ_ICP)
-find_pipeline(mad-icp/mad_icp        mad_odometry       EVALIO_MAD_ICP)
-find_pipeline(ct_icp                 CT_ICP             EVALIO_CT_ICP)
-find_pipeline(form                   FORM               EVALIO_FORM)
+find_pipeline(kiss-icp/cpp/kiss_icp          kiss_icp_pipeline  EVALIO_KISS_ICP)
+find_pipeline(LIO-SAM                        lio_sam            EVALIO_LIO_SAM)
+find_pipeline(loam                           loam               EVALIO_LOAM)
+find_pipeline(genz-icp/cpp/genz_icp          genz_icp::pipeline EVALIO_GENZ_ICP)
+find_pipeline(mad-icp/mad_icp                mad_odometry       EVALIO_MAD_ICP)
+find_pipeline(ct_icp                         CT_ICP             EVALIO_CT_ICP)
+find_pipeline(direct_lidar_inertial_odometry dlio_odom_node     EVALIO_DLIO)
+find_pipeline(form                           FORM               EVALIO_FORM)
 message("###################    Pipeline Results     ###################")
 if(NOT "${RESULTS}" STREQUAL "")
     string(STRIP "${RESULTS}" RESULTS)
@@ -93,8 +94,8 @@ FetchContent_Declare(
     nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind
     GIT_TAG v2.9.2
-    FIND_PACKAGE_ARGS
-        CONFIG # uses find_package first, git if it fails
+    # FIND_PACKAGE_ARGS
+    # CONFIG # uses find_package first, git if it fails
 )
 FetchContent_MakeAvailable(nanobind)
 
