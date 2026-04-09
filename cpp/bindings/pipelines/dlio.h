@@ -131,8 +131,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    // DLIO doesn't expose map retrieval in the same way, return empty for now
-    return std::map<std::string, std::vector<ev::Point>>();
+    return ev::make_map("point", *dlio_->getMap());
   }
 
   // Setters
@@ -176,6 +175,9 @@ public:
     const auto state = dlio_->getState();
     // Results are in the baselink = imu frame
     this->save(mm.stamp, state);
+
+    // Save the current cloud used by DLIO
+    this->save(mm.stamp, "point", *dlio_->getCurrentScan());
   }
 
 private:
