@@ -93,9 +93,9 @@ find_package(
 FetchContent_Declare(
     nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind
-    GIT_TAG v2.9.2
-    # FIND_PACKAGE_ARGS
-    # CONFIG # uses find_package first, git if it fails
+    GIT_TAG v2.12.0
+    FIND_PACKAGE_ARGS
+        CONFIG # uses find_package first, git if it fails
 )
 FetchContent_MakeAvailable(nanobind)
 

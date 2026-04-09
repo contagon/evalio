@@ -48,7 +48,7 @@ try:
     import rerun as rr
     import rerun.blueprint as rrb
 
-    OverrideType = dict[rr.datatypes.EntityPathLike, list[rr.AsComponents]]
+    OverrideType = dict[rr.datatypes.EntityPathLike, list[rrb.VisualizableArchetype]]
     RerunArgs = TypedDict(
         "RerunArgs", {"application_id": str, "recording_id": UUID, "make_default": bool}
     )
@@ -96,8 +96,7 @@ try:
             # https://github.com/rerun-io/rerun/issues/6673
             # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
             overrides: OverrideType = {
-                f"{n}/imu": [rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)]
-                for n in self.pipeline_names
+                f"{n}/imu": [rr.TransformAxes3D(10.0)] for n in self.pipeline_names
             }
 
             if self.args is not None and VisOption.IMAGE in self.args:
