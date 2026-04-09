@@ -17,11 +17,17 @@
 namespace ev = evalio;
 
 inline gtsam::Pose3 pose_to_gtsam(const ev::SE3& pose) {
-  return gtsam::Pose3(gtsam::Rot3(pose.rot.to_mat()), gtsam::Point3(pose.trans));
+  return gtsam::Pose3(
+    gtsam::Rot3(pose.rot.to_mat()),
+    gtsam::Point3(pose.trans)
+  );
 }
 
 inline ev::SE3 pose_to_evalio(const gtsam::Pose3& pose) {
-  return ev::SE3(ev::SO3::from_mat(pose.rotation().matrix()), pose.translation());
+  return ev::SE3(
+    ev::SO3::from_mat(pose.rotation().matrix()),
+    pose.translation()
+  );
 }
 
 template<typename PointT>
@@ -145,7 +151,8 @@ public:
     }
 
     auto [planar_kp, point_kp] = estimator_.register_scan(scan);
-    current_pose_ = pose_to_evalio(estimator_.current_lidar_estimate() * lidar_T_imu_);
+    current_pose_ =
+      pose_to_evalio(estimator_.current_lidar_estimate() * lidar_T_imu_);
 
     std::map<std::string, std::vector<ev::Point>> points = {
       {"planar", {}},
