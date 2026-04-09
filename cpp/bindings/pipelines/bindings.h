@@ -35,6 +35,10 @@ using namespace nb::literals;
   #include "bindings/pipelines/dlio.h"
 #endif
 
+#ifdef EVALIO_FORM
+  #include "bindings/pipelines/form.h"
+#endif
+
 namespace evalio {
 inline void make_pipelines(nb::module_& m) {
   // List all the pipelines here
@@ -128,6 +132,18 @@ inline void make_pipelines(nb::module_& m) {
     "Direct LiDAR-Inertial Odometry (DLIO) pipeline. DLIO is a lightweight "
     "LiDAR-inertial odometry algorithm that uses a coarse-to-fine approach "
     "with a geometric observer for real-time state estimation.";
+#endif
+
+#ifdef EVALIO_FORM
+  nb::class_<FORM, evalio::Pipeline>(m, "FORM")
+    .def(nb::init<>())
+    .def_static("name", &FORM::name)
+    .def_static("default_params", &FORM::default_params)
+    .def_static("url", &FORM::url)
+    .def_static("version", &FORM::version)
+    .doc() =
+    "FORM LiDAR odometry pipeline with feature extraction, factor-graph "
+    "optimization, and sparse keyscan map management.";
 #endif
 }
 } // namespace evalio
