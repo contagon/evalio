@@ -10,6 +10,7 @@ For more information about the pipelines included in evalio, see the [included p
             - LOAM
             - LioSAM
             - MadICP
+            - FORM
             - PipelineNotFound
             - UnusedPipelineParam
             - InvalidPipelineParamType
