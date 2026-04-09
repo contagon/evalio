@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include "evalio/convert/base.h"
+#include "evalio/convert/gtsam.h"
 #include "evalio/pipeline.h"
 #include "evalio/types.h"
 #include "form/feature/extraction.hpp"
@@ -16,40 +18,57 @@
 
 namespace ev = evalio;
 
-inline gtsam::Pose3 pose_to_gtsam(const ev::SE3& pose) {
-  return gtsam::Pose3(
-    gtsam::Rot3(pose.rot.to_mat()),
-    gtsam::Point3(pose.trans)
-  );
-}
+namespace evalio {
 
-inline ev::SE3 pose_to_evalio(const gtsam::Pose3& pose) {
-  return ev::SE3(
-    ev::SO3::from_mat(pose.rotation().matrix()),
-    pose.translation()
-  );
-}
-
-template<typename PointT>
-inline ev::Point point_to_evalio(const PointT& point) {
+template<>
+inline Point convert(const form::PointFeat& in) {
   return {
-    .x = point.x,
-    .y = point.y,
-    .z = point.z,
+    .x = in.x,
+    .y = in.y,
+    .z = in.z,
     .intensity = 0.0,
-    .t = ev::Duration::from_sec(0),
+    .t = Duration::from_sec(0),
     .row = 0,
-    .col = static_cast<uint16_t>(point.scan),
+    .col = static_cast<uint16_t>(in.scan),
   };
 }
 
-inline form::PointXYZf point_to_form(const ev::Point& point) {
-  return form::PointXYZf(
-    static_cast<float>(point.x),
-    static_cast<float>(point.y),
-    static_cast<float>(point.z)
-  );
+template<>
+inline Point convert(const form::PlanarFeat& in) {
+  return {
+    .x = in.x,
+    .y = in.y,
+    .z = in.z,
+    .intensity = 0.0,
+    .t = Duration::from_sec(0),
+    .row = 0,
+    .col = static_cast<uint16_t>(in.scan),
+  };
 }
+
+template<>
+inline Point convert(const form::PointXYZf& in) {
+  return {
+    .x = in.x,
+    .y = in.y,
+    .z = in.z,
+    .intensity = 0.0,
+    .t = Duration::from_sec(0),
+    .row = 0,
+    .col = 0,
+  };
+}
+
+template<>
+inline form::PointXYZf convert(const Point& in) {
+  return {
+    static_cast<float>(in.x),
+    static_cast<float>(in.y),
+    static_cast<float>(in.z),
+  };
+}
+
+} // namespace evalio
 
 class FORM: public ev::Pipeline {
 public:
@@ -114,7 +133,7 @@ public:
 
       for (const auto& [_, voxel] : std::get<I>(world_map)) {
         for (const auto& point : voxel) {
-          vec.push_back(point_to_evalio(point));
+          vec.push_back(ev::convert<ev::Point>(point));
         }
       }
     });
@@ -133,7 +152,7 @@ public:
   }
 
   void set_imu_T_lidar(ev::SE3 T) override {
-    lidar_T_imu_ = pose_to_gtsam(T).inverse();
+    lidar_T_imu_ = ev::convert<gtsam::Pose3>(T).inverse();
   }
 
   // Doers
@@ -144,34 +163,14 @@ public:
   void add_imu(ev::ImuMeasurement mm) override {}
 
   void add_lidar(ev::LidarMeasurement mm) override {
-    std::vector<form::PointXYZf> scan;
-    scan.reserve(mm.points.size());
-    for (const auto& point : mm.points) {
-      scan.push_back(point_to_form(point));
-    }
+    const auto scan = ev::convert_iter<std::vector<form::PointXYZf>>(mm.points);
 
     auto [planar_kp, point_kp] = estimator_.register_scan(scan);
     current_pose_ =
-      pose_to_evalio(estimator_.current_lidar_estimate() * lidar_T_imu_);
-
-    std::map<std::string, std::vector<ev::Point>> points = {
-      {"planar", {}},
-      {"point", {}},
-    };
-    auto& all_planar = points["planar"];
-    auto& all_point = points["point"];
-    all_planar.reserve(planar_kp.size());
-    all_point.reserve(point_kp.size());
-
-    for (const auto& point : planar_kp) {
-      all_planar.push_back(point_to_evalio(point));
-    }
-    for (const auto& point : point_kp) {
-      all_point.push_back(point_to_evalio(point));
-    }
+      ev::convert<ev::SE3>(estimator_.current_lidar_estimate() * lidar_T_imu_);
 
     this->save(mm.stamp, current_pose_);
-    this->save(mm.stamp, points);
+    this->save(mm.stamp, ev::make_map("planar", planar_kp, "point", point_kp));
   }
 
 private:
