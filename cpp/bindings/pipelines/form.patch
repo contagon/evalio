@@ -1,8 +1,23 @@
+diff --git a/form/form.cpp b/form/form.cpp
+index d69f197..8a6a93b 100644
+--- a/form/form.cpp
++++ b/form/form.cpp
+@@ -47,7 +47,9 @@ Estimator::register_scan(const std::vector<PointXYZf> &scan) noexcept {
+   // ------------------------------ Initialization ------------------------------ //
+   // This needs to go first to get the scan index
+   Pose3 prediction = m_constraints.predict_next();
+-  auto [scan_idx, scan_constraints] = m_constraints.step(prediction);
++  auto scan_step = m_constraints.step(prediction);
++  const auto scan_idx = std::get<0>(scan_step);
++  auto &scan_constraints = std::get<1>(scan_step);
+ 
+   // ----------------------------- Extract Features ----------------------------- //
+   const auto keypoints = m_extractor.extract(scan, scan_idx);
 diff --git a/form/mapping/map.hpp b/form/mapping/map.hpp
-index 321e54d..86cf051 100644
+index 321e54d..b7c8b28 100644
 --- a/form/mapping/map.hpp
 +++ b/form/mapping/map.hpp
-@@ -31,16 +31,17 @@
+@@ -31,18 +31,18 @@
  
  using gtsam::symbol_shorthand::X;
  
@@ -24,7 +39,7 @@ index 321e54d..86cf051 100644
  /// @brief A match between a query point and a point in the map
  /// If no match is found, dist_sqrd is set to max double
  template <typename Point> struct Match {
-@@ -69,7 +70,8 @@ private:
+@@ -69,7 +69,8 @@ private:
    double m_voxel_width = 0.5;
  
    /// @brief The data structure storing the points
