@@ -1,0 +1,36 @@
+diff --git a/form/mapping/map.hpp b/form/mapping/map.hpp
+index 321e54d..86cf051 100644
+--- a/form/mapping/map.hpp
++++ b/form/mapping/map.hpp
+@@ -31,16 +31,17 @@
+ 
+ using gtsam::symbol_shorthand::X;
+ 
++namespace form {
++
+ /// @brief Hash function for Eigen::Matrix<int, 3, 1>
+ /// From kiss-icp:
+ /// https://github.com/PRBonn/kiss-icp/blob/main/cpp/kiss_icp/core/VoxelUtils.hpp#L45-L51
+-template <> struct std::hash<Eigen::Matrix<int, 3, 1>> {
++struct VoxelHasher {
+   std::size_t operator()(const Eigen::Matrix<int, 3, 1> &voxel) const {
+     const uint32_t *vec = reinterpret_cast<const uint32_t *>(voxel.data());
+     return (vec[0] * 73856093 ^ vec[1] * 19349669 ^ vec[2] * 83492791);
+   }
+ };
+ 
+-namespace form {
+-
+ /// @brief A match between a query point and a point in the map
+ /// If no match is found, dist_sqrd is set to max double
+ template <typename Point> struct Match {
+@@ -69,7 +70,8 @@ private:
+   double m_voxel_width = 0.5;
+ 
+   /// @brief The data structure storing the points
+-  tsl::robin_map<Eigen::Matrix<int, 3, 1>, std::vector<Point>> m_data;
++  tsl::robin_map<Eigen::Matrix<int, 3, 1>, std::vector<Point>, VoxelHasher>
++      m_data;
+ 
+   /// @brief Compute the voxel coordinates for a given point
+   [[nodiscard]] Eigen::Matrix<int, 3, 1>

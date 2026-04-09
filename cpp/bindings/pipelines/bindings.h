@@ -31,6 +31,10 @@ using namespace nb::literals;
   #include "bindings/pipelines/ct_icp.h"
 #endif
 
+#ifdef EVALIO_FORM
+  #include "bindings/pipelines/form.h"
+#endif
+
 namespace evalio {
 inline void make_pipelines(nb::module_& m) {
   // List all the pipelines here
@@ -111,6 +115,18 @@ inline void make_pipelines(nb::module_& m) {
     "CT-ICP LiDAR-only pipeline performs continuous-time ICP over "
     "a small window of scans to perform more accurate dewarping performance. "
     "This is the version based on the 2022-ICRA paper.";
+#endif
+
+#ifdef EVALIO_FORM
+  nb::class_<FORM, evalio::Pipeline>(m, "FORM")
+    .def(nb::init<>())
+    .def_static("name", &FORM::name)
+    .def_static("default_params", &FORM::default_params)
+    .def_static("url", &FORM::url)
+    .def_static("version", &FORM::version)
+    .doc() =
+    "FORM LiDAR odometry pipeline with feature extraction, factor-graph "
+    "optimization, and sparse keyscan map management.";
 #endif
 }
 } // namespace evalio

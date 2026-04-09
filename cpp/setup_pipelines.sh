@@ -64,6 +64,16 @@ git switch --detach icra_2022
 git apply ../../pipelines/ct_icp.patch
 cd ..
 
+# FORM
+if [ ! -d "form" ]; then
+    git clone https://github.com/rpl-cmu/form.git
+fi
+cd form
+git stash
+git switch --detach main
+git apply ../../pipelines/form.patch
+cd ..
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then
