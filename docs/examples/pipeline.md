@@ -9,6 +9,7 @@ To create a pipeline, simply inherit from the `Pipeline` class,
     ```python
     from evalio.pipelines import Pipeline
     from evalio.types import (
+        Param,
         SE3,
         Point,
         ImuParams,
@@ -32,19 +33,18 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         def default_params() -> dict[str, bool | int | float | str]: ...;
 
         # Getters
-        def pose(self) -> SE3: ...
-        def map(self) -> list[Point]: ...
+        def map(self) -> dict[str, list[Point]]: ...
 
         # Setters
         def set_imu_params(self, params: ImuParams): ...
         def set_lidar_params(self, params: LidarParams): ...
         def set_imu_T_lidar(self, T: SE3): ...
-        def set_params(self, params: dict[str, bool | int | float | str]): ...
+        def set_params(self, params: dict[str, Param]) -> dict[str, Param]: ...
 
         # Doers
         def initialize(self): ...
         def add_imu(self, mm: ImuMeasurement): ...
-        def add_lidar(self, mm: LidarMeasurement) -> list[Point]: ...
+        def add_lidar(self, mm: LidarMeasurement): ...
     ```
 
 === "C++"
@@ -71,19 +71,18 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         static std::map<std::string, Param> default_params() { ... };
         
         // Getters
-        const SE3 pose() { ... };
-        const std::vector<Point> map() { ... };
+        const evalio::Map<> map() { ... };
 
         // Setters
         void set_imu_params(ImuParams params) { ... };
         void set_lidar_params(LidarParams params) { ... };
         void set_imu_T_lidar(SE3 T) { ... };
-        void set_params(std::map<std::string, Param>) { ... };
+        std::map<std::string, Param> set_params(std::map<std::string, Param>) { ... };
 
         // Doers
         void initialize() { ... };
         void add_imu(ImuMeasurement mm) { ... };
-        std::vector<Point> add_lidar(LidarMeasurement mm) { ... };
+        void add_lidar(LidarMeasurement mm) { ... };
     }
     ```
 
@@ -95,15 +94,13 @@ The first four methods are all static methods that provide information about the
 
 ## Getters
 
-The next two methods are getters for the pose and map. The pose is the most up-to-date estimate for the IMU and is polled after each lidar measurement is passed in. 
-
-The map current map/submap/etc and is only used for visualization purposes.
+The map getter returns the current map/submap/etc and is only used for visualization purposes.
 
 ## Setters
 
 These are to set both dataset specific parameters and pipeline specific parameters. The dataset specific parameters are `imu_params`, `lidar_params`, and `imu_T_lidar`. These are all set before the pipeline is run.
 
-The pipeline specific parameters are set using `set_params`, which takes in a dictionary of parameters. This is used to set any parameters that are specific to the pipeline, such as the number of iterations or the convergence threshold. `default_params` is updated with any parameters and passed at the start of each run.
+The pipeline specific parameters are set using `set_params`, which takes in a dictionary of parameters. This is used to set any parameters that are specific to the pipeline, such as the number of iterations or the convergence threshold. It should return any unused parameters.
 
 ## Doers
 Arguably the most important part. 
@@ -112,7 +109,7 @@ Arguably the most important part.
 
 `add_imu` is called for each IMU measurement. This is where the IMU data is processed and used to update the pose.
 
-`add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. It returns a list of features were extracted from the scan and are used for visualization.
+`add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. To save trajectory estimates and optional features for visualization, call `self.save(...)` in Python (or `save(...)` in C++).
 
 ## C++ Building
 
@@ -139,7 +136,7 @@ We recommend then setting everything up to be built with [`scikit-build-core`](h
 
     In order for nanobind to share types between the `evalio` shared object and your custom pipeline, they will have to be compiled with the same version of `libstdc++`. This [pybind PR](https://github.com/pybind/pybind11/pull/5439) discusses this in more detail.
 
-    The "abi_tag" used in your version of evalio can be gotten using `evalio._abi_tag()`, or by running `python -c "import evalio; print(evalio._abi_tag())`". To make sure it matches your nanobind module's, add this to your `NB_MODULE` definition:
+    The "abi_tag" used in your version of evalio can be gotten using `evalio._abi_tag`, or by running `python -c "import evalio; print(evalio._abi_tag)"`. To make sure it matches your nanobind module's, add this to your `NB_MODULE` definition:
     
     ```c++
     m.def("abi_tag", []() { return nb::detail::abi_tag(); });
