@@ -1165,9 +1165,9 @@ Also available are the <code>-l/--length</code> which will set a maximum length 
 Results will be saved to the <code>output_dir</code> specified in the config file, with nested results based on the dataset. Visualization options can also be used here. Mixing the config file and command line options is not allowed, just for reducing the number of possible combinations.</p>
 <h2 id="evaluating">Evaluating</h2>
 <p>Once trajectories have been run, statistics can be calculated,
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>evalio<span class="w"> </span>stats<span class="w"> </span>-d<span class="w"> </span>results<span class="w"> </span>-m<span class="w"> </span>mean<span class="w"> </span>-w<span class="w"> </span><span class="m">200</span><span class="w"> </span>-s<span class="w"> </span>RTEt
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>evalio<span class="w"> </span>stats<span class="w"> </span>results<span class="w"> </span>--metric<span class="w"> </span>mean<span class="w"> </span>--w-meters<span class="w"> </span><span class="m">200</span><span class="w"> </span>--sort<span class="w"> </span>RTEt_200.0m
 </span></code></pre></div>
-With <code>-m/--metric</code> specifying the metric to calculate with options including mean, median, and sse and <code>-w/--window</code> specifying the window size for RTE, with a default of 100 scans. Only first part of all trajectories can also be done using the <code>-l/--length</code> option. Sorting of the results can be done with the <code>-s/--sort</code> option, with any column heading being an allowed option. </p>
+With <code>--metric</code> specifying the metric to calculate with options including mean, median, and sse, and <code>--w-meters</code> / <code>--w-seconds</code> specifying RTE windows (defaults to <code>--w-meters 30</code> and can be repeated). Only first part of all trajectories can also be done using the <code>-l/--length</code> option. Sorting of the results can be done with <code>-S/--sort</code>, with any column heading being an allowed option.</p>
 
 
 

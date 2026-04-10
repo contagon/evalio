@@ -1142,7 +1142,7 @@
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>make
 </span></code></pre></div></p>
 <h3 id="pipelines">Pipelines</h3>
-<p>By default, pipelines are not included due to their large dependencies. We use vpckg to handle a reliable build of these dependencies and pipelines. vcpkg and the pipelines can be setup via running
+<p>By default, pipelines are not included due to their large dependencies. We use vcpkg to handle a reliable build of these dependencies and pipelines. vcpkg and the pipelines can be setup via running
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./cpp/setup_pipelines.sh
 </span></code></pre></div></p>
 <p>This will clone and setup vcpkg in the <code>.vcpkg</code> directory, and the pipelines (including some minor patches) to <code>cpp/bindings/pipelines-src</code>. vcpkg will automatically be picked up by CMake in this directory, so the build process then continues as in the base section.</p>
