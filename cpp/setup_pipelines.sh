@@ -22,7 +22,7 @@ if [ ! -d "LIO-SAM" ]; then
 fi
 cd LIO-SAM
 git stash
-git checkout master
+git checkout d35ce0606b6326377b631ae9cedd73c74066eacc
 cd ..
 
 # LOAM
@@ -31,7 +31,7 @@ if [ ! -d "loam" ]; then
 fi
 cd loam
 git stash
-git checkout main
+git checkout 48fc3a8c05ec3ea19c57f9565f453292c36b9bdf
 git apply ../../pipelines/loam.patch
 cd ..
 
@@ -69,7 +69,7 @@ if [ ! -d "direct_lidar_inertial_odometry" ]; then
 fi
 cd direct_lidar_inertial_odometry
 git stash
-git checkout master
+git checkout 5cda5f359a70174a98001256ffd7234cbfeccf38
 cd ..
 
 if [ ! -d "form" ]; then
@@ -77,7 +77,7 @@ if [ ! -d "form" ]; then
 fi
 cd form
 git stash
-git switch --detach main
+git switch --detach v0.1.1
 git apply ../../pipelines/form.patch
 cd ..
 
