@@ -31,5 +31,8 @@ compile_commands.json
 # cloned pipelines
 cpp/bindings/pipelines-src
 
-# beads
+# Beads / Dolt files (added by bd init)
 .beads/
+.dolt/
+*.db
+.beads-credential-key
