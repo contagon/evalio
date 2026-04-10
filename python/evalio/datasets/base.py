@@ -233,7 +233,7 @@ class Dataset(StrEnum):
         if not self.is_downloaded():
             # TODO: Make this print with rich?
             raise ValueError(
-                f"Data for {self} not found, please use `evalio download {self}` to download"
+                f"Data for {self} not found, please use `evalio dl {self}` to download"
             )
 
     @classmethod

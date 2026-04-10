@@ -5,12 +5,13 @@ For more information about the pipelines included in evalio, see the [included p
         members:
             - Pipeline
             - CTICP
-            - KissICP
+            - DLIO
+            - FORM
             - GenZICP
+            - KissICP
             - LOAM
             - LioSAM
             - MadICP
-            - FORM
             - PipelineNotFound
             - UnusedPipelineParam
             - InvalidPipelineParamType

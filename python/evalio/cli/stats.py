@@ -286,7 +286,7 @@ def evaluate_typer(
     # Parse some of the options
     if only_complete and only_failed:
         raise typer.BadParameter(
-            "Can only use one of --only-complete, --only-incomplete, or --only-failed."
+            "Can only use one of --only-complete or --only-failed."
         )
 
     # Parse the filtering options

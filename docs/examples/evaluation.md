@@ -63,6 +63,6 @@ Results will be saved to the `output_dir` specified in the config file, with nes
 
 Once trajectories have been run, statistics can be calculated,
 ```bash
-evalio stats -d results -m mean -w 200 -s RTEt
+evalio stats results --metric mean --w-meters 200 --sort RTEt_200.0m
 ```
-With `-m/--metric` specifying the metric to calculate with options including mean, median, and sse and `-w/--window` specifying the window size for RTE, with a default of 100 scans. Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with the `-s/--sort` option, with any column heading being an allowed option. 
+With `--metric` specifying the metric to calculate with options including mean, median, and sse, and `--w-meters` / `--w-seconds` specifying RTE windows (defaults to `--w-meters 30` and can be repeated). Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with `-S/--sort`, with any column heading being an allowed option.

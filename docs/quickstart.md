@@ -12,7 +12,7 @@ evalio can be used both as a python library and as a [CLI](ref/cli.md) for both 
 Once evalio is installed, datasets can be listed and downloaded via the [CLI](ref/cli.md) interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
 ```bash
 evalio ls datasets
-evalio download hilti_2022/basement_2
+evalio dl hilti_2022/basement_2
 ```
 evalio downloads data to the path given by `-D`, `EVALIO_DATA` environment variable, or if both are unset to the local folder `./evalio_data`. All the trajectories in a dataset can also be downloaded by using the wildcard `hilti_2022/*`, making sure to escape the asterisk as needed.
 
@@ -67,10 +67,10 @@ import rerun as rr
 from evalio.rerun import convert
 
 rr.init("evalio")
-rr.connect_tcp()
+rr.connect_grpc()
 for scan in ds.Hilti2022.basement_2.lidar():
     rr.set_time("timeline", timestamp=scan.stamp.to_sec())
-    rr.log("lidar", convert(scan, color=[255, 0, 255]))
+    rr.log("lidar", convert(scan, color=(255, 0, 255)))
 ```
 
 !!! note

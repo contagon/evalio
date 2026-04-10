@@ -81,7 +81,7 @@ from evalio.rerun import convert
 
 # Initialize rerun
 rr.init("evalio")
-rr.connect_tcp()
+rr.connect_grpc()
 
 # Stream lidar scans to rerun
 for scan in Hilti2022.basement_2.lidar():
