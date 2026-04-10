@@ -55,9 +55,6 @@ def module_callback(value: Optional[list[str]]) -> list[Any]:
 
 @app.callback()
 def global_options(
-    # Marking this as a str for now to get autocomplete to work,
-    # Once this fix is released (hasn't been as of 0.15.2), we can change it to a Path
-    # https://github.com/fastapi/typer/pull/1138
     data_dir: Annotated[
         Optional[Path],
         typer.Option(

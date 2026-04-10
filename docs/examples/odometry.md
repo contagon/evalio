@@ -44,7 +44,7 @@ from evalio.types import Trajectory
 from evalio.datasets import NewerCollege2020
 from evalio import stats
 
-traj = Trajectory.from_experiment("odometry.csv")
+traj = Trajectory.from_file("odometry.csv")
 gt = NewerCollege2020.short_experiment.ground_truth()
 
 # Align the odometry to the ground truth

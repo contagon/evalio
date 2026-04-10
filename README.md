@@ -28,7 +28,7 @@ evalio can be used both as a python library and as a CLI for both datasets and p
 Once evalio is installed, datasets can be listed and downloaded via the CLI interface. For example, to list all datasets and then download a sequence from the hilti-2022 dataset,
 ```bash
 evalio ls datasets
-evalio download hilti_2022/basement_2
+evalio dl hilti_2022/basement_2
 ```
 
 Once downloaded, a trajectory can then be easily used in python,
