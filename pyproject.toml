@@ -41,6 +41,14 @@ build-backend = "scikit_build_core.build"
 evalio = "evalio.cli:app"
 
 # -------------- Tools -------------- #
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "cpp/**/*.{h,c,hpp,cpp}" },
+    { file = "python/**/*.{cpp,py}" },
+    { file = "CMakeLists.txt" },
+]
+
 # building
 [tool.scikit-build]
 minimum-version = "0.12"
@@ -49,6 +57,7 @@ sdist.include = ["cpp/bindings/pipelines-src/*"]
 
 [tool.scikit-build.cmake.define]
 EVALIO_BUILD_PYTHON = true
+CMAKE_BUILD_TYPE = "RelWithDebInfo"
 VCPKG_INSTALLED_DIR = "./.vcpkg_installed"
 # VCPKG_INSTALL_OPTIONS = "--debug"
 

@@ -43,10 +43,6 @@ def eval_dataset(
         elif isinstance(traj.metadata, ty.Experiment):
             all_trajs.append(cast(ty.Trajectory[ty.Experiment], traj))
 
-    if gt_og is None:
-        print_warning(f"No ground truth found in {dir}, skipping.")
-        return None
-
     # Setup visualization
     if visualize:
         try:
@@ -67,11 +63,12 @@ def eval_dataset(
             spawn=False,
         )
         rr.connect_grpc()
-        rr.log(
-            "gt",
-            convert(gt_og, color=GT_COLOR),
-            static=True,
-        )
+        if gt_og is not None:
+            rr.log(
+                "gt",
+                convert(gt_og, color=GT_COLOR),
+                static=True,
+            )
 
         # generate colors for visualization
         colors = distinctipy.get_colors(len(all_trajs) + 1)
@@ -86,7 +83,7 @@ def eval_dataset(
         if traj.metadata.total_elapsed is not None:
             hz = len(traj) / traj.metadata.total_elapsed
 
-        if len(traj) > 0:
+        if len(traj) > 0 and gt_og is not None:
             # align to ground truth, copying ground truth by hand
             gt_aligned = Trajectory(
                 stamps=[ty.Stamp(s) for s in gt_og.stamps],
@@ -296,7 +293,7 @@ def evaluate_typer(
     else:
         from asteval import Interpreter
 
-        filter_method = lambda r: Interpreter(user_symbols=r).eval(
+        filter_method = lambda r: Interpreter(user_symbols=r).eval(  # type: ignore
             filter_str, raise_errors=True
         )
 

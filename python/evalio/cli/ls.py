@@ -142,7 +142,9 @@ def ls(
                 )
             else:
                 # sequences
-                all_info["Sequences"].append("\n".join(d.sequences()))
+                all_info["Sequences"].append(
+                    "\n".join([v.seq_name for v in d.sequences()])
+                )
                 # downloaded
                 downloaded = [d(s).is_downloaded() for s in d.sequences()]
                 downloaded = "\n".join(
