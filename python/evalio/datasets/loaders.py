@@ -368,8 +368,8 @@ class RawDataIter(DatasetIterator):
             return None
 
     def __iter__(self) -> Iterator[Measurement]:
-        self.next_imu = next(self.iter_imu)
-        self.next_lidar = next(self.iter_lidar)
+        self.next_imu = self._step(self.iter_imu)
+        self.next_lidar = self._step(self.iter_lidar)
         return self
 
     def __next__(self) -> Measurement:

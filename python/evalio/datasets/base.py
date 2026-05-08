@@ -84,14 +84,14 @@ class Dataset(StrEnum):
         ...
 
     # Return the ground truth in the ground truth frame
-    def ground_truth_raw(self) -> Trajectory:
+    def ground_truth_raw(self) -> Optional[Trajectory]:
         """
         Retrieves the raw ground truth trajectory, as represented in the ground truth frame.
 
         Returns:
             The raw ground truth trajectory data.
         """
-        ...
+        return None
 
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
@@ -210,13 +210,16 @@ class Dataset(StrEnum):
 
         return True
 
-    def ground_truth(self) -> Trajectory[GroundTruth]:
+    def ground_truth(self) -> Optional[Trajectory[GroundTruth]]:
         """Get the ground truth trajectory in the **IMU** frame, rather than the ground truth frame as returned in [ground_truth_raw][evalio.datasets.Dataset.ground_truth_raw].
 
         Returns:
             The ground truth trajectory in the IMU frame.
         """
         gt_traj = self.ground_truth_raw()
+        if gt_traj is None:
+            return None
+
         gt_T_imu = self.imu_T_gt().inverse()
 
         # Convert to IMU frame

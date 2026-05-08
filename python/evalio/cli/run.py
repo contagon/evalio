@@ -274,7 +274,9 @@ def run(
 
         # save ground truth if we haven't already
         if not (gt_file := exp.file.parent / "gt.csv").exists():
-            exp.sequence.ground_truth().to_file(gt_file)
+            gt = exp.sequence.ground_truth()
+            if gt is not None:
+                gt.to_file(gt_file)
 
         # Figure out the status of the experiment
         traj = ty.Trajectory.from_file(exp.file)

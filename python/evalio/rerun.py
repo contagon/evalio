@@ -127,7 +127,8 @@ try:
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
 
-            self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
+            if self.gt is not None:
+                self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
             # reset other variables
             self.pn = None
@@ -165,7 +166,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a dataset before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
@@ -192,13 +193,13 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a dataset before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
-            if self.gt_o_T_imu_o is None:
+            if self.gt_o_T_imu_o is None and self.gt is not None:
                 # If we haven't hit ground truth data or the pose isn't being updated, wait
                 if stamp < self.gt.stamps[0] or pose == SE3.identity():
                     pass
@@ -231,7 +232,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
@@ -247,7 +248,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
