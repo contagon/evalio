@@ -12,6 +12,7 @@ from rich import box
 
 from evalio import types as ty, stats
 import typer
+import numpy as np
 
 import distinctipy
 
@@ -82,6 +83,12 @@ def eval_dataset(
         hz = None
         if traj.metadata.total_elapsed is not None:
             hz = len(traj) / traj.metadata.total_elapsed
+
+        # Compute delta between start / end of trajectory
+        delta_transform = traj.poses[-1] * traj.poses[0].inverse()
+        delta = delta_transform.log()
+        r["d_rot"] = np.sqrt(delta[:3] @ delta[:3]) * 180.0 / np.pi
+        r["d_trans"] = np.sqrt(delta[3:6] @ delta[3:6])
 
         if len(traj) > 0 and gt_og is not None:
             # align to ground truth, copying ground truth by hand
