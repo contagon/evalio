@@ -267,6 +267,13 @@ inline void make_types(nb::module_& m) {
       "List of points in the "
       "point cloud. Note, this is always in row major format."
     )
+    .def_static(
+      "from_vec_positions",
+      &LidarMeasurement::from_vec_positions,
+      "stamp"_a,
+      "positions"_a,
+      "Construct a LidarMeasurement from a stamp and a (n,3) numpy array."
+    )
     .def(
       "to_vec_positions",
       &LidarMeasurement::to_vec_positions,

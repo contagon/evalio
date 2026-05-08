@@ -218,6 +218,16 @@ struct LidarMeasurement {
     return oss.str();
   }
 
+  static LidarMeasurement
+  from_vec_positions(Stamp stamp, const Eigen::MatrixX3d& positions) {
+    std::vector<Point> pts;
+    pts.reserve(positions.rows());
+    for (const auto& p : positions.rowwise()) {
+      pts.push_back(Point {.x = p.x(), .y = p.y(), .z = p.z()});
+    }
+    return LidarMeasurement(stamp, pts);
+  }
+
   std::vector<Eigen::Vector3d> to_vec_positions() const {
     std::vector<Eigen::Vector3d> eigen_points;
     eigen_points.reserve(points.size());
