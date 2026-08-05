@@ -92,7 +92,6 @@ def global_options(
     """
     Global options for the evalio CLI.
     """
-    pass
 
 
 __all__ = [

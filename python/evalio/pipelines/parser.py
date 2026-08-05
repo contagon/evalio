@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import importlib
-from inspect import isclass
 import itertools
+from collections.abc import Sequence
+from copy import deepcopy
+from inspect import isclass
 from types import ModuleType
-from typing import Any, Optional, cast, Sequence
-import numpy as np
+from typing import Any, Optional, cast
 
+import numpy as np
 from asteval import Interpreter
+
 from evalio import pipelines
 from evalio.pipelines import Pipeline
 from evalio.types import Param
 from evalio.utils import CustomException
-
 
 _PIPELINES: set[type[Pipeline]] = set()
 
@@ -220,7 +221,7 @@ def parse_config(
     elif isinstance(p, dict):
         # figure out name of pipeline
         if "pipeline" not in p:
-            return InvalidPipelineConfig(f"Need pipeline: {str(p)}")
+            return InvalidPipelineConfig(f"Need pipeline: {p!s}")
         pipe_name = cast(str, p.pop("pipeline"))
 
         # figure out the name

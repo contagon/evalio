@@ -1,8 +1,7 @@
-import pytest
 import numpy as np
-
-from evalio.types.base import Trajectory
+import pytest
 from evalio._cpp.types import SE3, SO3, Stamp  # type: ignore
+from evalio.types.base import Trajectory
 
 
 @pytest.fixture

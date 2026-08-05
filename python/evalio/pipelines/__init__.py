@@ -1,28 +1,28 @@
-from evalio._cpp.pipelines import *  # type: ignore # noqa: F403
+from evalio._cpp.pipelines import *  # type: ignore
 
 from .parser import (
-    register_pipeline,
-    get_pipeline,
-    all_pipelines,
-    parse_config,
-    validate_params,
+    InvalidPipelineConfig,
+    InvalidPipelineParamType,
+    PipelineConfigError,
     PipelineNotFound,
     UnusedPipelineParam,
-    InvalidPipelineParamType,
-    InvalidPipelineConfig,
-    PipelineConfigError,
+    all_pipelines,
+    get_pipeline,
+    parse_config,
+    register_pipeline,
+    validate_params,
 )
 
 __all__ = [
-    "Pipeline",  # noqa: F405
+    "InvalidPipelineConfig",
+    "InvalidPipelineParamType",
+    "Pipeline",
+    "PipelineConfigError",
+    "PipelineNotFound",
+    "UnusedPipelineParam",
     "all_pipelines",
     "get_pipeline",
-    "register_pipeline",
     "parse_config",
+    "register_pipeline",
     "validate_params",
-    "PipelineNotFound",
-    "InvalidPipelineConfig",
-    "UnusedPipelineParam",
-    "InvalidPipelineParamType",
-    "PipelineConfigError",
 ]

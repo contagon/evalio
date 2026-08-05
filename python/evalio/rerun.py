@@ -1,11 +1,13 @@
 from typing import Any, Literal, Optional, TypedDict, cast, overload
-from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import TypeVar
 
+from evalio._cpp.helpers import closest  # type: ignore
+from evalio._cpp.types import VisOption  # type: ignore
 from evalio.datasets import Dataset
 from evalio.types import (
     SE3,
@@ -18,8 +20,6 @@ from evalio.types import (
     Trajectory,
 )
 from evalio.utils import print_warning
-from evalio._cpp.helpers import closest  # type: ignore
-from evalio._cpp.types import VisOption  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -286,7 +286,6 @@ try:
             rr.Points3D: LidarMeasurement converted to rerun Points3D.
         """
 
-        ...
 
     @overload
     def convert(
@@ -307,7 +306,6 @@ try:
         Returns:
             rr.Points3D: Points converted to rerun Points3D.
         """
-        ...
 
     @overload
     def convert(
@@ -329,7 +327,6 @@ try:
         Returns:
             rr.Points3D: numpy array converted to rerun Points3D.
         """
-        ...
 
     # trajectories
     @overload
@@ -346,7 +343,6 @@ try:
         Returns:
             rr.Points3D: List of SE3 poses converted to rerun Points3D.
         """
-        ...
 
     M = TypeVar("M", bound=Metadata | None)
 
@@ -364,7 +360,6 @@ try:
         Returns:
             rr.Points3D: Trajectory converted to rerun Points3D.
         """
-        ...
 
     # poses
     @overload
@@ -377,7 +372,6 @@ try:
         Returns:
             rr.Transform3D: SE3 pose converted to rerun Transform3D.
         """
-        ...
 
     def convert(
         obj: Any,

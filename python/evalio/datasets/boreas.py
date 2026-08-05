@@ -1,6 +1,7 @@
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -12,8 +13,8 @@ from evalio.types import (
     ImuMeasurement,
     ImuParams,
     LidarParams,
-    Trajectory,
     Stamp,
+    Trajectory,
 )
 
 from .base import Dataset, DatasetIterator
@@ -240,9 +241,10 @@ class Boreas(Dataset):
         return sum(1 for _ in (self.folder / "lidar").glob("*.bin")) >= num
 
     def download(self):
-        from subprocess import Popen, PIPE, run
-        from tqdm import tqdm
         import sys
+        from subprocess import PIPE, Popen, run
+
+        from tqdm import tqdm
         # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 

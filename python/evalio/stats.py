@@ -1,18 +1,16 @@
-from enum import StrEnum, auto
-from typing_extensions import TypeVar
-
-from evalio.utils import print_warning
-from evalio._cpp.helpers import closest  # type: ignore
-from . import types as ty
-
+from copy import deepcopy
 from dataclasses import dataclass
+from enum import StrEnum, auto
+from typing import cast
 
 import numpy as np
-
-from typing import cast
 from numpy.typing import NDArray
+from typing_extensions import TypeVar
 
-from copy import deepcopy
+from evalio._cpp.helpers import closest  # type: ignore
+from evalio.utils import print_warning
+
+from . import types as ty
 
 
 class MetricKind(StrEnum):

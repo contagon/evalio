@@ -3,7 +3,9 @@ from typing import Annotated, Optional, TypeAlias
 import typer
 from rapidfuzz.process import extractOne
 from rich.console import Console
-from evalio import datasets as ds, pipelines as pl
+
+from evalio import datasets as ds
+from evalio import pipelines as pl
 
 err_console = Console(stderr=True)
 

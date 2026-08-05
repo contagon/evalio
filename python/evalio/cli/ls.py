@@ -1,5 +1,5 @@
 from enum import StrEnum, auto
-from typing import Annotated, Literal, Optional, TypeVar, TypedDict
+from typing import Annotated, Literal, Optional, TypedDict, TypeVar
 
 import typer
 from rapidfuzz.process import extract_iter
@@ -7,7 +7,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from evalio import datasets as ds, pipelines as pl
+from evalio import datasets as ds
+from evalio import pipelines as pl
 
 app = typer.Typer()
 

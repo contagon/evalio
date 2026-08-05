@@ -4,12 +4,13 @@ These are extended types that do depend on other parts of evalio.
 
 from __future__ import annotations
 
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Optional, Self
-from evalio.types.base import Param, Metadata
 
-from evalio import pipelines as pl, datasets as ds
+from evalio import datasets as ds
+from evalio import pipelines as pl
+from evalio.types.base import Metadata, Param
 from evalio.utils import print_warning
 
 

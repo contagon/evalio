@@ -1,8 +1,9 @@
 import importlib
-from inspect import isclass
 import itertools
+from collections.abc import Sequence
+from inspect import isclass
 from types import ModuleType
-from typing import NotRequired, Optional, Sequence, TypedDict, cast
+from typing import NotRequired, Optional, TypedDict, cast
 
 from evalio import datasets
 from evalio.datasets.base import Dataset

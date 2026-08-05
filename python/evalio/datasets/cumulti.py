@@ -1,10 +1,10 @@
 import os
-from typing import Optional
 import urllib
 import urllib.request
 import zipfile
 from enum import auto
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 from rosbags.typesys import Stores

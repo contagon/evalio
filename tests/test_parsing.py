@@ -1,9 +1,11 @@
+from collections.abc import Sequence
+from typing import Any
+
 import evalio.datasets as ds
-from evalio.types import Param
-from evalio.datasets.parser import DatasetConfig, DatasetConfigError
 import evalio.pipelines as pl
-from typing import Any, Sequence
 import pytest
+from evalio.datasets.parser import DatasetConfig, DatasetConfigError
+from evalio.types import Param
 
 # ------------------------- Dataset Parsing ------------------------- #
 seq = ds.NewerCollege2021.quad_easy
