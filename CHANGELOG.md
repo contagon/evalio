@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.6.0](https://github.com/contagon/evalio/compare/v0.5.0...v0.6.0) (2026-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Bump Pipelines ([#81](https://github.com/contagon/evalio/issues/81))
+
+### Features
+
+* Add small new constructor for LidarMeasurement ([#78](https://github.com/contagon/evalio/issues/78)) ([39eb11c](https://github.com/contagon/evalio/commit/39eb11c143514a0c3ce1d0dca7e2cf88c301ea0e))
+* Bump Pipelines ([#81](https://github.com/contagon/evalio/issues/81)) ([24071ec](https://github.com/contagon/evalio/commit/24071ec9184669d5d03b7d72ba028cc2c78f5851))
+* Bump python & CI deps, basedpyright -&gt; pyrefly ([#83](https://github.com/contagon/evalio/issues/83)) ([334875b](https://github.com/contagon/evalio/commit/334875bd7921a81cacb728cc92e49603e4e23f7f))
+* Handle missing ground truth in dataset ([#79](https://github.com/contagon/evalio/issues/79)) ([7367264](https://github.com/contagon/evalio/commit/736726499f14b7487299e7fc877ed5adfb4ed6f8))
+* vcpkg bump ([#84](https://github.com/contagon/evalio/issues/84)) ([1f15c61](https://github.com/contagon/evalio/commit/1f15c6136b5aac8303ac7f09bf9f225bcedca824))
+
+
+### Bug Fixes
+
+* handle subnanosecond in csv file loading ([#85](https://github.com/contagon/evalio/issues/85)) ([4ca115e](https://github.com/contagon/evalio/commit/4ca115e03cca57e3298a6e30e978ee066be733c3))
+* Ruff linting updates ([#82](https://github.com/contagon/evalio/issues/82)) ([2b624d4](https://github.com/contagon/evalio/commit/2b624d4b0e4fa39308adf52106aa64a135daa8ed))
+
 ## [0.5.0](https://github.com/contagon/evalio/compare/v0.4.2...v0.5.0) (2026-04-10)
 
 
