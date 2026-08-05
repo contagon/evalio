@@ -12,7 +12,8 @@ seq = ds.NewerCollege2021.quad_easy
 name = seq.full_name
 
 # fmt: off
-DATASETS: list[tuple[str | DatasetConfig | Sequence[str | DatasetConfig], DatasetConfigError | list[tuple[ds.Dataset, int]]]] = [
+# pyrefly: ignore [bad-assignment]
+DATASETS: list[tuple[str | DatasetConfig | Sequence[str | DatasetConfig], DatasetConfigError | list[tuple[ds.Dataset, int | None]]]] = [
     # good ones
     (name, [(seq, None)]),
     ({"name": name}, [(seq, None)]),
@@ -23,7 +24,7 @@ DATASETS: list[tuple[str | DatasetConfig | Sequence[str | DatasetConfig], Datase
     ("newer_college_123/*", ds.DatasetNotFound(name="newer_college_123")),
     ("newer_college_123/*", ds.DatasetNotFound(name="newer_college_123")),
     ({"name": "newer_college_2020/bad"}, ds.SequenceNotFound("newer_college_2020/bad")),
-    ({"length": 100}, ds.InvalidDatasetConfig("Missing 'name' in dataset config")), # type: ignore
+    ({"length": 100}, ds.InvalidDatasetConfig("Missing 'name' in dataset config")),
 ]
 # fmt: on
 

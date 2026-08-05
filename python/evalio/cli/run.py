@@ -346,7 +346,8 @@ def run_single(
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
     pipe, dataset = output
-    pipe.set_visualizing(vis.args)
+    if vis.args is not None:
+        pipe.set_visualizing(vis.args)
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
     traj.open()
