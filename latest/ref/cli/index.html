@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1186,8 +1186,8 @@
 </span></code></pre></div>
 <p><strong>Options</strong>:</p>
 <ul>
-<li><code>-D, --data-dir PATH</code>: Directory to store downloaded datasets.</li>
-<li><code>-M, --module TEXT</code>: Custom module to load (for custom datasets or pipelines). Can be used multiple times.</li>
+<li><code>-D, --data-dir &lt;path&gt;</code>: Directory to store downloaded datasets.</li>
+<li><code>-M, --module &lt;str&gt;</code>: Custom module to load (for custom datasets or pipelines). Can be used multiple times.</li>
 <li><code>-V, --version</code>: Show version and exit.</li>
 <li><code>--install-completion</code>: Install completion for the current shell.</li>
 <li><code>--show-completion</code>: Show completion for the current shell, to copy it or customize the installation.</li>
@@ -1205,11 +1205,11 @@
 <h2 id="evalio-dl"><code>evalio dl</code></h2>
 <p>Download datasets</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>dl<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DATASETS...
+<div class="language-console highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>dl<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">{</span>datasets<span class="o">}</span>...
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>DATASETS...</code>: The dataset(s) to use  [required]</li>
+<li><code>datasets...</code>: The dataset(s) to use  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
@@ -1219,11 +1219,11 @@
 <p>Remove dataset(s)</p>
 <p>If --force is not used, will ask for confirmation.</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>rm<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DATASETS...
+<div class="language-console highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>rm<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">{</span>datasets<span class="o">}</span>...
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>DATASETS...</code>: The dataset(s) to use  [required]</li>
+<li><code>datasets...</code>: The dataset(s) to use  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
@@ -1233,11 +1233,11 @@
 <h2 id="evalio-filter"><code>evalio filter</code></h2>
 <p>Filter rosbag dataset(s) to only include lidar and imu data. Useful for shrinking disk size.</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>filter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DATASETS...
+<div class="language-console highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>filter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">{</span>datasets<span class="o">}</span>...
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>DATASETS...</code>: The dataset(s) to use  [required]</li>
+<li><code>datasets...</code>: The dataset(s) to use  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
@@ -1247,15 +1247,15 @@
 <h2 id="evalio-ls"><code>evalio ls</code></h2>
 <p>List dataset and pipeline information</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>KIND:<span class="o">{</span>datasets<span class="p">|</span>pipelines<span class="o">}</span>
+<div class="language-console highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">{</span>kind<span class="o">}</span>:&lt;datasets<span class="p">|</span>pipelines&gt;
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>KIND:{datasets|pipelines}</code>: The kind of object to list  [required]</li>
+<li><code>kind:&lt;datasets|pipelines&gt;</code>: The kind of object to list  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
-<li><code>-s, --search TEXT</code>: Fuzzy search for a pipeline or dataset by name</li>
+<li><code>-s, --search &lt;str&gt;</code>: Fuzzy search for a pipeline or dataset by name</li>
 <li><code>-q, --quiet</code>: Output less verbose information</li>
 <li><code>--show-hyperlinks</code>: Output full links. For terminals that don&#x27;t support hyperlinks (OSC 8).</li>
 <li><code>--help</code>: Show this message and exit.</li>
@@ -1267,40 +1267,40 @@
 </span></code></pre></div>
 <p><strong>Options</strong>:</p>
 <ul>
-<li><code>-c, --config PATH</code>: Config file to load from</li>
-<li><code>-d, --datasets TEXT</code>: The dataset(s) to use</li>
-<li><code>-p, --pipelines TEXT</code>: The pipeline(s) to use</li>
-<li><code>-o, --output PATH</code>: Output directory to save results</li>
-<li><code>-l, --length INTEGER</code>: Number of scans to process for each dataset</li>
+<li><code>-c, --config &lt;path&gt;</code>: Config file to load from</li>
+<li><code>-d, --datasets &lt;str&gt;</code>: The dataset(s) to use</li>
+<li><code>-p, --pipelines &lt;str&gt;</code>: The pipeline(s) to use</li>
+<li><code>-o, --output &lt;path&gt;</code>: Output directory to save results</li>
+<li><code>-l, --length &lt;int&gt;</code>: Number of scans to process for each dataset</li>
 <li><code>-v, --visualize</code>: Visualize the results via rerun</li>
-<li><code>-s, --show PARSE_VIS</code>: Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.</li>
+<li><code>-s, --show &lt;parse_vis&gt;</code>: Show visualization options (m: map, i: image, s: scan, f: features). Automatically implies -v.</li>
 <li><code>--rerun-failed</code>: Rerun failed experiments. If not set, will skip previously failed experiments.</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="evalio-stats"><code>evalio stats</code></h2>
 <p>Evaluate the results of experiments.</p>
 <p><strong>Usage</strong>:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>stats<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DIRECTORIES...
+<div class="language-console highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gp">$ </span>evalio<span class="w"> </span>stats<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">{</span>directories<span class="o">}</span>...
 </span></code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>DIRECTORIES...</code>: Directory of results to evaluate.  [required]</li>
+<li><code>directories...</code>: Directory of results to evaluate.  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
 <li><code>-v, --visualize</code>: Visualize results.</li>
-<li><code>-S, --sort TEXT</code>: Sort results by the name of a column. Defaults to RTEt.</li>
+<li><code>-S, --sort &lt;str&gt;</code>: Sort results by the name of a column. Defaults to RTEt.</li>
 <li><code>-r, --reverse</code>: Reverse the sorting order. Defaults to False.</li>
-<li><code>-f, --filter TEXT</code>: Python expressions to filter results rows. &#x27;True&#x27; rows will be kept. Example: --filter &#x27;RTEt &lt; 0.5&#x27;</li>
+<li><code>-f, --filter &lt;str&gt;</code>: Python expressions to filter results rows. &#x27;True&#x27; rows will be kept. Example: --filter &#x27;RTEt &lt; 0.5&#x27;</li>
 <li><code>--only-complete</code>: Only show results for trajectories that completed.</li>
 <li><code>--only-failed</code>: Only show results for trajectories that failed.</li>
-<li><code>-h, --hide TEXT</code>: Columns to hide, may be repeated.</li>
-<li><code>-s, --show TEXT</code>: Columns to force show, may be repeated.</li>
+<li><code>-h, --hide &lt;str&gt;</code>: Columns to hide, may be repeated.</li>
+<li><code>-s, --show &lt;str&gt;</code>: Columns to force show, may be repeated.</li>
 <li><code>--print-columns</code>: Print the names of all available columns.</li>
-<li><code>--w-meters FLOAT</code>: Window size in meters for RTE computation. May be repeated. Defaults to 30m.</li>
-<li><code>--w-seconds FLOAT</code>: Window size in seconds for RTE computation. May be repeated. Defaults to none.</li>
-<li><code>--metric [mean|median|sse]</code>: Metric to use for ATE/RTE computation. Defaults to sse.  [default: sse]</li>
-<li><code>-l, --length INTEGER</code>: Specify subset of trajectory to evaluate.</li>
+<li><code>--w-meters &lt;float&gt;</code>: Window size in meters for RTE computation. May be repeated. Defaults to 30m.</li>
+<li><code>--w-seconds &lt;float&gt;</code>: Window size in seconds for RTE computation. May be repeated. Defaults to none.</li>
+<li><code>--metric &lt;mean|median|sse&gt;</code>: Metric to use for ATE/RTE computation. Defaults to sse.  [default: sse]</li>
+<li><code>-l, --length &lt;int&gt;</code>: Specify subset of trajectory to evaluate.</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 
@@ -1363,7 +1363,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../javascripts/tablesort.js"></script>
       
