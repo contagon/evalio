@@ -285,7 +285,6 @@ try:
             rr.Points3D: LidarMeasurement converted to rerun Points3D.
         """
 
-
     @overload
     def convert(
         obj: list[Point],
@@ -471,6 +470,7 @@ except ImportError:
         def __init__(
             self, args: Optional[set[VisOption]], pipeline_names: list[str]
         ) -> None:
+            self.args = args
             if args is not None:
                 print_warning("Rerun not found, visualization disabled")
 

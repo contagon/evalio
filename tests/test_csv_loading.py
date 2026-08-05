@@ -13,7 +13,7 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
-from utils import check_lidar_eq, isclose_se3, rand_se3
+from tests.utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
 data_dir = Path("tests/data")
