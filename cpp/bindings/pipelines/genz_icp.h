@@ -72,6 +72,7 @@ public:
   // Doers
   void initialize() override {
     genz_icp_ = std::make_unique<genz_icp::pipeline::GenZICP>(config_);
+    genz_icp_->SetTerminalStatusEnabled(false);
   }
 
   void add_imu(ev::ImuMeasurement mm) override {}
