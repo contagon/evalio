@@ -87,6 +87,6 @@ if [ ! -d ".vcpkg/" ]; then
     git clone https://github.com/microsoft/vcpkg.git .vcpkg/
 fi
 cd .vcpkg
-git switch --detach 2025.08.27
+git switch --detach 2026.07.29
 cd ..
 ./.vcpkg/bootstrap-vcpkg.sh
