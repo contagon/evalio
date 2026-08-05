@@ -18,6 +18,7 @@ from evalio.types import (
     Point,
     Stamp,
 )
+
 from tests.utils import check_lidar_eq, rosbag_saver
 
 # Create a row major point cloud

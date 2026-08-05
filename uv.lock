@@ -399,7 +399,7 @@ dev = [
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29.1" },
     { name = "pyrefly", specifier = ">=1.2.0" },
     { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.6.8" },
+    { name = "ruff", specifier = ">=0.16" },
     { name = "scipy", specifier = ">=1.16.2" },
     { name = "scipy-stubs", specifier = ">=1.16.2.4" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20240917" },

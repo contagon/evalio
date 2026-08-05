@@ -13,6 +13,7 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
+
 from tests.utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #

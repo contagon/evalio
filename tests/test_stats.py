@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 from evalio import stats
 from evalio.types import SE3, Stamp, Trajectory
+
 from tests.utils import isclose_se3, rand_se3
 
 ID = SE3.identity()
