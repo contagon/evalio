@@ -12,7 +12,7 @@ if [ ! -d "kiss-icp" ]; then
 fi
 cd kiss-icp
 git stash
-git switch --detach v1.2.2
+git switch --detach v1.3.0
 git apply ../../pipelines/kiss_icp.patch
 cd ..
 
@@ -41,7 +41,7 @@ if [ ! -d "genz-icp" ]; then
 fi
 cd genz-icp
 git stash
-git switch --detach v0.2.0
+git switch --detach v0.3.2
 git apply ../../pipelines/genz_icp.patch
 cd ..
 
@@ -77,7 +77,7 @@ if [ ! -d "form" ]; then
 fi
 cd form
 git stash
-git switch --detach v0.1.1
+git switch --detach v0.2.0
 git apply ../../pipelines/form.patch
 cd ..
 

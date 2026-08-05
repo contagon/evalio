@@ -12,6 +12,11 @@
           "type": "json",
           "path": "vcpkg.json",
           "jsonpath": "$.version"
+        },
+        {
+          "path": "uv.lock",
+          "type": "toml",
+          "jsonpath": "$.package[?(@.name.value=='evalio')].version"
         }
       ]
     }
