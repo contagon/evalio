@@ -6,27 +6,26 @@ They MUST not depend on anything else in evalio, or else circular imports will o
 
 from __future__ import annotations
 
-from copy import deepcopy
-from dataclasses import asdict, dataclass, field
 import csv
 from _csv import Writer
+from collections.abc import Iterator
+from copy import deepcopy
+from dataclasses import asdict, dataclass, field
 from io import TextIOWrapper
-from typing_extensions import TypeVar
-from evalio.utils import print_warning
-import yaml
-
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Iterator, Optional, Self, cast, Literal
-import numpy as np
+from typing import Any, ClassVar, Generic, Literal, Optional, Self, cast
 
+import numpy as np
+import yaml
+from typing_extensions import TypeVar
+
+from evalio._cpp.helpers import parse_csv_line  # type: ignore
 from evalio._cpp.types import (  # type: ignore
     SE3,
     SO3,
     Stamp,
 )
-from evalio._cpp.helpers import parse_csv_line  # type: ignore
-
-from evalio.utils import pascal_to_snake
+from evalio.utils import pascal_to_snake, print_warning
 
 Param = bool | int | float | str
 """A parameter value for a pipeline, can be a bool, int, float, or str."""
@@ -70,8 +69,7 @@ class Metadata:
         Returns:
             An instance of the metadata class.
         """
-        if "type" in data:
-            del data["type"]
+        data.pop("type", None)
         return cls(**data)
 
     def to_dict(self) -> dict[str, Any]:
@@ -108,7 +106,7 @@ class Metadata:
         """
         try:
             Loader = yaml.CSafeLoader
-        except Exception as _:
+        except (ImportError, AttributeError):
             print_warning("Failed to import yaml.CSafeLoader, trying yaml.SafeLoader")
             Loader = yaml.SafeLoader
 
@@ -123,7 +121,7 @@ class Metadata:
             if data["type"] == name:
                 try:
                     return subclass.from_dict(data)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     return FailedMetadataParse(f"Failed to parse {name}: {e}")
 
         return FailedMetadataParse(f"Unknown metadata type '{data['type']}'")

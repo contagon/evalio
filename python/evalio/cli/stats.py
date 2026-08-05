@@ -1,21 +1,20 @@
-from pathlib import Path
-from typing import Annotated, Any, Callable, Optional, cast
-
-from evalio.types.base import Trajectory
-import polars as pl
 import itertools
-
-from evalio.utils import print_warning
-from rich.table import Table
-from rich.console import Console
-from rich import box
-
-from evalio import types as ty, stats
-import typer
+from collections.abc import Callable
+from pathlib import Path
+from typing import Annotated, Any, Optional, cast
 
 import distinctipy
-
+import polars as pl
+import typer
 from joblib import Parallel, delayed
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
+from evalio import stats
+from evalio import types as ty
+from evalio.types.base import Trajectory
+from evalio.utils import print_warning
 
 app = typer.Typer()
 
@@ -47,7 +46,7 @@ def eval_dataset(
     if visualize:
         try:
             import rerun as rr
-        except Exception:
+        except ImportError:
             print_warning("Rerun not found, visualization disabled")
             visualize = False
 
@@ -56,7 +55,8 @@ def eval_dataset(
     colors = None
     if visualize:
         import rerun as rr
-        from evalio.rerun import convert, GT_COLOR
+
+        from evalio.rerun import GT_COLOR, convert
 
         rr.init(
             str(dir),
@@ -289,7 +289,7 @@ def evaluate_typer(
     # Parse the filtering options
     filter_method: Callable[[dict[str, Any]], bool]
     if filter_str is None:
-        filter_method = lambda r: True  # noqa: E731
+        filter_method = lambda r: True
     else:
         from asteval import Interpreter
 
@@ -299,9 +299,9 @@ def evaluate_typer(
 
     original_filter = filter_method
     if only_complete:
-        filter_method = lambda r: original_filter(r) and r["status"] == "complete"  # noqa: E731
+        filter_method = lambda r: original_filter(r) and r["status"] == "complete"
     elif only_failed:
-        filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
+        filter_method = lambda r: original_filter(r) and r["status"] == "fail"
 
     windows: list[stats.WindowKind] = []
     if w_seconds is not None:
@@ -328,7 +328,7 @@ def evaluate_typer(
     # ------------------------- Filter all results ------------------------- #
     try:
         results = [r for r in results if filter_method(r)]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_warning(f"Error filtering results: {e}")
 
     # convert to polars dataframe for easier processing

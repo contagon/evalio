@@ -101,7 +101,7 @@ dev = [
 
 [tool.ruff]
 exclude = ["cpp/**/*"]
-lint.ignore = ["E731"]
+lint.ignore = ["E731", "UP045"]
 
 [tool.ruff.format]
 # https://docs.astral.sh/ruff/configuration/
@@ -119,3 +119,6 @@ stubPath = "python/typings"
 reportPrivateUsage = "none"
 reportConstantRedefinition = "none"
 reportUnnecessaryIsInstance = "none"
+
+[tool.pyrefly]
+include = ["python", "tests"]

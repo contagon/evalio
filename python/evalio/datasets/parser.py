@@ -1,8 +1,9 @@
 import importlib
-from inspect import isclass
 import itertools
+from collections.abc import Sequence
+from inspect import isclass
 from types import ModuleType
-from typing import NotRequired, Optional, Sequence, TypedDict, cast
+from typing import NotRequired, Optional, TypedDict, cast
 
 from evalio import datasets
 from evalio.datasets.base import Dataset
@@ -60,8 +61,6 @@ def register_dataset(
     Returns:
         The number of datasets registered or an ImportError.
     """
-    global _DATASETS
-
     total = 0
     if module is not None:
         if isinstance(module, str):
@@ -87,7 +86,6 @@ def all_datasets() -> dict[str, type[Dataset]]:
     Returns:
         A dictionary mapping dataset names to their classes.
     """
-    global _DATASETS
     return {d.dataset_name(): d for d in _DATASETS}
 
 

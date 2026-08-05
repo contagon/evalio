@@ -1,7 +1,8 @@
 from pathlib import Path
+
+import numpy as np
 from evalio import types as ty
 from evalio._cpp.helpers import parse_csv_line  # type: ignore
-import numpy as np
 
 
 def make_exp() -> ty.Experiment:

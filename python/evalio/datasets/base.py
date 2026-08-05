@@ -1,8 +1,9 @@
 import os
+from collections.abc import Iterable, Iterator, Sequence
 from enum import StrEnum
 from itertools import islice
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Sequence, Union, cast
+from typing import Optional, cast
 
 from evalio._cpp.types import (  # type: ignore
     SE3,
@@ -11,12 +12,10 @@ from evalio._cpp.types import (  # type: ignore
     LidarMeasurement,
     LidarParams,
 )
-
 from evalio.types import GroundTruth, Trajectory
+from evalio.utils import pascal_to_snake, print_warning
 
-from evalio.utils import print_warning, pascal_to_snake
-
-Measurement = Union[ImuMeasurement, LidarMeasurement]
+Measurement = ImuMeasurement | LidarMeasurement
 
 _DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
 _WARNED = False
@@ -37,7 +36,6 @@ class DatasetIterator(Iterable[Measurement]):
         Yields:
             Iterator of IMU measurements.
         """
-        ...
 
     def lidar_iter(self) -> Iterator[LidarMeasurement]:
         """Main interface for iterating over Lidar measurements.
@@ -45,7 +43,6 @@ class DatasetIterator(Iterable[Measurement]):
         Yields:
             Iterator of Lidar measurements.
         """
-        ...
 
     def __iter__(self) -> Iterator[Measurement]:
         """Main interface for iterating over all measurements.
@@ -54,7 +51,6 @@ class DatasetIterator(Iterable[Measurement]):
             Iterator of all measurements (IMU and Lidar).
         """
 
-        ...
 
     # Return the number of lidar scans
     def __len__(self) -> int:
@@ -63,7 +59,6 @@ class DatasetIterator(Iterable[Measurement]):
         Returns:
             Number of lidar scans.
         """
-        ...
 
 
 class Dataset(StrEnum):
@@ -81,7 +76,6 @@ class Dataset(StrEnum):
         Returns:
             An iterator that yields measurements from the dataset.
         """
-        ...
 
     # Return the ground truth in the ground truth frame
     def ground_truth_raw(self) -> Optional[Trajectory]:
@@ -100,7 +94,6 @@ class Dataset(StrEnum):
         Returns:
             Transformation from IMU to Lidar frame.
         """
-        ...
 
     def imu_T_gt(self) -> SE3:
         """Retrieves the transformation from IMU to ground truth frame.
@@ -108,7 +101,6 @@ class Dataset(StrEnum):
         Returns:
             Transformation from IMU to ground truth frame.
         """
-        ...
 
     def imu_params(self) -> ImuParams:
         """Specifies the parameters of the IMU.
@@ -116,7 +108,6 @@ class Dataset(StrEnum):
         Returns:
             Parameters of the IMU.
         """
-        ...
 
     def lidar_params(self) -> LidarParams:
         """Specifies the parameters of the Lidar.
@@ -124,7 +115,6 @@ class Dataset(StrEnum):
         Returns:
             Parameters of the Lidar.
         """
-        ...
 
     def files(self) -> Sequence[str | Path]:
         """Return list of files required to run this dataset.
@@ -134,7 +124,6 @@ class Dataset(StrEnum):
         Returns:
             List of files required to run this dataset.
         """
-        ...
 
     # ------------------------- Optional dataset info ------------------------- #
     @staticmethod
@@ -241,7 +230,7 @@ class Dataset(StrEnum):
 
     @classmethod
     def _warn_default_dir(cls):
-        global _DATA_DIR, _WARNED
+        global _WARNED
         if not _WARNED and _DATA_DIR == Path("./evalio_data"):
             print_warning(
                 "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
@@ -357,7 +346,6 @@ class Dataset(StrEnum):
         Returns:
             Path to the dataset folder.
         """
-        global _DATA_DIR
         return _DATA_DIR / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
@@ -391,5 +379,4 @@ def get_data_dir() -> Path:
     Returns:
         Directory where datasets are stored.
     """
-    global _DATA_DIR
     return _DATA_DIR

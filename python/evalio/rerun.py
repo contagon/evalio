@@ -1,11 +1,13 @@
 from typing import Any, Literal, Optional, TypedDict, cast, overload
-from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import TypeVar
 
+from evalio._cpp.helpers import closest  # type: ignore
+from evalio._cpp.types import VisOption  # type: ignore
 from evalio.datasets import Dataset
 from evalio.types import (
     SE3,
@@ -18,8 +20,6 @@ from evalio.types import (
     Trajectory,
 )
 from evalio.utils import print_warning
-from evalio._cpp.helpers import closest  # type: ignore
-from evalio._cpp.types import VisOption  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -256,13 +256,12 @@ try:
             self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
 
             # Features from the scan
-            if VisOption.FEATURES in self.args:
-                if len(features) > 0:
-                    for (k, p), c in zip(features.items(), self.colors):
-                        self.rec.log(
-                            f"{self.pn}/imu/lidar/{k}",
-                            convert(p, color=c, radii=0.12),
-                        )
+            if VisOption.FEATURES in self.args and len(features) > 0:
+                for (k, p), c in zip(features.items(), self.colors):
+                    self.rec.log(
+                        f"{self.pn}/imu/lidar/{k}",
+                        convert(p, color=c, radii=0.12),
+                    )
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -286,7 +285,6 @@ try:
             rr.Points3D: LidarMeasurement converted to rerun Points3D.
         """
 
-        ...
 
     @overload
     def convert(
@@ -307,7 +305,6 @@ try:
         Returns:
             rr.Points3D: Points converted to rerun Points3D.
         """
-        ...
 
     @overload
     def convert(
@@ -329,7 +326,6 @@ try:
         Returns:
             rr.Points3D: numpy array converted to rerun Points3D.
         """
-        ...
 
     # trajectories
     @overload
@@ -346,7 +342,6 @@ try:
         Returns:
             rr.Points3D: List of SE3 poses converted to rerun Points3D.
         """
-        ...
 
     M = TypeVar("M", bound=Metadata | None)
 
@@ -364,7 +359,6 @@ try:
         Returns:
             rr.Points3D: Trajectory converted to rerun Points3D.
         """
-        ...
 
     # poses
     @overload
@@ -377,7 +371,6 @@ try:
         Returns:
             rr.Transform3D: SE3 pose converted to rerun Transform3D.
         """
-        ...
 
     def convert(
         obj: Any,
@@ -472,7 +465,7 @@ try:
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")  # type: ignore
 
-except Exception:
+except ImportError:
 
     class RerunVis:
         def __init__(

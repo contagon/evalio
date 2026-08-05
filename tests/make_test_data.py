@@ -1,4 +1,4 @@
-import pickle  # noqa: F401
+import pickle
 from pathlib import Path
 
 import evalio.datasets as ds

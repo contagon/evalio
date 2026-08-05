@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import importlib
-from inspect import isclass
 import itertools
+from collections.abc import Sequence
+from copy import deepcopy
+from inspect import isclass
 from types import ModuleType
-from typing import Any, Optional, cast, Sequence
-import numpy as np
+from typing import Any, Optional, cast
 
+import numpy as np
 from asteval import Interpreter
+
 from evalio import pipelines
 from evalio.pipelines import Pipeline
 from evalio.types import Param
 from evalio.utils import CustomException
-
 
 _PIPELINES: set[type[Pipeline]] = set()
 
@@ -82,8 +83,6 @@ def register_pipeline(
         pipeline (Optional[type[Pipeline]], optional): A specific pipeline class to add. Defaults to None.
         module (Optional[ModuleType  |  str], optional): The module to search for pipelines. Defaults to None.
     """
-    global _PIPELINES
-
     total = 0
     if module is not None:
         if isinstance(module, str):
@@ -109,7 +108,6 @@ def all_pipelines() -> dict[str, type[Pipeline]]:
     Returns:
         A dictionary mapping pipeline names to their classes.
     """
-    global _PIPELINES
     return {p.name(): p for p in _PIPELINES}
 
 
@@ -164,12 +162,12 @@ def validate_params(
         An error if validation fails, otherwise None.
     """
     default_params = pipe.default_params()
-    for p in params:
+    for p, val in params.items():
         if p not in default_params:
             return UnusedPipelineParam(p, pipe.name())
 
         expected_type = type(default_params[p])
-        actual_type = type(params[p])
+        actual_type = type(val)
         if actual_type != expected_type:
             return InvalidPipelineParamType(p, expected_type, actual_type)
 
@@ -203,7 +201,7 @@ def eval_str_sweep(val: str) -> list[Any]:
         return interp  # type: ignore
     # raise error for anything else
     else:
-        raise ValueError(f"Sweep '{val}' does not evaluate to a list")
+        raise TypeError(f"Sweep '{val}' does not evaluate to a list")
 
     return []
 
@@ -220,7 +218,7 @@ def parse_config(
     elif isinstance(p, dict):
         # figure out name of pipeline
         if "pipeline" not in p:
-            return InvalidPipelineConfig(f"Need pipeline: {str(p)}")
+            return InvalidPipelineConfig(f"Need pipeline: {p!s}")
         pipe_name = cast(str, p.pop("pipeline"))
 
         # figure out the name
@@ -240,18 +238,18 @@ def parse_config(
             sweep = cast(dict[str, list[Param]], params.pop("sweep"))
 
             # Parse any sweeps that are not lists but are evaluable python expressions
-            for k in sweep.keys():
+            for k in sweep:
                 val = sweep[k]
                 if not isinstance(val, list):
                     try:
                         sweep[k] = eval_str_sweep(val)
                     # If the sweep failed
-                    except ValueError as _:
+                    except TypeError as _:
                         return InvalidPipelineConfig(
                             f"Sweep value for '{k}' not a list: '{val}'"
                         )
                     # If the eval failed
-                    except Exception as _:
+                    except Exception as _:  # noqa: BLE001
                         return InvalidPipelineConfig(
                             f"Sweep value for '{k}' is not evaluable by python: '{val}'"
                         )

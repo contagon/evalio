@@ -1,6 +1,7 @@
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -12,12 +13,12 @@ from evalio.types import (
     ImuMeasurement,
     ImuParams,
     LidarParams,
-    Trajectory,
     Stamp,
+    Trajectory,
 )
 
-from .boreas import MAP_ROW_TO_IDX
 from .base import Dataset, DatasetIterator
+from .boreas import MAP_ROW_TO_IDX
 
 
 class BoreasRT(Dataset):
@@ -76,7 +77,7 @@ class BoreasRT(Dataset):
         ]
 
         # Setup lidar files
-        lidar_files = sorted(list(lidar_path.glob("*.bin")))
+        lidar_files = sorted(lidar_path.glob("*.bin"))
         params = self.lidar_params()
 
         def lidar_iter():
@@ -212,9 +213,10 @@ class BoreasRT(Dataset):
         return sum(1 for _ in (self.folder / "lidar").glob("*.bin")) >= num
 
     def download(self):
-        from subprocess import Popen, PIPE, run
-        from tqdm import tqdm
         import sys
+        from subprocess import PIPE, Popen, run
+
+        from tqdm import tqdm
         # NOTE: This is experimental; not sure if should use aws cli or boto3 to download from S3
         # boto3 is slower for all those tiny lidar files
 
@@ -235,6 +237,7 @@ class BoreasRT(Dataset):
             ],
             capture_output=True,
             text=True,
+            check=False,
         )
         if output.returncode != 0:
             error_msg = output.stderr.strip() if output.stderr else "unknown error"

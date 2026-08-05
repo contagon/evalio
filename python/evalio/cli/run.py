@@ -1,23 +1,23 @@
 import multiprocessing
 from pathlib import Path
-from evalio._cpp.types import VisOption  # type: ignore
-from evalio.cli.completions import DatasetOpt, PipelineOpt
-from evalio.types.base import Trajectory
-from evalio.utils import print_warning
-from tqdm.rich import tqdm
+from time import time
+from typing import Annotated, Optional
+
+import typer
 import yaml
 
-from evalio import datasets as ds, pipelines as pl, types as ty
-from evalio.rerun import RerunVis
-
 # from .stats import evaluate
-
 from rich import print
-from typing import Optional, Annotated
-import typer
+from tqdm.rich import tqdm
 
-from time import time
-
+from evalio import datasets as ds
+from evalio import pipelines as pl
+from evalio import types as ty
+from evalio._cpp.types import VisOption  # type: ignore
+from evalio.cli.completions import DatasetOpt, PipelineOpt
+from evalio.rerun import RerunVis
+from evalio.types.base import Trajectory
+from evalio.utils import print_warning
 
 app = typer.Typer()
 
@@ -116,7 +116,7 @@ def run_from_cli(
         with open(config, "r") as f:
             try:
                 Loader = yaml.CSafeLoader
-            except Exception as _:
+            except (ImportError, AttributeError):
                 print_warning(
                     "Failed to import yaml.CSafeLoader, trying yaml.SafeLoader"
                 )
@@ -368,8 +368,7 @@ def run_single(
             time_running += time() - start
 
             time_total += time_running
-            if time_running > time_max:
-                time_max = time_running
+            time_max = max(time_max, time_running)
             time_running = 0.0
 
             vis.log_scan(data)

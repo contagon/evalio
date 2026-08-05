@@ -63,7 +63,6 @@ def download(
     output: str
         Output filename.
     """
-    ...
 
 def download_folder(
     url: str = ...,
@@ -128,7 +127,6 @@ def download_folder(
         "1ZXEhzbLRLU1giKKRJkjm8N04cO_JoYE2",
     )
     """
-    ...
 
 __version__ = ...
 
