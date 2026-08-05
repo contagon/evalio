@@ -104,7 +104,9 @@ struct Stamp {
     // extract & pad nsec
     std::string nsec_str = sec_str.substr(dot_pos + 1);
     if (nsec_str.size() > 9) {
-      throw std::runtime_error("Too many digits in fractional part of sec.");
+      // If too many digits, that represents a fraction of a nanosecond
+      // so we just truncate to 9 digits
+      nsec_str = nsec_str.substr(0, 9);
     } else if (nsec_str.size() < 9) {
       nsec_str += std::string(9 - nsec_str.size(), '0');
     }
