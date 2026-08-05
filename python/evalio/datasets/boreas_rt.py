@@ -77,7 +77,7 @@ class BoreasRT(Dataset):
         ]
 
         # Setup lidar files
-        lidar_files = sorted(list(lidar_path.glob("*.bin")))
+        lidar_files = sorted(lidar_path.glob("*.bin"))
         params = self.lidar_params()
 
         def lidar_iter():
@@ -237,6 +237,7 @@ class BoreasRT(Dataset):
             ],
             capture_output=True,
             text=True,
+            check=False,
         )
         if output.returncode != 0:
             error_msg = output.stderr.strip() if output.stderr else "unknown error"

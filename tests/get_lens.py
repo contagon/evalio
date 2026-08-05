@@ -14,7 +14,7 @@ for d in ds.all_datasets().values():
 
         try:
             lengths[seq.name] = len(seq.data_iter())
-        except Exception:
+        except Exception:  # noqa: BLE001
             print_warning(f"Failed to get length of {seq.name}")
             continue
 

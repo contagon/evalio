@@ -62,7 +62,7 @@ class HeLiPR(Dataset):
 
         # setup all the lidar data
         lidar_path = self.folder / "Ouster"
-        lidar_files = sorted(list(lidar_path.glob("*")))
+        lidar_files = sorted(lidar_path.glob("*"))
         lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in lidar_files]
         lidar_params = self.lidar_params()
 

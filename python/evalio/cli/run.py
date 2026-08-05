@@ -116,7 +116,7 @@ def run_from_cli(
         with open(config, "r") as f:
             try:
                 Loader = yaml.CSafeLoader
-            except Exception as _:
+            except (ImportError, AttributeError):
                 print_warning(
                     "Failed to import yaml.CSafeLoader, trying yaml.SafeLoader"
                 )

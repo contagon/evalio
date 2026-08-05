@@ -119,3 +119,6 @@ stubPath = "python/typings"
 reportPrivateUsage = "none"
 reportConstantRedefinition = "none"
 reportUnnecessaryIsInstance = "none"
+
+[tool.pyrefly]
+include = ["python", "tests"]

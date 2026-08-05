@@ -46,7 +46,7 @@ def eval_dataset(
     if visualize:
         try:
             import rerun as rr
-        except Exception:
+        except ImportError:
             print_warning("Rerun not found, visualization disabled")
             visualize = False
 
@@ -328,7 +328,7 @@ def evaluate_typer(
     # ------------------------- Filter all results ------------------------- #
     try:
         results = [r for r in results if filter_method(r)]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_warning(f"Error filtering results: {e}")
 
     # convert to polars dataframe for easier processing

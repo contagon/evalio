@@ -3,7 +3,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from enum import StrEnum
 from itertools import islice
 from pathlib import Path
-from typing import Optional, Union, cast
+from typing import Optional, cast
 
 from evalio._cpp.types import (  # type: ignore
     SE3,
@@ -15,7 +15,7 @@ from evalio._cpp.types import (  # type: ignore
 from evalio.types import GroundTruth, Trajectory
 from evalio.utils import pascal_to_snake, print_warning
 
-Measurement = Union[ImuMeasurement, LidarMeasurement]
+Measurement = ImuMeasurement | LidarMeasurement
 
 _DATA_DIR = Path(os.environ.get("EVALIO_DATA", "evalio_data"))
 _WARNED = False
@@ -230,7 +230,7 @@ class Dataset(StrEnum):
 
     @classmethod
     def _warn_default_dir(cls):
-        global _DATA_DIR, _WARNED
+        global _WARNED
         if not _WARNED and _DATA_DIR == Path("./evalio_data"):
             print_warning(
                 "Using default './evalio_data' for base data directory. Override by setting [magenta]EVALIO_DATA[/magenta], [magenta]evalio.set_data_dir(path)[/magenta] in python, or [magenta]-D[/magenta] in the CLI."
@@ -346,7 +346,6 @@ class Dataset(StrEnum):
         Returns:
             Path to the dataset folder.
         """
-        global _DATA_DIR
         return _DATA_DIR / self.full_name
 
     def size_on_disk(self) -> Optional[float]:
@@ -380,5 +379,4 @@ def get_data_dir() -> Path:
     Returns:
         Directory where datasets are stored.
     """
-    global _DATA_DIR
     return _DATA_DIR

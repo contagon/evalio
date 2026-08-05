@@ -61,8 +61,6 @@ def register_dataset(
     Returns:
         The number of datasets registered or an ImportError.
     """
-    global _DATASETS
-
     total = 0
     if module is not None:
         if isinstance(module, str):
@@ -88,7 +86,6 @@ def all_datasets() -> dict[str, type[Dataset]]:
     Returns:
         A dictionary mapping dataset names to their classes.
     """
-    global _DATASETS
     return {d.dataset_name(): d for d in _DATASETS}
 
 

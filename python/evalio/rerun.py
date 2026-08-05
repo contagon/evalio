@@ -256,13 +256,12 @@ try:
             self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
 
             # Features from the scan
-            if VisOption.FEATURES in self.args:
-                if len(features) > 0:
-                    for (k, p), c in zip(features.items(), self.colors):
-                        self.rec.log(
-                            f"{self.pn}/imu/lidar/{k}",
-                            convert(p, color=c, radii=0.12),
-                        )
+            if VisOption.FEATURES in self.args and len(features) > 0:
+                for (k, p), c in zip(features.items(), self.colors):
+                    self.rec.log(
+                        f"{self.pn}/imu/lidar/{k}",
+                        convert(p, color=c, radii=0.12),
+                    )
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -466,7 +465,7 @@ try:
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")  # type: ignore
 
-except Exception:
+except ImportError:
 
     class RerunVis:
         def __init__(

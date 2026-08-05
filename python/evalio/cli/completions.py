@@ -10,7 +10,7 @@ from evalio import pipelines as pl
 err_console = Console(stderr=True)
 
 all_sequences_names = list(ds.all_sequences().keys()) + [
-    k + "/*" for k in ds.all_datasets().keys()
+    k + "/*" for k in ds.all_datasets()
 ]
 
 

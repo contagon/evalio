@@ -28,21 +28,17 @@ def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
     """
     Retrieves a file from url using urllib
     """
-    with urllib.request.urlopen(
-        urllib.request.Request(url, headers={"User-Agent": "evalio"})
-    ) as response:
-        with (
-            open(filename, "wb") as fh,
-            tqdm(
-                total=100e9,  # GLOBUS does not include size in request response, guess=100GB
-                unit="B",
-                unit_scale=True,
-                dynamic_ncols=True,
-            ) as pbar,
-        ):
-            while chunk := response.read(chunk_size):
-                fh.write(chunk)
-                pbar.update(len(chunk))
+    with (
+        urllib.request.urlopen(
+            urllib.request.Request(url, headers={"User-Agent": "evalio"})
+        ) as response,
+        open(filename, "wb") as fh,
+        # GLOBUS does not include size in request response, guess=100GB
+        tqdm(total=100e9, unit="B", unit_scale=True, dynamic_ncols=True) as pbar,
+    ):
+        while chunk := response.read(chunk_size):
+            fh.write(chunk)
+            pbar.update(len(chunk))
 
 
 def _extract_noreplace(zip_file: Path, dest_dir: Path):
@@ -51,12 +47,14 @@ def _extract_noreplace(zip_file: Path, dest_dir: Path):
     (Allows to resume zip extractions)
     """
     print(f"Extracting: {zip_file.name}")
-    with zipfile.ZipFile(str(zip_file)) as archive:
-        with tqdm(total=len(archive.namelist()), dynamic_ncols=True) as pbar:
-            for filename in archive.namelist():
-                if not (dest_dir / filename).is_file():
-                    archive.extract(filename, path=dest_dir)
-                pbar.update()
+    with (
+        zipfile.ZipFile(str(zip_file)) as archive,
+        tqdm(total=len(archive.namelist()), dynamic_ncols=True) as pbar,
+    ):
+        for filename in archive.namelist():
+            if not (dest_dir / filename).is_file():
+                archive.extract(filename, path=dest_dir)
+            pbar.update()
 
 
 class CUMulti(Dataset):

@@ -24,7 +24,7 @@ class MetricKind(StrEnum):
     """Sqrt of Sum of squared errors"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class WindowMeters:
     """Dataclass to hold the parameters for a distance-based window."""
 
@@ -36,7 +36,7 @@ class WindowMeters:
         return f"{self.value:.1f}m"
 
 
-@dataclass
+@dataclass(frozen=True)
 class WindowSeconds:
     """Dataclass to hold the parameters for a time-based window."""
 
@@ -300,7 +300,7 @@ def ate(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> Error:
 def rte(
     traj: ty.Trajectory[M1],
     gt: ty.Trajectory[M2],
-    window: WindowKind = WindowMeters(30),
+    window: WindowKind = WindowMeters(30),  # noqa: B008
 ) -> Error:
     """Compute the Relative Trajectory Error (RTE) between two trajectories.
 
@@ -342,7 +342,6 @@ def rte(
 
             window_deltas_poses.append(traj.poses[i].inverse() * traj.poses[end_idx])
             window_deltas_gts.append(gt.poses[i].inverse() * gt.poses[end_idx])
-
 
     elif isinstance(window, WindowMeters):
         # Compute deltas for all of ground truth poses

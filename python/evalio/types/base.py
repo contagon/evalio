@@ -106,7 +106,7 @@ class Metadata:
         """
         try:
             Loader = yaml.CSafeLoader
-        except Exception as _:
+        except (ImportError, AttributeError):
             print_warning("Failed to import yaml.CSafeLoader, trying yaml.SafeLoader")
             Loader = yaml.SafeLoader
 
@@ -121,7 +121,7 @@ class Metadata:
             if data["type"] == name:
                 try:
                     return subclass.from_dict(data)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     return FailedMetadataParse(f"Failed to parse {name}: {e}")
 
         return FailedMetadataParse(f"Unknown metadata type '{data['type']}'")
