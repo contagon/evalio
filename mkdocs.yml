@@ -69,12 +69,6 @@ plugins:
   search:
     lang: en
 
-  # autogenerate evalio ls & cli pages
-  gen-files:
-    scripts:
-      - docs/included.py
-      - docs/ref/cli.py
-
   # Autogenerate docs from docstrings
   mkdocstrings:
     default_handler: python

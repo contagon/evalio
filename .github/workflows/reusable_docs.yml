@@ -59,7 +59,7 @@ jobs:
 
       # Ensure docs build docs
       - name: Build docs
-        run: uv run mkdocs build
+        run: uv run python scripts/gen_docs.py && uv run zensical build
 
       # Deploy latest tag
       - name: Deploy docs
