@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Literal, Optional, TypedDict, cast, overload
 from uuid import UUID, uuid4
 
@@ -44,19 +46,34 @@ GT_COLOR = (
 )  # Color for ground truth in rerun
 
 
-try:
-    import rerun as rr
-    import rerun.blueprint as rrb
+def _load_rerun() -> tuple[Any, Any] | None:
+    try:
+        import rerun as rr
+        import rerun.blueprint as rrb
+    except ImportError:
+        return None
+    return rr, rrb
 
-    OverrideType = dict[rr.datatypes.EntityPathLike, list[rrb.VisualizableArchetype]]
-    RerunArgs = TypedDict(
-        "RerunArgs", {"application_id": str, "recording_id": UUID, "make_default": bool}
-    )
+
+rr, rrb = None, None
+if (_loaded := _load_rerun()) is not None:
+    rr, rrb = _loaded
+
+OverrideType = dict[Any, list[Any]]
+RerunArgs = TypedDict(
+    "RerunArgs", {"application_id": str, "recording_id": UUID, "make_default": bool}
+)
+
+
+if True:
 
     class RerunVis:  # type: ignore
         def __init__(self, args: Optional[set[VisOption]], pipeline_names: list[str]):
             self.args = args
             self.pipeline_names = pipeline_names
+            if rr is None and args is not None:
+                print_warning("Rerun not found, visualization disabled")
+                self.args = None
 
             # To be set during new_dataset
             self.lidar_params: Optional[LidarParams] = None
@@ -158,7 +175,15 @@ try:
 
             self.pn = pipe_name
             self.trajectory = Trajectory(stamps=[], poses=[])
-            self.rec.log(f"{self.pn}/imu/lidar", convert(self.imu_T_lidar), static=True)
+            self.rec.log(
+                f"{self.pn}/imu/lidar",
+                convert(
+                    self.imu_T_lidar,
+                    parent_frame=f"{self.pn}/imu",
+                    child_frame=f"{self.pn}/lidar",
+                ),
+                static=True,
+            )
 
             self.gt_o_T_imu_o = None
 
@@ -178,6 +203,7 @@ try:
                 self.rec.log(
                     f"{self.pn}/imu/lidar/scan",
                     convert(data, color=self.colors[-2], radii=0.08),
+                    rr.CoordinateFrame(f"{self.pn}/lidar"),
                 )
 
             # Include the intensity image
@@ -217,15 +243,31 @@ try:
                         gt_index -= 1
                     gt_o_T_imu_0 = self.gt.poses[gt_index]
                     self.gt_o_T_imu_o = gt_o_T_imu_0 * imu_o_T_imu_0.inverse()
-                    self.rec.log(self.pn, convert(self.gt_o_T_imu_o), static=True)
+                    self.rec.log(
+                        self.pn,
+                        convert(
+                            self.gt_o_T_imu_o,
+                            parent_frame="world",
+                            child_frame=f"{self.pn}/imu_origin",
+                        ),
+                        static=True,
+                    )
 
             # Always include the pose
             self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
-            self.rec.log(f"{self.pn}/imu", convert(pose))
+            self.rec.log(
+                f"{self.pn}/imu",
+                convert(
+                    pose,
+                    parent_frame=f"{self.pn}/imu_origin",
+                    child_frame=f"{self.pn}/imu",
+                ),
+            )
             self.trajectory.append(stamp, pose)
             self.rec.log(
                 f"{self.pn}/trajectory",
                 convert(self.trajectory, color=self.colors[-1]),
+                rr.CoordinateFrame("world"),
             )
 
         def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
@@ -242,7 +284,11 @@ try:
             # Include the current map
             if VisOption.MAP in self.args:
                 for (k, p), c in zip(map.items(), self.colors):
-                    self.rec.log(f"{self.pn}/map/{k}", convert(p, color=c, radii=0.03))
+                    self.rec.log(
+                        f"{self.pn}/map/{k}",
+                        convert(p, color=c, radii=0.03),
+                        rr.CoordinateFrame("world"),
+                    )
 
         def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
             if self.args is None:
@@ -261,6 +307,7 @@ try:
                     self.rec.log(
                         f"{self.pn}/imu/lidar/{k}",
                         convert(p, color=c, radii=0.12),
+                        rr.CoordinateFrame(f"{self.pn}/lidar"),
                     )
 
     # ------------------------- For converting to rerun types ------------------------- #
@@ -361,11 +408,18 @@ try:
 
     # poses
     @overload
-    def convert(obj: SE3) -> rr.Transform3D:
+    def convert(
+        obj: SE3,
+        *,
+        parent_frame: Optional[str] = None,
+        child_frame: Optional[str] = None,
+    ) -> rr.Transform3D:
         """Convert a SE3 pose to a rerun Transform3D.
 
         Args:
             obj (SE3): SE3 pose to convert.
+            parent_frame (Optional[str], optional): Name of the parent frame the transform maps into. Defaults to None.
+            child_frame (Optional[str], optional): Name of the child frame the transform maps from. Defaults to None.
 
         Returns:
             rr.Transform3D: SE3 pose converted to rerun Transform3D.
@@ -375,6 +429,9 @@ try:
         obj: Any,
         color: Optional[Any] = None,
         radii: Optional[float] = None,
+        *,
+        parent_frame: Optional[str] = None,
+        child_frame: Optional[str] = None,
     ) -> rr.Transform3D | rr.Points3D:
         """Convert a variety of objects to rerun types.
 
@@ -389,6 +446,12 @@ try:
         Returns:
             Rerun type.
         """
+        if rr is None:
+            raise ImportError(
+                "Rerun visualization requires the optional dependency. "
+                "Install it with `pip install evalio[vis]`."
+            )
+
         # If we have an empty list, assume it's a point cloud with no points
         if isinstance(obj, list) and len(obj) == 0:  # type: ignore
             return rr.Points3D(np.zeros((0, 3)), colors=color, radii=radii)
@@ -451,6 +514,8 @@ try:
                     ]
                 ),
                 translation=obj.trans,
+                parent_frame=parent_frame,
+                child_frame=child_frame,
             )
         elif isinstance(obj, Trajectory):
             return convert(obj.poses, color=color)
@@ -463,31 +528,3 @@ try:
 
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")  # type: ignore
-
-except ImportError:
-
-    class RerunVis:
-        def __init__(
-            self, args: Optional[set[VisOption]], pipeline_names: list[str]
-        ) -> None:
-            self.args = args
-            if args is not None:
-                print_warning("Rerun not found, visualization disabled")
-
-        def new_dataset(self, dataset: Dataset):
-            pass
-
-        def new_pipe(self, pipe_name: str, feat_num: int):
-            pass
-
-        def log_scan(self, data: LidarMeasurement):
-            pass
-
-        def log_pose(self, stamp: Stamp, pose: SE3):
-            pass
-
-        def log_map(self, stamp: Stamp, map: dict[str, NDArray[np.float64]]):
-            pass
-
-        def log_features(self, stamp: Stamp, features: dict[str, NDArray[np.float64]]):
-            pass
