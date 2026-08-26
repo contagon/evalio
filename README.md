@@ -16,6 +16,7 @@
 
 Specifically, it provides a common interface for connecting LIO datasets and LIO pipelines. This allows for easy addition of new datasets and pipelines, as well as a common location to evaluate them making benchmarks significantly easier to run. It features,
 - No ROS dependency! (though it can still load rosbag datasets using the wonderful [rosbags](https://ternaris.gitlab.io/rosbags/) package)
+- 8 compiled in LIO pipelines and 12 configured datasets.
 - Easy to add new datasets and pipelines, see the [example](https://github.com/contagon/evalio-example)
 - Unified representation of lidar scan, e.g. row (scan-line) major order, stamped at the start of the scan, point stamps are relative from the start of the scan.
 - Download and manage datasets via the CLI interface
