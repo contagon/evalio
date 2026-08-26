@@ -1,3 +1,29 @@
+.evalio-logo {
+    max-width: 42rem;
+    margin-inline: auto;
+    text-align: center;
+}
+
+.evalio-logo img {
+    margin-inline: auto;
+}
+
+.evalio-logo + p {
+    text-align: center;
+}
+
+.evalio-logo__dark {
+    display: none;
+}
+
+[data-md-color-scheme="slate"] .evalio-logo__light {
+    display: none;
+}
+
+[data-md-color-scheme="slate"] .evalio-logo__dark {
+    display: block;
+}
+
 @media screen and (min-width: 76.25em) {
 
     /* remove top level header */
