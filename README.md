@@ -11,7 +11,6 @@
   <a href="https://arxiv.org/abs/2507.16000"><img src="https://img.shields.io/badge/arXiv-2507.16000-b31b1b.svg" /></a>
   <p>evalio is a tool for <strong>Eval</strong>uating <strong>L</strong>idar-<strong>I</strong>nertial <strong>O</strong>dometry.</p>
   <br/>
-  <br/>
 </div>
 
 Specifically, it provides a common interface for connecting LIO datasets and LIO pipelines. This allows for easy addition of new datasets and pipelines, as well as a common location to evaluate them making benchmarks significantly easier to run. It features,
