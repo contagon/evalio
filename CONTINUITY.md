@@ -1,8 +1,14 @@
 # Snapshot
 - 2026-08-26 [USER] Recreate `logo.png` as a reproducible TikZ logo, generating PDF and SVG; exact raster aspect ratio is not required.
-- 2026-08-26 [USER] Fix missing theme color on the IMU center rectangle.
+- 2026-08-26 [USER] Remove all visible H1 headings from the docs landing page.
 
 # Done (recent)
+- 2026-08-26 [CODE] Superseded the unavailable Material helper class with native `<h1 hidden>`, removing the visible `evalio` heading.
+- 2026-08-26 [CODE] Suppressed Material's injected “About” heading with an accessible, visually hidden landing-page H1.
+- 2026-08-26 [CODE] Moved the README tagline into the centered logo block while preserving its emphasized acronym.
+- 2026-08-26 [CODE] Centered both docs logo image display modes and the immediately adjacent tagline paragraph.
+- 2026-08-26 [CODE] Centered the README logo with GitHub-compatible alignment and the docs logo with `margin-inline: auto`.
+- 2026-08-26 [CODE] Added adaptive logos to `README.md` via `<picture>` and to the docs landing page via Material palette-aware CSS.
 - 2026-08-26 [CODE] Replaced the same-color IMU `\shade` with `\fill[ink]`, preventing dvisvgm from dropping the center rectangle.
 - 2026-08-26 [CODE] Added a `\darklogo` compile flag; `just logo` now builds dark-ink `logo.*` and light-ink `logo-dark.*` assets.
 - 2026-08-26 [CODE] Added `just logo`, generating `docs/assets/logo.pdf` and `docs/assets/logo.svg` and removing LaTeX auxiliary files.
@@ -18,6 +24,9 @@
 
 # Working set
 - `justfile`
+- `README.md`
+- `docs/index.md`
+- `docs/css/tweaks.css`
 - `docs/assets/logo.tex`
 - `docs/assets/logo.pdf`
 - `docs/assets/logo.svg`
@@ -25,6 +34,11 @@
 - `docs/assets/logo-dark.svg`
 
 # Receipts
+- 2026-08-26 [TOOL] `uv run mkdocs build --strict` passed; homepage contains `<h1 hidden>evalio</h1>` and no injected “About” H1.
+- 2026-08-26 [TOOL] `uv run mkdocs build --strict` passed; built homepage has only `<h1 class="md-visually-hidden">evalio</h1>` and no “About” H1.
+- 2026-08-26 [TOOL] `uv run mkdocs build --strict` passed; generated CSS includes image auto margins and centered adjacent-paragraph styling.
+- 2026-08-26 [TOOL] `uv run mkdocs build --strict` passed after centering; generated `tweaks.css` contains the auto-margin rule.
+- 2026-08-26 [TOOL] `uv run mkdocs build --strict` passed; built index references both SVGs, palette CSS is published, and both assets are present in `site/assets/`.
 - 2026-08-26 [TOOL] Rebuilt both variants; SVGs now contain the rounded IMU body in `#181e24`/`#f5f7fa` and render correctly on light/dark backgrounds.
 - 2026-08-26 [TOOL] Both PDF/SVG variants validated and rendered correctly on white and `#10151B` backgrounds; SVG ink colors are `#181e24` and `#f5f7fa`.
 - 2026-08-26 [TOOL] `just logo` completed; both docs assets validate, SVG contains no white paint, and `docs/assets/` contains no auxiliary files.
