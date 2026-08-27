@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.1](https://github.com/contagon/evalio/compare/v0.6.0...v0.6.1) (2026-08-27)
+
+
+### Features
+
+* Logo! ([#86](https://github.com/contagon/evalio/issues/86)) ([9ee28be](https://github.com/contagon/evalio/commit/9ee28be4cdae31c095debd533a5e7ada18a7fb8e))
+* Zensical for docs ([#88](https://github.com/contagon/evalio/issues/88)) ([48c9b8c](https://github.com/contagon/evalio/commit/48c9b8cc5033510ada9c03305820c56b004a57b7))
+
+
+### Bug Fixes
+
+* zensical homepage fixes ([f87a6f3](https://github.com/contagon/evalio/commit/f87a6f321021329e214e7d50e5abbb531dd327d2))
+
 ## [0.6.0](https://github.com/contagon/evalio/compare/v0.5.0...v0.6.0) (2026-08-05)
 
 
