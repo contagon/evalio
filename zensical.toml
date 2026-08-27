@@ -1,5 +1,5 @@
 [project]
-site_url = "http://contagon.github.io/evalio"
+site_url = "https://contagon.github.io/evalio/"
 site_name = "evalio"
 # site_description = "Your project description"
 site_author = "Easton Potokar"
