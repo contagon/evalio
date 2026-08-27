@@ -23,3 +23,8 @@
 [data-md-color-scheme="slate"] .evalio-logo__dark {
     display: block;
 }
+
+/* Use light ink for the compact logo on the dark palette. */
+[data-md-color-scheme="slate"] [data-md-component="logo"] img {
+    content: url("../assets/logo-dark.svg");
+}

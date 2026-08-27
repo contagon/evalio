@@ -2,7 +2,9 @@
 \documentclass[tikz,border=3pt]{standalone}
 
 \usepackage{fontspec}
+\usepackage{xcolor}
 
+% handle dark / light versions
 \ifdefined\darklogo
   \definecolor{ink}{HTML}{F5F7FA}
 \else
@@ -11,31 +13,43 @@
 \definecolor{highlight}{HTML}{FDB827}
 \setmainfont{TeX Gyre Adventor}
 
+% handle imu colors when tiny
+\ifdefined\wordmark
+  \colorlet{imu}{highlight}
+  \colorlet{frame}{ink}
+\else
+  \colorlet{imu}{ink}
+  \colorlet{frame}{highlight}
+\fi
+
+
 \begin{document}
 \begin{tikzpicture}[line cap=round,line join=round]
   % Lidar ring and returns
   % The 10-degree arc gaps replace the old 1.5pt white marker strokes.
-  \foreach \angle in {0,45,...,315} {
-      \draw[ink,line width=5pt]
-      ({\angle+10}:2.05) arc[start angle={\angle+10},end angle={\angle+35},radius=2.05];
-      \fill[highlight] (\angle:2.05) circle[radius=.2186];
-    }
+  \ifdefined\wordmark\else
+    \foreach \angle in {0,45,...,315} {
+        \draw[ink,line width=5pt]
+        ({\angle+10}:2.05) arc[start angle={\angle+10},end angle={\angle+35},radius=2.05];
+        \fill[highlight] (\angle:2.05) circle[radius=.2186];
+      }
+  \fi
 
   % IMU chip and pins
   \foreach \angle in {45,135,225,315} {
-      \draw[ink,line width=8pt] (\angle:.67) -- (\angle:.94);
+      \draw[imu,line width=8pt] (\angle:.67) -- (\angle:.94);
     }
-  \fill[ink,rounded corners=6pt]
+  \fill[imu,rounded corners=6pt]
   (-.74,-.70) rectangle (.74,.70);
 
   % Coordinate frame
-  \draw[highlight,line width=4pt] (-.15,-.15) -- (-.15,.39);
-  \fill[highlight] (-.15,.57) -- (-.29,.36) -- (-.01,.36) -- cycle;
-  \draw[highlight,line width=4pt] (-.15,-.15) -- (.39,-.15);
-  \fill[highlight] (.57,-.15) -- (.36,-.01) -- (.36,-.29) -- cycle;
-  \fill[ink] (-.15,-.15) circle[radius=.20];
-  \draw[highlight,line width=4pt] (-.15,-.15) circle[radius=.17];
-  \fill[highlight] (-.15,-.15) circle[radius=.052];
+  \draw[frame,line width=4pt] (-.15,-.15) -- (-.15,.39);
+  \fill[frame] (-.15,.57) -- (-.29,.36) -- (-.01,.36) -- cycle;
+  \draw[frame,line width=4pt] (-.15,-.15) -- (.39,-.15);
+  \fill[frame] (.57,-.15) -- (.36,-.01) -- (.36,-.29) -- cycle;
+  \fill[imu] (-.15,-.15) circle[radius=.20];
+  \draw[frame,line width=4pt] (-.15,-.15) circle[radius=.17];
+  \fill[frame] (-.15,-.15) circle[radius=.052];
 
   % Omit the wordmark when compiling the compact logo variant.
   \ifdefined\wordmark\else

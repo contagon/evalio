@@ -38,6 +38,8 @@ nav = [
 ]
 
 extra_javascript = [
+    # synchronize favicon with the active palette
+    "javascripts/logo-theme.js",
     # math
     "javascripts/katex.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
@@ -62,7 +64,8 @@ provider = "mike"
 [project.theme]
 variant = "modern"
 # custom_dir = "overrides"
-# favicon = "images/favicon.png"
+logo = "assets/logo.svg"
+favicon = "assets/logo.svg"
 language = "en"
 features = [
     # add inline code annotations
@@ -96,7 +99,6 @@ features = [
 # logo = "assets/logo.png"
 
 [project.theme.icon]
-logo = "material/circle-double"
 repo = "fontawesome/brands/github"
 
 # [project.theme.font]
