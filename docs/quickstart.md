@@ -1,3 +1,6 @@
+---
+icon: lucide/braces
+---
 
 evalio is available on PyPi, so simply install via your favorite python package manager,
 ```bash

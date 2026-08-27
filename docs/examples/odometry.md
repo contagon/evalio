@@ -1,3 +1,7 @@
+---
+icon: lucide/route
+---
+
 If one off odometry is needed, such as for testing a loop closure algorithm, evalio can generate it for you. For example, to generate odometry for the first 2000 scans of the Newer College 2020 dataset using KissICP,
 ```bash
 evalio run -p kiss -d newer_college_2020/short_experiment -o odometry.csv -l 2000
@@ -5,26 +9,29 @@ evalio run -p kiss -d newer_college_2020/short_experiment -o odometry.csv -l 200
 
 The odometry will be *in the IMU frame* and saved in the TUM format, 
 $$
-[t\ \text{(sec)}, p_x, p_y, p_z, q_x, q_y, q_z, q_w\]
+[t\ \text{(sec)}, p_x, p_y, p_z, q_x, q_y, q_z, q_w]
 $$
 along with metadata about how the trajectory was generated behind the '#' character. The above for the first 10 scans would look like:
 ```csv
+# max_elapsed: 0.006720304489135742
 # name: kiss
 # pipeline: kiss
-# version: 1.2.2
-# convergence_criterion: 0.0001
-# deskew: False
-# initial_threshold: 2.0
-# max_num_iterations: 500
-# max_num_threads: 0
-# max_points_per_voxel: 20
-# min_motion_th: 0.1
-# voxel_size: 1.0
-#
-# dataset: newer_college_2020
-# sequence: short_experiment
-# length: 100
-#
+# pipeline_params:
+#   convergence_criterion: 0.0001
+#   deskew: false
+#   initial_threshold: 2.0
+#   max_num_iterations: 500
+#   max_num_threads: 0
+#   max_points_per_voxel: 20
+#   min_motion_th: 0.1
+#   voxel_size: 1.0
+# pipeline_version: 1.3.0
+# sequence: newer_college_2020/short_experiment
+# sequence_length: 20
+# status: complete
+# total_elapsed: 0.07155537605285645
+# type: experiment
+# 
 # timestamp, x, y, z, qx, qy, qz, qw
 1583836591.082580992,0.006252999883145094,-0.011775000020861626,-0.007644999772310257,0.0,0.0,-1.0,0.0
 1583836591.182590976,0.002104584749512301,-0.014210604585971584,-0.007355713813266136,-2.675152057596367e-05,-8.363399211902303e-06,-0.9999999975888385,-6.353528931178803e-05

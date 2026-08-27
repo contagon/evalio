@@ -1,3 +1,7 @@
+---
+icon: lucide/hammer
+---
+
 For the majority of use cases, we simply recommend installing via your favorite python package manager,
 ```bash
 uv add evalio      # uv

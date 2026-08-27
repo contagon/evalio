@@ -8,6 +8,8 @@ wheelhouse
 .vcpkg
 .vcpkg_cache
 site
+docs/included/
+docs/ref/cli.md
 
 # other caches
 .mypy_cache

@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo.svg">
-    <img alt="evalio" src="docs/assets/logo.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-wordmark-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-wordmark.svg">
+    <img alt="evalio" src="docs/assets/logo-wordmark.svg">
   </picture>
   <br/>
   <a href="https://github.com/contagon/evalio/releases"><img src="https://img.shields.io/github/v/release/contagon/evalio" /></a>
