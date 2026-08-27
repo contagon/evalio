@@ -1,4 +1,5 @@
 from enum import Enum, auto
+
 from rich.console import Console
 
 

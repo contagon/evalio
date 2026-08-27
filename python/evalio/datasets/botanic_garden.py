@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
-from evalio._cpp.helpers import fill_col_split_row_velodyne  # type: ignore
+from evalio._cpp.helpers import fill_col_by_map  # type: ignore
 from evalio.datasets.loaders import (
     LidarDensity,
     LidarFormatParams,
@@ -16,6 +17,11 @@ from evalio.datasets.loaders import (
 from evalio.types import SE3, ImuParams, LidarParams, Trajectory
 
 from .base import Dataset, DatasetIterator
+
+MAP_IDX_TO_ROW = [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15]
+MAP_ROW_TO_IDX = [-1] * 128
+for i, row in enumerate(MAP_IDX_TO_ROW):
+    MAP_ROW_TO_IDX[row] = i
 
 
 class BotanicGarden(Dataset):
@@ -47,7 +53,7 @@ class BotanicGarden(Dataset):
                 major=LidarMajor.Column,
                 density=LidarDensity.OnlyValidPoints,
             ),
-            custom_col_func=fill_col_split_row_velodyne,
+            custom_col_func=lambda mm: fill_col_by_map(mm, MAP_ROW_TO_IDX),
         )
 
     def ground_truth_raw(self) -> Trajectory:
@@ -65,7 +71,7 @@ class BotanicGarden(Dataset):
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
         # https://github.com/robot-pesg/BotanicGarden/blob/main/calib/extrinsics/calib_chain.yaml
-        return SE3.fromMat(
+        return SE3.from_mat(
             np.array(
                 [
                     [

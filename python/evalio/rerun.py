@@ -1,11 +1,13 @@
 from typing import Any, Literal, Optional, TypedDict, cast, overload
-from typing_extensions import TypeVar
 from uuid import UUID, uuid4
 
 import distinctipy
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import TypeVar
 
+from evalio._cpp.helpers import closest  # type: ignore
+from evalio._cpp.types import VisOption  # type: ignore
 from evalio.datasets import Dataset
 from evalio.types import (
     SE3,
@@ -18,8 +20,6 @@ from evalio.types import (
     Trajectory,
 )
 from evalio.utils import print_warning
-from evalio._cpp.helpers import closest  # type: ignore
-from evalio._cpp.types import VisOption  # type: ignore
 
 
 # These colors are pulled directly from the rerun skybox colors
@@ -48,7 +48,7 @@ try:
     import rerun as rr
     import rerun.blueprint as rrb
 
-    OverrideType = dict[rr.datatypes.EntityPathLike, list[rr.AsComponents]]
+    OverrideType = dict[rr.datatypes.EntityPathLike, list[rrb.VisualizableArchetype]]
     RerunArgs = TypedDict(
         "RerunArgs", {"application_id": str, "recording_id": UUID, "make_default": bool}
     )
@@ -96,8 +96,7 @@ try:
             # https://github.com/rerun-io/rerun/issues/6673
             # Once this is closed, we'll be able to remove pipelines as a parameter here and in new_recording
             overrides: OverrideType = {
-                f"{n}/imu": [rrb.VisualizerOverrides(rrb.visualizers.Transform3DArrows)]
-                for n in self.pipeline_names
+                f"{n}/imu": [rr.TransformAxes3D(10.0)] for n in self.pipeline_names
             }
 
             if self.args is not None and VisOption.IMAGE in self.args:
@@ -128,7 +127,8 @@ try:
             self.lidar_params = dataset.lidar_params()
             self.imu_T_lidar = dataset.imu_T_lidar()
 
-            self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
+            if self.gt is not None:
+                self.rec.log("gt", convert(self.gt, color=GT_COLOR), static=True)
 
             # reset other variables
             self.pn = None
@@ -166,7 +166,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a dataset before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
@@ -193,14 +193,15 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a dataset before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
 
             # Find transform between ground truth and imu origins
-            if self.gt_o_T_imu_o is None:
-                if stamp < self.gt.stamps[0]:
+            if self.gt_o_T_imu_o is None and self.gt is not None:
+                # If we haven't hit ground truth data or the pose isn't being updated, wait
+                if stamp < self.gt.stamps[0] or pose == SE3.identity():
                     pass
                 else:
                     imu_o_T_imu_0 = pose
@@ -231,7 +232,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
@@ -247,7 +248,7 @@ try:
             if self.args is None:
                 return
 
-            if self.lidar_params is None or self.gt is None:
+            if self.lidar_params is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
             if self.pn is None or self.trajectory is None or self.colors is None:
                 raise ValueError("You needed to add a pipeline before stepping!")
@@ -255,13 +256,12 @@ try:
             self.rec.set_time("evalio_time", timestamp=stamp.to_sec())
 
             # Features from the scan
-            if VisOption.FEATURES in self.args:
-                if len(features) > 0:
-                    for (k, p), c in zip(features.items(), self.colors):
-                        self.rec.log(
-                            f"{self.pn}/imu/lidar/{k}",
-                            convert(p, color=c, radii=0.12),
-                        )
+            if VisOption.FEATURES in self.args and len(features) > 0:
+                for (k, p), c in zip(features.items(), self.colors):
+                    self.rec.log(
+                        f"{self.pn}/imu/lidar/{k}",
+                        convert(p, color=c, radii=0.12),
+                    )
 
     # ------------------------- For converting to rerun types ------------------------- #
     # point clouds
@@ -285,8 +285,6 @@ try:
             rr.Points3D: LidarMeasurement converted to rerun Points3D.
         """
 
-        ...
-
     @overload
     def convert(
         obj: list[Point],
@@ -306,7 +304,6 @@ try:
         Returns:
             rr.Points3D: Points converted to rerun Points3D.
         """
-        ...
 
     @overload
     def convert(
@@ -328,7 +325,6 @@ try:
         Returns:
             rr.Points3D: numpy array converted to rerun Points3D.
         """
-        ...
 
     # trajectories
     @overload
@@ -345,7 +341,6 @@ try:
         Returns:
             rr.Points3D: List of SE3 poses converted to rerun Points3D.
         """
-        ...
 
     M = TypeVar("M", bound=Metadata | None)
 
@@ -363,7 +358,6 @@ try:
         Returns:
             rr.Points3D: Trajectory converted to rerun Points3D.
         """
-        ...
 
     # poses
     @overload
@@ -376,7 +370,6 @@ try:
         Returns:
             rr.Transform3D: SE3 pose converted to rerun Transform3D.
         """
-        ...
 
     def convert(
         obj: Any,
@@ -471,12 +464,13 @@ try:
         else:
             raise ValueError(f"Cannot convert {type(obj)} to rerun type")  # type: ignore
 
-except Exception:
+except ImportError:
 
     class RerunVis:
         def __init__(
             self, args: Optional[set[VisOption]], pipeline_names: list[str]
         ) -> None:
+            self.args = args
             if args is not None:
                 print_warning("Rerun not found, visualization disabled")
 

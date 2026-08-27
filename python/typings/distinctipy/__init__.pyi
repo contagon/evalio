@@ -65,7 +65,6 @@ def get_colors(
     :return: colors - A list of (r,g,b) colors that are visually distinct to each other
         and to the colours in exclude_colors. (r,g,b) values are floats between 0 and 1.
     """
-    ...
 
 __all__ = [
     "BLACK",

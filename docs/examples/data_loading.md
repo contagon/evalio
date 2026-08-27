@@ -1,3 +1,7 @@
+---
+icon: lucide/download
+---
+
 Loading robotics datasets can be tedious and time-consuming due to the lack of standardization in the datasets formats. evalio provides a unified interface for loading datasets, making it trivial to get up and running with real-world lidar and IMU data.
 
 Datasets are managed via the CLI interface, specifically, using `evalio dl` to download datasets and `evalio rm` command to remove unwanted datasets. `evalio ls datasets` is also useful to visualize what has been installed. 
@@ -81,7 +85,7 @@ from evalio.rerun import convert
 
 # Initialize rerun
 rr.init("evalio")
-rr.connect_tcp()
+rr.connect_grpc()
 
 # Stream lidar scans to rerun
 for scan in Hilti2022.basement_2.lidar():

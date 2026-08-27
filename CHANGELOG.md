@@ -1,5 +1,67 @@
 # Changelog
 
+## [0.6.1](https://github.com/contagon/evalio/compare/v0.6.0...v0.6.1) (2026-08-27)
+
+
+### Features
+
+* Logo! ([#86](https://github.com/contagon/evalio/issues/86)) ([9ee28be](https://github.com/contagon/evalio/commit/9ee28be4cdae31c095debd533a5e7ada18a7fb8e))
+* Zensical for docs ([#88](https://github.com/contagon/evalio/issues/88)) ([48c9b8c](https://github.com/contagon/evalio/commit/48c9b8cc5033510ada9c03305820c56b004a57b7))
+
+
+### Bug Fixes
+
+* zensical homepage fixes ([f87a6f3](https://github.com/contagon/evalio/commit/f87a6f321021329e214e7d50e5abbb531dd327d2))
+
+## [0.6.0](https://github.com/contagon/evalio/compare/v0.5.0...v0.6.0) (2026-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Bump Pipelines ([#81](https://github.com/contagon/evalio/issues/81))
+
+### Features
+
+* Add small new constructor for LidarMeasurement ([#78](https://github.com/contagon/evalio/issues/78)) ([39eb11c](https://github.com/contagon/evalio/commit/39eb11c143514a0c3ce1d0dca7e2cf88c301ea0e))
+* Bump Pipelines ([#81](https://github.com/contagon/evalio/issues/81)) ([24071ec](https://github.com/contagon/evalio/commit/24071ec9184669d5d03b7d72ba028cc2c78f5851))
+* Bump python & CI deps, basedpyright -&gt; pyrefly ([#83](https://github.com/contagon/evalio/issues/83)) ([334875b](https://github.com/contagon/evalio/commit/334875bd7921a81cacb728cc92e49603e4e23f7f))
+* Handle missing ground truth in dataset ([#79](https://github.com/contagon/evalio/issues/79)) ([7367264](https://github.com/contagon/evalio/commit/736726499f14b7487299e7fc877ed5adfb4ed6f8))
+* vcpkg bump ([#84](https://github.com/contagon/evalio/issues/84)) ([1f15c61](https://github.com/contagon/evalio/commit/1f15c6136b5aac8303ac7f09bf9f225bcedca824))
+
+
+### Bug Fixes
+
+* handle subnanosecond in csv file loading ([#85](https://github.com/contagon/evalio/issues/85)) ([4ca115e](https://github.com/contagon/evalio/commit/4ca115e03cca57e3298a6e30e978ee066be733c3))
+* Ruff linting updates ([#82](https://github.com/contagon/evalio/issues/82)) ([2b624d4](https://github.com/contagon/evalio/commit/2b624d4b0e4fa39308adf52106aa64a135daa8ed))
+
+## [0.5.0](https://github.com/contagon/evalio/compare/v0.4.2...v0.5.0) (2026-04-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Some simple nomenclature breaking changes here, fromMat → from_mat toMat → to_mat toEigen → to_eigen
+* **pl:** The Pipeline class interface has changed slightly. `add_lidar` now has no return, and `pose` method has been removed. In place of these is a new `save` method for saving poses and features asynchronously with no overhead.
+
+### Features
+
+* **ds:** Add Boreas and BoreasRT dataset support ([#67](https://github.com/contagon/evalio/issues/67)) ([1a598f6](https://github.com/contagon/evalio/commit/1a598f6818fde578375ed1b698e0fa56275970cb))
+* **ds:** Add in IMU rates to ImuParams ([#64](https://github.com/contagon/evalio/issues/64)) ([9f9859d](https://github.com/contagon/evalio/commit/9f9859d279ab85212c2148430485c9c381721f05))
+* Fomo dataset ([#68](https://github.com/contagon/evalio/issues/68)) ([a232bee](https://github.com/contagon/evalio/commit/a232beec99d36955c8137b97990aecc4e2e6d649))
+* **pl:** add FORM pipeline ([#72](https://github.com/contagon/evalio/issues/72)) ([a1b1a98](https://github.com/contagon/evalio/commit/a1b1a981f165e9cc6664a5eef06a4ef179b5888f))
+* **pl:** Create features and pose estimate buffers ([#54](https://github.com/contagon/evalio/issues/54)) ([21403a0](https://github.com/contagon/evalio/commit/21403a06a1488b8555f594deae3354d265cd6fbf))
+* **pl:** Direct Lidar Inertial Odometry ([#71](https://github.com/contagon/evalio/issues/71)) ([866feb8](https://github.com/contagon/evalio/commit/866feb8a4433b07ec8034bcac850ecb0faa164c9))
+
+
+### Bug Fixes
+
+* Add fix for loading time stamps in scientific notation (see enwide) ([#70](https://github.com/contagon/evalio/issues/70)) ([4256395](https://github.com/contagon/evalio/commit/4256395b71ee6de983fe44e14d865f6bf34de3a4))
+* Bump all dependencies ([#75](https://github.com/contagon/evalio/issues/75)) ([362ad5b](https://github.com/contagon/evalio/commit/362ad5b1c851f9304473e20f7175568637ba88a3))
+* **ci:** Clean up ci cibuildwheel selection and concurrency for docs deployment ([#66](https://github.com/contagon/evalio/issues/66)) ([d767fe4](https://github.com/contagon/evalio/commit/d767fe4d4f2f1547925a5bda7901674cd187ac83))
+* **ci:** Fix uploading assets to github releases ([5b9f49e](https://github.com/contagon/evalio/commit/5b9f49ee0576c1514775490c8bad6ec99a2c8239))
+* **docs:** Update a bunch of docs ([#77](https://github.com/contagon/evalio/issues/77)) ([4c29e94](https://github.com/contagon/evalio/commit/4c29e94af232d9888d6cf5eff7b46f9d0894b3a4))
+* **pl:** Fix LIO-SAM segfaults  ([#76](https://github.com/contagon/evalio/issues/76)) ([96e0832](https://github.com/contagon/evalio/commit/96e083281c2dd4d25641f2d1e87b206a87bdc415))
+* Switch interface to consistent snake_case naming ([#65](https://github.com/contagon/evalio/issues/65)) ([ded06a8](https://github.com/contagon/evalio/commit/ded06a8613829b004b54f7f86ce1086e68b2ba69))
+
 ## [0.4.2](https://github.com/contagon/evalio/compare/v0.4.1...v0.4.2) (2025-10-31)
 
 

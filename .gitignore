@@ -8,6 +8,8 @@ wheelhouse
 .vcpkg
 .vcpkg_cache
 site
+docs/included/
+docs/ref/cli.md
 
 # other caches
 .mypy_cache
@@ -30,3 +32,10 @@ compile_commands.json
 
 # cloned pipelines
 cpp/bindings/pipelines-src
+
+# Beads / Dolt files (added by bd init)
+.beads/
+.dolt/
+*.db
+.beads-credential-key
+.kiro

@@ -21,13 +21,13 @@ NB_MODULE(_cpp, m) {
     "types",
     "Common types used for conversion between datasets and pipelines."
   );
-  evalio::makeTypes(m_types);
+  evalio::make_types(m_types);
 
   auto m_helpers =
     m.def_submodule("helpers", "Helper functions for internal evalio usage.");
-  evalio::makeConversions(m_helpers);
+  evalio::make_conversions(m_helpers);
 
   auto m_pipelines = m.def_submodule("pipelines", "Pipelines used in evalio.");
-  evalio::makeBasePipeline(m_pipelines);
-  evalio::makePipelines(m_pipelines);
+  evalio::make_base_pipeline(m_pipelines);
+  evalio::make_pipelines(m_pipelines);
 }

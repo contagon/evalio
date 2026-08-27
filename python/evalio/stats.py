@@ -1,18 +1,16 @@
-from enum import StrEnum, auto
-from typing_extensions import TypeVar
-
-from evalio.utils import print_warning
-from evalio._cpp.helpers import closest  # type: ignore
-from . import types as ty
-
+from copy import deepcopy
 from dataclasses import dataclass
+from enum import StrEnum, auto
+from typing import cast
 
 import numpy as np
-
-from typing import cast
 from numpy.typing import NDArray
+from typing_extensions import TypeVar
 
-from copy import deepcopy
+from evalio._cpp.helpers import closest  # type: ignore
+from evalio.utils import print_warning
+
+from . import types as ty
 
 
 class MetricKind(StrEnum):
@@ -26,7 +24,7 @@ class MetricKind(StrEnum):
     """Sqrt of Sum of squared errors"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class WindowMeters:
     """Dataclass to hold the parameters for a distance-based window."""
 
@@ -38,7 +36,7 @@ class WindowMeters:
         return f"{self.value:.1f}m"
 
 
-@dataclass
+@dataclass(frozen=True)
 class WindowSeconds:
     """Dataclass to hold the parameters for a time-based window."""
 
@@ -302,7 +300,7 @@ def ate(traj: ty.Trajectory[M1], gt: ty.Trajectory[M2]) -> Error:
 def rte(
     traj: ty.Trajectory[M1],
     gt: ty.Trajectory[M2],
-    window: WindowKind = WindowMeters(30),
+    window: WindowKind = WindowMeters(30),  # noqa: B008
 ) -> Error:
     """Compute the Relative Trajectory Error (RTE) between two trajectories.
 

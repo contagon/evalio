@@ -11,7 +11,8 @@ from rich.console import Console
 from rich import box
 
 import distinctipy
-
+import polars as pl
+import typer
 from joblib import Parallel, delayed
 from cyclopts import Group, Parameter
 
@@ -39,15 +40,11 @@ def eval_dataset(
         elif isinstance(traj.metadata, ty.Experiment):
             all_trajs.append(cast(ty.Trajectory[ty.Experiment], traj))
 
-    if gt_og is None:
-        print_warning(f"No ground truth found in {dir}, skipping.")
-        return None
-
     # Setup visualization
     if visualize:
         try:
             import rerun as rr
-        except Exception:
+        except ImportError:
             print_warning("Rerun not found, visualization disabled")
             visualize = False
 
@@ -56,18 +53,20 @@ def eval_dataset(
     colors = None
     if visualize:
         import rerun as rr
-        from evalio.rerun import convert, GT_COLOR
+
+        from evalio.rerun import GT_COLOR, convert
 
         rr.init(
             str(dir),
             spawn=False,
         )
         rr.connect_grpc()
-        rr.log(
-            "gt",
-            convert(gt_og, color=GT_COLOR),
-            static=True,
-        )
+        if gt_og is not None:
+            rr.log(
+                "gt",
+                convert(gt_og, color=GT_COLOR),
+                static=True,
+            )
 
         # generate colors for visualization
         colors = distinctipy.get_colors(len(all_trajs) + 1)
@@ -82,7 +81,7 @@ def eval_dataset(
         if traj.metadata.total_elapsed is not None:
             hz = len(traj) / traj.metadata.total_elapsed
 
-        if len(traj) > 0:
+        if len(traj) > 0 and gt_og is not None:
             # align to ground truth, copying ground truth by hand
             gt_aligned = ty.Trajectory(
                 stamps=[ty.Stamp(s) for s in gt_og.stamps],
@@ -219,19 +218,19 @@ def evaluate_cli(
     # Parse the filtering options
     filter_method: Callable[[dict[str, Any]], bool]
     if filter_str is None:
-        filter_method = lambda r: True  # noqa: E731
+        filter_method = lambda r: True
     else:
         from asteval import Interpreter
 
-        filter_method = lambda r: Interpreter(user_symbols=r).eval(
+        filter_method = lambda r: Interpreter(user_symbols=r).eval(  # type: ignore
             filter_str, raise_errors=True
         )
 
     original_filter = filter_method
     if only_complete:
-        filter_method = lambda r: original_filter(r) and r["status"] == "complete"  # noqa: E731
+        filter_method = lambda r: original_filter(r) and r["status"] == "complete"
     elif only_failed:
-        filter_method = lambda r: original_filter(r) and r["status"] == "fail"  # noqa: E731
+        filter_method = lambda r: original_filter(r) and r["status"] == "fail"
 
     windows: list[stats.WindowKind] = []
     if w_seconds is not None:
@@ -258,7 +257,7 @@ def evaluate_cli(
     # ------------------------- Filter all results ------------------------- #
     try:
         results = [r for r in results if filter_method(r)]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_warning(f"Error filtering results: {e}")
 
     # convert to polars dataframe for easier processing

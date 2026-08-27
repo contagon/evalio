@@ -12,6 +12,11 @@ on:
         type: boolean
         default: false
 
+# Allow only one docs deployment at a time per branch/branch
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -26,7 +31,7 @@ jobs:
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         name: Checkout
         with:
           fetch-depth: 0
@@ -37,7 +42,7 @@ jobs:
 
       # Setup Python dependencies
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v9.0.0
       - name: Install the project
         run: uv sync --dev --verbose
 
@@ -52,9 +57,9 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # Build docs
+      # Ensure docs build docs
       - name: Build docs
-        run: uv run mkdocs build
+        run: uv run python scripts/gen_docs.py && uv run zensical build
 
       # Deploy latest tag
       - name: Deploy docs

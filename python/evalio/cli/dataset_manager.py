@@ -79,7 +79,7 @@ def dl(datasets: DatasetArg, /) -> None:
         print(f"---------- Beginning {dataset} ----------")
         try:
             dataset.download()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error downloading {dataset}\n: {e}")
         print(f"---------- Finished {dataset} ----------")
 
@@ -115,7 +115,7 @@ def rm(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
                     (dataset.folder / f).unlink()
                 else:
                     shutil.rmtree(dataset.folder / f, ignore_errors=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error removing {dataset}\n: {e}")
         print(f"---------- Finished {dataset} ----------")
 

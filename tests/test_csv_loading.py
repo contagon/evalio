@@ -2,9 +2,9 @@ import pickle
 from enum import Enum, auto
 from pathlib import Path
 
+import evalio.datasets as ds
 import numpy as np
 import pytest
-import evalio.datasets as ds
 from evalio.types import (
     SE3,
     GroundTruth,
@@ -13,7 +13,8 @@ from evalio.types import (
     Stamp,
     Trajectory,
 )
-from utils import check_lidar_eq, isclose_se3, rand_se3
+
+from tests.utils import check_lidar_eq, isclose_se3, rand_se3
 
 # ------------------------- Loading imu & lidar ------------------------- #
 data_dir = Path("tests/data")

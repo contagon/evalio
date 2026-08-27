@@ -12,7 +12,7 @@ if [ ! -d "kiss-icp" ]; then
 fi
 cd kiss-icp
 git stash
-git switch --detach v1.2.2
+git switch --detach v1.3.0
 git apply ../../pipelines/kiss_icp.patch
 cd ..
 
@@ -22,7 +22,7 @@ if [ ! -d "LIO-SAM" ]; then
 fi
 cd LIO-SAM
 git stash
-git checkout master
+git checkout d35ce0606b6326377b631ae9cedd73c74066eacc
 cd ..
 
 # LOAM
@@ -31,7 +31,7 @@ if [ ! -d "loam" ]; then
 fi
 cd loam
 git stash
-git checkout main
+git checkout 48fc3a8c05ec3ea19c57f9565f453292c36b9bdf
 git apply ../../pipelines/loam.patch
 cd ..
 
@@ -41,7 +41,7 @@ if [ ! -d "genz-icp" ]; then
 fi
 cd genz-icp
 git stash
-git switch --detach v0.2.0
+git switch --detach v0.3.2
 git apply ../../pipelines/genz_icp.patch
 cd ..
 
@@ -64,12 +64,29 @@ git switch --detach icra_2022
 git apply ../../pipelines/ct_icp.patch
 cd ..
 
+if [ ! -d "direct_lidar_inertial_odometry" ]; then
+    git clone https://github.com/contagon/direct_lidar_inertial_odometry.git
+fi
+cd direct_lidar_inertial_odometry
+git stash
+git checkout 5cda5f359a70174a98001256ffd7234cbfeccf38
+cd ..
+
+if [ ! -d "form" ]; then
+    git clone https://github.com/rpl-cmu/form.git
+fi
+cd form
+git stash
+git switch --detach v0.2.0
+git apply ../../pipelines/form.patch
+cd ..
+
 # ------------------------- Dependencies ------------------------- #
 cd $topdir
 if [ ! -d ".vcpkg/" ]; then
     git clone https://github.com/microsoft/vcpkg.git .vcpkg/
 fi
 cd .vcpkg
-git switch --detach 2025.08.27
+git switch --detach 2026.07.29
 cd ..
 ./.vcpkg/bootstrap-vcpkg.sh

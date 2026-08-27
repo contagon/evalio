@@ -276,23 +276,20 @@ inline void fill_col_col_major(LidarMeasurement& mm) {
   _fill_col(mm, func_col);
 }
 
-// point cloud loader where rows come in in 0, 8, 1, 9, ... order
-inline void fill_col_split_row_velodyne(LidarMeasurement& mm) {
-  auto func_row_idx_to_row_seq = [](uint8_t row_idx) {
-    if (row_idx < 8) {
-      return row_idx * 2;
-    } else {
-      return (row_idx - 8) * 2 + 1;
-    }
-  };
-
-  auto func_col = [&func_row_idx_to_row_seq](
+// point cloud loader where rows come in consistently a near-random order
+// used for 128-beam boreas dataset
+// map_row_to_idx is a map from channel/row idx to the order it appears in the return
+inline void
+fill_col_by_map(LidarMeasurement& mm, const std::vector<int>& map_row_to_idx) {
+  auto func_col = [&map_row_to_idx](
                     uint16_t& col,
                     const uint16_t& prev_col,
                     const uint8_t& prev_row,
                     const uint8_t& curr_row
-                  ) {
-    if (func_row_idx_to_row_seq(curr_row) < func_row_idx_to_row_seq(prev_row)) {
+                  ) mutable {
+    // If the rank of the current row is less than or equal to the max rank seen
+    // in the current column, we must have wrapped around to the next column.
+    if (map_row_to_idx[curr_row] < map_row_to_idx[prev_row]) {
       col = prev_col + 1;
     } else {
       col = prev_col;
@@ -373,7 +370,7 @@ inline LidarMeasurement helipr_bin_to_evalio(
       point.col = prev_col + 1;
     }
     if (point.row >= params.num_rows || point.col >= params.num_columns) {
-      std::cout << "HeLiPR point out of bounds\npoint.row: " << +point.row
+      std::cout << "Helipr point out of bounds\npoint.row: " << +point.row
                 << " point.col: " << point.col << std::endl;
       throw -1;
     }
@@ -387,12 +384,99 @@ inline LidarMeasurement helipr_bin_to_evalio(
   return mm;
 }
 
+// Load boreas data into evalio
+// Alternatively can use numpy, but this is faster for converting to evalio types afterwards
+// https://github.com/utiasASRL/pyboreas/blob/a0cd0fb5a453ebe8a0939e226ce55073bc8a578a/pyboreas/utils/utils.py#L17-L27
+inline LidarMeasurement boreas_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params,
+  std::vector<int>& map_row_to_idx
+) {
+  LidarMeasurement mm(stamp);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float holder = 0.0;
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.x = holder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.y = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.z = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.intensity = holder;
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.row = static_cast<uint16_t>(holder);
+    file.read(reinterpret_cast<char *>(&holder), sizeof(float)); point.t = Duration::from_sec(holder);
+    // clang-format on
+    mm.points.push_back(point);
+  }
+  file.close();
+
+  // Stamp is taken from middle of scan, so shift so the smallest point stamp is at 0
+  auto oldest = std::min_element(
+    mm.points.begin(),
+    mm.points.end(),
+    [](const Point& a, const Point& b) { return a.t < b.t; }
+  );
+  auto shift = -oldest->t;
+  shift_point_stamps(mm, shift);
+  mm.stamp = mm.stamp + shift;
+
+  fill_col_by_map(mm, map_row_to_idx);
+  reorder_points(mm, params.num_rows, params.num_columns);
+
+  return mm;
+}
+
+// Load fomo data into evalio
+// Alternatively can use numpy, but this is faster for converting to evalio types afterwards
+// https://github.com/norlab-ulaval/fomo-sdk/blob/78406b485c561e079134d46fad62506ff20c688c/fomo_sdk/lidar/utils.py#L139-L166
+inline LidarMeasurement fomo_bin_to_evalio(
+  const std::string& filename,
+  Stamp stamp,
+  const LidarParams& params,
+  std::vector<int>& map_row_to_idx
+) {
+  LidarMeasurement mm(stamp);
+
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+  float fholder = 0.0;
+  uint16_t u16holder = 0;
+  uint64_t u64holder = 0;
+  while (!file.eof()) {
+    // clang-format off
+    Point point;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.x = fholder;
+    // if we're off by a byte, just be done early
+    if(file.eof()) break;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.y = fholder;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.z = fholder;
+    file.read(reinterpret_cast<char *>(&fholder), sizeof(float)); point.intensity = fholder;
+    file.read(reinterpret_cast<char *>(&u16holder), sizeof(uint16_t)); point.row = u16holder;
+    // Filename stamp is from the start of scan, subtract it off of all of them
+    // The stored stamp is the absolute time in microseconds
+    file.read(reinterpret_cast<char *>(&u64holder), sizeof(uint64_t)); point.t = Stamp::from_nsec(u64holder * 1000) - stamp;
+    // clang-format on
+    mm.points.push_back(point);
+  }
+  file.close();
+
+  fill_col_by_map(mm, map_row_to_idx);
+  reorder_points(mm, params.num_rows, params.num_columns);
+
+  return mm;
+}
+
 /// Parse a CSV line into an SE3 object. The idx map should contain the indices
 /// of the required fields: "qw", "qx", "qy", "qz", "x", "y", "z".
 inline std::pair<Stamp, SE3> parse_csv_line(
   const std::string& s,
   const char delimiter,
-  const std::map<std::string, int>& idx
+  const std::map<std::string, int>& idx,
+  bool scientific = false
 ) {
   std::stringstream ss(s);
   std::string item;
@@ -423,28 +507,9 @@ inline std::pair<Stamp, SE3> parse_csv_line(
     };
   }
 
-  // If only sec is given, split it into sec/nsec
   else if (idx.count("sec")) {
-    // Find decimal place
     std::string sec_str = elems[idx.at("sec")];
-    size_t dot_pos = sec_str.find('.');
-    if (dot_pos == std::string::npos) {
-      throw std::runtime_error("Failed to find decimal in sec field.");
-    }
-
-    // extract sec
-    uint32_t sec_part = std::stoul(sec_str.substr(0, dot_pos));
-
-    // extract & pad nsec
-    std::string nsec_str = sec_str.substr(dot_pos + 1);
-    if (nsec_str.size() > 9) {
-      throw std::runtime_error("Too many digits in fractional part of sec.");
-    } else if (nsec_str.size() < 9) {
-      nsec_str += std::string(9 - nsec_str.size(), '0');
-    }
-    uint32_t nsec_part = std::stoul(nsec_str);
-
-    stamp = Stamp {.sec = sec_part, .nsec = nsec_part};
+    stamp = Stamp::from_sec(sec_str, scientific);
   }
 
   // If only nsec is given
@@ -468,7 +533,7 @@ inline bool closest(const Stamp& idx, const Stamp& a, const Stamp& b) {
 }
 
 // ---------------------- Create python bindings ---------------------- //
-inline void makeConversions(nb::module_& m) {
+inline void make_conversions(nb::module_& m) {
   nb::enum_<DataType>(m, "DataType")
     .value("UINT8", DataType::UINT8)
     .value("INT8", DataType::INT8)
@@ -528,15 +593,26 @@ inline void makeConversions(nb::module_& m) {
 
   m.def("fill_col_row_major", &fill_col_row_major);
   m.def("fill_col_col_major", &fill_col_col_major);
+  // Custom column filling for datasets with unique row ordering (e.g. boreas, botanic)
+  m.def("fill_col_by_map", &fill_col_by_map);
   m.def("reorder_points", &reorder_points);
   m.def("shift_point_stamps", &shift_point_stamps);
 
   // load custom bin format for helipr
   m.def("helipr_bin_to_evalio", &helipr_bin_to_evalio);
-  // botanic garden velodyne reordering
-  m.def("fill_col_split_row_velodyne", &fill_col_split_row_velodyne);
+  // load bin format for boreas
+  m.def("boreas_bin_to_evalio", &boreas_bin_to_evalio);
+  // load bin format for fomo
+  m.def("fomo_bin_to_evalio", &fomo_bin_to_evalio);
 
-  m.def("parse_csv_line", &parse_csv_line);
+  m.def(
+    "parse_csv_line",
+    &parse_csv_line,
+    "line"_a,
+    "delimiter"_a,
+    "idx"_a,
+    "scientific"_a = false
+  );
   m.def("closest", &closest);
 }
 

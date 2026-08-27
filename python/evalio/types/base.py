@@ -6,24 +6,26 @@ They MUST not depend on anything else in evalio, or else circular imports will o
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 import csv
 from _csv import Writer
+from collections.abc import Iterator
+from copy import deepcopy
+from dataclasses import asdict, dataclass, field
 from io import TextIOWrapper
-from typing_extensions import TypeVar
-from evalio.utils import print_warning
-import yaml
-
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Iterator, Optional, Self, cast
+from typing import Any, ClassVar, Generic, Literal, Optional, Self, cast
 
+import numpy as np
+import yaml
+from typing_extensions import TypeVar
+
+from evalio._cpp.helpers import parse_csv_line  # type: ignore
 from evalio._cpp.types import (  # type: ignore
     SE3,
+    SO3,
     Stamp,
 )
-from evalio._cpp.helpers import parse_csv_line  # type: ignore
-
-from evalio.utils import pascal_to_snake
+from evalio.utils import pascal_to_snake, print_warning
 
 Param = bool | int | float | str
 """A parameter value for a pipeline, can be a bool, int, float, or str."""
@@ -67,8 +69,7 @@ class Metadata:
         Returns:
             An instance of the metadata class.
         """
-        if "type" in data:
-            del data["type"]
+        data.pop("type", None)
         return cls(**data)
 
     def to_dict(self) -> dict[str, Any]:
@@ -105,7 +106,7 @@ class Metadata:
         """
         try:
             Loader = yaml.CSafeLoader
-        except Exception as _:
+        except (ImportError, AttributeError):
             print_warning("Failed to import yaml.CSafeLoader, trying yaml.SafeLoader")
             Loader = yaml.SafeLoader
 
@@ -120,7 +121,7 @@ class Metadata:
             if data["type"] == name:
                 try:
                     return subclass.from_dict(data)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     return FailedMetadataParse(f"Failed to parse {name}: {e}")
 
         return FailedMetadataParse(f"Unknown metadata type '{data['type']}'")
@@ -205,6 +206,79 @@ class Trajectory(Generic[M]):
         for i in range(len(self.poses)):
             self.poses[i] = self.poses[i] * T
 
+    def smooth_orientation(
+        self,
+        forward: Literal["x", "y"],
+        z: Literal["up", "down"],
+        min_dist: float = 1e-1,
+        inplace: bool = True,
+    ) -> Self:
+        """Smooth the orientation of the trajectory by making it face the next pose.
+
+        Args:
+            forward (Literal["x", "y"]): The axis to point towards the next pose.
+            z (Literal["up", "down"]): The general direction of the Z axis.
+            min_dist (float, optional): Minimum distance to the next pose before we stop trying to orient towards it. Defaults to 1e-1.
+            inplace (bool, optional): Whether to modify the trajectory in place. Defaults to True.
+
+        Returns:
+            The smoothed trajectory.
+        """
+
+        if len(self.poses) == 0:
+            return self if inplace else deepcopy(self)
+
+        # Compute distances between poses
+        total = len(self)
+        dist = np.zeros(total)
+        for i in range(1, total):
+            dist[i] = SE3.distance(self.poses[i - 1], self.poses[i])
+
+        cum_dist = np.cumsum(dist)
+
+        poses: list[SE3] = []
+        end_idx = 1
+        for i in range(len(self.poses)):
+            while end_idx < total and cum_dist[end_idx] - cum_dist[i] < min_dist:
+                end_idx += 1
+
+            # If we've reached the end, just point in the same direction as the previous pose
+            # NOTE: It would probably be good to look backwards instead, but this is simpler for now
+            if end_idx >= total:
+                poses.append(SE3(poses[-1].rot, self.poses[i].trans))
+                continue
+
+            v = self.poses[end_idx].trans - self.poses[i].trans
+            v /= np.linalg.norm(v)
+
+            Z_approx = (
+                np.array([0.0, 0.0, 1.0]) if z == "up" else np.array([0.0, 0.0, -1.0])
+            )
+
+            side = np.cross(Z_approx, v)
+            Z = np.cross(v, side)
+
+            if forward == "x":
+                X = v
+                Y = side
+            else:
+                Y = v
+                X = -side  # keep right-handedness
+
+            mat = np.stack([X, Y, Z], axis=1).astype(np.float64)
+            poses.append(SE3(rot=SO3.from_mat(mat), trans=self.poses[i].trans))
+
+        if inplace:
+            self.poses = poses
+            return self
+
+        import copy
+
+        new_traj = copy.copy(self)
+        new_traj.poses = poses
+        new_traj.stamps = self.stamps.copy()
+        return new_traj
+
     # ------------------------- Loading from file ------------------------- #
     @staticmethod
     def from_csv(
@@ -238,12 +312,21 @@ class Trajectory(Generic[M]):
 
         fields = {name: i for i, name in enumerate(fieldnames)}
 
+        scientific = None
+
         with open(path) as f:
             csvfile = filter(lambda row: row[0] != "#", f)
             for i, line in enumerate(csvfile):
                 if i < skip_lines:
                     continue
-                stamp, pose = parse_csv_line(line, delimiter, fields)
+                if scientific is None:
+                    scientific = (
+                        "sec" in fields
+                        and "nsec" not in fields
+                        and line.split(delimiter)[fields["sec"]].lower().find("e") != -1
+                    )
+
+                stamp, pose = parse_csv_line(line, delimiter, fields, scientific)
 
                 poses.append(pose)
                 stamps.append(stamp)

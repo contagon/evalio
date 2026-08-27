@@ -6,7 +6,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from evalio import datasets as ds, pipelines as pl
+from evalio import datasets as ds
+from evalio import pipelines as pl
 
 T = TypeVar("T")
 
@@ -116,7 +117,9 @@ def ls(
                 )
             else:
                 # sequences
-                all_info["Sequences"].append("\n".join(d.sequences()))
+                all_info["Sequences"].append(
+                    "\n".join([v.seq_name for v in d.sequences()])
+                )
                 # downloaded
                 downloaded = [d(s).is_downloaded() for s in d.sequences()]
                 downloaded = "\n".join(

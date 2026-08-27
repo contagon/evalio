@@ -1,6 +1,10 @@
+---
+icon: lucide/workflow
+---
+
 evalio comes with a small number of built-in pipelines, but is made to be easily extensible. Custom pipelines can be created in C++ with nanobind, or in Python. See [evalio-example](https://github.com/contagon/evalio-example) for some examples of building C++ pipelines as well as custom python pipelines.
 
-To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` to the module where your pipeline is defined.
+To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` or pass `-M my_module` to the module where your pipeline is defined.
 
 To create a pipeline, simply inherit from the `Pipeline` class,
 
@@ -33,7 +37,7 @@ To create a pipeline, simply inherit from the `Pipeline` class,
 
         # Getters
         def pose(self) -> SE3: ...
-        def map(self) -> list[Point]: ...
+        def map(self) -> dict[str, list[Point]]: ...
 
         # Setters
         def set_imu_params(self, params: ImuParams): ...
@@ -44,7 +48,7 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         # Doers
         def initialize(self): ...
         def add_imu(self, mm: ImuMeasurement): ...
-        def add_lidar(self, mm: LidarMeasurement) -> list[Point]: ...
+        def add_lidar(self, mm: LidarMeasurement) -> None: ...
     ```
 
 === "C++"
@@ -72,7 +76,7 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         
         // Getters
         const SE3 pose() { ... };
-        const std::vector<Point> map() { ... };
+        const evalio::Map<> map() { ... };
 
         // Setters
         void set_imu_params(ImuParams params) { ... };
@@ -83,7 +87,7 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         // Doers
         void initialize() { ... };
         void add_imu(ImuMeasurement mm) { ... };
-        std::vector<Point> add_lidar(LidarMeasurement mm) { ... };
+        void add_lidar(LidarMeasurement mm) { ... };
     }
     ```
 
@@ -92,6 +96,8 @@ We'll cover each section of methods in turn.
 ## Info
 
 The first four methods are all static methods that provide information about the pipeline. `version`, `url`, and `name` are all self-explanatory. `default_params` is a static method that returns a dictionary of the default parameters for the pipeline. This is used to verify parameters before they are passed in, as well as ensure a consistent output for each run.
+
+In C++ there is additionally a number of helper type conversion functions that can make converting between iterators, point types, and geometry types simpler. A good example of this can be found in the `lio_sam.h` binding where it is used to convert pose and point types. These converters can additionally be leveraged by the `save` methods described below.
 
 ## Getters
 
@@ -112,12 +118,16 @@ Arguably the most important part.
 
 `add_imu` is called for each IMU measurement. This is where the IMU data is processed and used to update the pose.
 
-`add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. It returns a list of features were extracted from the scan and are used for visualization.
+`add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. 
+
+Saving poses can be done asynchronously, using `#!cpp save(stamp, pose)`. In C++, the type of `pose` can be anything that has the method `#!cpp evalio::convert<evalio::SE3>(const MyPose& pose)` implemented.
+
+For visualization, features can be save similarly with either `#!python save(stamp, {"key": features})` in python, or `#!cpp save(stamp, "key1", feat1, "key2", feat2)` in C++. Again, `feat1` and `feat2` can be any type that are iterators with their internal point types convertible to `#!cpp evalio::Point`. 
 
 ## C++ Building
 
 If done in C++, you will need to build the pipeline as a shared library. This is done by a nanobind wrapper, which can be defined at the bottom of your file as follows,
-```c++
+```cpp
 NB_MODULE(_core, m) {
   m.doc() = "Custom evalio pipeline example";
 
@@ -125,11 +135,11 @@ NB_MODULE(_core, m) {
 
   // Only have to override the static methods here
   // All the others will be automatically inherited from the base class
-  nb::class_<MyCppPipeline, evalio::Pipeline>(m, "MyCppPipeline")
+  nb::class_<MyPipeline, evalio::Pipeline>(m, "MyPipeline")
       .def(nb::init<>())
-      .def_static("name", &MyCppPipeline::name)
-      .def_static("url", &MyCppPipeline::url)
-      .def_static("default_params", &MyCppPipeline::default_params);
+      .def_static("name", &MyPipeline::name)
+      .def_static("url", &MyPipeline::url)
+      .def_static("default_params", &MyPipeline::default_params);
 }
 ```
 

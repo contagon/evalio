@@ -2,6 +2,7 @@
 
 #include <pcl/point_cloud.h>
 
+#include <iostream>
 #include <map>
 #include <string>
 
@@ -118,7 +119,7 @@ public:
 
   // Getters
   const std::map<std::string, std::vector<ev::Point>> map() override {
-    return ev::make_map("map", *lio_sam_->getMap());
+    return ev::make_map("features", *lio_sam_->getMap());
   }
 
   // Setters
@@ -140,7 +141,7 @@ public:
   void set_imu_T_lidar(ev::SE3 T) override {
     lidar_T_imu_ = T.inverse();
     config_.lidar_P_imu = lidar_T_imu_.trans;
-    config_.lidar_R_imu = lidar_T_imu_.rot.toEigen();
+    config_.lidar_R_imu = lidar_T_imu_.rot.to_eigen();
   }
 
   // Doers

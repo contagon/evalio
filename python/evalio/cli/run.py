@@ -104,7 +104,7 @@ def run_from_cli(
         with open(config, "r") as f:
             try:
                 Loader = yaml.CSafeLoader
-            except Exception as _:
+            except (ImportError, AttributeError):
                 print_warning(
                     "Failed to import yaml.CSafeLoader, trying yaml.SafeLoader"
                 )
@@ -244,7 +244,9 @@ def run(
 
         # save ground truth if we haven't already
         if not (gt_file := exp.file.parent / "gt.csv").exists():
-            exp.sequence.ground_truth().to_file(gt_file)
+            gt = exp.sequence.ground_truth()
+            if gt is not None:
+                gt.to_file(gt_file)
 
         # Figure out the status of the experiment
         traj = ty.Trajectory.from_file(exp.file)
@@ -314,7 +316,8 @@ def run_single(
         print_warning(f"Error setting up experiment {exp.name}: {output}")
         return
     pipe, dataset = output
-    pipe.set_visualizing(vis.args)
+    if vis.args is not None:
+        pipe.set_visualizing(vis.args)
     exp.status = ty.ExperimentStatus.Started
     traj = ty.Trajectory(metadata=exp)
     traj.open()
@@ -336,8 +339,7 @@ def run_single(
             time_running += time() - start
 
             time_total += time_running
-            if time_running > time_max:
-                time_max = time_running
+            time_max = max(time_max, time_running)
             time_running = 0.0
 
             vis.log_scan(data)

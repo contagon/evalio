@@ -1,0 +1,167 @@
+[project]
+site_url = "https://contagon.github.io/evalio/"
+site_name = "evalio"
+# site_description = "Your project description"
+site_author = "Easton Potokar"
+watch = ["python/", "cpp/"]
+
+copyright = "Copyright &copy; 2026 Easton Potokar"
+
+repo_url = "https://github.com/contagon/evalio"
+repo_name = "contagon/evalio"
+
+nav = [
+    { "evalio" = [
+        { "About" = "index.md" },
+        { "Quickstart" = "quickstart.md" },
+        { "Source Build" = "install.md" },
+    ] },
+    { "Examples" = [
+        { "Odometry" = "examples/odometry.md" },
+        { "Data Loading" = "examples/data_loading.md" },
+        { "Evaluation" = "examples/evaluation.md" },
+        { "Custom Dataset" = "examples/dataset.md" },
+        { "Custom Pipeline" = "examples/pipeline.md" },
+    ] },
+    { "Included" = [
+        { "Datasets" = "included/datasets.md" },
+        { "Pipelines" = "included/pipelines.md" },
+    ] },
+    { "Reference" = [
+        { "cli" = "ref/cli.md" },
+        { "evalio.datasets" = "ref/datasets.md" },
+        { "evalio.pipelines" = "ref/pipelines.md" },
+        { "evalio.stats" = "ref/stats.md" },
+        { "evalio.types" = "ref/types.md" },
+        { "evalio.rerun" = "ref/rerun.md" },
+    ] },
+]
+
+extra_javascript = [
+    # synchronize favicon with the active palette
+    "javascripts/logo-theme.js",
+    # math
+    "javascripts/katex.js",
+    "https://unpkg.com/katex@0/dist/katex.min.js",
+    "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
+    # table sorting
+    "javascripts/tablesort.js",
+    "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+]
+extra_css = [
+    # math
+    "https://unpkg.com/katex@0/dist/katex.min.css",
+    # misc tweaks
+    "css/tweaks.css",
+]
+
+[project.extra]
+homepage = "/evalio/"
+
+[project.extra.version]
+provider = "mike"
+
+[project.theme]
+variant = "modern"
+# custom_dir = "overrides"
+logo = "assets/logo.svg"
+favicon = "assets/logo.svg"
+language = "en"
+features = [
+    # add inline code annotations
+    "content.code.annotate",
+    # copy button
+    "content.code.copy",
+    # hover footnotes
+    "content.footnote.tooltips",
+    # add tooltips to all pages
+    "content.tooltips",
+
+    # footer
+    "navigation.footer",
+    # make navigation much faster
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    # add sections on the side
+    "navigation.sections",
+    # back to top button
+    "navigation.top",
+    # track which section we're in
+    "navigation.tracking",
+    # scroll toc with page
+    "toc.follow",
+
+    # highlight search term on clicked page 
+    "search.highlight",
+
+]
+
+# logo = "assets/logo.png"
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+# [project.theme.font]
+# text = "Inter"
+# code = "Jetbrains Mono"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+primary = "amber"
+accent = "amber"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+primary = "amber"
+accent = "amber"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+primary = "amber"
+accent = "amber"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+# Enables callout blocks such as `!!! note`.
+admonition = {}
+# Emits generic math markup for the KaTeX renderer.
+pymdownx.arithmatex.generic = true
+# Adds anchors to code-block line numbers.
+pymdownx.highlight.anchor_linenums = true
+# Wraps highlighted lines with stable span IDs.
+pymdownx.highlight.line_spans = "__span"
+# Adds the source language as a CSS class to highlighted code.
+pymdownx.highlight.pygments_lang_class = true
+# Enables syntax-highlighted inline code blocks.
+pymdownx.inlinehilite = {}
+# Supports nested fenced blocks in content tabs.
+pymdownx.superfences = {}
+# Uses Material-style tabs instead of separate content blocks.
+pymdownx.tabbed.alternate_style = true
+# Includes the parent heading in generated tab anchors.
+pymdownx.tabbed.combine_header_slug = true
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+options.show_source = true
+options.separate_signature = true
+options.show_signature_annotations = true
+options.signature_crossrefs = true
+options.unwrap_annotated = true
+options.show_symbol_type_toc = true
+options.show_symbol_type_heading = true
+options.docstring_section_style = "list"
+options.docstring_style = "google"
+options.summary.attributes = true
+options.summary.functions = true
+options.summary.classes = true
+options.summary.modules = false

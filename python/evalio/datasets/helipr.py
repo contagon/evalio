@@ -1,8 +1,9 @@
 import os
 import tarfile
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -61,7 +62,7 @@ class HeLiPR(Dataset):
 
         # setup all the lidar data
         lidar_path = self.folder / "Ouster"
-        lidar_files = sorted(list(lidar_path.glob("*")))
+        lidar_files = sorted(lidar_path.glob("*"))
         lidar_stamps = [Stamp.from_nsec(int(x.stem)) for x in lidar_files]
         lidar_params = self.lidar_params()
 
@@ -86,7 +87,7 @@ class HeLiPR(Dataset):
     # ------------------------- For loading params ------------------------- #
     def imu_T_lidar(self) -> SE3:
         return SE3(
-            SO3.fromMat(
+            SO3.from_mat(
                 np.array(
                     [
                         [0.999715495593027, 0.0223448061210468, -0.00834490926264448],

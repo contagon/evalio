@@ -1,8 +1,8 @@
 import atexit
-from typing import cast
-import warnings
-import os
 import importlib
+import os
+import warnings
+from typing import cast
 
 from tqdm import TqdmExperimentalWarning
 
@@ -55,14 +55,14 @@ if "EVALIO_CUSTOM" in os.environ:
         _register_custom_modules(module_name)
 
 
-__version__ = "0.4.2"  # x-release-please-version
+__version__ = "0.6.1"  # x-release-please-version
 __all__ = [
+    "__version__",
     "_abi_tag",
-    "datasets",
     "_cpp",
+    "datasets",
     "pipelines",
     "stats",
     "types",
     "utils",
-    "__version__",
 ]

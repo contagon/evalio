@@ -1,3 +1,7 @@
+---
+icon: lucide/library
+---
+
 For more information about the datasets included in evalio, see the [included datasets](../included/datasets.md) section.
 
 ::: evalio.datasets

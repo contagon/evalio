@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
 from typing import Sequence
@@ -5,6 +6,9 @@ from evalio.cli import app
 from evalio import datasets as ds, types as ty
 
 import pytest
+from evalio import datasets as ds
+from evalio import types as ty
+from evalio.cli.dataset_manager import dl, rm
 
 
 class FakeData(ds.Dataset):
@@ -12,10 +16,7 @@ class FakeData(ds.Dataset):
     downloaded = auto()
 
     def is_downloaded(self) -> bool:
-        if self == FakeData.not_downloaded:
-            return False
-        else:
-            return True
+        return self != FakeData.not_downloaded
 
     def files(self) -> Sequence[str | Path]:
         return []

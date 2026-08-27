@@ -1,3 +1,7 @@
+---
+icon: lucide/hammer
+---
+
 For the majority of use cases, we simply recommend installing via your favorite python package manager,
 ```bash
 uv add evalio      # uv
@@ -23,7 +27,7 @@ make
 ```
 
 ### Pipelines
-By default, pipelines are not included due to their large dependencies. We use vpckg to handle a reliable build of these dependencies and pipelines. vcpkg and the pipelines can be setup via running
+By default, pipelines are not included due to their large dependencies. We use vcpkg to handle a reliable build of these dependencies and pipelines. vcpkg and the pipelines can be setup via running
 ```bash
 ./cpp/setup_pipelines.sh
 ```

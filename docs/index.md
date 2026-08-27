@@ -1,4 +1,13 @@
-# evalio
+---
+icon: lucide/info
+---
+
+<h1 hidden>evalio</h1>
+
+<div class="evalio-logo">
+  <img class="evalio-logo__light" src="assets/logo-wordmark.svg" alt="evalio">
+  <img class="evalio-logo__dark" src="assets/logo-wordmark-dark.svg" alt="">
+</div>
 
 evalio is a tool for **Eval**uating **L**idar-**I**nertial **O**dometry.
 

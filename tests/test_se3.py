@@ -15,10 +15,12 @@ class T:
 
 def is_close(t: T, se3: SE3):
     qx, qy, qz, qw = t.r.as_quat()
-    math.isclose(se3.rot.qx, qx)
-    math.isclose(se3.rot.qy, qy)
-    math.isclose(se3.rot.qz, qz)
-    math.isclose(se3.rot.qw, qw)
+    return (
+        math.isclose(se3.rot.qx, qx)
+        and math.isclose(se3.rot.qy, qy)
+        and math.isclose(se3.rot.qz, qz)
+        and math.isclose(se3.rot.qw, qw)
+    )
 
 
 def test_constructor():
@@ -28,7 +30,7 @@ def test_constructor():
     qx, qy, qz, qw = r.as_quat()
     so3 = SO3(qx=float(qx), qy=float(qy), qz=float(qz), qw=float(qw))
 
-    is_close(T(r, t), SE3(so3, t))
+    assert is_close(T(r, t), SE3(so3, t))
 
 
 def test_from_matrix():
@@ -39,9 +41,9 @@ def test_from_matrix():
     mat[:3, :3] = r.as_matrix()
     mat[:3, 3] = t
 
-    se3 = SE3.fromMat(mat)
+    se3 = SE3.from_mat(mat)
 
-    is_close(T(r, t), se3)
+    assert is_close(T(r, t), se3)
 
 
 def test_to_matrix():
@@ -56,7 +58,7 @@ def test_to_matrix():
     mat[:3, :3] = r.as_matrix()
     mat[:3, 3] = t
 
-    assert np.allclose(mat, se3.toMat())
+    assert np.allclose(mat, se3.to_mat())
 
 
 def test_log_exp():

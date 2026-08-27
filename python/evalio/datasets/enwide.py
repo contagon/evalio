@@ -1,8 +1,9 @@
 import urllib
 import urllib.request
+from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Optional, Sequence, cast
+from typing import Optional, cast
 
 import numpy as np
 from tqdm.rich import tqdm
@@ -25,18 +26,17 @@ from .base import (
 
 # https://github.com/pytorch/vision/blob/fc746372bedce81ecd53732ee101e536ae3afec1/torchvision/datasets/utils.py#L27
 def _urlretrieve(url: str, filename: Path, chunk_size: int = 1024 * 32) -> None:
-    with urllib.request.urlopen(
+    with (
+        urllib.request.urlopen(
         urllib.request.Request(url, headers={"User-Agent": "evalio"})
-    ) as response:
-        with (
-            open(filename, "wb") as fh,
-            tqdm(
-                total=response.length, unit="B", unit_scale=True, dynamic_ncols=True
-            ) as pbar,
-        ):
-            while chunk := response.read(chunk_size):
-                fh.write(chunk)
-                pbar.update(len(chunk))
+    ) as response, open(filename, "wb") as fh,
+        tqdm(
+            total=response.length, unit="B", unit_scale=True, dynamic_ncols=True
+        ) as pbar,
+    ):
+        while chunk := response.read(chunk_size):
+            fh.write(chunk)
+            pbar.update(len(chunk))
 
 
 class EnWide(Dataset):

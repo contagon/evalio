@@ -1,3 +1,7 @@
+---
+icon: lucide/git-branch
+---
+
 For more information about the pipelines included in evalio, see the [included pipelines](../included/pipelines.md) section.
 
 ::: evalio.pipelines
@@ -5,8 +9,10 @@ For more information about the pipelines included in evalio, see the [included p
         members:
             - Pipeline
             - CTICP
-            - KissICP
+            - DLIO
+            - FORM
             - GenZICP
+            - KissICP
             - LOAM
             - LioSAM
             - MadICP

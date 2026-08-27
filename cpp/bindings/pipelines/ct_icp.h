@@ -39,7 +39,7 @@ inline ct_icp::Point3D convert(const evalio::Point& from) {
 
 template<>
 inline evalio::SE3 convert(const ct_icp::TrajectoryFrame& in) {
-  return ev::SE3(ev::SO3::fromMat(in.begin_R), in.begin_t);
+  return ev::SE3(ev::SO3::from_mat(in.begin_R), in.begin_t);
 }
 } // namespace evalio
 

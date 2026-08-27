@@ -1,3 +1,7 @@
+---
+icon: lucide/chart-line
+---
+
 One of the main uses of `evalio` is to evaluate the performance of lidar-inertial odometry pipelines. The `evalio run` command is dedicated to this task. It has usage both as a quick command, and via loading of a config file. See [cli](../ref/cli.md) for more details.
 
 !!! tip
@@ -46,9 +50,10 @@ pipelines:
 ```
 
 A few notes,
+
 - For datasets, a wildcard `*` can be used to run on all sequences in that dataset.
-- In the dataset section, a bare item `- hilti_2022/basement_2` is shorthand for `- name: hilti_2022/basement_2`.
-- Similarly for pipelines, a bare item `- kiss` is shorthand for `- pipeline: kiss`.
+- In the dataset section, a bare item `#!yaml - hilti_2022/basement_2` is shorthand for `#!yaml - name: hilti_2022/basement_2`.
+- Similarly for pipelines, a bare item `#!yaml - kiss` is shorthand for `#!yaml - pipeline: kiss`.
 - If a pipeline name is not set, it defaults to the pipeline name.
 - The `sweep` section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to `name__parameter-value`.
 - `sweep` values can also be python code snippets that will be evaluated to generate the list of values for larger and more complex sweeps. This includes usage of a subset of functions in `math` and `numpy`.
@@ -63,6 +68,6 @@ Results will be saved to the `output_dir` specified in the config file, with nes
 
 Once trajectories have been run, statistics can be calculated,
 ```bash
-evalio stats -d results -m mean -w 200 -s RTEt
+evalio stats results --metric mean --w-meters 200 --sort RTEt_200.0m
 ```
-With `-m/--metric` specifying the metric to calculate with options including mean, median, and sse and `-w/--window` specifying the window size for RTE, with a default of 100 scans. Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with the `-s/--sort` option, with any column heading being an allowed option. 
+With `--metric` specifying the metric to calculate with options including mean, median, and sse, and `--w-meters` / `--w-seconds` specifying RTE windows (defaults to `--w-meters 30` and can be repeated). Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with `-S/--sort`, with any column heading being an allowed option.
