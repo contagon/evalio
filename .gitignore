@@ -38,3 +38,4 @@ cpp/bindings/pipelines-src
 .dolt/
 *.db
 .beads-credential-key
+.kiro
