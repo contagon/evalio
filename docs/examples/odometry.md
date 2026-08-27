@@ -1,3 +1,7 @@
+---
+icon: lucide/route
+---
+
 If one off odometry is needed, such as for testing a loop closure algorithm, evalio can generate it for you. For example, to generate odometry for the first 2000 scans of the Newer College 2020 dataset using KissICP,
 ```bash
 evalio run -p kiss -d newer_college_2020/short_experiment -o odometry.csv -l 2000

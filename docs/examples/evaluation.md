@@ -1,3 +1,7 @@
+---
+icon: lucide/chart-line
+---
+
 One of the main uses of `evalio` is to evaluate the performance of lidar-inertial odometry pipelines. The `evalio run` command is dedicated to this task. It has usage both as a quick command, and via loading of a config file. See [cli](../ref/cli.md) for more details.
 
 !!! tip

@@ -1,3 +1,7 @@
+---
+icon: lucide/database
+---
+
 While evalio comes with a number of built-in datasets, you can also easily create your own dataset without having to build any of evalio from source. In addition to this guide, we also provide [evalio-example](https://github.com/contagon/evalio-example) with examples. 
 
 To get evalio to find your custom dataset, simply point the environment variable `EVALIO_CUSTOM=my_module` or pass `-M my_module` to the module where your dataset is defined.

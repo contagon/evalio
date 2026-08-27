@@ -43,10 +43,14 @@ def rich_table_to_markdown(
 
 
 def write_included(
-    kind: Kind, filename: str, intro: str, skip_columns: AbstractSet[str] = frozenset()
+    kind: Kind,
+    filename: str,
+    intro: str,
+    icon: str,
+    skip_columns: AbstractSet[str] = frozenset(),
 ) -> None:
     table = ls(kind, show=False, show_hyperlinks=True)
-    content = f"---\nhide:\n  - toc\n---\n{intro}\n\n"
+    content = f"---\nicon: lucide/{icon}\nhide:\n  - toc\n---\n{intro}\n\n"
     if table is not None:
         content += rich_table_to_markdown(table, skip_columns)
     path = DOCS / filename
@@ -58,14 +62,17 @@ write_included(
     Kind.datasets,
     "included/datasets.md",
     "evalio comes with a variety of datasets that can be used for easy loading. Below is a table of all datasets that are included, which mirrors the output of `evalio ls datasets`.",
+    "hard-drive",
     {"DL", "Size"},
 )
 write_included(
     Kind.pipelines,
     "included/pipelines.md",
     "evalio comes with a variety of pipelines that can be used for evaluation. Below is a table of all pipelines that are included and their parameters, which mirrors the output of `evalio ls pipelines`.",
+    "blocks",
 )
 cli_path = DOCS / "ref/cli.md"
 cli_path.parent.mkdir(parents=True, exist_ok=True)
 with cli_path.open("w") as output, redirect_stdout(output):
+    output.write("---\nicon: lucide/terminal\n---\n\n")
     app(["evalio.cli", "utils", "docs", "--name", "evalio"])

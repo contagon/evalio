@@ -1,3 +1,7 @@
+---
+icon: lucide/workflow
+---
+
 evalio comes with a small number of built-in pipelines, but is made to be easily extensible. Custom pipelines can be created in C++ with nanobind, or in Python. See [evalio-example](https://github.com/contagon/evalio-example) for some examples of building C++ pipelines as well as custom python pipelines.
 
 To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` or pass `-M my_module` to the module where your pipeline is defined.

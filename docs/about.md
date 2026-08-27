@@ -1,3 +1,7 @@
+---
+icon: lucide/info
+---
+
 <h1 hidden>evalio</h1>
 
 <div class="evalio-logo">
