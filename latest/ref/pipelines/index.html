@@ -7,8 +7,10 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
       
+        <meta name="author" content="Easton Potokar">
       
-        <link rel="canonical" href="http://contagon.github.io/evalio/latest/ref/pipelines/">
+      
+        <link rel="canonical" href="https://contagon.github.io/evalio/latest/ref/pipelines/">
       
       
         <link rel="prev" href="../datasets/">
@@ -20,19 +22,24 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
+      <link rel="icon" href="../../assets/logo.svg">
+      <meta name="generator" content="zensical-0.0.57">
     
     
       
-        <title>evalio.pipelines - evalio</title>
+        <title>Pipelines - evalio</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -46,18 +53,16 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
-    
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="https://unpkg.com/katex@0/dist/katex.min.css">
     
       <link rel="stylesheet" href="../../css/tweaks.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -73,12 +78,12 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="amber" data-md-color-accent="amber">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -102,15 +107,14 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="evalio" class="md-header__button md-logo" aria-label="evalio" data-md-component="logo">
+    <a href="/evalio/about/" title="evalio" class="md-header__button md-logo" aria-label="evalio" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8m0 2a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6m0 2a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4"/></svg>
+  <img src="../../assets/logo.svg" alt="evalio">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -122,7 +126,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              evalio.pipelines
+              Pipelines
             
           </span>
         </div>
@@ -135,30 +139,30 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="amber" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun-moon" viewBox="0 0 24 24"><path d="M12 2v2M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715M16 12a4 4 0 0 0-4-4M19 5l-1.256 1.256M20 12h2"/></svg>
       </label>
     
   
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="amber" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </label>
     
   
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="amber" data-md-color-accent="amber"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
     
       <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
       </label>
     
   
@@ -172,57 +176,30 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/contagon/evalio" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     contagon/evalio
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -248,10 +225,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="evalio" class="md-nav__button md-logo" aria-label="evalio" data-md-component="logo">
+    <a href="/evalio/about/" title="evalio" class="md-nav__button md-logo" aria-label="evalio" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8 8 8 0 0 1 8-8m0 2a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6m0 2a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4"/></svg>
+  <img src="../../assets/logo.svg" alt="evalio">
 
     </a>
     evalio
@@ -261,7 +237,7 @@
       <a href="https://github.com/contagon/evalio" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     contagon/evalio
@@ -301,8 +277,7 @@
   <span class="md-ellipsis">
     
   
-    evalio
-  
+  evalio
 
     
   </span>
@@ -317,8 +292,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    evalio
-  
+  evalio
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -330,15 +304,16 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../about/" class="md-nav__link">
         
   
+  
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
   
   <span class="md-ellipsis">
     
   
-    About
-  
+  About
 
     
   </span>
@@ -362,11 +337,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-braces" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Quickstart
-  
+  Quickstart
 
     
   </span>
@@ -390,11 +366,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-hammer" viewBox="0 0 24 24"><path d="m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9M18 15l4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Source Build
-  
+  Source Build
 
     
   </span>
@@ -444,8 +421,7 @@
   <span class="md-ellipsis">
     
   
-    Examples
-  
+  Examples
 
     
   </span>
@@ -460,8 +436,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Examples
-  
+  Examples
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -477,11 +452,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Odometry
-  
+  Odometry
 
     
   </span>
@@ -505,11 +481,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-download" viewBox="0 0 24 24"><path d="M12 15V3M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Data Loading
-  
+  Data Loading
 
     
   </span>
@@ -533,11 +510,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-chart-line" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Evaluation
-  
+  Evaluation
 
     
   </span>
@@ -561,11 +539,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Custom Dataset
-  
+  Custom Dataset
 
     
   </span>
@@ -589,11 +568,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-workflow" viewBox="0 0 24 24"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Custom Pipeline
-  
+  Custom Pipeline
 
     
   </span>
@@ -643,8 +623,7 @@
   <span class="md-ellipsis">
     
   
-    Included
-  
+  Included
 
     
   </span>
@@ -659,8 +638,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Included
-  
+  Included
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -676,11 +654,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-hard-drive" viewBox="0 0 24 24"><path d="M10 16h.01M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM21.946 12.013H2.054M6 16h.01"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Datasets
-  
+  Datasets
 
     
   </span>
@@ -704,11 +683,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-blocks" viewBox="0 0 24 24"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect width="8" height="8" x="14" y="2" rx="1"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    Pipelines
-  
+  Pipelines
 
     
   </span>
@@ -760,8 +740,7 @@
   <span class="md-ellipsis">
     
   
-    Reference
-  
+  Reference
 
     
   </span>
@@ -776,8 +755,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Reference
-  
+  Reference
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -793,11 +771,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-terminal" viewBox="0 0 24 24"><path d="M12 19h8M4 17l6-6-6-6"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    cli
-  
+  cli
 
     
   </span>
@@ -821,11 +800,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-library" viewBox="0 0 24 24"><path d="m16 6 4 14M12 6v14M8 8v12M4 4v16"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    evalio.datasets
-  
+  evalio.datasets
 
     
   </span>
@@ -848,7 +828,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
       
@@ -856,11 +836,12 @@
           
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-git-branch" viewBox="0 0 24 24"><path d="M15 6a9 9 0 0 0-9 9V3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    evalio.pipelines
-  
+  evalio.pipelines
 
     
   </span>
@@ -870,15 +851,16 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
+  
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-git-branch" viewBox="0 0 24 24"><path d="M15 6a9 9 0 0 0-9 9V3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></svg>
   
   <span class="md-ellipsis">
     
   
-    evalio.pipelines
-  
+  evalio.pipelines
 
     
   </span>
@@ -889,23 +871,24 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#evalio.pipelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;pipelines
-      
+      </span>
     </span>
   </a>
   
@@ -914,21 +897,21 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Pipeline
-      
+      </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" Pipeline">
+    <nav class="md-nav" aria-label="Pipeline">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
-      
+      </span>
     </span>
   </a>
   
@@ -937,9 +920,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.add_imu" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;add_imu
-      
+      </span>
     </span>
   </a>
   
@@ -948,9 +931,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.add_lidar" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;add_lidar
-      
+      </span>
     </span>
   </a>
   
@@ -959,9 +942,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.default_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;default_params
-      
+      </span>
     </span>
   </a>
   
@@ -970,9 +953,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.initialize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
-      
+      </span>
     </span>
   </a>
   
@@ -981,9 +964,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.map" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;map
-      
+      </span>
     </span>
   </a>
   
@@ -992,9 +975,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.name" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;name
-      
+      </span>
     </span>
   </a>
   
@@ -1003,9 +986,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_estimates" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_estimates
-      
+      </span>
     </span>
   </a>
   
@@ -1014,9 +997,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_features" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_features
-      
+      </span>
     </span>
   </a>
   
@@ -1025,9 +1008,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_features_matrix" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_features_matrix
-      
+      </span>
     </span>
   </a>
   
@@ -1036,9 +1019,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_maps" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_maps
-      
+      </span>
     </span>
   </a>
   
@@ -1047,9 +1030,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_maps_matrix" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_maps_matrix
-      
+      </span>
     </span>
   </a>
   
@@ -1058,9 +1041,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_imu_T_lidar" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_imu_T_lidar
-      
+      </span>
     </span>
   </a>
   
@@ -1069,9 +1052,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_imu_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_imu_params
-      
+      </span>
     </span>
   </a>
   
@@ -1080,9 +1063,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_lidar_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_lidar_params
-      
+      </span>
     </span>
   </a>
   
@@ -1091,9 +1074,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_params
-      
+      </span>
     </span>
   </a>
   
@@ -1102,9 +1085,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_visualizing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_visualizing
-      
+      </span>
     </span>
   </a>
   
@@ -1113,9 +1096,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.url" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;url
-      
+      </span>
     </span>
   </a>
   
@@ -1124,9 +1107,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.version" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;version
-      
+      </span>
     </span>
   </a>
   
@@ -1140,9 +1123,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.CTICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CTICP
-      
+      </span>
     </span>
   </a>
   
@@ -1151,9 +1134,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.DLIO" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;DLIO
-      
+      </span>
     </span>
   </a>
   
@@ -1162,9 +1145,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.FORM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;FORM
-      
+      </span>
     </span>
   </a>
   
@@ -1173,9 +1156,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.GenZICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GenZICP
-      
+      </span>
     </span>
   </a>
   
@@ -1184,9 +1167,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.KissICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;KissICP
-      
+      </span>
     </span>
   </a>
   
@@ -1195,9 +1178,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.LOAM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LOAM
-      
+      </span>
     </span>
   </a>
   
@@ -1206,9 +1189,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.LioSAM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LioSAM
-      
+      </span>
     </span>
   </a>
   
@@ -1217,9 +1200,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.MadICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MadICP
-      
+      </span>
     </span>
   </a>
   
@@ -1228,9 +1211,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.PipelineNotFound" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;PipelineNotFound
-      
+      </span>
     </span>
   </a>
   
@@ -1239,9 +1222,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.UnusedPipelineParam" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UnusedPipelineParam
-      
+      </span>
     </span>
   </a>
   
@@ -1250,9 +1233,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.InvalidPipelineParamType" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;InvalidPipelineParamType
-      
+      </span>
     </span>
   </a>
   
@@ -1261,9 +1244,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.all_pipelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;all_pipelines
-      
+      </span>
     </span>
   </a>
   
@@ -1272,9 +1255,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.get_pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_pipeline
-      
+      </span>
     </span>
   </a>
   
@@ -1283,9 +1266,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.register_pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;register_pipeline
-      
+      </span>
     </span>
   </a>
   
@@ -1294,9 +1277,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.validate_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;validate_params
-      
+      </span>
     </span>
   </a>
   
@@ -1322,11 +1305,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    evalio.stats
-  
+  evalio.stats
 
     
   </span>
@@ -1350,11 +1334,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-boxes" viewBox="0 0 24 24"><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3zM7 16.5l-4.74-2.85M7 16.5l5-3M7 16.5v5.17M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5zM17 16.5l-5-3M17 16.5l4.74-2.85M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0zM12 8 7.26 5.15M12 8l4.74-2.85M12 13.5V8"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    evalio.types
-  
+  evalio.types
 
     
   </span>
@@ -1378,11 +1363,12 @@
         
   
   
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+  
   <span class="md-ellipsis">
     
   
-    evalio.rerun
-  
+  evalio.rerun
 
     
   </span>
@@ -1412,26 +1398,38 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#evalio.pipelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;pipelines
-      
+      </span>
     </span>
   </a>
   
@@ -1440,21 +1438,21 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Pipeline
-      
+      </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label=" Pipeline">
+    <nav class="md-nav" aria-label="Pipeline">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__init__
-      
+      </span>
     </span>
   </a>
   
@@ -1463,9 +1461,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.add_imu" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;add_imu
-      
+      </span>
     </span>
   </a>
   
@@ -1474,9 +1472,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.add_lidar" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;add_lidar
-      
+      </span>
     </span>
   </a>
   
@@ -1485,9 +1483,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.default_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;default_params
-      
+      </span>
     </span>
   </a>
   
@@ -1496,9 +1494,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.initialize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;initialize
-      
+      </span>
     </span>
   </a>
   
@@ -1507,9 +1505,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.map" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;map
-      
+      </span>
     </span>
   </a>
   
@@ -1518,9 +1516,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.name" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;name
-      
+      </span>
     </span>
   </a>
   
@@ -1529,9 +1527,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_estimates" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_estimates
-      
+      </span>
     </span>
   </a>
   
@@ -1540,9 +1538,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_features" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_features
-      
+      </span>
     </span>
   </a>
   
@@ -1551,9 +1549,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_features_matrix" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_features_matrix
-      
+      </span>
     </span>
   </a>
   
@@ -1562,9 +1560,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_maps" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_maps
-      
+      </span>
     </span>
   </a>
   
@@ -1573,9 +1571,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.saved_maps_matrix" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;saved_maps_matrix
-      
+      </span>
     </span>
   </a>
   
@@ -1584,9 +1582,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_imu_T_lidar" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_imu_T_lidar
-      
+      </span>
     </span>
   </a>
   
@@ -1595,9 +1593,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_imu_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_imu_params
-      
+      </span>
     </span>
   </a>
   
@@ -1606,9 +1604,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_lidar_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_lidar_params
-      
+      </span>
     </span>
   </a>
   
@@ -1617,9 +1615,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_params
-      
+      </span>
     </span>
   </a>
   
@@ -1628,9 +1626,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.set_visualizing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;set_visualizing
-      
+      </span>
     </span>
   </a>
   
@@ -1639,9 +1637,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.url" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;url
-      
+      </span>
     </span>
   </a>
   
@@ -1650,9 +1648,9 @@
           <li class="md-nav__item">
   <a href="#evalio.pipelines.Pipeline.version" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;version
-      
+      </span>
     </span>
   </a>
   
@@ -1666,9 +1664,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.CTICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;CTICP
-      
+      </span>
     </span>
   </a>
   
@@ -1677,9 +1675,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.DLIO" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;DLIO
-      
+      </span>
     </span>
   </a>
   
@@ -1688,9 +1686,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.FORM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;FORM
-      
+      </span>
     </span>
   </a>
   
@@ -1699,9 +1697,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.GenZICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GenZICP
-      
+      </span>
     </span>
   </a>
   
@@ -1710,9 +1708,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.KissICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;KissICP
-      
+      </span>
     </span>
   </a>
   
@@ -1721,9 +1719,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.LOAM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LOAM
-      
+      </span>
     </span>
   </a>
   
@@ -1732,9 +1730,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.LioSAM" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LioSAM
-      
+      </span>
     </span>
   </a>
   
@@ -1743,9 +1741,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.MadICP" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MadICP
-      
+      </span>
     </span>
   </a>
   
@@ -1754,9 +1752,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.PipelineNotFound" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;PipelineNotFound
-      
+      </span>
     </span>
   </a>
   
@@ -1765,9 +1763,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.UnusedPipelineParam" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UnusedPipelineParam
-      
+      </span>
     </span>
   </a>
   
@@ -1776,9 +1774,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.InvalidPipelineParamType" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;InvalidPipelineParamType
-      
+      </span>
     </span>
   </a>
   
@@ -1787,9 +1785,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.all_pipelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;all_pipelines
-      
+      </span>
     </span>
   </a>
   
@@ -1798,9 +1796,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.get_pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_pipeline
-      
+      </span>
     </span>
   </a>
   
@@ -1809,9 +1807,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.register_pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;register_pipeline
-      
+      </span>
     </span>
   </a>
   
@@ -1820,9 +1818,9 @@
         <li class="md-nav__item">
   <a href="#evalio.pipelines.validate_params" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;validate_params
-      
+      </span>
     </span>
   </a>
   
@@ -1842,13 +1840,11 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
 
-  <h1>evalio.pipelines</h1>
+  <h1 id="__skip">Pipelines</h1>
 
 <p>For more information about the pipelines included in evalio, see the <a href="../../included/pipelines/">included pipelines</a> section.</p>
 
@@ -1870,84 +1866,84 @@
 <p><span class="doc-section-title">Classes:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></b>
           –
           <div class="doc-md-description">
             <p>Base class for all pipelines. This class defines the interface for interacting with pipelines, and is intended to be subclassed by specific implementations.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            CTICP (evalio.pipelines.CTICP)" href="#evalio.pipelines.CTICP">CTICP</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;CTICP&lt;/span&gt;" href="./#evalio.pipelines.CTICP">CTICP</a></code></b>
           –
           <div class="doc-md-description">
             <p>CT-ICP LiDAR-only pipeline performs continuous-time ICP over a small window of scans to perform more accurate dewarping performance. This is the version based on the 2022-ICRA paper.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            DLIO (evalio.pipelines.DLIO)" href="#evalio.pipelines.DLIO">DLIO</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;DLIO&lt;/span&gt;" href="./#evalio.pipelines.DLIO">DLIO</a></code></b>
           –
           <div class="doc-md-description">
             <p>Direct LiDAR-Inertial Odometry (DLIO) pipeline. DLIO is a lightweight LiDAR-inertial odometry algorithm that uses a coarse-to-fine approach with a geometric observer for real-time state estimation.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            FORM (evalio.pipelines.FORM)" href="#evalio.pipelines.FORM">FORM</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;FORM&lt;/span&gt;" href="./#evalio.pipelines.FORM">FORM</a></code></b>
           –
           <div class="doc-md-description">
             <p>FORM LiDAR odometry pipeline with feature extraction, factor-graph optimization, and sparse keyscan map management.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            GenZICP (evalio.pipelines.GenZICP)" href="#evalio.pipelines.GenZICP">GenZICP</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;GenZICP&lt;/span&gt;" href="./#evalio.pipelines.GenZICP">GenZICP</a></code></b>
           –
           <div class="doc-md-description">
             <p>Genz-ICP LiDAR-only pipeline is an extension of KissICP that additionally estimates normals in the local submap voxel map for increased robustness. It also includes a novel weighting scheme for weighting point-to-plane and point-to-point correspondences.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            KissICP (evalio.pipelines.KissICP)" href="#evalio.pipelines.KissICP">KissICP</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;KissICP&lt;/span&gt;" href="./#evalio.pipelines.KissICP">KissICP</a></code></b>
           –
           <div class="doc-md-description">
             <p>KissICP LiDAR-only pipeline for point cloud registration. KissICP is designed to be simple and easy to use, while still providing good performance with minimal parameter tuning required across datasets.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            LOAM (evalio.pipelines.LOAM)" href="#evalio.pipelines.LOAM">LOAM</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LOAM&lt;/span&gt;" href="./#evalio.pipelines.LOAM">LOAM</a></code></b>
           –
           <div class="doc-md-description">
             <p>Lidar Odometry and Mapping (LOAM) pipeline. LOAM is a baseline lidar-only odometry method that pioneered feature-based ICP. Our implementation permits both scan-to-scan or scan-to-map matching.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            LioSAM (evalio.pipelines.LioSAM)" href="#evalio.pipelines.LioSAM">LioSAM</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LioSAM&lt;/span&gt;" href="./#evalio.pipelines.LioSAM">LioSAM</a></code></b>
           –
           <div class="doc-md-description">
             <p>Lidar-Inertial Smoothing and Mapping (LioSAM) pipeline. LioSAM is an extension of LOAM (=&gt; uses planar and edge features) that additionally utilizes an IMU for initializing ICP steps and for dewarping points</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            MadICP (evalio.pipelines.MadICP)" href="#evalio.pipelines.MadICP">MadICP</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;MadICP&lt;/span&gt;" href="./#evalio.pipelines.MadICP">MadICP</a></code></b>
           –
           <div class="doc-md-description">
             <p>MAD-ICP LiDAR-only pipeline is an extension of KissICP that utilizes a novel kd-tree representation that implicitly computes normals to perform point-to-plane registration.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            PipelineNotFound (evalio.pipelines.PipelineNotFound)" href="#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;PipelineNotFound&lt;/span&gt;" href="./#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></code></b>
           –
           <div class="doc-md-description">
             <p>Raised when a pipeline is not found in the registry.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            UnusedPipelineParam (evalio.pipelines.UnusedPipelineParam)" href="#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;UnusedPipelineParam&lt;/span&gt;" href="./#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></code></b>
           –
           <div class="doc-md-description">
             <p>Raised when a parameter is not used in the pipeline.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><a class="autorefs autorefs-internal" title="            InvalidPipelineParamType (evalio.pipelines.InvalidPipelineParamType)" href="#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;InvalidPipelineParamType&lt;/span&gt;" href="./#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a></code></b>
           –
           <div class="doc-md-description">
             <p>Raised when a parameter has an invalid type.</p>
@@ -1961,28 +1957,28 @@
 <p><span class="doc-section-title">Functions:</span></p>
     <ul>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            all_pipelines (evalio.pipelines.all_pipelines)" href="#evalio.pipelines.all_pipelines">all_pipelines</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;all_pipelines&lt;/span&gt;" href="./#evalio.pipelines.all_pipelines">all_pipelines</a></code></b>
             –
             <div class="doc-md-description">
               <p>Get all registered pipelines.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            get_pipeline (evalio.pipelines.get_pipeline)" href="#evalio.pipelines.get_pipeline">get_pipeline</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;get_pipeline&lt;/span&gt;" href="./#evalio.pipelines.get_pipeline">get_pipeline</a></code></b>
             –
             <div class="doc-md-description">
               <p>Get a pipeline class by its name.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            register_pipeline (evalio.pipelines.register_pipeline)" href="#evalio.pipelines.register_pipeline">register_pipeline</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;register_pipeline&lt;/span&gt;" href="./#evalio.pipelines.register_pipeline">register_pipeline</a></code></b>
             –
             <div class="doc-md-description">
               <p>Add a pipeline or a module containing pipelines to the registry.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            validate_params (evalio.pipelines.validate_params)" href="#evalio.pipelines.validate_params">validate_params</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;validate_params&lt;/span&gt;" href="./#evalio.pipelines.validate_params">validate_params</a></code></b>
             –
             <div class="doc-md-description">
               <p>Validate the parameters for a given pipeline.</p>
@@ -2033,153 +2029,153 @@
 <p><span class="doc-section-title">Methods:</span></p>
     <ul>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            __init__ (evalio.pipelines.Pipeline.__init__)" href="#evalio.pipelines.Pipeline.__init__">__init__</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;__init__&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.__init__">__init__</a></code></b>
             –
             <div class="doc-md-description">
               <p>Construct a new pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            add_imu (evalio.pipelines.Pipeline.add_imu)" href="#evalio.pipelines.Pipeline.add_imu">add_imu</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;add_imu&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.add_imu">add_imu</a></code></b>
             –
             <div class="doc-md-description">
               <p>Register an IMU measurement.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            add_lidar (evalio.pipelines.Pipeline.add_lidar)" href="#evalio.pipelines.Pipeline.add_lidar">add_lidar</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;add_lidar&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.add_lidar">add_lidar</a></code></b>
             –
             <div class="doc-md-description">
               <p>Register a LiDAR measurement.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            default_params
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;default_params&lt;/span&gt;
 
 
-  
-      staticmethod
-   (evalio.pipelines.Pipeline.default_params)" href="#evalio.pipelines.Pipeline.default_params">default_params</a></code></b>
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-staticmethod&quot;&gt;&lt;code&gt;staticmethod&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="./#evalio.pipelines.Pipeline.default_params">default_params</a></code></b>
             –
             <div class="doc-md-description">
               <p>Default parameters for the pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            initialize (evalio.pipelines.Pipeline.initialize)" href="#evalio.pipelines.Pipeline.initialize">initialize</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;initialize&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.initialize">initialize</a></code></b>
             –
             <div class="doc-md-description">
               <p>Initialize the pipeline. Must be called after constructing the object and before setting parameters.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            map (evalio.pipelines.Pipeline.map)" href="#evalio.pipelines.Pipeline.map">map</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;map&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.map">map</a></code></b>
             –
             <div class="doc-md-description">
               <p>Map of the environment.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            name
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;name&lt;/span&gt;
 
 
-  
-      staticmethod
-   (evalio.pipelines.Pipeline.name)" href="#evalio.pipelines.Pipeline.name">name</a></code></b>
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-staticmethod&quot;&gt;&lt;code&gt;staticmethod&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="./#evalio.pipelines.Pipeline.name">name</a></code></b>
             –
             <div class="doc-md-description">
               <p>Name of the pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            saved_estimates (evalio.pipelines.Pipeline.saved_estimates)" href="#evalio.pipelines.Pipeline.saved_estimates">saved_estimates</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;saved_estimates&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.saved_estimates">saved_estimates</a></code></b>
             –
             <div class="doc-md-description">
               <p>Most recent stamped pose estimates. Will be removed after this method is called.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            saved_features (evalio.pipelines.Pipeline.saved_features)" href="#evalio.pipelines.Pipeline.saved_features">saved_features</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;saved_features&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.saved_features">saved_features</a></code></b>
             –
             <div class="doc-md-description">
               <p>Most recent stamped feature scans. Will be removed after this method is called.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            saved_features_matrix (evalio.pipelines.Pipeline.saved_features_matrix)" href="#evalio.pipelines.Pipeline.saved_features_matrix">saved_features_matrix</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;saved_features_matrix&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.saved_features_matrix">saved_features_matrix</a></code></b>
             –
             <div class="doc-md-description">
               <p>Most recent stamped feature scans as matrices. Will be removed after this method is called.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            saved_maps (evalio.pipelines.Pipeline.saved_maps)" href="#evalio.pipelines.Pipeline.saved_maps">saved_maps</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;saved_maps&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.saved_maps">saved_maps</a></code></b>
             –
             <div class="doc-md-description">
               <p>Most recent stamped maps. Will be removed after this method is called.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            saved_maps_matrix (evalio.pipelines.Pipeline.saved_maps_matrix)" href="#evalio.pipelines.Pipeline.saved_maps_matrix">saved_maps_matrix</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;saved_maps_matrix&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.saved_maps_matrix">saved_maps_matrix</a></code></b>
             –
             <div class="doc-md-description">
               <p>Most recent stamped maps as matrices. Will be removed after this method is called.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            set_imu_T_lidar (evalio.pipelines.Pipeline.set_imu_T_lidar)" href="#evalio.pipelines.Pipeline.set_imu_T_lidar">set_imu_T_lidar</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;set_imu_T_lidar&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.set_imu_T_lidar">set_imu_T_lidar</a></code></b>
             –
             <div class="doc-md-description">
               <p>Set the transformation from IMU to LiDAR frame.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            set_imu_params (evalio.pipelines.Pipeline.set_imu_params)" href="#evalio.pipelines.Pipeline.set_imu_params">set_imu_params</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;set_imu_params&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.set_imu_params">set_imu_params</a></code></b>
             –
             <div class="doc-md-description">
               <p>Set IMU parameters for the pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            set_lidar_params (evalio.pipelines.Pipeline.set_lidar_params)" href="#evalio.pipelines.Pipeline.set_lidar_params">set_lidar_params</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;set_lidar_params&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.set_lidar_params">set_lidar_params</a></code></b>
             –
             <div class="doc-md-description">
               <p>Set LiDAR parameters for the pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            set_params (evalio.pipelines.Pipeline.set_params)" href="#evalio.pipelines.Pipeline.set_params">set_params</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;set_params&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.set_params">set_params</a></code></b>
             –
             <div class="doc-md-description">
               <p>Set parameters for the pipeline. This will override any default parameters.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            set_visualizing (evalio.pipelines.Pipeline.set_visualizing)" href="#evalio.pipelines.Pipeline.set_visualizing">set_visualizing</a></code></b>
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;set_visualizing&lt;/span&gt;" href="./#evalio.pipelines.Pipeline.set_visualizing">set_visualizing</a></code></b>
             –
             <div class="doc-md-description">
               <p>Enable or disable visualization.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            url
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;url&lt;/span&gt;
 
 
-  
-      staticmethod
-   (evalio.pipelines.Pipeline.url)" href="#evalio.pipelines.Pipeline.url">url</a></code></b>
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-staticmethod&quot;&gt;&lt;code&gt;staticmethod&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="./#evalio.pipelines.Pipeline.url">url</a></code></b>
             –
             <div class="doc-md-description">
               <p>URL for more information about the pipeline.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            version
+            <b><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;version&lt;/span&gt;
 
 
-  
-      staticmethod
-   (evalio.pipelines.Pipeline.version)" href="#evalio.pipelines.Pipeline.version">version</a></code></b>
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-staticmethod&quot;&gt;&lt;code&gt;staticmethod&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="./#evalio.pipelines.Pipeline.version">version</a></code></b>
             –
             <div class="doc-md-description">
               <p>Version of the pipeline.</p>
@@ -2411,7 +2407,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_imu</span><span class="p">(</span><span class="n">mm</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            ImuMeasurement (evalio._cpp.types.ImuMeasurement)" href="../types/#evalio.types.ImuMeasurement">ImuMeasurement</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_imu</span><span class="p">(</span><span class="n">mm</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ImuMeasurement&lt;/span&gt;" href="../types/#evalio.types.ImuMeasurement">ImuMeasurement</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2438,7 +2434,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_lidar</span><span class="p">(</span><span class="n">mm</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            LidarMeasurement (evalio._cpp.types.LidarMeasurement)" href="../types/#evalio.types.LidarMeasurement">LidarMeasurement</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_lidar</span><span class="p">(</span><span class="n">mm</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LidarMeasurement&lt;/span&gt;" href="../types/#evalio.types.LidarMeasurement">LidarMeasurement</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2529,7 +2525,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">map</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Point (evalio._cpp.types.Point)" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">map</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Point&lt;/span&gt;" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2589,7 +2585,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_estimates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio._cpp.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            SE3 (evalio._cpp.types.SE3)" href="../types/#evalio.types.SE3">SE3</a></span><span class="p">]]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_estimates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Stamp&lt;/span&gt;" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SE3&lt;/span&gt;" href="../types/#evalio.types.SE3">SE3</a></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2621,7 +2617,7 @@
 
 </h3>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_features</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio._cpp.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Point (evalio._cpp.types.Point)" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Stamp&lt;/span&gt;" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Point&lt;/span&gt;" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]]</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">]</span>
 </span></code></pre></div>
 
@@ -2654,7 +2650,7 @@
 
 </h3>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_features_matrix</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio._cpp.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]]]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Stamp&lt;/span&gt;" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]]]</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">]</span>
 </span></code></pre></div>
 
@@ -2686,7 +2682,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_maps</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio._cpp.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Point (evalio._cpp.types.Point)" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]]]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_maps</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Stamp&lt;/span&gt;" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Point&lt;/span&gt;" href="../types/#evalio.types.Point">Point</a></span><span class="p">]]]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2714,7 +2710,7 @@
 
 </h3>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">saved_maps_matrix</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Stamp (evalio._cpp.types.Stamp)" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]]]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Stamp&lt;/span&gt;" href="../types/#evalio.types.Stamp">Stamp</a></span><span class="p">,</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.float64">float64</span></span><span class="p">]]]</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">]</span>
 </span></code></pre></div>
 
@@ -2746,7 +2742,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_imu_T_lidar</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            SE3 (evalio._cpp.types.SE3)" href="../types/#evalio.types.SE3">SE3</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_imu_T_lidar</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SE3&lt;/span&gt;" href="../types/#evalio.types.SE3">SE3</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2773,7 +2769,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_imu_params</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            ImuParams (evalio._cpp.types.ImuParams)" href="../types/#evalio.types.ImuParams">ImuParams</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_imu_params</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ImuParams&lt;/span&gt;" href="../types/#evalio.types.ImuParams">ImuParams</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2800,7 +2796,7 @@
 
 
 </h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_lidar_params</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            LidarParams (evalio._cpp.types.LidarParams)" href="../types/#evalio.types.LidarParams">LidarParams</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_lidar_params</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LidarParams&lt;/span&gt;" href="../types/#evalio.types.LidarParams">LidarParams</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2966,7 +2962,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3056,7 +3052,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3146,7 +3142,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3236,7 +3232,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3326,7 +3322,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3416,7 +3412,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3506,7 +3502,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3596,7 +3592,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Pipeline (evalio._cpp.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></code></p>
 
 
 
@@ -3890,7 +3886,7 @@
 
 
 </h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">all_pipelines</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">all_pipelines</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3901,7 +3897,7 @@
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="type">type</span>[<a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a>]]</code>
+              <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="type">type</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a>]]</code>
           –
           <div class="doc-md-description">
             <p>A dictionary mapping pipeline names to their classes.</p>
@@ -3941,7 +3937,7 @@
 </h2>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_pipeline</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="            PipelineNotFound (evalio.pipelines.parser.PipelineNotFound)" href="#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;PipelineNotFound&lt;/span&gt;" href="./#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3965,7 +3961,7 @@
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a>] | <a class="autorefs autorefs-internal" title="            PipelineNotFound (evalio.pipelines.parser.PipelineNotFound)" href="#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></code>
+              <code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a>] | <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;PipelineNotFound&lt;/span&gt;" href="./#evalio.pipelines.PipelineNotFound">PipelineNotFound</a></code>
           –
           <div class="doc-md-description">
             <p>The pipeline class if found, otherwise a PipelineNotFound error.</p>
@@ -4010,7 +4006,7 @@
 
 </h2>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">register_pipeline</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">pipeline</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">pipeline</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">module</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="types.ModuleType">ModuleType</span></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="n"><span title="ImportError">ImportError</span></span>
 </span></code></pre></div>
@@ -4024,7 +4020,7 @@
     <ul>
         <li class="doc-section-item field-body">
             <b><code>pipeline</code></b>
-              (<code><span title="typing.Optional">Optional</span>[<span title="type">type</span>[<a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a>]]</code>, default:
+              (<code><span title="typing.Optional">Optional</span>[<span title="type">type</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a>]]</code>, default:
                   <code>None</code>
 )
           –
@@ -4115,13 +4111,13 @@
 
 </h2>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">validate_params</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">pipe</span><span class="p">:</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">],</span> <span class="n">params</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            Param
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">pipe</span><span class="p">:</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a></span><span class="p">],</span> <span class="n">params</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-attribute&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;Param&lt;/span&gt;
 
 
-  
-      module-attribute
-   (evalio.types.Param)" href="../types/#evalio.types.Param">Param</a></span><span class="p">]</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="            InvalidPipelineParamType (evalio.pipelines.parser.InvalidPipelineParamType)" href="#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="            UnusedPipelineParam (evalio.pipelines.parser.UnusedPipelineParam)" href="#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></span>
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-module-attribute&quot;&gt;&lt;code&gt;module-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../types/#evalio.types.Param">Param</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;InvalidPipelineParamType&lt;/span&gt;" href="./#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;UnusedPipelineParam&lt;/span&gt;" href="./#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4133,7 +4129,7 @@
     <ul>
         <li class="doc-section-item field-body">
             <b><code>pipe</code></b>
-              (<code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="            Pipeline (evalio.pipelines.Pipeline)" href="#evalio.pipelines.Pipeline">Pipeline</a>]</code>)
+              (<code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Pipeline&lt;/span&gt;" href="./#evalio.pipelines.Pipeline">Pipeline</a>]</code>)
           –
           <div class="doc-md-description">
             <p>The pipeline class.</p>
@@ -4141,12 +4137,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>params</code></b>
-              (<code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="            Param
+              (<code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-attribute&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;Param&lt;/span&gt;
 
 
-  
-      module-attribute
-   (evalio.types.Param)" href="../types/#evalio.types.Param">Param</a>]</code>)
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-module-attribute&quot;&gt;&lt;code&gt;module-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../types/#evalio.types.Param">Param</a>]</code>)
           –
           <div class="doc-md-description">
             <p>The parameters to validate.</p>
@@ -4158,7 +4154,7 @@
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code>None | <a class="autorefs autorefs-internal" title="            InvalidPipelineParamType (evalio.pipelines.parser.InvalidPipelineParamType)" href="#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a> | <a class="autorefs autorefs-internal" title="            UnusedPipelineParam (evalio.pipelines.parser.UnusedPipelineParam)" href="#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></code>
+              <code>None | <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;InvalidPipelineParamType&lt;/span&gt;" href="./#evalio.pipelines.InvalidPipelineParamType">InvalidPipelineParamType</a> | <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;UnusedPipelineParam&lt;/span&gt;" href="./#evalio.pipelines.UnusedPipelineParam">UnusedPipelineParam</a></code>
           –
           <div class="doc-md-description">
             <p>An error if validation fails, otherwise None.</p>
@@ -4238,6 +4234,11 @@
 
 
 
+  
+  
+
+
+
 
 
 
@@ -4246,14 +4247,12 @@
             </div>
           
           
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
-
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -4261,14 +4260,58 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../datasets/" class="md-footer__link md-footer__link--prev" aria-label="Previous: evalio.datasets">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                evalio.datasets
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../stats/" class="md-footer__link md-footer__link--next" aria-label="Next: evalio.stats">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                evalio.stats
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Easton Potokar
+    </div>
+  
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -4286,20 +4329,22 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.annotate","content.code.copy","content.footnote.tooltips","content.tooltips","navigation.footer","navigation.instant","navigation.instant.prefetch","navigation.sections","navigation.top","navigation.tracking","toc.follow","search.highlight"],"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"provider":"mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.49251538.min.js"></script>
       
-        <script src="../../javascripts/tablesort.js"></script>
-      
-        <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
+        <script src="../../javascripts/logo-theme.js"></script>
       
         <script src="../../javascripts/katex.js"></script>
       
         <script src="https://unpkg.com/katex@0/dist/katex.min.js"></script>
       
         <script src="https://unpkg.com/katex@0/dist/contrib/auto-render.min.js"></script>
+      
+        <script src="../../javascripts/tablesort.js"></script>
+      
+        <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
       
     
   </body>
