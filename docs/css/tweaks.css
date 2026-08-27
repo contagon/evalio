@@ -1,3 +1,4 @@
+/* Make the homepage logo switch light/dark and be a good size. */
 .evalio-logo {
     max-width: 42rem;
     margin-inline: auto;
@@ -27,4 +28,32 @@
 /* Use light ink for the compact logo on the dark palette. */
 [data-md-color-scheme="slate"] [data-md-component="logo"] img {
     content: url("../assets/logo-dark.svg");
+}
+
+/* Tweak footer to be a bit less loud. */
+.md-footer-meta {
+    background-color: var(--md-default-bg-color);
+    color: var(--md-default-fg-color);
+}
+
+.md-footer-meta__inner {
+    padding: 0px;
+    justify-content: center;
+}
+
+.md-copyright {
+    font-size: 0.6rem;
+    text-align: center;
+}
+
+.md-copyright__highlight {
+    display: inline;
+}
+
+.md-copyright__highlight::after {
+    content: " | ";
+}
+
+.md-footer-meta a {
+    color: inherit;
 }
