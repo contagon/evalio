@@ -3,27 +3,29 @@ site_url = "http://contagon.github.io/evalio"
 site_name = "evalio"
 # site_description = "Your project description"
 site_author = "Easton Potokar"
+watch = ["python/", "cpp/"]
 
 copyright = "Copyright &copy; 2026 Easton Potokar"
 
 repo_url = "https://github.com/contagon/evalio"
 repo_name = "contagon/evalio"
-# edit_uri = "edit/main/docs/"
-
-extra.version = "mike"
 
 nav = [
     { "evalio" = [
-        { "About" = "main.md" },
-        { "Quick Start" = "quickstart.md" },
-        { "Install" = "install.md" },
+        { "About" = "about.md" },
+        { "Quickstart" = "quickstart.md" },
+        { "Source Build" = "install.md" },
     ] },
     { "Examples" = [
-        "examples/odometry.md",
-        "examples/data_loading.md",
-        "examples/evaluation.md",
-        "examples/dataset.md",
-        "examples/pipeline.md",
+        { "Odometry" = "examples/odometry.md" },
+        { "Data Loading" = "examples/data_loading.md" },
+        { "Evaluation" = "examples/evaluation.md" },
+        { "Custom Dataset" = "examples/dataset.md" },
+        { "Custom Pipeline" = "examples/pipeline.md" },
+    ] },
+    { "Included" = [
+        { "Datasets" = "included/datasets.md" },
+        { "Pipelines" = "included/pipelines.md" },
     ] },
     { "Reference" = [
         { "cli" = "ref/cli.md" },
@@ -35,8 +37,24 @@ nav = [
     ] },
 ]
 
-# extra_css = ["stylesheets/extra.css"]
-# extra_javascript = ["javascripts/extra.js"]
+extra_javascript = [
+    # math
+    "javascripts/katex.js",
+    "https://unpkg.com/katex@0/dist/katex.min.js",
+    "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
+    # table sorting
+    "javascripts/tablesort.js",
+    "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+]
+extra_css = [
+    # math
+    "https://unpkg.com/katex@0/dist/katex.min.css",
+    # misc tweaks
+    "css/tweaks.css",
+]
+
+[project.extra.version]
+provider = "mike"
 
 [project.theme]
 variant = "modern"
@@ -44,38 +62,39 @@ variant = "modern"
 # favicon = "images/favicon.png"
 language = "en"
 features = [
-    "announce.dismiss",
-    # "content.action.edit",
-    # "content.action.view",
+    # add inline code annotations
     "content.code.annotate",
+    # copy button
     "content.code.copy",
-    "content.code.select",
+    # hover footnotes
     "content.footnote.tooltips",
-    "content.tabs.link",
+    # add tooltips to all pages
     "content.tooltips",
-    # "header.autohide",
-    # "navigation.expand",
+
+    # footer
     "navigation.footer",
-    "navigation.indexes",
+    # make navigation much faster
     "navigation.instant",
     "navigation.instant.prefetch",
-    # "navigation.instant.progress",
-    "navigation.path",
-    # "navigation.prune",
+    # add sections on the side
     "navigation.sections",
-    # "navigation.tabs",
-    # "navigation.tabs.sticky",
+    # back to top button
     "navigation.top",
+    # track which section we're in
     "navigation.tracking",
+    # scroll toc with page
+    "toc.follow",
+
+    # highlight search term on clicked page 
     "search.highlight",
-    # "toc.follow",
-    # "toc.integrate",
+
 ]
 
 # logo = "assets/logo.png"
 
 [project.theme.icon]
 logo = "material/circle-double"
+repo = "fontawesome/brands/github"
 
 # [project.theme.font]
 # text = "Inter"
@@ -104,41 +123,40 @@ scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to system preference"
 
-# [[project.extra.social]]
-# icon = "fontawesome/brands/github"
-# link = "https://github.com/user/repo"
-
-# [[project.extra.social]]
-# icon = "fontawesome/brands/mastodon"
-# link = "https://fosstodon.org/@user"
-
 [project.markdown_extensions]
-abbr = {}
+# Enables callout blocks such as `!!! note`.
 admonition = {}
-attr_list = {}
-def_list = {}
-footnotes = {}
-md_in_html = {}
-toc.permalink = true
+# Emits generic math markup for the KaTeX renderer.
 pymdownx.arithmatex.generic = true
-pymdownx.betterem = {}
-pymdownx.caret = {}
-pymdownx.details = {}
-pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
-pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+# Adds anchors to code-block line numbers.
 pymdownx.highlight.anchor_linenums = true
+# Wraps highlighted lines with stable span IDs.
 pymdownx.highlight.line_spans = "__span"
+# Adds the source language as a CSS class to highlighted code.
 pymdownx.highlight.pygments_lang_class = true
+# Enables syntax-highlighted inline code blocks.
 pymdownx.inlinehilite = {}
-pymdownx.keys = {}
-pymdownx.magiclink = {}
-pymdownx.mark = {}
-pymdownx.smartsymbols = {}
-# pymdownx.snippets.base_path = "includes"
-pymdownx.superfences.custom_fences = [
-    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
-]
+# Supports nested fenced blocks in content tabs.
+pymdownx.superfences = {}
+# Uses Material-style tabs instead of separate content blocks.
 pymdownx.tabbed.alternate_style = true
+# Includes the parent heading in generated tab anchors.
 pymdownx.tabbed.combine_header_slug = true
-pymdownx.tasklist.custom_checkbox = true
-pymdownx.tilde = {}
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+options.show_source = true
+options.separate_signature = true
+options.show_signature_annotations = true
+options.signature_crossrefs = true
+options.unwrap_annotated = true
+options.show_symbol_type_toc = true
+options.show_symbol_type_heading = true
+options.docstring_section_style = "list"
+options.docstring_style = "google"
+options.summary.attributes = true
+options.summary.functions = true
+options.summary.classes = true
+options.summary.modules = false

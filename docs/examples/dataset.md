@@ -1,6 +1,6 @@
 While evalio comes with a number of built-in datasets, you can also easily create your own dataset without having to build any of evalio from source. In addition to this guide, we also provide [evalio-example](https://github.com/contagon/evalio-example) with examples. 
 
-To get evalio to find your custom dataset, simply point the environment variable `EVALIO_CUSTOM=my_module` to the module where your dataset is defined.
+To get evalio to find your custom dataset, simply point the environment variable `EVALIO_CUSTOM=my_module` or pass `-M my_module` to the module where your dataset is defined.
 
 To create a dataset, one simply has to inherit from the `Dataset` class,
 
@@ -80,6 +80,6 @@ The next three are again self-explanatory, all of which provide information for 
 
 `download` does exactly what it says - downloads the datasets. See the [newer college 2020](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/newer_college_2020.py#L157) for an example downloading from google drive, and [hilti 2022](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/hilti_2022.py#L144) for an example downloading directly from a url.
 
-`quick_len` returns a hardcoded number of scans in a dataset, used for `evalio ls` and for computing time estimates in `evalio run`. If not set, evalio will load the data to compute the length.
+`quick_len` returns a hardcoded number of scans in a dataset, used for `evalio ls` and for computing time estimates in `evalio run`. If not set, evalio will load the data to compute the length (which can be very slow).
 
 That's all there is to it! Datasets are fairly simple - mostly just parameter setting and easy-to-use iterator wrappers. If you have an dataset implementation of an open-source dataset, feel free to make a PR to add it to evalio so others can use it as well.

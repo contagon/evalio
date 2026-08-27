@@ -1,6 +1,6 @@
 evalio comes with a small number of built-in pipelines, but is made to be easily extensible. Custom pipelines can be created in C++ with nanobind, or in Python. See [evalio-example](https://github.com/contagon/evalio-example) for some examples of building C++ pipelines as well as custom python pipelines.
 
-To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` to the module where your pipeline is defined.
+To get evalio to find your custom pipeline, simply point the environment variable `EVALIO_CUSTOM=my_module` or pass `-M my_module` to the module where your pipeline is defined.
 
 To create a pipeline, simply inherit from the `Pipeline` class,
 
@@ -116,14 +116,14 @@ Arguably the most important part.
 
 `add_lidar` is called for each lidar measurement. This is where the lidar data is processed and used to update the map. 
 
-Saving poses can be done asynchronously, using `save(stamp, pose)`. In C++, the type of `pose` can be anything that has the method `evalio::convert<evalio::SE3>(const MyPose& pose)` implemented.
+Saving poses can be done asynchronously, using `#!cpp save(stamp, pose)`. In C++, the type of `pose` can be anything that has the method `#!cpp evalio::convert<evalio::SE3>(const MyPose& pose)` implemented.
 
-For visualization, features can be save similarly with either `save(stamp, {"key": features})` in python, or `save(stamp, "key1", feat1, "key2", feat2)` in C++. Again, `feat1` and `feat2` can be any type that are iterators with their internal point types convertible to `evalio::Point`. 
+For visualization, features can be save similarly with either `#!python save(stamp, {"key": features})` in python, or `#!cpp save(stamp, "key1", feat1, "key2", feat2)` in C++. Again, `feat1` and `feat2` can be any type that are iterators with their internal point types convertible to `#!cpp evalio::Point`. 
 
 ## C++ Building
 
 If done in C++, you will need to build the pipeline as a shared library. This is done by a nanobind wrapper, which can be defined at the bottom of your file as follows,
-```c++
+```cpp
 NB_MODULE(_core, m) {
   m.doc() = "Custom evalio pipeline example";
 

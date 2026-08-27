@@ -8,7 +8,7 @@
     margin-inline: auto;
 }
 
-.evalio-logo + p {
+.evalio-logo+p {
     text-align: center;
 }
 
@@ -22,18 +22,4 @@
 
 [data-md-color-scheme="slate"] .evalio-logo__dark {
     display: block;
-}
-
-@media screen and (min-width: 76.25em) {
-
-    /* remove top level header */
-    /* https://github.com/squidfunk/mkdocs-material/discussions/8192#discussioncomment-13013188 */
-    label[for="__drawer"] {
-        display: none;
-    }
-
-    /* recolor top level headers */
-    .md-nav__item--section>.md-nav__link[for] {
-        color: var(--md-default-fg-color--lighter) !important;
-    }
 }

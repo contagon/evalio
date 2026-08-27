@@ -46,9 +46,10 @@ pipelines:
 ```
 
 A few notes,
+
 - For datasets, a wildcard `*` can be used to run on all sequences in that dataset.
-- In the dataset section, a bare item `- hilti_2022/basement_2` is shorthand for `- name: hilti_2022/basement_2`.
-- Similarly for pipelines, a bare item `- kiss` is shorthand for `- pipeline: kiss`.
+- In the dataset section, a bare item `#!yaml - hilti_2022/basement_2` is shorthand for `#!yaml - name: hilti_2022/basement_2`.
+- Similarly for pipelines, a bare item `#!yaml - kiss` is shorthand for `#!yaml - pipeline: kiss`.
 - If a pipeline name is not set, it defaults to the pipeline name.
 - The `sweep` section is used to run the pipeline with different parameters. The parameters are set as a list, and the pipeline will be run for each parameter in the list, with the name of the pipeline being set to `name__parameter-value`.
 - `sweep` values can also be python code snippets that will be evaluated to generate the list of values for larger and more complex sweeps. This includes usage of a subset of functions in `math` and `numpy`.
