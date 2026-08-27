@@ -8,6 +8,8 @@
 - 2026-08-27 [CODE] Removed `content.code.select`, disabling the code-block line-selection modal.
 - 2026-08-27 [CODE] Added one-line descriptions for every active Markdown extension setting in `zensical.toml`.
 - 2026-08-27 [CODE] Removed unused Markdown extensions and the unused Mermaid fence, retaining inline highlighting, code highlighting, math, admonitions, nested fences, and tabs.
+- 2026-08-27 [CODE] Set `project.extra.homepage` to `/evalio/about/`, directing the header and sidebar logo to the About page.
+- 2026-08-27 [CODE] `just logo` produces icon-only `logo*` and wordmark `logo-wordmark*` light/dark SVG assets, deleting all temporary PDFs after conversion.
 - 2026-08-26 [CODE] Docs migration, adaptive logo assets, and hidden landing-page H1 completed.
 
 # Working set
@@ -21,5 +23,8 @@
 - 2026-08-27 [TOOL] `uv run zensical build` completed with no issues after disabling line selection.
 - 2026-08-27 [TOOL] `uv run zensical build` completed with no issues after documenting Markdown extensions.
 - 2026-08-27 [TOOL] `uv run zensical build` completed with no issues after trimming Markdown extensions.
+- 2026-08-27 [TOOL] `uv run zensical build` completed with no issues; generated header and sidebar logo links target `/evalio/about/`.
+- 2026-08-27 [TOOL] `just logo` and `uv run zensical build` completed; generated About page references the renamed wordmark SVG variants.
+- 2026-08-27 [TOOL] `just logo` completed and `docs/assets/**/*.pdf` has no matches.
 - 2026-08-27 [TOOL] Build reported six pre-existing broken page links, including absent `docs/included/{datasets,pipelines}.md` targets.
 - 2026-08-26 [TOOL] Logo PDF/SVG variants rendered correctly on light and dark backgrounds.

@@ -37,8 +37,10 @@
   \draw[highlight,line width=4pt] (-.15,-.15) circle[radius=.17];
   \fill[highlight] (-.15,-.15) circle[radius=.052];
 
-  % Wordmark
-  \node[anchor=west,inner sep=0,text=ink,font=\fontsize{116}{116}\selectfont]
-  at (3.25,-.02) {evalio};
+  % Omit the wordmark when compiling the compact logo variant.
+  \ifdefined\wordmark\else
+    \node[anchor=west,inner sep=0,text=ink,font=\fontsize{116}{116}\selectfont]
+    at (3.25,-.02) {evalio};
+  \fi
 \end{tikzpicture}
 \end{document}

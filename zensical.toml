@@ -53,6 +53,9 @@ extra_css = [
     "css/tweaks.css",
 ]
 
+[project.extra]
+homepage = "/evalio/about/"
+
 [project.extra.version]
 provider = "mike"
 
