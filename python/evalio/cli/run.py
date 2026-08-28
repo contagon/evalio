@@ -33,17 +33,24 @@ def opt2vis(opt: VisStr) -> VisOption:
     return map[opt]
 
 
-def vis_convert(type_: type, tokens: Sequence[Token]) -> Optional[list[str]]:
-    """Custom converter to split strings into individual characters."""
-    out: list[str] = []
+def vis_convert(type_: type, tokens: Sequence[Token]) -> list[str]:
+    """Custom converter to split strings into individual characters.
+
+    Accepts them bunched (``-v misf``) or separate (``-v m -v s``).
+
+    Raises:
+        ValueError: If any character is not a visualization option.
+    """
     options = [v.__name__[0].lower() for v in VisOption]
+    out: list[str] = []
     for t in tokens:
-        if t.value in options:
-            out.append(t.value)
-        elif len(t.value) > 1:
-            for c in t.value:
-                if c in options:
-                    out.append(c)
+        for c in t.value:
+            if c not in options:
+                raise ValueError(
+                    f"Unknown visualization option '{c}', choose from: "
+                    + ", ".join(options)
+                )
+            out.append(c)
 
     return out
 

@@ -140,7 +140,10 @@ app["--help"].group = gg
 for c in app:
     if c in ["--help", "-h"]:
         continue
+    # Cyclopts hides the auto-created --help on subcommands (show=False), so it has to be
+    # switched back on for it to appear in the subcommand's own help page.
     app[c]["--help"].group = gg
+    app[c]["--help"].show = True
 
 
 @app.command(name="--show-completion", group=mg)
@@ -199,7 +202,14 @@ def global_options(
         app.help_print(tokens)
         return
 
-    app(tokens)
+    # Catch any stray errors and print them as cyclopts errors
+    try:
+        app(tokens)
+    except CycloptsError as e:
+        if e.console is None:
+            e.console = app.error_console
+        e.console.print(CycloptsPanel(e))
+        sys.exit(1)
 
 
 def launch():

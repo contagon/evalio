@@ -23,17 +23,22 @@ DatasetArg: TypeAlias = Annotated[
 ]
 
 ForceAnnotation = Annotated[
-    bool, Parameter(name=["--yes", "-y"], negative="", show_default=False)
+    bool, Parameter(name=["--force", "-f"], negative="", show_default=False)
 ]
 
 
-def confirm_check() -> bool:
+def confirm_check(prompt: str) -> bool:
     """
-    Check if --confirm is used, if not ask for confirmation.
+    Ask the user to confirm a destructive operation.
+
+    Args:
+        prompt (str): The question to put to the user.
+
+    Returns:
+        Whether the user answered yes.
     """
-    print("Are you sure you want to continue? This is a destructive operation. [y/N]")
-    response = input().strip().lower()
-    return response == "y"
+    print(f"{prompt} [y/N]")
+    return input().strip().lower() == "y"
 
 
 def parse_datasets(datasets: DatasetArg) -> list[ds.Dataset]:
@@ -86,26 +91,28 @@ def dl(datasets: DatasetArg, /) -> None:
         print(f"---------- Finished {dataset} ----------")
 
 
-def rm(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
+def rm(datasets: DatasetArg, /, force: ForceAnnotation = False):
     """
     Remove dataset(s)
 
     Args:
         datasets (str): The dataset(s) to remove.
-        confirm (bool): Force, do not ask for confirmation.
+        force (bool): Skip the confirmation prompt.
     """
     # parse all datasets
     to_remove = parse_datasets(datasets)
 
-    if not confirm:
-        if not confirm_check():
-            print("Aborting")
-            return
-
+    # show what will happen before asking to confirm it
     print("Will remove:")
     for dataset in to_remove:
         print(f"  {dataset}")
     print()
+
+    if not force and not confirm_check(
+        "Are you sure you want to delete these datasets?"
+    ):
+        print("Aborting")
+        return
 
     for dataset in to_remove:
         print(f"---------- Beginning {dataset} ----------")
@@ -217,21 +224,16 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
     bag_temp.rmdir()
 
 
-def filter(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
+def filter(datasets: DatasetArg, /, force: ForceAnnotation = False):
     """
     Filter rosbag dataset(s) to only include lidar and imu data.
 
     Args:
         datasets (str): The dataset(s) to filter.
-        confirm (bool): Force, do not ask for confirmation.
+        force (bool): Skip the confirmation prompt.
     """
     # parse all datasets
     valid_datasets = parse_datasets(datasets)
-
-    if not confirm:
-        if not confirm_check():
-            print("Aborting")
-            return
 
     # Check if already downloaded
     to_filter: list[ds.Dataset] = []
@@ -241,10 +243,18 @@ def filter(datasets: DatasetArg, /, confirm: ForceAnnotation = False):
         else:
             to_filter.append(dataset)
 
+    # show what will happen before asking to confirm it
     print("Will filter: ")
     for dataset in to_filter:
         print(f"  {dataset}")
     print()
+
+    if not force and not confirm_check(
+        "Are you sure you want to filter these datasets? This is slightly experimental, "
+        "please make sure the data has a copy somewhere!"
+    ):
+        print("Aborting")
+        return
 
     for dataset in to_filter:
         print(f"---------- Filtering {dataset} ----------")

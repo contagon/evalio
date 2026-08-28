@@ -20,7 +20,7 @@ evalio run -d newer_college_2020/short_experiment \
             -p kiss -p liosam \
             -o evalio_results
 ```
-Also available are the `-l/--length` which will set a maximum length for every dataset run on, and `-s/--show` which will visualize the results in an open rerun window, with `m` showing the map, `s` the scan, `f` the extracted features, and `i` the intensity image.
+Also available are the `-l/--length` which will set a maximum length for every dataset run on, and `-v/--visualize` which will visualize the results in an open rerun window. On its own it shows the trajectory; passing it letters enables more, with `m` showing the map, `s` the scan, `f` the extracted features, and `i` the intensity image (e.g. `-v msif`).
 
 
 ## Config file
@@ -70,4 +70,6 @@ Once trajectories have been run, statistics can be calculated,
 ```bash
 evalio stats results --metric mean --w-meters 200 --sort RTEt_200.0m
 ```
-With `--metric` specifying the metric to calculate with options including mean, median, and sse, and `--w-meters` / `--w-seconds` specifying RTE windows (defaults to `--w-meters 30` and can be repeated). Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with `-S/--sort`, with any column heading being an allowed option.
+With `-m/--metric` specifying the metric to calculate with options including mean, median, and sse, and `--w-meters` / `--w-seconds` specifying RTE windows (defaults to `--w-meters 30` and can be repeated). Only first part of all trajectories can also be done using the `-l/--length` option. Sorting of the results can be done with `-s/--sort`, with any column heading being an allowed option, and `-r/--reverse` to flip the order.
+
+Which columns are shown is chosen automatically, but can be tweaked with `-H/--hide-columns` and `-S/--show-columns` (both repeatable); `--print-columns` lists what is available. Rows can be narrowed down with `-f/--filter-str`, which takes a python expression evaluated per row, e.g. `-f 'RTEt_30.0m < 0.5'`, or with `--only-complete` / `--only-failed`.

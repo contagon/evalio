@@ -2,7 +2,7 @@ from evalio.datasets.parser import all_sequences_wildcard
 from typing import TYPE_CHECKING, Literal, Sequence
 
 from cyclopts import Token
-from evalio import datasets as ds, pipelines as pl
+from evalio import pipelines as pl
 
 from rapidfuzz.process import extractOne
 
