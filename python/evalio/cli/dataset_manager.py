@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Annotated, cast, TypeAlias
+from typing import Annotated, TypeAlias, cast
 
 from cyclopts import Parameter
 from rosbags.interfaces import Connection, ConnectionExtRosbag2

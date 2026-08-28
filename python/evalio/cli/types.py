@@ -1,11 +1,11 @@
-from evalio.datasets.parser import all_sequences_wildcard
-from typing import TYPE_CHECKING, Literal, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal
 
 from cyclopts import Token
-from evalio import pipelines as pl
-
 from rapidfuzz.process import extractOne
 
+from evalio import pipelines as pl
+from evalio.datasets.parser import all_sequences_wildcard
 
 # ------------------------- Type aliases ------------------------- #
 

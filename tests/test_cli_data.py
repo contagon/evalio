@@ -1,14 +1,11 @@
 from collections.abc import Sequence
 from enum import auto
 from pathlib import Path
-from typing import Sequence
-from evalio.cli import app
-from evalio import datasets as ds, types as ty
 
 import pytest
 from evalio import datasets as ds
 from evalio import types as ty
-from evalio.cli.dataset_manager import dl, rm
+from evalio.cli import app
 
 
 class FakeData(ds.Dataset):

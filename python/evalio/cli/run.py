@@ -1,25 +1,27 @@
 import multiprocessing
+from collections.abc import Sequence
 from pathlib import Path
+from time import time
+from typing import TYPE_CHECKING, Annotated, Literal, Optional
+
+import yaml
 from cyclopts import CycloptsError, Group, Parameter, Token
+from rich import print
+from tqdm.rich import tqdm
+
+from evalio import datasets as ds
+from evalio import pipelines as pl
+from evalio import types as ty
+from evalio._cpp.types import VisOption  # type: ignore
 from evalio.cli.types import (
     DataSeq,
     Pipeline,
     data_sequence_converter,
     pipeline_converter,
 )
+from evalio.rerun import RerunVis
 from evalio.types import Trajectory
 from evalio.utils import print_warning
-from tqdm.rich import tqdm
-import yaml
-
-from evalio import datasets as ds, pipelines as pl, types as ty
-from evalio.rerun import RerunVis
-from evalio._cpp.types import VisOption  # type: ignore
-
-from rich import print
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, Annotated
-
-from time import time
 
 if TYPE_CHECKING:
     VisStr = str
@@ -201,7 +203,7 @@ def run_from_cli(
     # Go through visualization options
     vis_args = None
     if visualize is not None:
-        vis_args = set(opt2vis(v) for v in visualize)
+        vis_args = {opt2vis(v) for v in visualize}
 
     vis = RerunVis(vis_args, [p[0] for p in run_pipelines])
 

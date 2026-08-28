@@ -3,10 +3,9 @@ from pathlib import Path
 from typing import Literal, cast
 
 from cyclopts.docs.markdown import generate_markdown_docs
-from rich.table import Table
-
 from evalio.cli import app
 from evalio.cli.ls import ls
+from rich.table import Table
 
 DOCS = Path(__file__).parent.parent / "docs"
 

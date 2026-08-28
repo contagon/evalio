@@ -1,13 +1,14 @@
 import sys
+from enum import Enum
 from inspect import isclass
 from pathlib import Path
+from typing import Annotated, Any, Literal, Optional, Union, get_args, get_origin
+
 from cyclopts import App, CycloptsError, Group, Parameter
 from cyclopts.completion import detect_shell
-from cyclopts.help import DefaultFormatter, ColumnSpec, HelpEntry, PanelSpec, TableSpec
+from cyclopts.help import ColumnSpec, DefaultFormatter, HelpEntry, PanelSpec, TableSpec
 from cyclopts.panel import CycloptsPanel
-from enum import Enum
 from rich.console import Console, ConsoleOptions
-from typing import Any, Union, get_args, get_origin, Literal, Annotated, Optional
 
 
 # ------------------------- Prettier Helper Pages ------------------------- #

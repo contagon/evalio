@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Optional, TypeVar, TypedDict
+from typing import Annotated, Literal, Optional, TypedDict, TypeVar
 
 from cyclopts import Parameter
 from rapidfuzz.process import extract_iter

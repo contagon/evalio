@@ -1,18 +1,19 @@
-from pathlib import Path
-from typing import Annotated, Any, Callable, Optional, cast
-
-import polars as pl
 import itertools
-
-from evalio import types as ty, stats
-from evalio.utils import print_warning
-from rich.table import Table
-from rich.console import Console
-from rich import box
+from collections.abc import Callable
+from pathlib import Path
+from typing import Annotated, Any, Optional, cast
 
 import distinctipy
-from joblib import Parallel, delayed
+import polars as pl
 from cyclopts import CycloptsError, Group, Parameter
+from joblib import Parallel, delayed
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
+from evalio import stats
+from evalio import types as ty
+from evalio.utils import print_warning
 
 
 def eval_dataset(
