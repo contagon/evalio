@@ -1,11 +1,11 @@
 from collections.abc import Set as AbstractSet
-from contextlib import redirect_stdout
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
-from evalio.cli.ls import Kind, ls
+from cyclopts.docs.markdown import generate_markdown_docs
+from evalio.cli import app
+from evalio.cli.ls import ls
 from rich.table import Table
-from typer.cli import app
 
 DOCS = Path(__file__).parent.parent / "docs"
 
@@ -43,7 +43,7 @@ def rich_table_to_markdown(
 
 
 def write_included(
-    kind: Kind,
+    kind: Literal["datasets", "pipelines"],
     filename: str,
     intro: str,
     icon: str,
@@ -59,20 +59,28 @@ def write_included(
 
 
 write_included(
-    Kind.datasets,
+    "datasets",
     "included/datasets.md",
     "evalio comes with a variety of datasets that can be used for easy loading. Below is a table of all datasets that are included, which mirrors the output of `evalio ls datasets`.",
     "hard-drive",
     {"DL", "Size"},
 )
 write_included(
-    Kind.pipelines,
+    "pipelines",
     "included/pipelines.md",
     "evalio comes with a variety of pipelines that can be used for evaluation. Below is a table of all pipelines that are included and their parameters, which mirrors the output of `evalio ls pipelines`.",
     "blocks",
 )
+# zensical does not run mkdocs plugins, so instead of the `::: cyclopts` directive we
+# call the same generator the cyclopts mkdocs plugin wraps.
 cli_path = DOCS / "ref/cli.md"
 cli_path.parent.mkdir(parents=True, exist_ok=True)
-with cli_path.open("w") as output, redirect_stdout(output):
-    output.write("---\nicon: lucide/terminal\n---\n\n")
-    app(["evalio.cli", "utils", "docs", "--name", "evalio"])
+cli_path.write_text(
+    "---\nicon: lucide/terminal\n---\n\n"
+    + generate_markdown_docs(
+        app,
+        heading_level=1,
+        generate_toc=False,
+        code_block_title=True,
+    )
+)

@@ -45,6 +45,10 @@ along with metadata about how the trajectory was generated behind the '#' charac
 1583836591.982548736,-0.000298752072032382,-0.009307858981044354,-0.01089797673030992,-1.0989202198288011e-05,-4.521269654356091e-05,-0.999999998085071,4.0803279324257364e-05
 ```
 
+!!! note
+
+    Alongside the odometry, evalio also writes the sequence's ground truth as `gt.csv` in the same directory — here `./gt.csv`, since `odometry.csv` is in the current folder. It is in the same format, so `Trajectory.from_file("gt.csv")` works as an alternative to pulling it from the dataset as below. An existing `gt.csv` is never overwritten.
+
 This file can then by loaded and aligned to the ground truth as needed using the python API.
 ```python
 from evalio.types import Trajectory

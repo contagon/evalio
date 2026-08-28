@@ -1,102 +1,218 @@
+import sys
+from enum import Enum
+from inspect import isclass
 from pathlib import Path
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Literal, Optional, Union, get_args, get_origin
 
-import typer
+from cyclopts import App, CycloptsError, Group, Parameter
+from cyclopts.completion import detect_shell
+from cyclopts.help import ColumnSpec, DefaultFormatter, HelpEntry, PanelSpec, TableSpec
+from cyclopts.panel import CycloptsPanel
+from rich.console import Console, ConsoleOptions
 
-import evalio
-from evalio.datasets import set_data_dir
 
-# import typer apps
-from .dataset_manager import app as app_dl
-from .ls import app as app_ls
-from .run import app as app_run
-from .stats import app as app_stats
+# ------------------------- Prettier Helper Pages ------------------------- #
+# Define custom column renderers
+def names_long(entry: HelpEntry) -> str:
+    """Combine parameter names and shorts."""
+    if not entry.names:
+        return ""
+    # If positional with single name, just return it
+    if len(entry.names) == 1:
+        return entry.names[0]
+    # If multiples, skip ALL_CAPS
+    if entry.names[0].isupper():
+        names = entry.names[1:]
+    else:
+        names = entry.names
 
-app = typer.Typer(
-    help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
-    rich_markup_mode="rich",
-    no_args_is_help=True,
-    pretty_exceptions_enable=False,
+    return " ".join(names).strip()
+
+
+def render_type(type_: Any) -> str:
+    """Show the parameter type."""
+    if type_ is bool:
+        return ""
+    elif type_ is str:
+        return "text"
+    elif type_ is int:
+        return "int"
+    elif type_ is float:
+        return "float"
+    elif type_ is Path:
+        return "path"
+    elif type_ is None:
+        return ""
+    elif (origin := get_origin(type_)) is Literal:
+        args = get_args(type_)
+        if len(args) > 5:
+            return "text"
+        return "|".join(str(a) for a in args)
+    elif origin is Union:
+        # handle Optional
+        args = get_args(type_)
+        if len(args) == 2 and type(None) in args:
+            type_ = args[0] if args[1] is type(None) else args[1]
+            return render_type(type_)
+        else:
+            return " | ".join(render_type(t) for t in args)
+    elif origin is list:
+        return render_type(get_args(type_)[0])
+    elif isclass(type_) and issubclass(type_, Enum):
+        return "|".join(e.name for e in type_)
+
+    raise ValueError(f"Unsupported type for rendering: {type_}")
+
+
+def columns(
+    console: Console, options: ConsoleOptions, entries: list[HelpEntry]
+) -> list[ColumnSpec]:
+    columns: list[ColumnSpec] = []
+
+    if any(e.required for e in entries):
+        columns.append(
+            ColumnSpec(
+                renderer=lambda e: "*" if e.required else " ",  # type: ignore
+                width=1,
+                style="red bold",
+            )
+        )
+
+    columns.extend(
+        [
+            ColumnSpec(
+                renderer=names_long,
+                style="cyan",
+            ),
+            ColumnSpec(
+                renderer=lambda e: " ".join(e.shorts).strip() if e.shorts else "",  # type: ignore
+                style="green",
+                max_width=30,
+            ),
+            ColumnSpec(
+                renderer=lambda e: render_type(e.type),  # type: ignore
+                style="yellow",
+                justify="center",
+            ),
+            ColumnSpec(
+                renderer="description",  # Use attribute name
+                overflow="fold",
+            ),
+        ]
+    )
+
+    return columns
+
+
+# Create custom columns
+spec = DefaultFormatter(
+    table_spec=TableSpec(show_header=False),
+    column_specs=columns,  # type: ignore
+    panel_spec=PanelSpec(border_style="bright_black"),
 )
 
-app.add_typer(app_dl)
-app.add_typer(app_ls)
-app.add_typer(app_run)
-app.add_typer(app_stats)
+
+# ------------------------- Make CLI App ------------------------- #
+mg = Group("Misc", sort_key=1)
+gg = Group("Global Options", sort_key=100)
+
+app = App(
+    name="evalio",
+    help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
+    help_formatter=spec,
+    help_on_error=False,
+    default_parameter=Parameter(negative=""),
+    version_flags=[],
+)
+
+# Register commands
+app.command("evalio.cli.ls:ls")
+app.command("evalio.cli.dataset_manager:dl")
+app.command("evalio.cli.dataset_manager:rm")
+app.command("evalio.cli.dataset_manager:filter")
+app.command("evalio.cli.stats:evaluate_cli", name="stats")
+app.command("evalio.cli.run:run_from_cli", name="run")
+app.register_install_completion_command(add_to_startup=True)  # type: ignore
+
+# Assign groups
+app["--install-completion"].group = mg
+app["--help"].group = gg
+
+for c in app:
+    if c in ["--help", "-h"]:
+        continue
+    # Cyclopts hides the auto-created --help on subcommands (show=False), so it has to be
+    # switched back on for it to appear in the subcommand's own help page.
+    app[c]["--help"].group = gg
+    app[c]["--help"].show = True
 
 
-def version_callback(value: bool):
+@app.command(name="--show-completion", group=mg)
+def show_completion():
+    """
+    Show shell completion script.
+    """
+    comp = app.generate_completion()
+    # zsh needs an extra line
+    if detect_shell() == "zsh":
+        comp += "compdef _cyclopts_evalio evalio"
+        # Fix wildcard completions
+        comp = comp.replace("/*", "/\\*")
+    print(comp)
+
+
+@app.command(name="--version", alias="-V", group=mg)
+def version():
     """
     Show version and exit.
     """
-    if value:
-        print(evalio.__version__)
-        raise typer.Exit()
+    import evalio
+
+    print(evalio.__version__)
 
 
-def data_callback(value: Optional[Path]):
-    """
-    Set the data directory.
-    """
-    if value is not None:
-        set_data_dir(value)
-
-
-def module_callback(value: Optional[list[str]]) -> list[Any]:
-    """
-    Set the module to use.
-    """
-    if value is not None:
-        for module in value:
-            evalio._register_custom_modules(module)
-
-    return []
-
-
-@app.callback()
+@app.meta.default
 def global_options(
-    data_dir: Annotated[
-        Optional[Path],
-        typer.Option(
-            "-D",
-            "--data-dir",
-            help="Directory to store downloaded datasets.",
-            show_default=False,
-            rich_help_panel="Global options",
-            callback=data_callback,
-        ),
-    ] = None,
-    custom_modules: Annotated[
-        Optional[list[str]],
-        typer.Option(
-            "-M",
-            "--module",
-            help="Custom module to load (for custom datasets or pipelines). Can be used multiple times.",
-            show_default=False,
-            rich_help_panel="Global options",
-            callback=module_callback,
-        ),
-    ] = None,
-    version: Annotated[
-        bool,
-        typer.Option(
-            "--version",
-            "-V",
-            help="Show version and exit.",
-            is_eager=True,
-            show_default=False,
-            callback=version_callback,
-        ),
-    ] = False,
+    *tokens: Annotated[str, Parameter(show=False, allow_leading_hyphen=True)],
+    module: Annotated[Optional[list[str]], Parameter(alias="-M", group=gg)] = None,
+    data_dir: Annotated[Optional[Path], Parameter(alias="-D", group=gg)] = None,
 ):
+    """Define a number of global options that are set before any command is run.
+
+    Args:
+        module (list[str]): Custom module to import. Can be repeated.
+        data_dir (Optional[Path]): Directory to store downloaded datasets.
     """
-    Global options for the evalio CLI.
-    """
+    # Register custom modules
+    if module is not None:
+        from evalio import _register_custom_modules
+
+        for m in module:
+            _register_custom_modules(m)
+
+    # Set data directory
+    if data_dir is not None:
+        from evalio.datasets import set_data_dir
+
+        set_data_dir(data_dir)
+
+    # If bare subcommands are computed (e.g. `evalio run`), print help and exit
+    command_chain, apps, remaining = app.parse_commands(tokens)
+    # command_chain=run, remaining=[], apps=[App(name='evalio', ...), App(name='run', ...)]
+    if command_chain and not remaining and mg not in apps[-1].group:
+        app.help_print(tokens)
+        return
+
+    # Catch any stray errors and print them as cyclopts errors
+    try:
+        app(tokens)
+    except CycloptsError as e:
+        if e.console is None:
+            e.console = app.error_console
+        e.console.print(CycloptsPanel(e))
+        sys.exit(1)
 
 
 __all__ = [
     "app",
 ]
-
-if __name__ == "__main__":
-    app()

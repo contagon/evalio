@@ -100,7 +100,7 @@ evalio stats results
 ```
 !!! note
 
-    KissICP does poorly by default on hilti_2022/basement_2, due to the close range and large default voxel size. You can visualize this by adding `-s ms` to the `run` command to visualize the map and scan in rerun.
+    KissICP does poorly by default on hilti_2022/basement_2, due to the close range and large default voxel size. You can visualize this by adding `-v ms` to the `run` command to visualize the map and scan in rerun.
 
 More complex experiments can be run, including varying pipeline parameters, via specifying a config file,
 ```yaml
@@ -134,9 +134,9 @@ This can then be run via
 evalio run -c config.yml
 ```
 
-Additionally, the run command supports visualization via rerun as well. `-v` will do a simple visualization of the ground truth trajectory and odometry, while `-s` can be used to enable additional visualizations,
+Additionally, the run command supports visualization via rerun as well. `-v` on its own will do a simple visualization of the ground truth trajectory and odometry, while passing it letters enables additional visualizations,
 ```bash
-evalio run -o results -d hilti_2022/basement_2 -p kiss -s msif
+evalio run -o results -d hilti_2022/basement_2 -p kiss -v msif
 ```
 where m -> map, s -> scan, i -> intensity image, and f -> extracted features can all be selectively visualized in rerun. 
 

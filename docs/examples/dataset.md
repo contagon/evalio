@@ -45,7 +45,7 @@ Arguably the most important method, as is the main interface to the actual data.
 
 While you are welcome to provide a custom [`DatasetIterator`][evalio.datasets.DatasetIterator], evalio provides some for the most common use cases in [`RosbagIter`][evalio.datasets.RosbagIter] that iterates over topics found in a rosbag, and [`RawDataIter`][evalio.datasets.RawDataIter] takes in iterators for imu and lidar data to return.
 
-An example of [`RosbagIter`][evalio.datasets.RosbagIter] can be found in the [Hilti2022 source code](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/hilti_2022.py) and [`RawDataIter`][evalio.datasets.RawDataIter] in the [Helipr source code](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/helipr.py). There is also examples of each in [evalio-example](https://github.com/contagon/evalio-example).
+An example of [`RosbagIter`][evalio.datasets.RosbagIter] can be found in the [Hilti2022 source code](https://github.com/contagon/evalio/blob/main/python/evalio/datasets/hilti_2022.py) and [`RawDataIter`][evalio.datasets.RawDataIter] in the [Helipr source code](https://github.com/contagon/evalio/blob/main/python/evalio/datasets/helipr.py). There is also examples of each in [evalio-example](https://github.com/contagon/evalio-example).
 
 ## ground_truth_raw
 
@@ -82,7 +82,7 @@ The first one provides a base dataset name to be used. By default this is the cl
 
 The next three are again self-explanatory, all of which provide information for the `evalio ls` command.
 
-`download` does exactly what it says - downloads the datasets. See the [newer college 2020](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/newer_college_2020.py#L157) for an example downloading from google drive, and [hilti 2022](https://github.com/contagon/evalio/blob/master/python/evalio/datasets/hilti_2022.py#L144) for an example downloading directly from a url.
+`download` does exactly what it says - downloads the datasets. See the [newer college 2020](https://github.com/contagon/evalio/blob/main/python/evalio/datasets/newer_college_2020.py#L167) for an example downloading from google drive, and [hilti 2022](https://github.com/contagon/evalio/blob/main/python/evalio/datasets/hilti_2022.py#L145) for an example downloading directly from a url.
 
 `quick_len` returns a hardcoded number of scans in a dataset, used for `evalio ls` and for computing time estimates in `evalio run`. If not set, evalio will load the data to compute the length (which can be very slow).
 

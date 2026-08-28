@@ -33,17 +33,18 @@ To create a pipeline, simply inherit from the `Pipeline` class,
         @staticmethod
         def name() -> str: ...
         @staticmethod
-        def default_params() -> dict[str, bool | int | float | str]: ...;
+        def default_params() -> dict[str, bool | int | float | str]: ...
 
         # Getters
-        def pose(self) -> SE3: ...
         def map(self) -> dict[str, list[Point]]: ...
 
         # Setters
         def set_imu_params(self, params: ImuParams): ...
         def set_lidar_params(self, params: LidarParams): ...
         def set_imu_T_lidar(self, T: SE3): ...
-        def set_params(self, params: dict[str, bool | int | float | str]): ...
+        def set_params(
+            self, params: dict[str, bool | int | float | str]
+        ) -> dict[str, bool | int | float | str]: ...
 
         # Doers
         def initialize(self): ...
@@ -97,13 +98,13 @@ We'll cover each section of methods in turn.
 
 The first four methods are all static methods that provide information about the pipeline. `version`, `url`, and `name` are all self-explanatory. `default_params` is a static method that returns a dictionary of the default parameters for the pipeline. This is used to verify parameters before they are passed in, as well as ensure a consistent output for each run.
 
-In C++ there is additionally a number of helper type conversion functions that can make converting between iterators, point types, and geometry types simpler. A good example of this can be found in the `lio_sam.h` binding where it is used to convert pose and point types. These converters can additionally be leveraged by the `save` methods described below.
+In C++ there is additionally a number of helper type conversion functions that can make converting between iterators, point types, and geometry types simpler. A good example of this can be found in the `cpp/bindings/pipelines/lio_sam.h` binding where it is used to convert pose and point types. These converters can additionally be leveraged by the `save` methods described below.
 
 ## Getters
 
-The next two methods are getters for the pose and map. The pose is the most up-to-date estimate for the IMU and is polled after each lidar measurement is passed in. 
+`map` returns the current map/submap/etc and is only used for visualization purposes.
 
-The map current map/submap/etc and is only used for visualization purposes.
+Pose estimates are *not* polled through a getter. The pipeline pushes them as they are produced using `save`, and evalio drains them afterwards - see [Doers](#doers) below.
 
 ## Setters
 

@@ -1,6 +1,6 @@
-from evalio.cli.ls import Kind, ls
+from evalio.cli.ls import ls
 
 
-def test_ls_pipelines():
-    ls(Kind.datasets)
-    ls(Kind.pipelines)
+def test_ls():
+    ls("datasets")
+    ls("pipelines")

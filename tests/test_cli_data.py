@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from evalio import datasets as ds
 from evalio import types as ty
-from evalio.cli.dataset_manager import dl, rm
+from evalio.cli import app
 
 
 class FakeData(ds.Dataset):
@@ -48,10 +48,11 @@ class FakeData(ds.Dataset):
 
 
 ds.register_dataset(FakeData)
+app.result_action = "return_value"
 
 
 def test_dl_done(capsys: pytest.CaptureFixture[str]) -> None:
-    dl(["fake_data/downloaded"])
+    app.meta(["dl", "fake_data/downloaded"])
 
     captured = capsys.readouterr()
     expected = """
@@ -62,7 +63,7 @@ Nothing to download, finishing
 
 
 def test_dl_not_done(capsys: pytest.CaptureFixture[str]) -> None:
-    dl(["fake_data/not_downloaded"])
+    app.meta(["dl", "fake_data/not_downloaded"])
 
     captured = capsys.readouterr()
     expected = """
@@ -76,7 +77,7 @@ Will download:
 
 
 def test_rm_done(capsys: pytest.CaptureFixture[str]) -> None:
-    rm(["fake_data/downloaded"])
+    app.meta(["rm", "fake_data/downloaded", "-f"])
 
     captured = capsys.readouterr()
     expected = f"""
@@ -91,7 +92,7 @@ Removing from {ds.get_data_dir()}/fake_data/downloaded
 
 
 def test_rm_not_done(capsys: pytest.CaptureFixture[str]) -> None:
-    rm(["fake_data/not_downloaded"])
+    app.meta(["rm", "fake_data/not_downloaded", "-f"])
 
     captured = capsys.readouterr()
     expected = f"""
