@@ -137,7 +137,7 @@ def run_from_cli(
         run_pipelines = pl.parse_config(params.get("pipelines", None))
 
         run_out = (
-            params["output_dir"]
+            Path(params["output_dir"])
             if "output_dir" in params
             else Path("./evalio_results") / config.stem
         )

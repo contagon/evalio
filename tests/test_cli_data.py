@@ -77,7 +77,7 @@ Will download:
 
 
 def test_rm_done(capsys: pytest.CaptureFixture[str]) -> None:
-    app.meta(["rm", "fake_data/downloaded", "-y"])
+    app.meta(["rm", "fake_data/downloaded", "-f"])
 
     captured = capsys.readouterr()
     expected = f"""
@@ -92,7 +92,7 @@ Removing from {ds.get_data_dir()}/fake_data/downloaded
 
 
 def test_rm_not_done(capsys: pytest.CaptureFixture[str]) -> None:
-    app.meta(["rm", "fake_data/not_downloaded", "-y"])
+    app.meta(["rm", "fake_data/not_downloaded", "-f"])
 
     captured = capsys.readouterr()
     expected = f"""

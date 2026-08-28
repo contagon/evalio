@@ -91,7 +91,7 @@ def dl(datasets: DatasetArg, /) -> None:
         print(f"---------- Finished {dataset} ----------")
 
 
-def rm(datasets: DatasetArg, /, force: ForceAnnotation = False):
+def rm(datasets: DatasetArg, /, *, force: ForceAnnotation = False):
     """
     Remove dataset(s)
 
@@ -224,7 +224,7 @@ def filter_ros2(bag: Path, topics: list[str]) -> None:
     bag_temp.rmdir()
 
 
-def filter(datasets: DatasetArg, /, force: ForceAnnotation = False):
+def filter(datasets: DatasetArg, /, *, force: ForceAnnotation = False):
     """
     Filter rosbag dataset(s) to only include lidar and imu data.
 

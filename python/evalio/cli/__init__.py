@@ -213,10 +213,6 @@ def global_options(
         sys.exit(1)
 
 
-def launch():
-    app.meta()
-
-
 __all__ = [
     "app",
 ]
