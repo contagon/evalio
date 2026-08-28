@@ -282,7 +282,7 @@ class Trajectory(Generic[M]):
     # ------------------------- Loading from file ------------------------- #
     @staticmethod
     def from_csv(
-        path: Path,
+        path: Path | str,
         fieldnames: list[str],
         delimiter: str = ",",
         skip_lines: int = 0,
@@ -299,7 +299,7 @@ class Trajectory(Generic[M]):
         ```
 
         Args:
-            path (Path): Location of file.
+            path (str | Path): Location of file.
             fieldnames (list[str]): List of field names to use, in their expected order. See above for an example.
             delimiter (str, optional): Delimiter between elements. Defaults to ",".
             skip_lines (int, optional): Number of lines to skip, useful for skipping headers. Defaults to 0.
@@ -334,11 +334,11 @@ class Trajectory(Generic[M]):
         return Trajectory(stamps=stamps, poses=poses)
 
     @staticmethod
-    def from_tum(path: Path) -> Trajectory:
+    def from_tum(path: Path | str) -> Trajectory:
         """Load a TUM dataset pose file. Simple wrapper around [from_csv][evalio.types.Trajectory].
 
         Args:
-            path (Path): Location of file.
+            path (str | Path): Location of file.
 
         Returns:
             Stored trajectory
@@ -347,18 +347,19 @@ class Trajectory(Generic[M]):
 
     @staticmethod
     def from_file(
-        path: Path,
+        path: Path | str,
     ) -> Trajectory[Metadata] | FailedMetadataParse | FileNotFoundError:
         """Load a saved evalio trajectory from file.
 
         Works identically to [from_tum][evalio.types.Trajectory.from_tum], but also loads metadata from the file.
 
         Args:
-            path (Path): Location of trajectory results.
+            path (str | Path): Location of trajectory results.
 
         Returns:
             Loaded trajectory with metadata, stamps, and poses.
         """
+        path = Path(path)
         if not path.exists():
             return FileNotFoundError(f"File {path} does not exist.")
 
@@ -416,16 +417,16 @@ class Trajectory(Generic[M]):
         self._file.write("# timestamp, x, y, z, qx, qy, qz, qw\n")
         self._csv_writer.writerows(self._serialize_pose(s, p) for s, p in self)
 
-    def open(self, path: Optional[Path] = None):
+    def open(self, path: Optional[Path | str] = None):
         """Open a CSV file for writing.
 
         This will overwrite any existing file. If no path is provided, will use the path in the metadata, if it exists.
 
         Args:
-            path (Optional[Path], optional): Path to the CSV file. Defaults to None.
+            path (Optional[str | Path], optional): Path to the CSV file. Defaults to None.
         """
         if path is not None:
-            pass
+            path = Path(path)
         elif self.metadata is not None and self.metadata.file is not None:
             path = self.metadata.file
         else:
@@ -448,11 +449,11 @@ class Trajectory(Generic[M]):
         else:
             print_warning("Trajectory.close: No file to close.")
 
-    def to_file(self, path: Optional[Path] = None):
+    def to_file(self, path: Optional[Path | str] = None):
         """Save the trajectory to a CSV file.
 
         Args:
-            path (Optional[Path], optional): Path to the CSV file. If not specified, utilizes the path in the metadata, if it exists. Defaults to None.
+            path (Optional[str | Path], optional): Path to the CSV file. If not specified, utilizes the path in the metadata, if it exists. Defaults to None.
         """
         self.open(path)
         self.close()

@@ -218,7 +218,11 @@ def run_from_cli(
             pipeline=pipeline,
             pipeline_version=pipeline.version(),
             pipeline_params=params,
-            file=run_out / sequence.full_name / f"{name}.csv",
+            # a `.csv` output names the trajectory file itself, anything else is a
+            # directory tree. The check above has already limited this to one experiment.
+            file=run_out
+            if run_out.suffix == ".csv"
+            else run_out / sequence.full_name / f"{name}.csv",
         )
         for sequence, length in run_datasets
         for name, pipeline, params in run_pipelines
