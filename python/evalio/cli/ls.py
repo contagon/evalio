@@ -40,6 +40,7 @@ def extract_len(d: ds.Dataset) -> str:
 def ls(
     kind: Literal["datasets", "pipelines"],
     /,
+    *,
     search: Annotated[Optional[str], Parameter(alias="-s")] = None,
     quiet: Annotated[bool, Parameter(alias="-q")] = False,
     show_hyperlinks: bool = False,

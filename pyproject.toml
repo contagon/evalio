@@ -117,8 +117,5 @@ reportPrivateUsage = "none"
 reportConstantRedefinition = "none"
 reportUnnecessaryIsInstance = "none"
 
-# [tool.uv.sources]
-# cyclopts = { git = "https://github.com/BrianPugh/cyclopts.git", branch = "mkdocs-plugin" }
-
 [tool.pyrefly]
 include = ["python", "tests"]

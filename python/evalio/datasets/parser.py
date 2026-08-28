@@ -112,6 +112,19 @@ def all_sequences() -> dict[str, Dataset]:
     }
 
 
+def all_sequences_wildcard() -> list[str]:
+    """Get all sequences and datasets in a format suitable for shell completion.
+
+    This includes every sequence name, followed by a `<dataset>/*` entry per dataset.
+    Note that datasets registered late (via `-M/--module`) are accepted.
+
+    Returns:
+        Every sequence name, followed by a `<dataset>/*` entry per dataset.
+    """
+    ds = all_datasets()
+    return list(all_sequences().keys()) + [d + "/*" for d in ds]
+
+
 def get_sequence(name: str) -> Dataset | SequenceNotFound:
     """Get a registered sequence by name.
 

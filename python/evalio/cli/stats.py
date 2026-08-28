@@ -12,7 +12,7 @@ from rich import box
 
 import distinctipy
 from joblib import Parallel, delayed
-from cyclopts import Group, Parameter
+from cyclopts import CycloptsError, Group, Parameter
 
 
 def eval_dataset(
@@ -211,7 +211,9 @@ def evaluate_cli(
     # ------------------------- Process all inputs ------------------------- #
     # Parse some of the options
     if only_complete and only_failed:
-        raise ValueError("Can only use one of --only-complete and --only-failed.")
+        raise CycloptsError(
+            msg="Can only use one of --only-complete and --only-failed."
+        )
 
     # Parse the filtering options
     filter_method: Callable[[dict[str, Any]], bool]

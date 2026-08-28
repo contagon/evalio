@@ -1,8 +1,10 @@
+import sys
 from inspect import isclass
 from pathlib import Path
-from cyclopts import App, Group, Parameter
+from cyclopts import App, CycloptsError, Group, Parameter
 from cyclopts.completion import detect_shell
 from cyclopts.help import DefaultFormatter, ColumnSpec, HelpEntry, PanelSpec, TableSpec
+from cyclopts.panel import CycloptsPanel
 from enum import Enum
 from rich.console import Console, ConsoleOptions
 from typing import Any, Union, get_args, get_origin, Literal, Annotated, Optional
@@ -117,7 +119,7 @@ app = App(
     name="evalio",
     help="Tool for evaluating Lidar-Inertial Odometry pipelines on open-source datasets",
     help_formatter=spec,
-    help_on_error=True,
+    help_on_error=False,
     default_parameter=Parameter(negative=""),
     version_flags=[],
 )
@@ -189,6 +191,13 @@ def global_options(
         from evalio.datasets import set_data_dir
 
         set_data_dir(data_dir)
+
+    # If bare subcommands are computed (e.g. `evalio run`), print help and exit
+    command_chain, apps, remaining = app.parse_commands(tokens)
+    # command_chain=run, remaining=[], apps=[App(name='evalio', ...), App(name='run', ...)]
+    if command_chain and not remaining and mg not in apps[-1].group:
+        app.help_print(tokens)
+        return
 
     app(tokens)
 

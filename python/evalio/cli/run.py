@@ -1,7 +1,6 @@
 import multiprocessing
 from pathlib import Path
-from cyclopts import Group, Token, ValidationError
-from cyclopts import Parameter
+from cyclopts import CycloptsError, Group, Parameter, Token
 from evalio.cli.types import (
     DataSeq,
     Pipeline,
@@ -104,7 +103,7 @@ def run_from_cli(
     """
 
     if (pipelines or datasets or length) and config:
-        raise ValueError("Cannot specify both config and manual options")
+        raise CycloptsError(msg="Cannot specify both config and manual options")
 
     # ------------------------- Parse Config file ------------------------- #
     if config is not None:
@@ -121,9 +120,9 @@ def run_from_cli(
             params = yaml.load(f, Loader=Loader)
 
         if "datasets" not in params:
-            raise ValueError("No datasets specified in config")
+            raise CycloptsError(msg="No datasets specified in config")
         if "pipelines" not in params:
-            raise ValueError("No pipelines specified in config")
+            raise CycloptsError(msg="No pipelines specified in config")
 
         run_datasets = ds.parse_config(params.get("datasets", None))
         run_pipelines = pl.parse_config(params.get("pipelines", None))
@@ -137,9 +136,9 @@ def run_from_cli(
     # ------------------------- Parse manual options ------------------------- #
     else:
         if pipelines is None:
-            raise ValueError("Must specify at least one pipeline")
+            raise CycloptsError(msg="Must specify at least one pipeline")
         if datasets is None:
-            raise ValidationError(msg="Must specify at least one dataset")
+            raise CycloptsError(msg="Must specify at least one dataset")
 
         if length is not None:
             temp_datasets: list[ds.DatasetConfig] = [
@@ -160,9 +159,9 @@ def run_from_cli(
     # ------------------------- Miscellaneous ------------------------- #
     # error out if either is wrong
     if isinstance(run_datasets, ds.DatasetConfigError):
-        raise ValueError(f"Error in datasets config: {run_datasets}")
+        raise CycloptsError(msg=f"Error in datasets config: {run_datasets}")
     if isinstance(run_pipelines, pl.PipelineConfigError):
-        raise ValueError(f"Error in pipelines config: {run_pipelines}")
+        raise CycloptsError(msg=f"Error in pipelines config: {run_pipelines}")
 
     # make sure all datasets are downloaded
     for d, _ in run_datasets:
@@ -175,7 +174,9 @@ def run_from_cli(
     ]
 
     if run_out.suffix == ".csv" and (len(run_pipelines) > 1 or len(run_datasets) > 1):
-        raise ValueError("Output must be a directory when running multiple experiments")
+        raise CycloptsError(
+            msg="Output must be a directory when running multiple experiments"
+        )
 
     print(
         f"Running {plural(len(run_datasets), 'dataset')} => {plural(len(run_pipelines) * len(run_datasets), 'experiment')}"
