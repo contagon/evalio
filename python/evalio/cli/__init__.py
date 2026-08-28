@@ -149,7 +149,7 @@ def show_completion():
     comp = app.generate_completion()
     # zsh needs an extra line
     if detect_shell() == "zsh":
-        comp += "compdef _evalio evalio"
+        comp += "compdef _cyclopts_evalio evalio"
         # Fix wildcard completions
         comp = comp.replace("/*", "/\\*")
     print(comp)

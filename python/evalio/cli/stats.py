@@ -11,8 +11,6 @@ from rich.console import Console
 from rich import box
 
 import distinctipy
-import polars as pl
-import typer
 from joblib import Parallel, delayed
 from cyclopts import Group, Parameter
 

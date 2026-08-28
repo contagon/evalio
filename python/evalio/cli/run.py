@@ -67,8 +67,16 @@ def run_from_cli(
     # Config file
     config: Ann[Opt[Path], Par(alias="-c", group=cg)] = None,
     # Manual options
-    datasets: Ann[Opt[list[DataSeq]], Par(alias="-d", group=mg, converter=dc)] = None,
-    pipelines: Ann[Opt[list[Pipeline]], Par(alias="-p", group=mg, converter=pc)] = None,
+    # NOTE: show_choices=False - choices are only for shell completion, they're far
+    # too long to render in help/docs
+    datasets: Ann[
+        Opt[list[DataSeq]],
+        Par(alias="-d", group=mg, converter=dc, show_choices=False),
+    ] = None,
+    pipelines: Ann[
+        Opt[list[Pipeline]],
+        Par(alias="-p", group=mg, converter=pc, show_choices=False),
+    ] = None,
     out: Ann[Opt[Path], Par(alias="-o", group=mg)] = None,
     length: Ann[Opt[int], Par(alias="-l", group=mg)] = None,
     # misc options

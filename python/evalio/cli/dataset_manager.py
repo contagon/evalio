@@ -17,7 +17,9 @@ from evalio.utils import print_warning
 from .types import DataSeq, data_sequence_converter
 
 DatasetArg: TypeAlias = Annotated[
-    list[DataSeq], Parameter(converter=data_sequence_converter)
+    list[DataSeq],
+    # choices are only for shell completion; they're far too long to render in help/docs
+    Parameter(converter=data_sequence_converter, show_choices=False),
 ]
 
 ForceAnnotation = Annotated[
