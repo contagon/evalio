@@ -72,6 +72,7 @@ _SEQUENCES = {
         num_laz=25,
         num_csv=25,
         environment="Underground Parking",
+        gt_file="ground-truth/trajectory.tum",
         quick_len=2724,
     ),
 }
