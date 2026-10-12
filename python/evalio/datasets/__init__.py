@@ -8,6 +8,7 @@ from .fomo import FoMo
 from .helipr import HeLiPR
 from .hilti_2022 import Hilti2022
 from .loaders import RawDataIter, RosbagIter
+from .mandeye import Mandeye
 from .multi_campus import MultiCampus
 from .newer_college_2020 import NewerCollege2020
 from .newer_college_2021 import NewerCollege2021
@@ -43,6 +44,7 @@ __all__ = [
     "HeLiPR",
     "Hilti2022",
     "InvalidDatasetConfig",
+    "Mandeye",
     "MultiCampus",
     "NewerCollege2020",
     "NewerCollege2021",
