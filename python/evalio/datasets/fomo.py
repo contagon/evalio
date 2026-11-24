@@ -30,7 +30,7 @@ for i, row in enumerate(MAP_IDX_TO_ROW):
 class FoMo(Dataset):
     """The FoMo dataset is a multi-season collection designed to support research on robust algorithms for robot autonomy under adverse conditions.
 
-    Data was collected in the same location across 12 deployments spanning four seasons, with each deployment containing six trajectories of varying lengths. Here we use two deployments, March and August 2025. The dataset includes synchronized data from a Robosense Ruby Plus lidar, an Applanix POS LV IMU, and ground truth trajectories provided in TUM format. The FoMo dataset is ideal for evaluating the performance of algorithms under challenging conditions such as snow, rain, and fog, making it a valuable resource for researchers working on robust perception and localization for autonomous vehicles.
+    Data was collected in the same location across 12 deployments spanning four seasons, with each deployment containing six trajectories of varying lengths. Here we use two deployments, March and August 2025. The dataset includes synchronized data from a Robosense Ruby Plus lidar, a Vectornav VN-100, and Xsens MTi-30 IMUs, and ground truth trajectories provided in TUM format. The FoMo dataset is ideal for evaluating the performance of algorithms under challenging conditions such as snow, rain, and fog, making it a valuable resource for researchers working on robust perception and localization for autonomous vehicles.
 
     It should be noted that they DO NOT report GT orientation. We synthetically create plausible orientation for visualization purposes.
 
