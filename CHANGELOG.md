@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/contagon/evalio/compare/v0.6.1...v0.6.2) (2026-11-24)
+
+
+### Bug Fixes
+
+* Update fomo.py description ([#90](https://github.com/contagon/evalio/issues/90)) ([537171d](https://github.com/contagon/evalio/commit/537171d586ecfe96589a29a8d65f3f01daf6ff6c))
+
 ## [0.6.1](https://github.com/contagon/evalio/compare/v0.6.0...v0.6.1) (2026-08-27)
 
 
